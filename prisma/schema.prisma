@@ -678,8 +678,8 @@ model hrms_m_bank_master {
   createdby  Int
   updatedate DateTime? @db.DateTime
   updatedby  Int?
-  is_active  String?   @default("Y") @db.Char(1)
   log_inst   Int?
+  is_active  String?   @default("Y") @db.Char(1)
 }
 
 model hrms_m_branch_master {
@@ -692,6 +692,7 @@ model hrms_m_branch_master {
   updatedate  DateTime? @db.DateTime
   updatedby   Int?
   log_inst    Int?
+  is_active   String?   @default("Y") @db.Char(1)
 }
 
 model hrms_m_company_master {
@@ -722,6 +723,7 @@ model hrms_m_currency_master {
   updatedate    DateTime? @db.DateTime
   updatedby     Int?
   log_inst      Int?
+  is_active     String?   @default("Y") @db.Char(1)
 }
 
 model hrms_m_department_master {
@@ -950,7 +952,7 @@ model hrms_m_statutory_rate {
   upper_limit    Decimal?  @db.Decimal(10, 2)
   rate_percent   Decimal?  @db.Decimal(5, 2)
   effective_from DateTime? @db.Date
-  is_active      Boolean?
+  is_active      String?   @default("Y") @db.Char(1)
   createdate     DateTime? @default(now(), map: "DF__hrms_m_st__creat__367C1819") @db.DateTime
   createdby      Int
   updatedate     DateTime? @db.DateTime

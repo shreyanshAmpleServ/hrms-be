@@ -1,4 +1,4 @@
-const companyMaster = require('../services/CompanyMasterService');
+const companyService = require('../services/CompanyMasterService');
 const CustomError = require('../../utils/CustomError');
 const { generateFullUrl } = require('../../utils/helper');
 
@@ -18,7 +18,7 @@ const createCompany = async (req, res, next) => {
     try {
         console.log("daata : ",req.body)
         let companyData = { ...req.body };
-        const company = await companyMaster.createCompany(companyData);
+        const company = await companyService.createCompany(companyData);
         res.status(201).success('Company created successfully', company);
     } catch (error) {
         next(error);
@@ -27,7 +27,7 @@ const createCompany = async (req, res, next) => {
 
 const getCompanyById = async (req, res, next) => {
     try {
-        const company = await companyMaster.findCompanyById(req.params.id);
+        const company = await companyService.findCompanyById(req.params.id);
         if (!company) throw new CustomError('Company not found', 404);
 
         res.status(200).success(null, company);
@@ -44,7 +44,7 @@ const updateCompany = async (req, res, next) => {
 
         // companyData = sanitizecompanyData(companyData);
 
-        const company = await companyMaster.updateCompany(req.params.id, companyData);
+        const company = await companyService.updateCompany(req.params.id, companyData);
         res.status(200).success('Company updated successfully', company);
     } catch (error) {
         next(error);
@@ -53,7 +53,7 @@ const updateCompany = async (req, res, next) => {
 
 const deleteCompany = async (req, res, next) => {
     try {
-        await companyMaster.deleteCompany(req.params.id);
+        await companyService.deleteCompany(req.params.id);
         res.status(200).success('Company deleted successfully', null);
     } catch (error) {
         next(error);
@@ -62,7 +62,8 @@ const deleteCompany = async (req, res, next) => {
 
 const getAllCompanies = async (req, res, next) => {
     try {
-        const companies = await companyMaster.getAllCompanies();
+        const { page , size , search ,startDate,endDate   } = req.query;
+        const companies = await companyService.getAllCompanies(Number(page), Number(size) ,search ,moment(startDate), moment(endDate));
         res.status(200).success(null, companies);
     } catch (error) {
         next(error);

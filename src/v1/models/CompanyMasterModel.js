@@ -65,14 +65,68 @@ const deleteCompany = async (id) => {
 };
 
 // Get all companies
-const getAllCompanies = async () => {
+const getAllCompanies = async (page, size, search,  startDate,endDate) => {
     try {
-        const companies = await prisma.hrms_m_company_master.findMany({
-            orderBy: [
-                { updatedate: 'desc' },
-                { createdate: 'desc' },
-            ],
+        page = page || page == 0 ? 1 : page;
+        size = size || 10;
+        const skip = (page - 1) * size || 0;
+    
+        const filters = {};
+        // Handle search
+        // if (search) {
+        //   filters.OR = [
+        //     {
+        //       campaign_user: {
+        //         full_name: { contains: search.toLowerCase() },
+        //       }, // Include contact details
+        //     },
+        //     {
+        //       campaign_leads: {
+        //         title: { contains: search.toLowerCase() },
+        //       }, // Include contact details
+        //     },
+        //     {
+        //       name: { contains: search.toLowerCase() },
+        //     },
+        //     {
+        //       status: { contains: search.toLowerCase() },
+        //     },
+        //   ];
+        // }
+        // if (status) {
+        //   filters.is_active = { equals: status };
+        // }
+    
+        if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+    
+          if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+            filters.createdate = {
+              gte: start,
+              lte: end,
+            };
+          }
+        }
+        const departments = await prisma.hrms_m_company_master.findMany({
+        //   where: filters,
+          skip: skip,
+          take: size,
+  
+          orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
         });
+  
+        const totalCount = await prisma.hrms_m_company_master.count({
+        //   where: filters,
+        });
+        return {
+          data: departments,
+          currentPage: page,
+          size,
+          totalPages: Math.ceil(totalCount / size),
+          totalCount: totalCount,
+        };
+  
         return companies;
     } catch (error) {
         throw new CustomError('Error retrieving companies', 503);

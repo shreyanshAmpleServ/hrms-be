@@ -16,8 +16,8 @@ const deleteCompany = async (id) => {
     return await companyModal.deleteCompany(id);
 };
 
-const getAllCompanies = async () => {
-    return await companyModal.getAllCompanies();
+const getAllCompanies = async (page, size, search,  startDate,endDate) => {
+    return await companyModal.getAllCompanies(page, size, search,  startDate,endDate);
 };
 
 module.exports = {

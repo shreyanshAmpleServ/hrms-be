@@ -5,12 +5,10 @@ const prisma = new PrismaClient();
 
 const createCurrency = async (data) => {
     try {
-        const currency = await prisma.Currency.create({
+        const currency = await prisma.hrms_m_currency_master.create({
             data: {
-                name: data.name,
-                icon: data.icon || null,
-                is_default: data.is_default || false,
-                code: data.code,
+                currency_name: data.currency_name,
+                currency_code: data.currency_code || null,
                 is_active: data.is_active || 'Y',
                 createdby: data.createdby || 1,
                 log_inst: data.log_inst || 1,
@@ -24,7 +22,7 @@ const createCurrency = async (data) => {
 
 const findCurrencyById = async (id) => {
     try {
-        const currency = await prisma.Currency.findUnique({
+        const currency = await prisma.hrms_m_currency_master.findUnique({
             where: { id: parseInt(id) },
         });
         if (!currency) {
@@ -38,7 +36,7 @@ const findCurrencyById = async (id) => {
 
 const updateCurrency = async (id, data) => {
     try {
-        const updatedCurrency = await prisma.Currency.update({
+        const updatedCurrency = await prisma.hrms_m_currency_master.update({
             where: { id: parseInt(id) },
             data: {
                 ...data,
@@ -53,7 +51,7 @@ const updateCurrency = async (id, data) => {
 
 const deleteCurrency = async (id) => {
     try {
-        await prisma.Currency.delete({
+        await prisma.hrms_m_currency_master.delete({
             where: { id: parseInt(id) },
         });
     } catch (error) {
@@ -61,15 +59,67 @@ const deleteCurrency = async (id) => {
     }
 };
 
-const getAllCurrency = async () => {
+const getAllCurrency = async (page , size , search ,startDate,endDate) => {
     try {
-        const Currency = await prisma.Currency.findMany({
-            orderBy: [
-                { updatedate: 'desc' },
-                { createdate: 'desc' },
-            ],
+        page = page || page == 0 ? 1 : page;
+        size = size || 10;
+        const skip = (page - 1) * size || 0;
+    
+        const filters = {};
+        // Handle search
+        // if (search) {
+        //   filters.OR = [
+        //     {
+        //       campaign_user: {
+        //         full_name: { contains: search.toLowerCase() },
+        //       }, // Include contact details
+        //     },
+        //     {
+        //       campaign_leads: {
+        //         title: { contains: search.toLowerCase() },
+        //       }, // Include contact details
+        //     },
+        //     {
+        //       name: { contains: search.toLowerCase() },
+        //     },
+        //     {
+        //       status: { contains: search.toLowerCase() },
+        //     },
+        //   ];
+        // }
+        // if (status) {
+        //   filters.is_active = { equals: status };
+        // }
+    
+        if (startDate && endDate) {
+          const start = new Date(startDate);
+          const end = new Date(endDate);
+    
+          if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+            filters.createdate = {
+              gte: start,
+              lte: end,
+            };
+          }
+        }
+        const Currencies = await prisma.hrms_m_currency_master.findMany({
+        //   where: filters,
+          skip: skip,
+          take: size,
+  
+          orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
         });
-        return Currency;
+  
+        const totalCount = await prisma.hrms_m_currency_master.count({
+          where: filters,
+        });
+        return {
+          data: Currencies,
+          currentPage: page,
+          size,
+          totalPages: Math.ceil(totalCount / size),
+          totalCount: totalCount,
+        };
     } catch (error) {
         throw new CustomError('Error retrieving Currency', 503);
     }

@@ -44,6 +44,14 @@ const solutionsRoutes = require("../v1/routes/solutionsRoutes")
 const campaignRoutes = require("../v1/routes/campaignRoutes")
 const bankRoutes = require("../v1/routes/bankRoute")
 const companyMasterRoutes = require("../v1/routes/companyMasterRoute")
+const branchRoutes = require("../v1/routes/branchRoute")
+const departmentRoutes = require("../v1/routes/departmentRoutes")
+const designationRoutes = require("../v1/routes/designationRoutes")
+const empCategoryRoutes = require("../v1/routes/empCategoryRoutes")
+const empTypeRoutes = require("../v1/routes/empTypeRoutes")
+const payComponentRoutes = require("../v1/routes/payComponentRoutes")
+const salaryStructureRoutes = require("../v1/routes/salaryStructureRoutes")
+const statutoryRateRoutes = require("../v1/routes/statutoryRateRoutes")
 
 const router = express.Router();
 
@@ -93,6 +101,14 @@ router.use('/v1',solutionsRoutes);
 router.use('/v1',campaignRoutes);
 router.use('/v1', bankRoutes);
 router.use('/v1', companyMasterRoutes);
+router.use('/v1', branchRoutes);
+router.use('/v1', departmentRoutes);
+router.use('/v1', designationRoutes);
+router.use('/v1', empCategoryRoutes);
+router.use('/v1', empTypeRoutes);
+router.use('/v1', payComponentRoutes);
+router.use('/v1', salaryStructureRoutes);
+router.use('/v1', statutoryRateRoutes);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);

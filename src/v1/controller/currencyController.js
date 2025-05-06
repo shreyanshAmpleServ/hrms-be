@@ -1,5 +1,6 @@
 const currencyService = require('../services/currencyService');
 const CustomError = require('../../utils/CustomError');
+const moment = require ("moment")
 
 const createCurrency = async (req, res, next) => {
     try {
@@ -40,7 +41,8 @@ const deleteCurrency = async (req, res, next) => {
 
 const getAllCurrencies = async (req, res, next) => {
     try {
-        const currencies = await currencyService.getAllCurrenciesService();
+        const { page , size , search ,startDate,endDate   } = req.query;
+        const currencies = await currencyService.getAllCurrenciesService(Number(page), Number(size) ,search ,moment(startDate), moment(endDate));
         res.status(200).success(null, currencies);
     } catch (error) {
         next(error);
