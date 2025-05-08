@@ -1,67 +1,63 @@
-const payComponentService = require('../services/payComponentService');
+const taxRegimService = require('../services/taxRegimService');
 const CustomError = require('../../utils/CustomError');
 const moment = require("moment")
 
 
-const createPayComponent = async (req, res, next) => {
+const createTaxRegime = async (req, res, next) => {
     try {
-        let departmentData = { ...req.body };
-        const department = await payComponentService.createPayComponent(departmentData);
-        res.status(201).success('Pay component created successfully', department);
+        let taxData = { ...req.body };
+        const data = await taxRegimService.createTaxRegime(taxData);
+        res.status(201).success('Tax regime created successfully', data);
     } catch (error) {
         next(error);
     }
 };
 
-const findPayComponentById = async (req, res, next) => {
+const findTaxRegimeById = async (req, res, next) => {
     try {
-        const department = await payComponentService.findPayComponentById(req.params.id);
-        if (!department) throw new CustomError('Pay component not found', 404);
+        const data = await taxRegimService.findTaxRegimeById(req.params.id);
+        if (!data) throw new CustomError('Tax regime not found', 404);
 
-        res.status(200).success(null, department);
+        res.status(200).success(null, data);
     } catch (error) {
         next(error);
     }
 };
 
-const updatePayComponent = async (req, res, next) => {
+const updateTaxRegime = async (req, res, next) => {
     try {
-        // const attachmentPath = req.file ? req.file.path : null;
-        let departmentData = { ...req.body };
-        // if (attachmentPath) departmentData.attachment = generateFullUrl(req, attachmentPath);
+        let taxData = { ...req.body };
 
-        // departmentData = sanitizedepartmentData(departmentData);
-
-        const department = await payComponentService.updatePayComponent(req.params.id, departmentData);
-        res.status(200).success('Pay component updated successfully', department);
+        const data = await taxRegimService.updateTaxRegime(req.params.id, taxData);
+        res.status(200).success('Tax regime updated successfully', data);
     } catch (error) {
         next(error);
     }
 };
 
-const deletePayComponent = async (req, res, next) => {
+const deleteTaxRegime = async (req, res, next) => {
     try {
-        await payComponentService.deletePayComponent(req.params.id);
-        res.status(200).success('Pay component deleted successfully', null);
+        await taxRegimService.deleteTaxRegime(req.params.id);
+        res.status(200).success('Tax regime deleted successfully', null);
     } catch (error) {
         next(error);
     }
 };
 
-const getAllPayComponent = async (req, res, next) => {
+const getAllTaxRegime = async (req, res, next) => {
     try {
         const { page , size , search ,startDate,endDate   } = req.query;
-        const departments = await payComponentService.getAllPayComponent(Number(page), Number(size) ,search ,moment(startDate), moment(endDate));
-        res.status(200).success(null, departments);
+        const data = await taxRegimService.getAllTaxRegime(Number(page), Number(size) ,search ,moment(startDate), moment(endDate));
+        res.status(200).success(null, data);
     } catch (error) {
         next(error);
     }
 };
 
 module.exports = {
-    createPayComponent,
-    findPayComponentById,
-    updatePayComponent,
-    deletePayComponent,
-    getAllPayComponent,
+    createTaxRegime,
+    findTaxRegimeById,
+    updateTaxRegime,
+    deleteTaxRegime,
+    getAllTaxRegime,
 };

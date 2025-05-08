@@ -52,6 +52,11 @@ const empTypeRoutes = require("../v1/routes/empTypeRoutes")
 const payComponentRoutes = require("../v1/routes/payComponentRoutes")
 const salaryStructureRoutes = require("../v1/routes/salaryStructureRoutes")
 const statutoryRateRoutes = require("../v1/routes/statutoryRateRoutes")
+const taxRegimeRoutes = require("../v1/routes/taxRegimRoutes")
+const pfRoutes = require("../v1/routes/PFRoutes")
+const taxReliefRoutes = require("../v1/routes/taxReliefRoutes")
+const shiftRoutes = require("../v1/routes/shiftRoutes")
+const leaveTypeRoutes = require("../v1/routes/leaveTypeRoutes")
 
 const router = express.Router();
 
@@ -109,6 +114,11 @@ router.use('/v1', empTypeRoutes);
 router.use('/v1', payComponentRoutes);
 router.use('/v1', salaryStructureRoutes);
 router.use('/v1', statutoryRateRoutes);
+router.use('/v1', taxRegimeRoutes);
+router.use('/v1', pfRoutes);
+router.use('/v1', taxReliefRoutes);
+router.use('/v1', shiftRoutes);
+router.use('/v1', leaveTypeRoutes);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
