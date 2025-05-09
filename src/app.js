@@ -19,7 +19,7 @@ app.use(express.json());
 app.use(express.urlencoded({ extended: true })); // Support URL-encoded bodies
 app.use(cookieParser());
 app.use(cors({
-    origin:  ["http://192.168.29.141:3000" ,'http://localhost:3000',"http://10.160.5.101:3000"] ,// Replace with your frontend URL
+    origin:  ["http://192.168.29.89:3000" ,'http://localhost:3000',"http://10.160.5.101:3000"] ,// Replace with your frontend URL
     credentials: true, // Allow cookies to be sent
 }));
 
