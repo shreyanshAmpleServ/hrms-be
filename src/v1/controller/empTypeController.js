@@ -1,5 +1,6 @@
 const empTypeService = require('../services/empTypeService');
 const CustomError = require('../../utils/CustomError');
+const moment = require("moment")
 
 const createEmpType = async (req, res, next) => {
     try {

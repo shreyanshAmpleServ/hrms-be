@@ -17,7 +17,6 @@ const projectRoutes = require('../v1/routes/projectRoutes');
 const userRoutes = require('../v1/routes/userRoutes');
 const roleRoutes = require('../v1/routes/roleRoute');
 const leadRoutes = require('../v1/routes/leadRoutes');
-const stateRoutes = require('../v1/routes/stateRoute');
 const countryRoutes = require('../v1/routes/countryRoutes')
 const currencyRoutes = require('../v1/routes/currencyRoutes')
 const activitiesRoutes = require('../v1/routes/activitiesRoutes')
@@ -25,7 +24,7 @@ const activitiesRoutes = require('../v1/routes/activitiesRoutes')
 const dashboardRoutes = require('../v1/routes/dashboardRoutes')
 const vendorRoutes = require('../v1/routes/vendorRoutes')
 const meetingTypeRoutes = require('../v1/routes/meetingTypeRoute')
-const mappedStateRoutes = require('../v1/routes/mappedStateRoute')
+const stateRoutes = require('../v1/routes/stateRoute')
 const modulesRoutes = require('../v1/routes/ModuleRoute')
 const permissionsRoutes = require('../v1/routes/roleModulePermissionRoute')
 const fileAttachmentRoutes = require('../v1/routes/fileAttachmentRoute')
@@ -57,6 +56,11 @@ const pfRoutes = require("../v1/routes/PFRoutes")
 const taxReliefRoutes = require("../v1/routes/taxReliefRoutes")
 const shiftRoutes = require("../v1/routes/shiftRoutes")
 const leaveTypeRoutes = require("../v1/routes/leaveTypeRoutes")
+const HolidaysRoutes = require("../v1/routes/HolidayCalenderRoutes")
+const workScheduleRoutes = require("../v1/routes/workScheduleRoutes")
+const KPIRoutes = require("../v1/routes/KPIRoutes")
+const GoalCategoryRoutes = require("../v1/routes/GoalCategoryRoutes")
+const reviewTempRoutes = require("../v1/routes/reviewTempRoutes")
 
 const router = express.Router();
 
@@ -82,13 +86,12 @@ router.use('/v1', projectRoutes);
 router.use('/v1', userRoutes);
 router.use('/v1', roleRoutes);
 router.use('/v1', leadRoutes);
-router.use('/v1', stateRoutes);
 router.use('/v1', countryRoutes);
 router.use('/v1', currencyRoutes);
 router.use('/v1', activitiesRoutes);
 // router.use('/v1', noteRoutes);
 router.use('/v1', meetingTypeRoutes);
-router.use('/v1', mappedStateRoutes);
+router.use('/v1', stateRoutes);
 router.use('/v1', modulesRoutes);
 router.use('/v1', permissionsRoutes);
 router.use('/v1', fileAttachmentRoutes);
@@ -119,6 +122,11 @@ router.use('/v1', pfRoutes);
 router.use('/v1', taxReliefRoutes);
 router.use('/v1', shiftRoutes);
 router.use('/v1', leaveTypeRoutes);
+router.use('/v1', HolidaysRoutes);
+router.use('/v1', workScheduleRoutes);
+router.use('/v1', KPIRoutes);
+router.use('/v1', GoalCategoryRoutes);
+router.use('/v1', reviewTempRoutes);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);

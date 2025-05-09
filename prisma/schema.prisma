@@ -689,7 +689,7 @@ model hrms_m_branch_master {
   location    String?   @db.NVarChar(255)
   createdate  DateTime? @default(now(), map: "DF__hrms_m_br__creat__17036CC0") @db.DateTime
   createdby   Int
-  updatedate  DateTime? @db.DateTime
+  updatedate  DateTime?
   updatedby   Int?
   log_inst    Int?
   is_active   String?   @default("Y") @db.Char(1)
@@ -712,6 +712,7 @@ model hrms_m_company_master {
   updatedate           DateTime? @db.DateTime
   updatedby            Int?
   log_inst             Int?
+  is_active            String?   @default("Y") @db.Char(1)
 }
 
 model hrms_m_currency_master {
@@ -729,6 +730,7 @@ model hrms_m_currency_master {
 model hrms_m_department_master {
   id              Int       @id(map: "PK__hrms_m_d__3213E83F972A91BD") @default(autoincrement())
   department_name String?   @db.NVarChar(255)
+  is_active       String?   @default("Y") @db.Char(1)
   createdate      DateTime? @default(now(), map: "DF__hrms_m_de__creat__19DFD96B") @db.DateTime
   createdby       Int
   updatedate      DateTime? @db.DateTime
@@ -739,6 +741,7 @@ model hrms_m_department_master {
 model hrms_m_designation_master {
   id               Int       @id(map: "PK__hrms_m_d__3213E83FB3D16212") @default(autoincrement())
   designation_name String?   @db.NVarChar(255)
+  is_active        String?   @default("Y") @db.Char(1)
   createdate       DateTime? @default(now(), map: "DF__hrms_m_de__creat__1CBC4616") @db.DateTime
   createdby        Int
   updatedate       DateTime? @db.DateTime
@@ -770,6 +773,7 @@ model hrms_m_document_type {
 model hrms_m_employee_category {
   id            Int       @id(map: "PK__hrms_m_e__3213E83F2A0FBA56") @default(autoincrement())
   category_name String?   @db.NVarChar(100)
+  is_active     String?   @default("Y") @db.Char(1)
   createdate    DateTime? @default(now(), map: "DF__hrms_m_em__creat__1F98B2C1") @db.DateTime
   createdby     Int
   updatedate    DateTime? @db.DateTime
@@ -780,6 +784,7 @@ model hrms_m_employee_category {
 model hrms_m_employment_type {
   id         Int       @id(map: "PK__hrms_m_e__3213E83F11B66B00") @default(autoincrement())
   type_name  String?   @db.NVarChar(100)
+  is_active  String?   @default("Y") @db.Char(1)
   createdate DateTime? @default(now(), map: "DF__hrms_m_em__creat__22751F6C") @db.DateTime
   createdby  Int
   updatedate DateTime? @db.DateTime
@@ -1079,4 +1084,32 @@ model m_mobile_notification_template {
   updatedate       DateTime? @db.DateTime
   updatedby        Int?
   log_inst         Int?
+}
+
+model crms_m_states {
+  id              Int       @id(map: "PK_crms__states") @default(autoincrement())
+  country_code    Int
+  name            String    @db.NVarChar(100)
+  is_active       String    @default("Y", map: "DF__crms_m_st__is_ac__361203C5") @db.Char(1)
+  createdate      DateTime  @default(now()) @db.DateTime
+  createdby       Int
+  log_inst        Int?
+  updatedate      DateTime? @db.DateTime
+  updatedby       Int?
+  country_details Country   @relation(fields: [country_code], references: [id], onUpdate: NoAction)
+}
+
+model Country {
+  id              Int             @id @default(autoincrement())
+  code            String          @db.Char(4)
+  name            String          @db.NVarChar(50)
+  is_active       String          @default("Y") @db.Char(1)
+  createdate      DateTime        @default(now()) @db.DateTime
+  createdby       Int
+  log_inst        Int?
+  updatedate      DateTime?       @db.DateTime
+  updatedby       Int?
+  country_details crms_m_states[]
+
+  @@map("crms_m_countries")
 }

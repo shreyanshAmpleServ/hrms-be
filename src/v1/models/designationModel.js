@@ -9,6 +9,7 @@ const createDesignation = async (data) => {
         designation_name: data.designation_name,
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
+        is_active: data.is_active || 'Y',
         createdate:new Date(),
         updatedate: new Date(),
         updatedby:1,

@@ -44,6 +44,7 @@ const updateCompany = async (id, data) => {
             data: {
                 ...data,
                 country_id: Number(data.country_id),
+                is_active: data.is_active || 'Y',
                 updatedate: new Date(),
             },
         });
