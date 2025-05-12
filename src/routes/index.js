@@ -61,6 +61,16 @@ const workScheduleRoutes = require("../v1/routes/workScheduleRoutes")
 const KPIRoutes = require("../v1/routes/KPIRoutes")
 const GoalCategoryRoutes = require("../v1/routes/GoalCategoryRoutes")
 const reviewTempRoutes = require("../v1/routes/reviewTempRoutes")
+const ratingScaleRoutes = require("../v1/routes/ratingScaleRoutes")
+const jobCategoryRoutes = require("../v1/routes/jobCategoryRoutes")
+const grievanceTypeRoutes = require("../v1/routes/grievanceTypeRoutes")
+const disciplinaryPenaltyRoutes = require("../v1/routes/disciplinaryPenaltyRoutes")
+const eventTypeRoutes = require("../v1/routes/eventTypeRoutes")
+const awardTypeRoutes = require("../v1/routes/awardTypeRoutes")
+const latterTypeRoutes = require("../v1/routes/latterTypeRoutes")
+const DocTypeRoutes = require("../v1/routes/DocTypeRoutes")
+const surveyRoutes = require("../v1/routes/surveyRoutes")
+const assetsTypeRoutes = require("../v1/routes/assetsTypeRoutes")
 
 const router = express.Router();
 
@@ -127,6 +137,16 @@ router.use('/v1', workScheduleRoutes);
 router.use('/v1', KPIRoutes);
 router.use('/v1', GoalCategoryRoutes);
 router.use('/v1', reviewTempRoutes);
+router.use('/v1', ratingScaleRoutes);
+router.use('/v1', jobCategoryRoutes);
+router.use('/v1', grievanceTypeRoutes);
+router.use('/v1', disciplinaryPenaltyRoutes);
+router.use('/v1', eventTypeRoutes);
+router.use('/v1', awardTypeRoutes);
+router.use('/v1', latterTypeRoutes);
+router.use('/v1', DocTypeRoutes);
+router.use('/v1', surveyRoutes);
+router.use('/v1', assetsTypeRoutes);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
