@@ -37,8 +37,8 @@ const fileFilter = (req, file, cb) => {
 
 // Middleware
 const upload = multer({
-  // storage,
-  storage: multer.memoryStorage(),
+  storage,
+  // storage: multer.memoryStorage(),
   fileFilter,
   limits: { fileSize: 1024 * 1024 * 3 }, // Limit file size to 5MB
 });

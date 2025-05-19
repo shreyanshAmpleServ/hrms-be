@@ -42,7 +42,6 @@ const getUserWithRole = async (userId,is_password=false)  => {
         },
     });
     
-    console.log("User with role",user)
     if (!user) throw new CustomError('User not found', 404);
   
     const roleId = user?.hrms_d_user_role?.[0]?.hrms_m_role?.id || null;

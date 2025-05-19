@@ -78,11 +78,7 @@ const getAllShift = async (  page,
       // Handle search
       if (search) {
         filters.OR = [
-          // {
-          //   campaign_user: {
-          //     full_name: { contains: search.toLowerCase() },
-          //   }, // Include contact details
-          // },
+
           // {
           //   campaign_leads: {
           //     title: { contains: search.toLowerCase() },
@@ -91,28 +87,26 @@ const getAllShift = async (  page,
           {
             shift_name: { contains: search.toLowerCase() },
           },
-          // {
-          //   status: { contains: search.toLowerCase() },
-          // },
+
         ];
       }
-      // if (status) {
-      //   filters.is_active = { equals: status };
+      // if (search) {
+      //   filters.shift_name = { contains: search };
       // }
   
-      if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
+      // if (startDate && endDate) {
+      //   const start = new Date(startDate);
+      //   const end = new Date(endDate);
   
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          filters.createdate = {
-            gte: start,
-            lte: end,
-          };
-        }
-      }
+      //   if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      //     filters.createdate = {
+      //       gte: start,
+      //       lte: end,
+      //     };
+      //   }
+      // }
       const data = await prisma.hrms_m_shift_master.findMany({
-      //   where: filters,
+        where: filters,
         skip: skip,
         take: size,
 
@@ -120,7 +114,7 @@ const getAllShift = async (  page,
       });
 
       const totalCount = await prisma.hrms_m_shift_master.count({
-      //   where: filters,
+        where: filters,
       });
       return {
         data: data,

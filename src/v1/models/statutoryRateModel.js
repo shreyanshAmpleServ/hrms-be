@@ -53,6 +53,7 @@ const updateStatutoryRate = async (id, data) => {
     });
     return updatedSalaryStructure;
   } catch (error) {
+    console.log("Error in updating Statutory : ", error)
     throw new CustomError(`Error updating statutory rate: ${error.message}`, 500);
   }
 };

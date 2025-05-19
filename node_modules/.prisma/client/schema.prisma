@@ -169,33 +169,39 @@ model hrms_d_document_upload {
 }
 
 model hrms_d_employee {
-  id                      Int                       @id(map: "PK__hrms_d_e__3213E83F2F671AFD") @default(autoincrement())
-  employee_code           String                    @unique(map: "UQ__hrms_d_e__B0AA73455BFB8896") @db.VarChar(20)
-  first_name              String?                   @db.NVarChar(100)
-  last_name               String?                   @db.NVarChar(100)
-  gender                  String?                   @db.VarChar(10)
-  date_of_birth           DateTime?                 @db.Date
-  national_id_number      String?                   @db.VarChar(50)
-  passport_number         String?                   @db.VarChar(50)
-  employment_type         String?                   @db.VarChar(50)
-  employee_category       String?                   @db.VarChar(50)
-  designation_id          Int?
-  department_id           Int?
-  join_date               DateTime?                 @db.Date
-  confirm_date            DateTime?                 @db.Date
-  resign_date             DateTime?                 @db.Date
-  bank_id                 Int?
-  account_number          String?                   @db.VarChar(30)
-  work_location           String?                   @db.NVarChar(100)
-  email                   String?                   @db.NVarChar(100)
-  phone_number            String?                   @db.VarChar(20)
-  status                  String?                   @db.VarChar(20)
-  createdate              DateTime?                 @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
-  createdby               Int
-  updatedate              DateTime?                 @db.DateTime
-  updatedby               Int?
-  log_inst                Int?
-  hrms_d_employee_address hrms_d_employee_address[]
+  id                    Int                       @id(map: "PK__hrms_d_e__3213E83F2F671AFD") @default(autoincrement())
+  employee_code         String                    @unique(map: "UQ__hrms_d_e__B0AA73455BFB8896") @db.VarChar(20)
+  first_name            String?                   @db.NVarChar(100)
+  last_name             String?                   @db.NVarChar(100)
+  full_name             String?                   @db.NVarChar(100)
+  profile_pic           String?
+  gender                String?                   @db.VarChar(10)
+  date_of_birth         DateTime?                 @db.Date
+  national_id_number    String?                   @db.VarChar(50)
+  passport_number       String?                   @db.VarChar(50)
+  employment_type       String?                   @db.VarChar(50)
+  employee_category     String?                   @db.VarChar(50)
+  designation_id        Int?
+  department_id         Int?
+  join_date             DateTime?                 @db.Date
+  confirm_date          DateTime?                 @db.Date
+  resign_date           DateTime?                 @db.Date
+  bank_id               Int?
+  account_number        String?                   @db.VarChar(30)
+  work_location         String?                   @db.NVarChar(100)
+  email                 String?                   @db.NVarChar(100)
+  phone_number          String?                   @db.VarChar(20)
+  status                String?                   @db.VarChar(20)
+  createdate            DateTime?                 @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?                 @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  hrms_employee_address hrms_d_employee_address[]
+
+  hrms_employee_designation hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
+  hrms_employee_department  hrms_m_department_master?  @relation(fields: [department_id], references: [id], onUpdate: NoAction)
+  hrms_employee_bank        hrms_m_bank_master?        @relation(fields: [bank_id], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_employee_address {
@@ -672,14 +678,15 @@ model hrms_m_award_type {
 }
 
 model hrms_m_bank_master {
-  id         Int       @id(map: "PK__hrms_m_b__3213E83F1B2BC21F") @default(autoincrement())
-  bank_name  String?   @db.NVarChar(255)
-  createdate DateTime? @default(now(), map: "DF__hrms_m_ba__creat__395884C4") @db.DateTime
-  createdby  Int
-  updatedate DateTime? @db.DateTime
-  updatedby  Int?
-  log_inst   Int?
-  is_active  String?   @default("Y") @db.Char(1)
+  id                 Int               @id(map: "PK__hrms_m_b__3213E83F1B2BC21F") @default(autoincrement())
+  bank_name          String?           @db.NVarChar(255)
+  createdate         DateTime?         @default(now(), map: "DF__hrms_m_ba__creat__395884C4") @db.DateTime
+  createdby          Int
+  updatedate         DateTime?         @db.DateTime
+  updatedby          Int?
+  log_inst           Int?
+  is_active          String?           @default("Y") @db.Char(1)
+  hrms_employee_bank hrms_d_employee[]
 }
 
 model hrms_m_branch_master {
@@ -736,17 +743,20 @@ model hrms_m_department_master {
   updatedate      DateTime? @db.DateTime
   updatedby       Int?
   log_inst        Int?
+
+  hrms_employee_department hrms_d_employee[]
 }
 
 model hrms_m_designation_master {
-  id               Int       @id(map: "PK__hrms_m_d__3213E83FB3D16212") @default(autoincrement())
-  designation_name String?   @db.NVarChar(255)
-  is_active        String?   @default("Y") @db.Char(1)
-  createdate       DateTime? @default(now(), map: "DF__hrms_m_de__creat__1CBC4616") @db.DateTime
-  createdby        Int
-  updatedate       DateTime? @db.DateTime
-  updatedby        Int?
-  log_inst         Int?
+  id                        Int               @id(map: "PK__hrms_m_d__3213E83FB3D16212") @default(autoincrement())
+  designation_name          String?           @db.NVarChar(255)
+  is_active                 String?           @default("Y") @db.Char(1)
+  createdate                DateTime?         @default(now(), map: "DF__hrms_m_de__creat__1CBC4616") @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?         @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
+  hrms_employee_designation hrms_d_employee[]
 }
 
 model hrms_m_disciplinary_penalty {
