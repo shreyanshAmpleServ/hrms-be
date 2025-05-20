@@ -10,7 +10,12 @@ const createEmployee = async (req, res, next) => {
     if (profielPath) {
       imageUrl = generateFullUrl(req,profielPath);
     }
-    let employeeData = { ...req.body ,empAddressData:JSON.parse(req.body?.empAddressData) , profile_pic: imageUrl};
+    let employeeData = { 
+      ...req.body, 
+       createdby: req.user.id,
+       log_inst: req.user.log_inst,
+       empAddressData:JSON.parse(req.body?.empAddressData) ,
+       profile_pic: imageUrl};
 
         
     const deal = await EmployeeService.createEmployee(employeeData);
@@ -37,7 +42,7 @@ const updateEmployee = async (req, res, next) => {
     if (profielPath) {
       imageUrl = generateFullUrl(req,profielPath);
     }
-    let employeeData = { ...req.body ,empAddressData:JSON.parse(req.body?.empAddressData) , profile_pic: imageUrl};
+    let employeeData = { ...req.body,updatedby:req.user.id ,empAddressData:JSON.parse(req.body?.empAddressData) , profile_pic: imageUrl};
 
         
     const deal = await EmployeeService.updateEmployee(req.params.id, employeeData);

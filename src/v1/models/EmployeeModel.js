@@ -24,6 +24,16 @@ const serializeTags = (data) => {
     email: data?.email || "",
     phone_number: data?.phone_number || "",
     status: data?.status || "",
+    profile_pic : data?.profile_pic || "",
+    spouse_name : data?.spouse_name || "",
+    marital_status : data?.marital_status || "",
+    no_of_child : Number(data?.no_of_child) || 0,
+    // manager_id : Number(data?.manager_id) || null,
+    father_name : data?.father_name || "",
+    mother_name : data?.mother_name || "",
+    emergency_contact : data?.emergency_contact || "",
+    emergency_contact_person : data?.emergency_contact_person || "",
+    contact_relation : data?.contact_relation || "",
     // designation_id: Number(data?.designation_id) || null,
     // bank_id: Number(data.bank_id) || null,
     // department_id: Number(data.department_id) || null,
@@ -36,6 +46,9 @@ const serializeTags = (data) => {
     hrms_employee_bank: {
       connect: { id: Number(data?.bank_id) || null },
     },
+    hrms_manager : {
+      connect : { id: Number(data?.manager_id) || null }
+    }
   };
 };
 
@@ -131,6 +144,10 @@ const createEmployee = async (data) => {
             select :{  id:true,
               bank_name:true,
         }  },
+          hrms_manager: {
+           select : { id: true,
+            full_name: true}
+          },
         },
       });
 
@@ -147,6 +164,7 @@ const updateEmployee = async (id, data) => {
   try {
     const updatedData = {
       ...employeeData,
+      updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
     const serializedData = serializeTags(updatedData);
@@ -175,6 +193,7 @@ const updateEmployee = async (id, data) => {
             select:{
               id:true,
             }
+            
           }
         }
       });
@@ -221,9 +240,9 @@ const updateEmployee = async (id, data) => {
       // Retrieve the updated employee with hrms_d_employee_address and employeeHistory included
       const updatedEmp = await prisma.hrms_d_employee.findUnique({
         where: { id: parseInt(id) },
-        include: {
+       include: {
           hrms_employee_address: true,
-          hrms_employee_designation: {
+            hrms_employee_designation: {
            select: { id: true,
             designation_name: true}
           },
@@ -235,6 +254,10 @@ const updateEmployee = async (id, data) => {
             select :{  id:true,
               bank_name:true,
         }  },
+          hrms_manager: {
+           select : { id: true,
+            full_name: true}
+          },
         },
       });
 
@@ -262,6 +285,10 @@ const findEmployeeById = async (id) => {
           hrms_employee_department: {
            select : { id: true,
             department_name: true}
+          },
+          hrms_manager: {
+           select : { id: true,
+            full_name: true}
           },
           hrms_employee_bank: {
             select :{  id:true,

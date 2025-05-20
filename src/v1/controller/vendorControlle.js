@@ -89,7 +89,7 @@ const deleteVendor = async (req, res, next) => {
 const getAllVendors = async (req, res, next) => {
   try {
     const { page , size ,search ,startDate,endDate  } = req.query;
-    const users = await vendorService.getAllVendors(search,Number(page), Number(size),moment(startDate),moment(endDate));
+    const users = await vendorService.getAllVendors(search,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
     res.status(200).success(null, users);
   } catch (error) {
     next(error);

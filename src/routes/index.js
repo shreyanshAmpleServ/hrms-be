@@ -9,7 +9,7 @@ const callsRoutes = require('../v1/routes/callsRoute');
 const callStatusRoutes = require('../v1/routes/callStatusRoute');
 const callTypeRoutes = require('../v1/routes/callTypeRoute');
 const callResultRoutes = require('../v1/routes/callResultRoute');
-const callPurposeRoutes = require('../v1/routes/callPurposeRoute');
+// const callPurposeRoutes = require('../v1/routes/callPurposeRoute');
 const contactStageRoutes = require('../v1/routes/contactStageRoute');
 const industryRoutes = require('../v1/routes/industryRoute');
 const lostReasonRoutes = require('../v1/routes/lostReasonRoute');
@@ -72,6 +72,7 @@ const DocTypeRoutes = require("../v1/routes/DocTypeRoutes")
 const surveyRoutes = require("../v1/routes/surveyRoutes")
 const assetsTypeRoutes = require("../v1/routes/assetsTypeRoutes")
 const EmployeeRoutes = require("../v1/routes/EmployeeRoutes")
+const JobPostingRoutes = require("../v1/routes/JobPostingRoute")
 
 const router = express.Router();
 
@@ -89,7 +90,7 @@ router.use('/v1', callsRoutes);// Base path: /v1
 router.use('/v1', callStatusRoutes);// Base path: /v1
 router.use('/v1', callTypeRoutes);// Base path: /v1
 router.use('/v1', callResultRoutes);// Base path: /v1
-router.use('/v1', callPurposeRoutes);// Base path: /v1
+// router.use('/v1', callPurposeRoutes);// Base path: /v1
 router.use('/v1', contactStageRoutes);// Base path: /v1
 router.use('/v1', industryRoutes);// Base path: /v1
 router.use('/v1', lostReasonRoutes);// Base path: /v1
@@ -149,6 +150,7 @@ router.use('/v1', DocTypeRoutes);
 router.use('/v1', surveyRoutes);
 router.use('/v1', assetsTypeRoutes);
 router.use('/v1', EmployeeRoutes);
+router.use('/v1', JobPostingRoutes);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
