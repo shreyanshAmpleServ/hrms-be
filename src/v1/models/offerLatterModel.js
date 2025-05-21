@@ -4,14 +4,12 @@ const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {
-    department_id: Number(data.department_id) || null,
-    designation_id: Number(data.designation_id) || null,
-    job_title: data.job_title || "",
-    description: data.description || "",
-    required_experience: data.required_experience || "",
-    posting_date: data.posting_date || new Date(),
-    closing_date: data.closing_date || null,
-    is_internal: Boolean(data.is_internal) || false || 1,
+    employee_id: Number(data.department_id) || null,
+    offer_date: Number(data.designation_id) || null,
+    position: data.job_title || "",
+    offered_salary: data.description || "",
+    valid_until: data.required_experience || "",
+    status: data.posting_date || new Date(),
   };
 };
 
