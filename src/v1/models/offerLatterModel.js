@@ -17,7 +17,7 @@ const serializeJobData = (data) => {
 // Create a new offer letter
 const createOfferLetter = async (data) => {
   try {
-    errorNotExist("hrms_d_employee",data.employee_id );
+   await errorNotExist('hrms_d_employee',data.employee_id ,"Employee" );
     const reqData = await prisma.hrms_d_offer_letter.create({
       data: {
         ...serializeJobData(data),
@@ -61,7 +61,7 @@ const findOfferLetterById = async (id) => {
 // Update a offer letter
 const updateOfferLetter = async (id, data) => {
   try {
-    errorNotExist("hrms_d_employee",data.employee_id );
+    await errorNotExist("hrms_d_employee",data.employee_id , "Employee");
 
     const updatedOfferLetter = await prisma.hrms_d_offer_letter.update({
       where: { id: parseInt(id) },
@@ -108,7 +108,7 @@ const getAllOfferLetter = async (search,page,size ,startDate, endDate) => {
     if (search) {
       filters.OR = [
         {
-          appointment_employee: {
+          offered_employee: {
             full_name: { contains: search.toLowerCase() },
           },
         },

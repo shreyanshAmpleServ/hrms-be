@@ -205,14 +205,15 @@ model hrms_d_employee {
   emergency_contact_person String?
   contact_relation         String?
 
-  createdate            DateTime?                   @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
+  createdate            DateTime?                    @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
   createdby             Int
-  updatedate            DateTime?                   @db.DateTime
+  updatedate            DateTime?                    @db.DateTime
   updatedby             Int?
   log_inst              Int?
   offered_employee      hrms_d_offer_letter[]
   hrms_employee_address hrms_d_employee_address[]
   appointment_employee  hrms_d_appointment_letter[]
+  contracted_employee   hrms_d_employment_contract[]
 
   hrms_manager              hrms_d_employee?           @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates              hrms_d_employee[]          @relation("EmployeeManager")
@@ -265,6 +266,8 @@ model hrms_d_employment_contract {
   updatedate          DateTime? @db.DateTime
   updatedby           Int?
   log_inst            Int?
+
+  contracted_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_exit_clearance {
