@@ -78,16 +78,19 @@ model hrms_m_module {
 }
 
 model hrms_d_appointment_letter {
-  id            Int       @id(map: "PK__hrms_d_a__3213E83F95843842") @default(autoincrement())
-  employee_id   Int?
-  issue_date    DateTime? @db.Date
-  designation   String?   @db.NVarChar(100)
-  terms_summary String?   @db.NVarChar(500)
-  createdate    DateTime? @default(now(), map: "DF__hrms_d_ap__creat__681373AD") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id             Int       @id(map: "PK__hrms_d_a__3213E83F95843842") @default(autoincrement())
+  employee_id    Int?
+  issue_date     DateTime? @db.Date
+  designation_id Int?
+  terms_summary  String?   @db.NVarChar(500)
+  createdate     DateTime? @default(now(), map: "DF__hrms_d_ap__creat__681373AD") @db.DateTime
+  createdby      Int
+  updatedate     DateTime? @db.DateTime
+  updatedby      Int?
+  log_inst       Int?
+
+  appointment_employee    hrms_d_employee?           @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  appointment_designation hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_appraisal {
@@ -202,13 +205,14 @@ model hrms_d_employee {
   emergency_contact_person String?
   contact_relation         String?
 
-  createdate            DateTime?                 @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
+  createdate            DateTime?                   @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
   createdby             Int
-  updatedate            DateTime?                 @db.DateTime
+  updatedate            DateTime?                   @db.DateTime
   updatedby             Int?
   log_inst              Int?
   offered_employee      hrms_d_offer_letter[]
   hrms_employee_address hrms_d_employee_address[]
+  appointment_employee  hrms_d_appointment_letter[]
 
   hrms_manager              hrms_d_employee?           @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates              hrms_d_employee[]          @relation("EmployeeManager")
@@ -767,16 +771,17 @@ model hrms_m_department_master {
 }
 
 model hrms_m_designation_master {
-  id                        Int                  @id(map: "PK__hrms_m_d__3213E83FB3D16212") @default(autoincrement())
-  designation_name          String?              @db.NVarChar(255)
-  is_active                 String?              @default("Y") @db.Char(1)
-  createdate                DateTime?            @default(now(), map: "DF__hrms_m_de__creat__1CBC4616") @db.DateTime
+  id                        Int                         @id(map: "PK__hrms_m_d__3213E83FB3D16212") @default(autoincrement())
+  designation_name          String?                     @db.NVarChar(255)
+  is_active                 String?                     @default("Y") @db.Char(1)
+  createdate                DateTime?                   @default(now(), map: "DF__hrms_m_de__creat__1CBC4616") @db.DateTime
   createdby                 Int
-  updatedate                DateTime?            @db.DateTime
+  updatedate                DateTime?                   @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
   hrms_job_designation      hrms_d_job_posting[]
   hrms_employee_designation hrms_d_employee[]
+  appointment_designation   hrms_d_appointment_letter[]
 }
 
 model hrms_m_disciplinary_penalty {
