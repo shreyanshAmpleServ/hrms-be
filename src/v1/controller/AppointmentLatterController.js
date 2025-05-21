@@ -1,5 +1,6 @@
 const AppointmentLatterService = require('../services/AppointmentLatterService');
 const CustomError = require('../../utils/CustomError');
+const moment = require('moment');
 
 const createAppointmentLatter = async (req, res, next) => {
     try {
