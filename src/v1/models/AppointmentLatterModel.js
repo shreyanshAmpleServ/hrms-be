@@ -6,7 +6,7 @@ const serializeJobData = (data) => {
   return {
     employee_id: Number(data.employee_id) || null,
     issue_date: data.issue_date || new Date(),
-    designation_id: data.designation_id || null,
+    designation_id: Number(data.designation_id) || null,
     terms_summary: data.terms_summary || "",
   };
 };
@@ -14,6 +14,13 @@ const serializeJobData = (data) => {
 // Create a new appointment latter
 const createAppointmentLatter = async (data) => {
   try {
+        const employeeExists = await prisma.hrms_d_employee.findUnique({
+      where: { id:Number( data.employee_id )},
+    });
+
+    if (!employeeExists) {
+      throw new Error("Employee ID does not exist");
+    }
     const reqData = await prisma.hrms_d_appointment_letter.create({
       data: {
         ...serializeJobData(data),
@@ -63,6 +70,13 @@ const findAppointmentLatterById = async (id) => {
 // Update a appointment latter
 const updateAppointmentLatter = async (id, data) => {
   try {
+            const employeeExists = await prisma.hrms_d_employee.findUnique({
+      where: { id:Number( data.employee_id )},
+    });
+
+    if (!employeeExists) {
+      throw new Error("Employee ID does not exist");
+    }
     const updatedAppointmentLatter = await prisma.hrms_d_appointment_letter.update({
       where: { id: parseInt(id) },
       data: {
