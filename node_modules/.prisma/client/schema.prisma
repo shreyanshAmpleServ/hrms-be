@@ -218,19 +218,22 @@ model hrms_d_employee {
 }
 
 model hrms_d_employee_address {
-  id              Int             @id(map: "PK__hrms_d_e__3213E83F2523D35F") @default(autoincrement())
-  employee_id     Int
-  address_type    String?         @db.VarChar(50)
-  street          String?         @db.NVarChar(255)
-  street_no       String?         @db.NVarChar(50)
-  building        String?         @db.NVarChar(100)
-  floor           String?         @db.NVarChar(50)
-  city            String?         @db.NVarChar(100)
-  district        String?         @db.NVarChar(100)
-  state           String?         @db.NVarChar(100)
-  country         String?         @db.NVarChar(100)
-  zip_code        String?         @db.NVarChar(20)
-  hrms_d_employee hrms_d_employee @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_em__emplo__078C1F06")
+  id           Int     @id(map: "PK__hrms_d_e__3213E83F2523D35F") @default(autoincrement())
+  employee_id  Int
+  address_type String? @db.VarChar(50)
+  street       String? @db.NVarChar(255)
+  street_no    String? @db.NVarChar(50)
+  building     String? @db.NVarChar(100)
+  floor        String? @db.NVarChar(50)
+  city         String? @db.NVarChar(100)
+  district     String? @db.NVarChar(100)
+  state        Int?
+  country      Int?
+  zip_code     String? @db.NVarChar(20)
+
+  employee_state        crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
+  employee_country      hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
+  hrms_employee_address hrms_d_employee        @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_em__emplo__078C1F06")
 }
 
 model hrms_d_employee_suggestion {
@@ -1049,15 +1052,17 @@ model hrms_m_work_schedule_template {
 }
 
 model hrms_m_country_master {
-  id            Int       @id(map: "PK__hrms_m_c__3213E83F1EDF4224") @default(autoincrement())
-  country_name  String?   @db.NVarChar(100)
-  currency_code String?   @db.VarChar(3)
-  is_active     String?   @default("Y", map: "DF__hrms_m_co__is_ac__67DE6983") @db.Char(1)
-  createdate    DateTime? @default(now(), map: "DF__hrms_m_co__creat__68D28DBC") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id               Int                       @id(map: "PK__hrms_m_c__3213E83F1EDF4224") @default(autoincrement())
+  name             String?                   @db.NVarChar(100)
+  code             String?                   @db.VarChar(5)
+  is_active        String?                   @default("Y", map: "DF__hrms_m_co__is_ac__67DE6983") @db.Char(1)
+  createdate       DateTime?                 @default(now(), map: "DF__hrms_m_co__creat__68D28DBC") @db.DateTime
+  createdby        Int
+  updatedate       DateTime?                 @db.DateTime
+  updatedby        Int?
+  log_inst         Int?
+  employee_country hrms_d_employee_address[]
+  country_details  crms_m_states[]
 }
 
 model hrms_m_country_tax_rule_template {
@@ -1114,29 +1119,29 @@ model m_mobile_notification_template {
 }
 
 model crms_m_states {
-  id              Int       @id(map: "PK_crms__states") @default(autoincrement())
+  id              Int                       @id(map: "PK_crms__states") @default(autoincrement())
   country_code    Int
-  name            String    @db.NVarChar(100)
-  is_active       String    @default("Y", map: "DF__crms_m_st__is_ac__361203C5") @db.Char(1)
-  createdate      DateTime  @default(now()) @db.DateTime
+  name            String                    @db.NVarChar(100)
+  is_active       String                    @default("Y", map: "DF__crms_m_st__is_ac__361203C5") @db.Char(1)
+  createdate      DateTime                  @default(now()) @db.DateTime
   createdby       Int
   log_inst        Int?
-  updatedate      DateTime? @db.DateTime
+  updatedate      DateTime?                 @db.DateTime
   updatedby       Int?
-  country_details Country   @relation(fields: [country_code], references: [id], onUpdate: NoAction)
+  employee_state  hrms_d_employee_address[]
+  country_details hrms_m_country_master     @relation(fields: [country_code], references: [id], onUpdate: NoAction)
 }
 
 model Country {
-  id              Int             @id @default(autoincrement())
-  code            String          @db.Char(4)
-  name            String          @db.NVarChar(50)
-  is_active       String          @default("Y") @db.Char(1)
-  createdate      DateTime        @default(now()) @db.DateTime
-  createdby       Int
-  log_inst        Int?
-  updatedate      DateTime?       @db.DateTime
-  updatedby       Int?
-  country_details crms_m_states[]
+  id         Int       @id @default(autoincrement())
+  code       String    @db.Char(4)
+  name       String    @db.NVarChar(50)
+  is_active  String    @default("Y") @db.Char(1)
+  createdate DateTime  @default(now()) @db.DateTime
+  createdby  Int
+  log_inst   Int?
+  updatedate DateTime? @db.DateTime
+  updatedby  Int?
 
   @@map("crms_m_countries")
 }

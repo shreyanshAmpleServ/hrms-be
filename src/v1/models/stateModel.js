@@ -102,7 +102,7 @@ const getAllStates = async (search,page,size,country_id) => {
       filters.name = { contains: search.toLowerCase() }
     }
     if (country_id) {
-      filters.country_code = { equal: country_id}
+      filters.country_code = { equals: country_id}
     }
     const states = await prisma.crms_m_states.findMany({
       where:filters,

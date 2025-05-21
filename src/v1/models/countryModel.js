@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 const createCountry = async (data) => {
   try {
-    const country = await prisma.Country.create({
+    const country = await prisma.hrms_m_country_master.create({
       data: {
         ...data,
         name: data.name,
@@ -25,7 +25,7 @@ const createCountry = async (data) => {
 
 const findCountryById = async (id) => {
   try {
-    const country = await prisma.Country.findUnique({
+    const country = await prisma.hrms_m_country_master.findUnique({
       where: { id: parseInt(id) },
     });
     if (!country) {
@@ -40,7 +40,7 @@ const findCountryById = async (id) => {
 
 const updateCountry = async (id, data) => {
   try {
-    const updatedCountry = await prisma.Country.update({
+    const updatedCountry = await prisma.hrms_m_country_master.update({
       where: { id: parseInt(id) },
       data: {
         ...data,
@@ -55,7 +55,7 @@ const updateCountry = async (id, data) => {
 
 const deleteCountry = async (id) => {
   try {
-    await prisma.Country.delete({
+    await prisma.hrms_m_country_master.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
@@ -65,7 +65,7 @@ const deleteCountry = async (id) => {
 
 const getAllCountries = async () => {
   try {
-    const countries = await prisma.Country.findMany({
+    const countries = await prisma.hrms_m_country_master.findMany({
       orderBy: [
         { name: 'asc' },
         // { updatedate: 'desc' },

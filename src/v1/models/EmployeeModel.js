@@ -5,7 +5,7 @@ const moment = require("moment");
 
 // Serialize  before saving it
 const serializeTags = (data) => {
-  return {
+  const serialized = {
     employee_code: data?.employee_code || "",
     first_name: data?.first_name || "",
     last_name: data?.last_name || "",
@@ -16,24 +16,24 @@ const serializeTags = (data) => {
     passport_number: data?.passport_number || "",
     employment_type: data?.employment_type || "",
     employee_category: data?.employee_category || "",
-    join_date: data?.join_date ? moment(data?.join_date) :  null,
-    confirm_date: data?.confirm_date ? moment( data?.confirm_date) : null,
-    resign_date:data?.resign_date ? moment(data?.resign_date) : null,
+    join_date: data?.join_date ? moment(data?.join_date) : null,
+    confirm_date: data?.confirm_date ? moment(data?.confirm_date) : null,
+    resign_date: data?.resign_date ? moment(data?.resign_date) : null,
     account_number: data?.account_number || "",
     work_location: data?.work_location || "",
     email: data?.email || "",
     phone_number: data?.phone_number || "",
     status: data?.status || "",
-    profile_pic : data?.profile_pic || "",
-    spouse_name : data?.spouse_name || "",
-    marital_status : data?.marital_status || "",
-    no_of_child : Number(data?.no_of_child) || 0,
+    profile_pic: data?.profile_pic || "",
+    spouse_name: data?.spouse_name || "",
+    marital_status: data?.marital_status || "",
+    no_of_child: Number(data?.no_of_child) || 0,
     // manager_id : Number(data?.manager_id) || null,
-    father_name : data?.father_name || "",
-    mother_name : data?.mother_name || "",
-    emergency_contact : data?.emergency_contact || "",
-    emergency_contact_person : data?.emergency_contact_person || "",
-    contact_relation : data?.contact_relation || "",
+    father_name: data?.father_name || "",
+    mother_name: data?.mother_name || "",
+    emergency_contact: data?.emergency_contact || "",
+    emergency_contact_person: data?.emergency_contact_person || "",
+    contact_relation: data?.contact_relation || "",
     // designation_id: Number(data?.designation_id) || null,
     // bank_id: Number(data.bank_id) || null,
     // department_id: Number(data.department_id) || null,
@@ -43,29 +43,40 @@ const serializeTags = (data) => {
     hrms_employee_department: {
       connect: { id: Number(data?.department_id) || null },
     },
-    hrms_employee_bank: {
-      connect: { id: Number(data?.bank_id) || null },
-    },
-    hrms_manager : {
-      connect : { id: Number(data?.manager_id) || null }
-    }
+    // hrms_employee_bank: {
+    //   connect: { id: Number(data?.bank_id) || null },
+    // },
+    // hrms_manager : {
+    //   connect : { id: Number(data?.manager_id) || null }
+    // }
   };
+  if (data?.manager_id) {
+    serialized.hrms_manager = {
+      connect: { id: Number(data.manager_id) },
+    };
+  }
+  if (data?.bank_id) {
+    serialized.hrms_employee_bank = {
+      connect: { id: Number(data.bank_id) },
+    };
+  }
+  return serialized;
 };
 
-const serializeAddress = (data) =>{
+const serializeAddress = (data) => {
   return {
-address_type : data?.address_type || "",
-street : data?.street || "",
-street_no : data?.street_no || "",
-building : data?.building || "",
-floor : data?.floor || "",
-city : data?.city || "",
-district : data?.district || "",
-state : data?.state || "",
-country : data?.country || "",
-zip_code : data?.zip_code || "",
-  }
-}
+    address_type: data?.address_type || "",
+    street: data?.street || "",
+    street_no: data?.street_no || "",
+    building: data?.building || "",
+    floor: data?.floor || "",
+    city: data?.city || "",
+    district: data?.district || "",
+    state: Number(data?.state) || null,
+    country: Number(data?.country) || null,
+    zip_code: data?.zip_code || "",
+  };
+};
 
 // Parse  after retrieving it
 const parseTags = (deal) => {
@@ -97,7 +108,6 @@ const validateContactsExist = async (contactIds) => {
 const createEmployee = async (data) => {
   const { empAddressData, ...employeeData } = data; // Separate `contactIds` from other deal data
   try {
-    let empId = null
     const serializedData = serializeTags(employeeData);
 
     // Use transaction for atomicity
@@ -119,37 +129,49 @@ const createEmployee = async (data) => {
       //   employee_id: employee.id,
       // };
       const addressDatas = empAddressData.map((addr) => ({
-  ...serializeAddress(addr),
-  address_type:addr?.address_type ||  "Home", 
-  employee_id: employee.id,
-}));
+        ...serializeAddress(addr),
+        address_type: addr?.address_type || "Home",
+        employee_id: employee.id,
+      }));
       await prisma.hrms_d_employee_address.createMany({ data: addressDatas });
 
- return employee?.id
+      return employee?.id;
       // return fullData;
     });
-         const fullData = await prisma.hrms_d_employee.findFirst({
-        where: { id: result },
-        include: {
-          hrms_employee_address: true,
-            hrms_employee_designation: {
-           select: { id: true,
-            designation_name: true}
-          },
-          hrms_employee_department: {
-           select : { id: true,
-            department_name: true}
-          },
-          hrms_employee_bank: {
-            select :{  id:true,
-              bank_name:true,
-        }  },
-          hrms_manager: {
-           select : { id: true,
-            full_name: true}
+    const fullData = await prisma.hrms_d_employee.findFirst({
+      where: { id: result },
+      include: {
+       hrms_employee_address: {
+          include: {
+            employee_state:{
+              select:{
+                id: true,
+                name: true, 
+              }
+            },
+            employee_country:{
+              select:{
+                id: true,
+                name: true, 
+              }
+            },
+
           },
         },
-      });
+        hrms_employee_designation: {
+          select: { id: true, designation_name: true },
+        },
+        hrms_employee_department: {
+          select: { id: true, department_name: true },
+        },
+        hrms_employee_bank: {
+          select: { id: true, bank_name: true },
+        },
+        hrms_manager: {
+          select: { id: true, full_name: true },
+        },
+      },
+    });
 
     return fullData;
   } catch (error) {
@@ -160,7 +182,7 @@ const createEmployee = async (data) => {
 
 // Update an existing employee
 const updateEmployee = async (id, data) => {
-  const {empAddressData , ...employeeData } = data; // Separate `contactIds` from other employee data
+  const { empAddressData, ...employeeData } = data; // Separate `contactIds` from other employee data
   try {
     const updatedData = {
       ...employeeData,
@@ -169,7 +191,7 @@ const updateEmployee = async (id, data) => {
     };
     const serializedData = serializeTags(updatedData);
 
-// Filter address by existence of ID
+    // Filter address by existence of ID
     const newAddresses = empAddressData.filter((addr) => !addr.id);
     const existingAddresses = empAddressData.filter((addr) => addr.id);
 
@@ -181,26 +203,22 @@ const updateEmployee = async (id, data) => {
 
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
-     
       // Update the employee
       const employee = await prisma.hrms_d_employee.update({
         where: { id: parseInt(id) },
         data: {
           ...serializedData,
         },
-        select:{
-          hrms_employee_address:{
-            select:{
-              id:true,
-            }
-            
-          }
-        }
+        select: {
+          hrms_employee_address: {
+            select: {
+              id: true,
+            },
+          },
+        },
       });
 
-
-
- // 2. Fetch current DB address IDs
+      // 2. Fetch current DB address IDs
       // const dbAddresses = await prisma.hrms_d_employee_address.findMany({
       //   where: { employee_id: parseInt(id) },
       //   select: { id: true },
@@ -240,23 +258,35 @@ const updateEmployee = async (id, data) => {
       // Retrieve the updated employee with hrms_d_employee_address and employeeHistory included
       const updatedEmp = await prisma.hrms_d_employee.findUnique({
         where: { id: parseInt(id) },
-       include: {
-          hrms_employee_address: true,
-            hrms_employee_designation: {
-           select: { id: true,
-            designation_name: true}
+        include: {
+          hrms_employee_address: {
+          include: {
+            employee_state:{
+              select:{
+                id: true,
+                name: true, 
+              }
+            },
+            employee_country:{
+              select:{
+                id: true,
+                name: true, 
+              }
+            },
+
+          },
+        },
+          hrms_employee_designation: {
+            select: { id: true, designation_name: true },
           },
           hrms_employee_department: {
-           select : { id: true,
-            department_name: true}
+            select: { id: true, department_name: true },
           },
           hrms_employee_bank: {
-            select :{  id:true,
-              bank_name:true,
-        }  },
+            select: { id: true, bank_name: true },
+          },
           hrms_manager: {
-           select : { id: true,
-            full_name: true}
+            select: { id: true, full_name: true },
           },
         },
       });
@@ -277,23 +307,35 @@ const findEmployeeById = async (id) => {
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(id) },
       include: {
-         hrms_employee_address: true,
-            hrms_employee_designation: {
-           select: { id: true,
-            designation_name: true}
+       hrms_employee_address: {
+          include: {
+            employee_state:{
+              select:{
+                id: true,
+                name: true, 
+              }
+            },
+            employee_country:{
+              select:{
+                id: true,
+                name: true, 
+              }
+            },
+
           },
-          hrms_employee_department: {
-           select : { id: true,
-            department_name: true}
-          },
-          hrms_manager: {
-           select : { id: true,
-            full_name: true}
-          },
-          hrms_employee_bank: {
-            select :{  id:true,
-              bank_name:true,
-        }  },
+        },
+        hrms_employee_designation: {
+          select: { id: true, designation_name: true },
+        },
+        hrms_employee_department: {
+          select: { id: true, department_name: true },
+        },
+        hrms_manager: {
+          select: { id: true, full_name: true },
+        },
+        hrms_employee_bank: {
+          select: { id: true, bank_name: true },
+        },
       },
     });
     return parseTags(employee);
@@ -360,21 +402,34 @@ const getAllEmployee = async (
       where: filters,
       skip: skip,
       take: size,
-         include: {
-            hrms_employee_address: true,
-          hrms_employee_designation: {
-           select: { id: true,
-            designation_name: true}
+      include: {
+        hrms_employee_address: {
+          include: {
+            employee_state:{
+              select:{
+                id: true,
+                name: true, 
+              }
+            },
+            employee_country:{
+              select:{
+                id: true,
+                name: true, 
+              }
+            },
+
           },
-          hrms_employee_department: {
-           select : { id: true,
-            department_name: true}
-          },
-          hrms_employee_bank: {
-            select :{  id:true,
-              bank_name:true,
-        }  },
         },
+        hrms_employee_designation: {
+          select: { id: true, designation_name: true },
+        },
+        hrms_employee_department: {
+          select: { id: true, department_name: true },
+        },
+        hrms_employee_bank: {
+          select: { id: true, bank_name: true },
+        },
+      },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     // const formattedDeals = employee.map((deal) => {
@@ -400,17 +455,17 @@ const getAllEmployee = async (
 
 const deleteEmployee = async (id) => {
   try {
-     const result = await prisma.$transaction(async (prisma) => {
-    // Step 1: Delete related data from DealContacts
-    await prisma.hrms_d_employee_address.deleteMany({
-      where: { employee_id: parseInt(id) },
-    });
+    const result = await prisma.$transaction(async (prisma) => {
+      // Step 1: Delete related data from DealContacts
+      await prisma.hrms_d_employee_address.deleteMany({
+        where: { employee_id: parseInt(id) },
+      });
 
-    // Step 2: Delete the deal
-    await prisma.hrms_d_employee.delete({
-      where: { id: parseInt(id) },
+      // Step 2: Delete the deal
+      await prisma.hrms_d_employee.delete({
+        where: { id: parseInt(id) },
+      });
     });
-  })
   } catch (error) {
     console.log("Error to delete employee : ", error);
     throw new CustomError(`Error deleting employee: ${error.message}`, 500);
