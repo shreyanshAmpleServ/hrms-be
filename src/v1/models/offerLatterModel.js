@@ -1,22 +1,24 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { errorNotExist } = require("../../Comman/errorNotExist");
 const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {
-    employee_id: Number(data.department_id) || null,
-    offer_date: Number(data.designation_id) || null,
-    position: data.job_title || "",
-    offered_salary: data.description || "",
-    valid_until: data.required_experience || "",
-    status: data.posting_date || new Date(),
+    employee_id: Number(data.employee_id) || null,
+    offer_date: data.offer_date || new Date(),
+    position: data.position || "",
+    offered_salary: Number(data.offered_salary) || 0,
+    valid_until: data.valid_until || new Date(),
+    status: data.status || "",
   };
 };
 
-// Create a new job posting
-const createJobPosting = async (data) => {
+// Create a new offer letter
+const createOfferLetter = async (data) => {
   try {
-    const reqData = await prisma.hrms_d_job_posting.create({
+    errorNotExist("hrms_d_employee",data.employee_id );
+    const reqData = await prisma.hrms_d_offer_letter.create({
       data: {
         ...serializeJobData(data),
         createdby: data.createdby || 1,
@@ -24,48 +26,44 @@ const createJobPosting = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        hrms_job_department: {
+                offered_employee:{
           select: {
-            department_name: true,
-            id: true,
-          },
-        },
-        hrms_job_designation: {
-          select: {
-            designation_name: true,
-            id: true,
-          },
+            full_name: true,
+            id:true,
+          }
         },
       },
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(`Error creating job posting: ${error.message}`, 500);
+    throw new CustomError(`Error creating offer letter: ${error.message}`, 500);
   }
 };
 
-// Find a job posting by ID
-const findJobPostingById = async (id) => {
+// Find a offer letter by ID
+const findOfferLetterById = async (id) => {
   try {
-    const reqData = await prisma.hrms_d_job_posting.findUnique({
+    const reqData = await prisma.hrms_d_offer_letter.findUnique({
       where: { id: parseInt(id) },
     });
-    if (!JobPosting) {
-      throw new CustomError("job posting not found", 404);
+    if (!OfferLetter) {
+      throw new CustomError("offer letter not found", 404);
     }
     return reqData;
   } catch (error) {
     throw new CustomError(
-      `Error finding job posting by ID: ${error.message}`,
+      `Error finding offer letter by ID: ${error.message}`,
       503
     );
   }
 };
 
-// Update a job posting
-const updateJobPosting = async (id, data) => {
+// Update a offer letter
+const updateOfferLetter = async (id, data) => {
   try {
-    const updatedJobPosting = await prisma.hrms_d_job_posting.update({
+    errorNotExist("hrms_d_employee",data.employee_id );
+
+    const updatedOfferLetter = await prisma.hrms_d_offer_letter.update({
       where: { id: parseInt(id) },
       data: {
         ...serializeJobData(data),
@@ -73,39 +71,33 @@ const updateJobPosting = async (id, data) => {
         updatedate: new Date(),
       },
       include: {
-        hrms_job_department: {
+                offered_employee:{
           select: {
-            department_name: true,
-            id: true,
-          },
-        },
-        hrms_job_designation: {
-          select: {
-            designation_name: true,
-            id: true,
-          },
+            full_name: true,
+            id:true,
+          }
         },
       },
     });
-    return updatedJobPosting;
+    return updatedOfferLetter;
   } catch (error) {
-    throw new CustomError(`Error updating job posting: ${error.message}`, 500);
+    throw new CustomError(`Error updating offer letter: ${error.message}`, 500);
   }
 };
 
-// Delete a job posting
-const deleteJobPosting = async (id) => {
+// Delete a offer letter
+const deleteOfferLetter = async (id) => {
   try {
-    await prisma.hrms_d_job_posting.delete({
+    await prisma.hrms_d_offer_letter.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting job posting: ${error.message}`, 500);
+    throw new CustomError(`Error deleting offer letter: ${error.message}`, 500);
   }
 };
 
-// Get all job postings
-const getAllJobPosting = async (search,page,size ,startDate, endDate) => {
+// Get all offer letters
+const getAllOfferLetter = async (search,page,size ,startDate, endDate) => {
   try {
     page = (!page || page == 0) ? 1 : page;
     size = size || 10;
@@ -116,17 +108,15 @@ const getAllJobPosting = async (search,page,size ,startDate, endDate) => {
     if (search) {
       filters.OR = [
         {
-          hrms_job_department: {
-            department_name: { contains: search.toLowerCase() },
+          appointment_employee: {
+            full_name: { contains: search.toLowerCase() },
           },
         },
         {
-          hrms_job_designation: {
-            designation_name: { contains: search.toLowerCase() },
-          },
+          position: { contains: search.toLowerCase() },
         },
         {
-          job_title: { contains: search.toLowerCase() },
+          status: { contains: search.toLowerCase() },
         },
       ];
     }
@@ -142,28 +132,22 @@ const getAllJobPosting = async (search,page,size ,startDate, endDate) => {
         };
       }
     }
-    const datas = await prisma.hrms_d_job_posting.findMany({
+    const datas = await prisma.hrms_d_offer_letter.findMany({
       where: filters,
       skip: skip,
       take: size,
       include: {
-        hrms_job_department: {
+        offered_employee:{
           select: {
-            department_name: true,
-            id: true,
-          },
-        },
-        hrms_job_designation: {
-          select: {
-            designation_name: true,
-            id: true,
-          },
+            full_name: true,
+            id:true,
+          }
         },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_job_posting.count();
-    const totalCount = await prisma.hrms_d_job_posting.count({
+    // const totalCount = await prisma.hrms_d_offer_letter.count();
+    const totalCount = await prisma.hrms_d_offer_letter.count({
         where: filters,
     });
 
@@ -175,14 +159,14 @@ const getAllJobPosting = async (search,page,size ,startDate, endDate) => {
       totalCount: totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving job postings", 503);
+    throw new CustomError("Error retrieving offer letters", 503);
   }
 };
 
 module.exports = {
-  createJobPosting,
-  findJobPostingById,
-  updateJobPosting,
-  deleteJobPosting,
-  getAllJobPosting,
+  createOfferLetter,
+  findOfferLetterById,
+  updateOfferLetter,
+  deleteOfferLetter,
+  getAllOfferLetter,
 };

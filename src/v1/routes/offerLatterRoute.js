@@ -1,13 +1,13 @@
 const express = require('express');
-const JobPostingController = require('../controller/JobPostingController');
+const offerLatterController = require('../controller/offerLatterController');
 const { authenticateToken } = require('../middlewares/authMiddleware');
 
 const router = express.Router();
 
-router.post('/job-posting', authenticateToken, JobPostingController.createJobPosting);
-router.get('/job-posting/:id', authenticateToken, JobPostingController.findJobPostingById);
-router.put('/job-posting/:id', authenticateToken, JobPostingController.updateJobPosting);
-router.delete('/job-posting/:id', authenticateToken, JobPostingController.deleteJobPosting);
-router.get('/job-posting', authenticateToken, JobPostingController.getAllJobPosting);
+router.post('/offer-letter', authenticateToken, offerLatterController.createOfferLetter);
+router.get('/offer-letter/:id', authenticateToken, offerLatterController.findOfferLetterById);
+router.put('/offer-letter/:id', authenticateToken, offerLatterController.updateOfferLetter);
+router.delete('/offer-letter/:id', authenticateToken, offerLatterController.deleteOfferLetter);
+router.get('/offer-letter', authenticateToken, offerLatterController.getAllOfferLetter);
 
 module.exports = router;

@@ -1,29 +1,29 @@
-const JobPostingModel = require('../models/JobPostingModel');
+const offerLatterModel = require('../models/offerLatterModel');
 
-const createJobPosting = async (data) => {
-    return await JobPostingModel.createJobPosting(data);
+const createOfferLetter = async (data) => {
+    return await offerLatterModel.createOfferLetter(data);
 };
 
-const findJobPostingById = async (id) => {
-    return await JobPostingModel.findJobPostingById(id);
+const findOfferLetterById = async (id) => {
+    return await offerLatterModel.findOfferLetterById(id);
 };
 
-const updateJobPosting = async (id, data) => {
-    return await JobPostingModel.updateJobPosting(id, data);
+const updateOfferLetter = async (id, data) => {
+    return await offerLatterModel.updateOfferLetter(id, data);
 };
 
-const deleteJobPosting = async (id) => {
-    return await JobPostingModel.deleteJobPosting(id);
+const deleteOfferLetter = async (id) => {
+    return await offerLatterModel.deleteOfferLetter(id);
 };
 
-const getAllJobPosting = async (search,page,size ,startDate, endDate) => {
-    return await JobPostingModel.getAllJobPosting(search,page,size ,startDate, endDate);
+const getAllOfferLetter = async (search,page,size ,startDate, endDate) => {
+    return await offerLatterModel.getAllOfferLetter(search,page,size ,startDate, endDate);
 };
 
 module.exports = {
-    createJobPosting,
-    findJobPostingById,
-    updateJobPosting,
-    deleteJobPosting,
-    getAllJobPosting,
+    createOfferLetter,
+    findOfferLetterById,
+    updateOfferLetter,
+    deleteOfferLetter,
+    getAllOfferLetter,
 };

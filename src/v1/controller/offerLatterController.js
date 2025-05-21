@@ -1,55 +1,55 @@
-const JobPostingService = require('../services/JobPostingService');
+const offerLatterService = require('../services/offerLatterService');
 const CustomError = require('../../utils/CustomError');
 
-const createJobPosting = async (req, res, next) => {
+const createOfferLetter = async (req, res, next) => {
     try {
         const data = {
             ...req.body,
             createdby: req.user.id,
             log_inst: req.user.log_inst,  }
-        const reqData = await JobPostingService.createJobPosting(data);
-        res.status(201).success('Job posting created successfully', reqData);
+        const reqData = await offerLatterService.createOfferLetter(data);
+        res.status(201).success('Offer letter created successfully', reqData);
     } catch (error) {
         next(error);
     }
 };
 
-const findJobPostingById = async (req, res, next) => {
+const findOfferLetterById = async (req, res, next) => {
     try {
-        const reqData = await JobPostingService.findJobPostingById(req.params.id);
-        if (!reqData) throw new CustomError('Job posting not found', 404);
+        const reqData = await offerLatterService.findOfferLetterById(req.params.id);
+        if (!reqData) throw new CustomError('Offer letter not found', 404);
         res.status(200).success(null, reqData);
     } catch (error) {
         next(error);
     }
 };
 
-const updateJobPosting = async (req, res, next) => {
+const updateOfferLetter = async (req, res, next) => {
     try {
         const data = {
             ...req.body,
             updatedby: req.user.id,
             log_inst: req.user.log_inst,  }
-        const reqData = await JobPostingService.updateJobPosting(req.params.id, data);
-        res.status(200).success('Job posting updated successfully', reqData);
+        const reqData = await offerLatterService.updateOfferLetter(req.params.id, data);
+        res.status(200).success('Offer letter updated successfully', reqData);
     } catch (error) {
         next(error);
     }
 };
 
-const deleteJobPosting = async (req, res, next) => {
+const deleteOfferLetter = async (req, res, next) => {
     try {
-        await JobPostingService.deleteJobPosting(req.params.id);
-        res.status(200).success('Job posting deleted successfully', null);
+        await offerLatterService.deleteOfferLetter(req.params.id);
+        res.status(200).success('Offer letter deleted successfully', null);
     } catch (error) {
         next(error);
     }
 };
 
-const getAllJobPosting = async (req, res, next) => {
+const getAllOfferLetter = async (req, res, next) => {
     try {
             const { page , size ,search ,startDate,endDate  } = req.query;
-        const data = await JobPostingService.getAllJobPosting(search,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
+        const data = await offerLatterService.getAllOfferLetter(search,Number(page), Number(size),startDate && moment(startDate),endDate && moment(endDate));
         res.status(200).success(null, data);
     } catch (error) {
         next(error);
@@ -57,9 +57,9 @@ const getAllJobPosting = async (req, res, next) => {
 };
 
 module.exports = {
-    createJobPosting,
-    findJobPostingById,
-    updateJobPosting,
-    deleteJobPosting,
-    getAllJobPosting,
+    createOfferLetter,
+    findOfferLetterById,
+    updateOfferLetter,
+    deleteOfferLetter,
+    getAllOfferLetter,
 };

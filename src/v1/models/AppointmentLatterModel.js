@@ -133,8 +133,13 @@ const getAllAppointmentLatter = async (search,page,size ,startDate, endDate) => 
           },
         },
         {
-          job_title: { contains: search.toLowerCase() },
+          appointment_employee: {
+            full_name: { contains: search.toLowerCase() },
+          },
         },
+        // {
+        //   job_title: { contains: search.toLowerCase() },
+        // },
       ];
     }
 
