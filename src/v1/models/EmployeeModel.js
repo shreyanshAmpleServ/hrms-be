@@ -16,7 +16,7 @@ const serializeTags = (data) => {
     passport_number: data?.passport_number || "",
     employment_type: data?.employment_type || "",
     employee_category: data?.employee_category || "",
-    join_date: data?.join_date ? moment(data?.join_date) : null,
+    join_date: data?.join_date ? moment(data?.join_date) : new Date(),
     confirm_date: data?.confirm_date ? moment(data?.confirm_date) : null,
     resign_date: data?.resign_date ? moment(data?.resign_date) : null,
     account_number: data?.account_number || "",

@@ -77,6 +77,8 @@ const AppointmetnLatterRoute = require("../v1/routes/AppointmetnLatterRoute")
 const offerLatterRoute = require("../v1/routes/offerLatterRoute")
 const EmploymentContractRoute = require("../v1/routes/EmploymentContractRoute")
 const ResumeUploadRoute = require("../v1/routes/ResumeUploadRoute")
+const LeaveApplyRoute = require("../v1/routes/LeaveApplyRoute")
+const LeaveEncashmentRoute = require("../v1/routes/LeaveEncashmentRoute")
 
 const router = express.Router();
 
@@ -159,6 +161,8 @@ router.use('/v1', AppointmetnLatterRoute);
 router.use('/v1', offerLatterRoute);
 router.use('/v1', EmploymentContractRoute);
 router.use('/v1', ResumeUploadRoute);
+router.use('/v1', LeaveApplyRoute);
+router.use('/v1', LeaveEncashmentRoute);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);

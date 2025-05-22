@@ -205,16 +205,18 @@ model hrms_d_employee {
   emergency_contact_person String?
   contact_relation         String?
 
-  createdate            DateTime?                    @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
-  createdby             Int
-  updatedate            DateTime?                    @db.DateTime
-  updatedby             Int?
-  log_inst              Int?
-  offered_employee      hrms_d_offer_letter[]
-  hrms_employee_address hrms_d_employee_address[]
-  appointment_employee  hrms_d_appointment_letter[]
-  contracted_employee   hrms_d_employment_contract[]
-  resume_employee       hrms_d_resume[]
+  createdate                DateTime?                    @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?                    @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
+  offered_employee          hrms_d_offer_letter[]
+  hrms_employee_address     hrms_d_employee_address[]
+  appointment_employee      hrms_d_appointment_letter[]
+  contracted_employee       hrms_d_employment_contract[]
+  resume_employee           hrms_d_resume[]
+  leave_encashment_employee hrms_d_leave_encashment[]
+  leave_employee            hrms_d_leave_application[]
 
   hrms_manager              hrms_d_employee?           @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates              hrms_d_employee[]          @relation("EmployeeManager")
@@ -380,6 +382,9 @@ model hrms_d_leave_application {
   updatedate    DateTime? @db.DateTime
   updatedby     Int?
   log_inst      Int?
+
+  leave_types    hrms_m_leave_type_master? @relation(fields: [leave_type_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  leave_employee hrms_d_employee?          @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_leave_encashment {
@@ -395,6 +400,9 @@ model hrms_d_leave_encashment {
   updatedate        DateTime? @db.DateTime
   updatedby         Int?
   log_inst          Int?
+
+  encashment_leave_types    hrms_m_leave_type_master? @relation(fields: [leave_type_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  leave_encashment_employee hrms_d_employee?          @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_loan_request {
@@ -887,14 +895,16 @@ model hrms_m_kpi_master {
 }
 
 model hrms_m_leave_type_master {
-  id            Int       @id(map: "PK__hrms_m_l__3213E83F7F49932B") @default(autoincrement())
-  leave_type    String?   @db.NVarChar(100)
-  carry_forward Boolean?
-  createdate    DateTime? @default(now(), map: "DF__hrms_m_le__creat__282DF8C2") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id                     Int                        @id(map: "PK__hrms_m_l__3213E83F7F49932B") @default(autoincrement())
+  leave_type             String?                    @db.NVarChar(100)
+  carry_forward          Boolean?
+  createdate             DateTime?                  @default(now(), map: "DF__hrms_m_le__creat__282DF8C2") @db.DateTime
+  createdby              Int
+  updatedate             DateTime?                  @db.DateTime
+  updatedby              Int?
+  log_inst               Int?
+  leave_types            hrms_d_leave_application[]
+  encashment_leave_types hrms_d_leave_encashment[]
 }
 
 model hrms_m_letter_type {
