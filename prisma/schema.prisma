@@ -262,6 +262,7 @@ model hrms_d_employment_contract {
   contract_end_date   DateTime? @db.Date
   contract_type       String?   @db.VarChar(50)
   document_path       String?   @db.NVarChar(255)
+  description         String?
   createdate          DateTime? @default(now(), map: "DF__hrms_d_em__creat__6AEFE058") @db.DateTime
   createdby           Int
   updatedate          DateTime? @db.DateTime

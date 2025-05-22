@@ -1,5 +1,6 @@
 const offerLatterService = require('../services/offerLatterService');
 const CustomError = require('../../utils/CustomError');
+const moment = require('moment');
 
 const createOfferLetter = async (req, res, next) => {
     try {

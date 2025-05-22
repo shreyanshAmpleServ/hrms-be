@@ -10,6 +10,7 @@ const serializeJobData = (data) => {
     contract_end_date: data.contract_end_date || new Date(),
     contract_type: data.contract_type || "",
     document_path: data.document_path || "",
+    description: data.description || "",
   };
 };
 
