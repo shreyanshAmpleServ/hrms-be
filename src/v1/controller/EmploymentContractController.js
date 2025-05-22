@@ -1,5 +1,6 @@
 const EmploymentContractService = require('../services/EmploymentContractService');
 const CustomError = require('../../utils/CustomError');
+const moment = require('moment');
 
 const createEmploymentContract = async (req, res, next) => {
     try {

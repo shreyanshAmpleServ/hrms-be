@@ -214,6 +214,7 @@ model hrms_d_employee {
   hrms_employee_address hrms_d_employee_address[]
   appointment_employee  hrms_d_appointment_letter[]
   contracted_employee   hrms_d_employment_contract[]
+  resume_employee       hrms_d_resume[]
 
   hrms_manager              hrms_d_employee?           @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates              hrms_d_employee[]          @relation("EmployeeManager")
@@ -534,15 +535,16 @@ model hrms_d_remote_work_log {
 }
 
 model hrms_d_resume {
-  id          Int       @id(map: "PK__hrms_d_r__3213E83FBE64C057") @default(autoincrement())
-  employee_id Int?
-  resume_path String?   @db.NVarChar(255)
-  uploaded_on DateTime? @db.DateTime
-  createdate  DateTime? @default(now(), map: "DF__hrms_d_re__creat__73852659") @db.DateTime
-  createdby   Int
-  updatedate  DateTime? @db.DateTime
-  updatedby   Int?
-  log_inst    Int?
+  id              Int              @id(map: "PK__hrms_d_r__3213E83FBE64C057") @default(autoincrement())
+  employee_id     Int?
+  resume_path     String?          @db.NVarChar(255)
+  uploaded_on     DateTime?        @db.DateTime
+  createdate      DateTime?        @default(now(), map: "DF__hrms_d_re__creat__73852659") @db.DateTime
+  createdby       Int
+  updatedate      DateTime?        @db.DateTime
+  updatedby       Int?
+  log_inst        Int?
+  resume_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_succession_plan {
