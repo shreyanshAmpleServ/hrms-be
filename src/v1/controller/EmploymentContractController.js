@@ -33,9 +33,18 @@ const findEmploymentContractById = async (req, res, next) => {
 
 const updateEmploymentContract = async (req, res, next) => {
     try {
-        const existingData = await findEmploymentContractById(req.params.id);
+        const existingData = await EmploymentContractService.findEmploymentContractById(req.params.id);
+        if (!existingData) throw new CustomError("Resume not found", 404);
+           let imageUrl = existingData.resume_path;  
+    if (!req.file) {
+      throw new CustomError("Please upload a file", 400);
+    }
+    // Check if the file is present
+    if (!req.file.buffer || !req.file.originalname || !req.file.mimetype) {
+      throw new CustomError("File not found", 400);
+    }
            if (req.file) {
-      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "contacts");
+      imageUrl = await uploadToBackblaze(req.file.buffer, req.file.originalname, req.file.mimetype , "EmploymentContract");
     }
         const data = {
             ...req.body,
@@ -55,7 +64,7 @@ const updateEmploymentContract = async (req, res, next) => {
 
 const deleteEmploymentContract = async (req, res, next) => {
     try {
-        const existingData = await findEmploymentContractById(req.params.id);
+        const existingData = await EmploymentContractService.findEmploymentContractById(req.params.id);
         await EmploymentContractService.deleteEmploymentContract(req.params.id);
         res.status(200).success('Employment contract deleted successfully', null);
             if (existingData.image) {

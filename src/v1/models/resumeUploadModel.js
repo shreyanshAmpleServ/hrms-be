@@ -43,7 +43,7 @@ const findResumeUploadById = async (id) => {
     const reqData = await prisma.hrms_d_resume.findUnique({
       where: { id: parseInt(id) },
     });
-    if (!ResumeUpload) {
+    if (!reqData) {
       throw new CustomError("resume not found", 404);
     }
     return reqData;
@@ -78,6 +78,7 @@ const updateResumeUpload = async (id, data) => {
     });
     return updatedResumeUpload;
   } catch (error) {
+    console.error("Error updating resume:", error);
     throw new CustomError(`Error updating resume: ${error.message}`, 500);
   }
 };

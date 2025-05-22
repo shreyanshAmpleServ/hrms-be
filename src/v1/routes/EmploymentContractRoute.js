@@ -7,7 +7,7 @@ const router = express.Router();
 
 router.post('/employment-contract', authenticateToken,upload.single('document_path'), EmploymentContractController.createEmploymentContract);
 router.get('/employment-contract/:id', authenticateToken, EmploymentContractController.findEmploymentContractById);
-router.put('/employment-contract/:id', authenticateToken, EmploymentContractController.updateEmploymentContract);
+router.put('/employment-contract/:id', authenticateToken,upload.single('document_path'), EmploymentContractController.updateEmploymentContract);
 router.delete('/employment-contract/:id', authenticateToken, EmploymentContractController.deleteEmploymentContract);
 router.get('/employment-contract', authenticateToken, EmploymentContractController.getAllEmploymentContract);
 

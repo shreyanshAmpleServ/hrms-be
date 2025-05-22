@@ -46,7 +46,7 @@ const findEmploymentContractById = async (id) => {
     const reqData = await prisma.hrms_d_employment_contract.findUnique({
       where: { id: parseInt(id) },
     });
-    if (!EmploymentContract) {
+    if (!reqData) {
       throw new CustomError("employment contract not found", 404);
     }
     return reqData;

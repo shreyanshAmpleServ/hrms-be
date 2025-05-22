@@ -13,7 +13,7 @@ const ensureDir = (dir) => {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Determine folder dynamically
-    const entityType = req.body.entityType || 'general'; // Use `entityType` field or default to 'general'
+    const entityType = req.query.entityType || req.headers['x-entity-type'] || 'general'; // Use `entityType` field or default to 'general'
     const uploadDir = `uploads/${entityType}`;
     ensureDir(uploadDir); // Ensure the directory exists
     cb(null, uploadDir);
