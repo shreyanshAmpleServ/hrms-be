@@ -217,6 +217,8 @@ model hrms_d_employee {
   resume_employee           hrms_d_resume[]
   leave_encashment_employee hrms_d_leave_encashment[]
   leave_employee            hrms_d_leave_application[]
+  time_sheet_employee       hrms_d_time_sheet[]
+  payslip_employee          hrms_d_payslip[]
 
   hrms_manager              hrms_d_employee?           @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates              hrms_d_employee[]          @relation("EmployeeManager")
@@ -478,16 +480,17 @@ model hrms_d_org_chart {
 }
 
 model hrms_d_payslip {
-  id          Int       @id(map: "PK__hrms_d_p__3213E83F1EC9183D") @default(autoincrement())
-  employee_id Int?
-  month       String?   @db.VarChar(7)
-  net_salary  Decimal?  @db.Decimal(10, 2)
-  pdf_path    String?   @db.NVarChar(255)
-  createdate  DateTime? @default(now(), map: "DF__hrms_d_pa__creat__793DFFAF") @db.DateTime
-  createdby   Int
-  updatedate  DateTime? @db.DateTime
-  updatedby   Int?
-  log_inst    Int?
+  id               Int              @id(map: "PK__hrms_d_p__3213E83F1EC9183D") @default(autoincrement())
+  employee_id      Int?
+  month            String?          @db.VarChar(7)
+  net_salary       Decimal?         @db.Decimal(10, 2)
+  pdf_path         String?          @db.NVarChar(255)
+  createdate       DateTime?        @default(now(), map: "DF__hrms_d_pa__creat__793DFFAF") @db.DateTime
+  createdby        Int
+  updatedate       DateTime?        @db.DateTime
+  updatedby        Int?
+  log_inst         Int?
+  payslip_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_probation_review {
@@ -595,6 +598,8 @@ model hrms_d_time_sheet {
   updatedate       DateTime? @db.DateTime
   updatedby        Int?
   log_inst         Int?
+
+  time_sheet_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_training_feedback {

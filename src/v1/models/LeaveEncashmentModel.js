@@ -55,7 +55,7 @@ const findLeaveEncashmentById = async (id) => {
     const reqData = await prisma.hrms_d_leave_encashment.findUnique({
       where: { id: parseInt(id) },
     });
-    if (!LeaveEncashment) {
+    if (!reqData) {
       throw new CustomError("leave encashment not found", 404);
     }
     return reqData;

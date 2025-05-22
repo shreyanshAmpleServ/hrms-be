@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
+const { leaveApplicationSchema } = require("../schemas/leaveApplicationSchema");
 const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
@@ -9,7 +10,7 @@ const serializeJobData = (data) => {
     leave_type_id: Number(data.leave_type_id) || null,
     start_date: data.start_date || new Date(),
     end_date: data.end_date || new Date(),
-    reason: data.valid_until || "",
+    reason: data.reason || "",
     status: data.status || "",
   };
 };
@@ -17,13 +18,14 @@ const serializeJobData = (data) => {
 // Create a new leave application
 const createLeaveApplication = async (data) => {
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+   const validatedData = leaveApplicationSchema.parse(data);
+    await errorNotExist("hrms_d_employee", validatedData.employee_id, "Employee");
     const reqData = await prisma.hrms_d_leave_application.create({
       data: {
-        ...serializeJobData(data),
-        createdby: data.createdby || 1,
+        ...serializeJobData(validatedData),
+        createdby: validatedData.createdby || 1,
         createdate: new Date(),
-        log_inst: data.log_inst || 1,
+        log_inst: davalidatedDatata.log_inst || 1,
       },
       include: {
         leave_employee: {
@@ -55,7 +57,7 @@ const findLeaveApplicationById = async (id) => {
     const reqData = await prisma.hrms_d_leave_application.findUnique({
       where: { id: parseInt(id) },
     });
-    if (!LeaveApplication) {
+    if (!reqData) {
       throw new CustomError("leave application not found", 404);
     }
     return reqData;
@@ -70,14 +72,16 @@ const findLeaveApplicationById = async (id) => {
 // Update a leave application
 const updateLeaveApplication = async (id, data) => {
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+   const validatedData = leaveApplicationSchema.parse(data);
+
+    await errorNotExist("hrms_d_employee", validatedData.employee_id, "Employee");
 
     const updatedLeaveApplication =
       await prisma.hrms_d_leave_application.update({
         where: { id: parseInt(id) },
         data: {
-          ...serializeJobData(data),
-          updatedby: data.updatedby || 1,
+          ...serializeJobData(validatedData),
+          updatedby: validatedData.updatedby || 1,
           updatedate: new Date(),
         },
         include: {

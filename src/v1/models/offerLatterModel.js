@@ -46,7 +46,7 @@ const findOfferLetterById = async (id) => {
     const reqData = await prisma.hrms_d_offer_letter.findUnique({
       where: { id: parseInt(id) },
     });
-    if (!OfferLetter) {
+    if (!reqData) {
       throw new CustomError("offer letter not found", 404);
     }
     return reqData;
