@@ -46,7 +46,7 @@ const uploadToBackblaze = async (fileBuffer, originalName, mimeType,folder="gene
     mime: mimeType,
   });
 
-  const fileUrl = `https://DCC-CRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
+  const fileUrl = `https://DCC-HRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
   return fileUrl;
 };
 
