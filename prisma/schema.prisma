@@ -104,6 +104,8 @@ model hrms_d_appraisal {
   updatedate        DateTime? @db.DateTime
   updatedby         Int?
   log_inst          Int?
+
+  appraisal_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_asset_assignment {
@@ -220,6 +222,7 @@ model hrms_d_employee {
   time_sheet_employee       hrms_d_time_sheet[]
   payslip_employee          hrms_d_payslip[]
   loan_req_employee         hrms_d_loan_request[]
+  appraisal_employee        hrms_d_appraisal[]
 
   hrms_manager              hrms_d_employee?           @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates              hrms_d_employee[]          @relation("EmployeeManager")

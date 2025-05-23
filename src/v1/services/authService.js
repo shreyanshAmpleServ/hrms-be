@@ -42,16 +42,16 @@ const loginUser = async (email, password) => {
     // Check Redis cache first
     const cachedUser = await redisClient.get(email);
     let user;
-    if (cachedUser) {
-      console.log("Catched Data ;")         // Fetch cached user
-      user = JSON.parse(cachedUser); 
-    } else { 
-      console.log("DB Data ;")
+    // if (!cachedUser) {
+    //   console.log("Catched Data ;")         // Fetch cached user
+    //   user = JSON.parse(cachedUser); 
+    // } else { 
+    //   console.log("DB Data ;")
       user = await userModel.findUserByEmail(email);  // Fetch from DB
-      if (user) {
-        await redisClient.setEx(email, 3600, JSON.stringify(user)); // Set user in cache for 1 hour
-      }
-    } 
+    //   if (user) {
+    //     await redisClient.setEx(email, 3600, JSON.stringify(user)); // Set user in cache for 1 hour
+    //   }
+    // } 
     if (!user) throw new CustomError('User not found',401);
 
     const [isValidPassword, token] = await Promise.all([
