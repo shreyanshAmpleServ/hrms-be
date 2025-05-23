@@ -1,9 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const {
-  status,
-} = require("../../../../crm-fe/src/components/common/selectoption/selectoption");
 const prisma = new PrismaClient();
 
 const serializeData = (data) => {
