@@ -5,11 +5,17 @@ const prisma = new PrismaClient();
 
 const serializeData = (data) => {
   return {
-    employee_id: Number(data.employee_id) || null,
-    month: data.month || "",
-    year: data.year || "",
-    net_salary: data.net_salary || 0,
-    pdf_path: data.pdf_path || "",
+    // employee_id: Number(data.employee_id) || null,
+    // loan_type_id: Number(data.loan_type_id) || null,
+    amount: Number(data.amount) || 0,
+    emi_months: Number(data.emi_months) || 0,
+    status: data.status || "",
+    loan_req_employee: {
+      connect: { id: Number(data?.employee_id) || null },
+    },
+    loan_types: {
+      connect: { id: Number(data?.loan_type_id) || null },
+    },
   };
 };
 
@@ -41,6 +47,7 @@ const createLoanRequest = async (data) => {
     });
     return reqData;
   } catch (error) {
+    console.error("Error creating loan request:", error);
     throw new CustomError(`Error creating loan request: ${error.message}`, 500);
   }
 };
