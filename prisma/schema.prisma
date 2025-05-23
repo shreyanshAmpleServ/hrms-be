@@ -219,6 +219,7 @@ model hrms_d_employee {
   leave_employee            hrms_d_leave_application[]
   time_sheet_employee       hrms_d_time_sheet[]
   payslip_employee          hrms_d_payslip[]
+  loan_req_employee         hrms_d_loan_request[]
 
   hrms_manager              hrms_d_employee?           @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates              hrms_d_employee[]          @relation("EmployeeManager")
@@ -419,6 +420,9 @@ model hrms_d_loan_request {
   updatedate   DateTime? @db.DateTime
   updatedby    Int?
   log_inst     Int?
+
+  loan_req_employee hrms_d_employee?  @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  loan_types        hrms_m_loan_type? @relation(fields: [loan_type_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_medical_record {
@@ -933,6 +937,8 @@ model hrms_m_loan_type {
   updatedate    DateTime? @db.DateTime
   updatedby     Int?
   log_inst      Int?
+
+  loan_types hrms_d_loan_request[]
 }
 
 model hrms_m_pay_component {

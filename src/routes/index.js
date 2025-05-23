@@ -81,6 +81,7 @@ const LeaveApplyRoute = require("../v1/routes/LeaveApplyRoute")
 const LeaveEncashmentRoute = require("../v1/routes/LeaveEncashmentRoute")
 const TimeSheetRoute = require("../v1/routes/TimeSheetRoute")
 const paySlipRoute = require("../v1/routes/paySlipRoute")
+const loanReqRoute = require("../v1/routes/loanReqRoute")
 
 const router = express.Router();
 
@@ -167,6 +168,7 @@ router.use('/v1', LeaveApplyRoute);
 router.use('/v1', LeaveEncashmentRoute);
 router.use('/v1', TimeSheetRoute);
 router.use('/v1', paySlipRoute);
+router.use('/v1', loanReqRoute);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
