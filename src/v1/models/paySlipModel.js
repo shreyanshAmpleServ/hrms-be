@@ -6,7 +6,8 @@ const prisma = new PrismaClient();
 const serializeData = (data) => {
   return {
     employee_id: Number(data.employee_id) || null,
-    month: data.month || null,
+    month: data.month || "",
+    year: data.year || "",
     net_salary: data.net_salary || 0,
     pdf_path: data.pdf_path || "",
   };

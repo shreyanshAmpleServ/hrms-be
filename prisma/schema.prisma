@@ -483,6 +483,7 @@ model hrms_d_payslip {
   id               Int              @id(map: "PK__hrms_d_p__3213E83F1EC9183D") @default(autoincrement())
   employee_id      Int?
   month            String?          @db.VarChar(7)
+  year             String?
   net_salary       Decimal?         @db.Decimal(10, 2)
   pdf_path         String?          @db.NVarChar(255)
   createdate       DateTime?        @default(now(), map: "DF__hrms_d_pa__creat__793DFFAF") @db.DateTime

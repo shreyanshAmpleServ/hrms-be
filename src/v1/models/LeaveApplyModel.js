@@ -19,13 +19,13 @@ const serializeJobData = (data) => {
 const createLeaveApplication = async (data) => {
   try {
    const validatedData = leaveApplicationSchema.parse(data);
-    await errorNotExist("hrms_d_employee", validatedData.employee_id, "Employee");
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const reqData = await prisma.hrms_d_leave_application.create({
       data: {
-        ...serializeJobData(validatedData),
-        createdby: validatedData.createdby || 1,
+        ...serializeJobData(data),
+        createdby: data.createdby || 1,
         createdate: new Date(),
-        log_inst: davalidatedDatata.log_inst || 1,
+        log_inst: data.log_inst || 1,
       },
       include: {
         leave_employee: {
@@ -74,14 +74,14 @@ const updateLeaveApplication = async (id, data) => {
   try {
    const validatedData = leaveApplicationSchema.parse(data);
 
-    await errorNotExist("hrms_d_employee", validatedData.employee_id, "Employee");
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
     const updatedLeaveApplication =
       await prisma.hrms_d_leave_application.update({
         where: { id: parseInt(id) },
         data: {
-          ...serializeJobData(validatedData),
-          updatedby: validatedData.updatedby || 1,
+          ...serializeJobData(data),
+          updatedby: data.updatedby || 1,
           updatedate: new Date(),
         },
         include: {
