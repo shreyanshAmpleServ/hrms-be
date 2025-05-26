@@ -184,6 +184,10 @@ const createEmployee = async (data) => {
 const updateEmployee = async (id, data) => {
   const { empAddressData, ...employeeData } = data; // Separate `contactIds` from other employee data
   try {
+         const updatedEmp = await prisma.hrms_d_employee.findUnique({
+        where: { id: parseInt(id) },
+         });
+         console.log("updatedEmp", updatedEmp);   
     const updatedData = {
       ...employeeData,
       updatedby: data.updatedby || 1,
