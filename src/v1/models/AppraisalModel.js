@@ -7,7 +7,7 @@ const serializeData = (data) => {
   return {
     employee_id: Number(data.employee_id) || null,
     review_period: data.review_period || "",
-    rating: Number(data.rating) || 0,
+    rating: parseFloat(data.rating) || 0,
     reviewer_comments: data.reviewer_comments || "",
   };
 };
