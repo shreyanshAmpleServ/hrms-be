@@ -84,6 +84,7 @@ const paySlipRoute = require("../v1/routes/paySlipRoute")
 const loanReqRoute = require("../v1/routes/loanReqRoute")
 const loanTypeRoute = require("../v1/routes/loanTypeRoute")
 const appraisalRoute = require("../v1/routes/appraisalRoute")
+const wpsFileLogRoutes = require("../v1/routes/wpsFileLogRoutes")
 
 const router = express.Router();
 
@@ -173,6 +174,7 @@ router.use('/v1', paySlipRoute);
 router.use('/v1', loanReqRoute);
 router.use('/v1', loanTypeRoute);
 router.use('/v1', appraisalRoute);
+router.use('/v1', wpsFileLogRoutes);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
