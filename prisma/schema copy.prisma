@@ -174,38 +174,48 @@ model hrms_d_document_upload {
 }
 
 model hrms_d_employee {
-  id                       Int       @id(map: "PK__hrms_d_e__3213E83F2F671AFD") @default(autoincrement())
-  employee_code            String    @unique(map: "UQ__hrms_d_e__B0AA73455BFB8896") @db.VarChar(20)
-  first_name               String?   @db.NVarChar(100)
-  last_name                String?   @db.NVarChar(100)
-  full_name                String?   @db.NVarChar(100)
-  profile_pic              String?
-  gender                   String?   @db.VarChar(10)
-  date_of_birth            DateTime? @db.Date
-  national_id_number       String?   @db.VarChar(50)
-  passport_number          String?   @db.VarChar(50)
-  employment_type          String?   @db.VarChar(50)
-  employee_category        String?   @db.VarChar(50)
-  designation_id           Int?
-  department_id            Int?
-  join_date                DateTime? @db.Date
-  confirm_date             DateTime? @db.Date
-  resign_date              DateTime? @db.Date
-  bank_id                  Int?
-  account_number           String?   @db.VarChar(30)
-  work_location            String?   @db.NVarChar(100)
-  email                    String?   @db.NVarChar(100)
-  phone_number             String?   @db.VarChar(20)
-  status                   String?   @db.VarChar(20)
-  spouse_name              String?
-  marital_status           String?
-  no_of_child              Int?
-  manager_id               Int?
-  father_name              String?
-  mother_name              String?
-  emergency_contact        String?
-  emergency_contact_person String?
-  contact_relation         String?
+  id                         Int       @id(map: "PK__hrms_d_e__3213E83F2F671AFD") @default(autoincrement())
+  employee_code              String    @unique(map: "UQ__hrms_d_e__B0AA73455BFB8896") @db.VarChar(20)
+  first_name                 String?   @db.NVarChar(100)
+  last_name                  String?   @db.NVarChar(100)
+  full_name                  String?   @db.NVarChar(100)
+  profile_pic                String?
+  gender                     String?   @db.VarChar(10)
+  date_of_birth              DateTime? @db.Date
+  national_id_number         String?   @db.VarChar(50)
+  passport_number            String?   @db.VarChar(50)
+  nationality                String?
+  passport_issue_date        DateTime?
+  passport_expiry_date       DateTime?
+  employment_type            String?   @db.VarChar(50)
+  employee_category          String?   @db.VarChar(50)
+  designation_id             Int?
+  department_id              Int?
+  address                    String?
+  join_date                  DateTime? @db.Date
+  confirm_date               DateTime? @db.Date
+  resign_date                DateTime? @db.Date
+  bank_id                    Int?
+  ifsc                       String?
+  account_number             String?   @db.VarChar(30)
+  account_holder_name        String?   @db.VarChar(100)
+  work_location              String?   @db.NVarChar(100)
+  email                      String?   @db.NVarChar(100)
+  phone_number               String?   @db.VarChar(20)
+  status                     String?   @db.VarChar(20)
+  spouse_name                String?
+  marital_status             String?
+  no_of_child                Int?
+  manager_id                 Int?
+  father_name                String?
+  mother_name                String?
+  primary_contact_number     String?
+  secondary_contact_mumber   String?
+  primary_contact_name       String?
+  secondary_contact_name     String?
+  primary_contact_relation   String?
+  secondary_contact_relation String?
+  social_medias              String?
 
   createdate                DateTime?                    @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
   createdby                 Int
@@ -223,6 +233,8 @@ model hrms_d_employee {
   payslip_employee          hrms_d_payslip[]
   loan_req_employee         hrms_d_loan_request[]
   appraisal_employee        hrms_d_appraisal[]
+  eduction_of_employee      hrms_employee_d_educations[]
+  experiance_of_employee    hrms_employee_d_experiences[]
 
   hrms_manager              hrms_d_employee?           @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates              hrms_d_employee[]          @relation("EmployeeManager")
@@ -1181,3 +1193,32 @@ model Country {
 
   @@map("crms_m_countries")
 }
+
+model hrms_employee_d_experiences {
+  id              Int                       @id @default(autoincrement())
+  employee_id     Int
+  company_name            String?
+  position        String?
+  start_from       DateTime?        
+  end_to       DateTime?        
+  createdate      DateTime                  @default(now()) @db.DateTime
+  createdby       Int
+  log_inst        Int?
+  updatedate      DateTime?                 @db.DateTime
+  updatedby       Int?
+  experiance_of_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+ }
+model hrms_employee_d_educations {
+  id              Int                       @id @default(autoincrement())
+  employee_id     Int
+  institute_name  String?       
+  degree          String?
+  specialization  String?
+  createdate      DateTime                  @default(now()) @db.DateTime
+  createdby       Int
+  log_inst        Int?
+  updatedate      DateTime?                 @db.DateTime
+  updatedby       Int?
+  eduction_of_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+ }

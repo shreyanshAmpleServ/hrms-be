@@ -194,14 +194,14 @@ const updateEmployee = async (id, data) => {
     const serializedData = serializeTags(updatedData);
 
     // Filter address by existence of ID
-    const newAddresses = empAddressData.filter((addr) => !addr.id);
-    const existingAddresses = empAddressData.filter((addr) => addr.id);
+    const newAddresses = empAddressData?.filter((addr) => !addr.id) || [];
+    const existingAddresses = empAddressData?.filter((addr) => addr.id) || [];
 
     // Prepare address data
-    const newSerialized = newAddresses.map((addr) => ({
+    const newSerialized = newAddresses?.map((addr) => ({
       ...serializeAddress(addr),
       employee_id: parseInt(id),
-    }));
+    })) || [];
 
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
@@ -225,11 +225,12 @@ const updateEmployee = async (id, data) => {
       //   where: { employee_id: parseInt(id) },
       //   select: { id: true },
       // });
-      const dbIds = employee.hrms_employee_address?.map((a) => a.id);
-      const requestIds = existingAddresses.map((a) => a.id);
+        if (Array.isArray(empAddressData) && empAddressData.length > 0) {
+      const dbIds = employee?.hrms_employee_address?.map((a) => a.id);
+      const requestIds = existingAddresses?.map((a) => a.id);
 
       // 3. Delete removed addresses (if any)
-      const toDeleteIds = dbIds.filter((id) => !requestIds.includes(id));
+      const toDeleteIds = empAddressData ? dbIds.filter((id) => !requestIds.includes(id)) : [];
       if (toDeleteIds.length > 0) {
         await prisma.hrms_d_employee_address.deleteMany({
           where: { id: { in: toDeleteIds } },
@@ -237,7 +238,7 @@ const updateEmployee = async (id, data) => {
       }
 
       // 4. Update existing addresses
-      for (const addr of existingAddresses) {
+     for (const addr of existingAddresses) {
         await prisma.hrms_d_employee_address.update({
           where: { id: addr.id },
           data: serializeAddress(addr),
@@ -250,6 +251,7 @@ const updateEmployee = async (id, data) => {
           data: newSerialized,
         });
       }
+    }
       //  const serializedAddres = serializeAddress(empAddressData);
       // // Map contacts to the employee
       // const addressDatas = {
