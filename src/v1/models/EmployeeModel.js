@@ -16,12 +16,18 @@ const serializeTags = (data) => {
   if ("gender" in data) serialized.gender = data.gender;
   if ("date_of_birth" in data) serialized.date_of_birth = data.date_of_birth ? moment(data.date_of_birth) : null;
   if ("national_id_number" in data) serialized.national_id_number = data.national_id_number;
+  if ("nationality" in data) serialized.nationality = data.nationality;
+  if ("passport_issue_date" in data) serialized.passport_issue_date = data.passport_issue_date;
+  if ("passport_expiry_date" in data) serialized.passport_expiry_date = data.passport_expiry_date;
   if ("passport_number" in data) serialized.passport_number = data.passport_number;
+  if ("address" in data) serialized.address = data.address;
   if ("employment_type" in data) serialized.employment_type = data.employment_type;
   if ("employee_category" in data) serialized.employee_category = data.employee_category;
   if ("join_date" in data) serialized.join_date = data.join_date ? moment(data.join_date) : null;
   if ("confirm_date" in data) serialized.confirm_date = data.confirm_date ? moment(data.confirm_date) : null;
   if ("resign_date" in data) serialized.resign_date = data.resign_date ? moment(data.resign_date) : null;
+  if ("ifsc" in data) serialized.ifsc = data.ifsc;
+  if ("account_holder_name" in data) serialized.account_holder_name = data.account_holder_name;
   if ("account_number" in data) serialized.account_number = data.account_number;
   if ("work_location" in data) serialized.work_location = data.work_location;
   if ("email" in data) serialized.email = data.email;
@@ -31,12 +37,16 @@ const serializeTags = (data) => {
   if ("spouse_name" in data) serialized.spouse_name = data.spouse_name;
   if ("marital_status" in data) serialized.marital_status = data.marital_status;
   if ("no_of_child" in data) serialized.no_of_child = Number(data.no_of_child);
+  if ("social_medias" in data) serialized.social_medias = Number(data.social_medias);
 
   if ("father_name" in data) serialized.father_name = data.father_name;
   if ("mother_name" in data) serialized.mother_name = data.mother_name;
-  if ("emergency_contact" in data) serialized.emergency_contact = data.emergency_contact;
-  if ("emergency_contact_person" in data) serialized.emergency_contact_person = data.emergency_contact_person;
-  if ("contact_relation" in data) serialized.contact_relation = data.contact_relation;
+  if ("primary_contact_number" in data) serialized.primary_contact_number = data.primary_contact_number;
+  if ("primary_contact_name" in data) serialized.primary_contact_name = data.primary_contact_name;
+  if ("primary_contact_relation" in data) serialized.primary_contact_relation = data.primary_contact_relation;
+  if ("secondary_contact_mumber" in data) serialized.secondary_contact_mumber = data.secondary_contact_mumber;
+  if ("secondary_contact_name" in data) serialized.secondary_contact_name = data.secondary_contact_name;
+  if ("secondary_contact_relation" in data) serialized.secondary_contact_relation = data.secondary_contact_relation;
 
   // Relations (only connect if provided)
   if ("designation_id" in data) {
