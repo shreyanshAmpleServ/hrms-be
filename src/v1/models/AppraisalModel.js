@@ -151,6 +151,14 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
       where: filters,
       skip: skip,
       take: size,
+      include: {
+        appraisal_employee: {
+          select: {
+            full_name: true,
+            id: true,
+          },
+        },
+      },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     // const totalCount = await prisma.hrms_d_appraisal.count();
