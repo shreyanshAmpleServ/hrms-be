@@ -42,7 +42,7 @@ const updateEmployee = async (req, res, next) => {
     if (profielPath) {
       imageUrl = generateFullUrl(req,profielPath);
     }
-    let employeeData = { ...req.body,updatedby:req.user.id ,empAddressData:JSON.parse(req.body?.empAddressData) , profile_pic: imageUrl};
+    let employeeData = { ...req.body,updatedby:req.user.id ,empAddressData:req.body?.empAddressData ? JSON.parse(req.body?.empAddressData) : null , profile_pic: imageUrl};
 
         
     const deal = await EmployeeService.updateEmployee(req.params.id, employeeData);

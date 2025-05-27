@@ -5,63 +5,74 @@ const moment = require("moment");
 
 // Serialize  before saving it
 const serializeTags = (data) => {
-  const serialized = {
-    employee_code: data?.employee_code || "",
-    first_name: data?.first_name || "",
-    last_name: data?.last_name || "",
-    full_name: data?.first_name + " " + data?.last_name || "",
-    gender: data?.gender || "",
-    date_of_birth: data?.date_of_birth ? moment(data?.date_of_birth) : null,
-    national_id_number: data?.national_id_number || "",
-    passport_number: data?.passport_number || "",
-    employment_type: data?.employment_type || "",
-    employee_category: data?.employee_category || "",
-    join_date: data?.join_date ? moment(data?.join_date) : new Date(),
-    confirm_date: data?.confirm_date ? moment(data?.confirm_date) : null,
-    resign_date: data?.resign_date ? moment(data?.resign_date) : null,
-    account_number: data?.account_number || "",
-    work_location: data?.work_location || "",
-    email: data?.email || "",
-    phone_number: data?.phone_number || "",
-    status: data?.status || "",
-    profile_pic: data?.profile_pic || "",
-    spouse_name: data?.spouse_name || "",
-    marital_status: data?.marital_status || "",
-    no_of_child: Number(data?.no_of_child) || 0,
-    // manager_id : Number(data?.manager_id) || null,
-    father_name: data?.father_name || "",
-    mother_name: data?.mother_name || "",
-    emergency_contact: data?.emergency_contact || "",
-    emergency_contact_person: data?.emergency_contact_person || "",
-    contact_relation: data?.contact_relation || "",
-    // designation_id: Number(data?.designation_id) || null,
-    // bank_id: Number(data.bank_id) || null,
-    // department_id: Number(data.department_id) || null,
-    hrms_employee_designation: {
-      connect: { id: Number(data?.designation_id) || null },
-    },
-    hrms_employee_department: {
-      connect: { id: Number(data?.department_id) || null },
-    },
-    // hrms_employee_bank: {
-    //   connect: { id: Number(data?.bank_id) || null },
-    // },
-    // hrms_manager : {
-    //   connect : { id: Number(data?.manager_id) || null }
-    // }
-  };
-  if (data?.manager_id) {
-    serialized.hrms_manager = {
-      connect: { id: Number(data.manager_id) },
+  const serialized = {};
+
+  if ("employee_code" in data) serialized.employee_code = data.employee_code;
+  if ("first_name" in data) serialized.first_name = data.first_name;
+  if ("last_name" in data) serialized.last_name = data.last_name;
+  if ("first_name" in data || "last_name" in data)
+    serialized.full_name = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+
+  if ("gender" in data) serialized.gender = data.gender;
+  if ("date_of_birth" in data) serialized.date_of_birth = data.date_of_birth ? moment(data.date_of_birth) : null;
+  if ("national_id_number" in data) serialized.national_id_number = data.national_id_number;
+  if ("nationality" in data) serialized.nationality = data.nationality;
+  if ("passport_issue_date" in data) serialized.passport_issue_date = data.passport_issue_date;
+  if ("passport_expiry_date" in data) serialized.passport_expiry_date = data.passport_expiry_date;
+  if ("passport_number" in data) serialized.passport_number = data.passport_number;
+  if ("address" in data) serialized.address = data.address;
+  if ("employment_type" in data) serialized.employment_type = data.employment_type;
+  if ("employee_category" in data) serialized.employee_category = data.employee_category;
+  if ("join_date" in data) serialized.join_date = data.join_date ? moment(data.join_date) : null;
+  if ("confirm_date" in data) serialized.confirm_date = data.confirm_date ? moment(data.confirm_date) : null;
+  if ("resign_date" in data) serialized.resign_date = data.resign_date ? moment(data.resign_date) : null;
+  if ("ifsc" in data) serialized.ifsc = data.ifsc;
+  if ("account_holder_name" in data) serialized.account_holder_name = data.account_holder_name;
+  if ("account_number" in data) serialized.account_number = data.account_number;
+  if ("work_location" in data) serialized.work_location = data.work_location;
+  if ("email" in data) serialized.email = data.email;
+  if ("phone_number" in data) serialized.phone_number = data.phone_number;
+  if ("status" in data) serialized.status = data.status;
+  if ("profile_pic" in data) serialized.profile_pic = data.profile_pic;
+  if ("spouse_name" in data) serialized.spouse_name = data.spouse_name;
+  if ("marital_status" in data) serialized.marital_status = data.marital_status;
+  if ("no_of_child" in data) serialized.no_of_child = Number(data.no_of_child);
+  if ("social_medias" in data) serialized.social_medias = Number(data.social_medias);
+
+  if ("father_name" in data) serialized.father_name = data.father_name;
+  if ("mother_name" in data) serialized.mother_name = data.mother_name;
+  if ("primary_contact_number" in data) serialized.primary_contact_number = data.primary_contact_number;
+  if ("primary_contact_name" in data) serialized.primary_contact_name = data.primary_contact_name;
+  if ("primary_contact_relation" in data) serialized.primary_contact_relation = data.primary_contact_relation;
+  if ("secondary_contact_mumber" in data) serialized.secondary_contact_mumber = data.secondary_contact_mumber;
+  if ("secondary_contact_name" in data) serialized.secondary_contact_name = data.secondary_contact_name;
+  if ("secondary_contact_relation" in data) serialized.secondary_contact_relation = data.secondary_contact_relation;
+
+  // Relations (only connect if provided)
+  if ("designation_id" in data) {
+    serialized.hrms_employee_designation = {
+      connect: { id: Number(data.designation_id) },
     };
   }
-  if (data?.bank_id) {
+  if ("department_id" in data) {
+    serialized.hrms_employee_department = {
+      connect: { id: Number(data.department_id) },
+    };
+  }
+  if ("bank_id" in data) {
     serialized.hrms_employee_bank = {
       connect: { id: Number(data.bank_id) },
     };
   }
+  if ("manager_id" in data) {
+    serialized.hrms_manager = {
+      connect: { id: Number(data.manager_id) },
+    };
+  }
+
   return serialized;
 };
+
 
 const serializeAddress = (data) => {
   return {
@@ -184,6 +195,7 @@ const createEmployee = async (data) => {
 const updateEmployee = async (id, data) => {
   const { empAddressData, ...employeeData } = data; // Separate `contactIds` from other employee data
   try {
+
     const updatedData = {
       ...employeeData,
       updatedby: data.updatedby || 1,
@@ -192,14 +204,14 @@ const updateEmployee = async (id, data) => {
     const serializedData = serializeTags(updatedData);
 
     // Filter address by existence of ID
-    const newAddresses = empAddressData.filter((addr) => !addr.id);
-    const existingAddresses = empAddressData.filter((addr) => addr.id);
+    const newAddresses = empAddressData?.filter((addr) => !addr.id) || [];
+    const existingAddresses = empAddressData?.filter((addr) => addr.id) || [];
 
     // Prepare address data
-    const newSerialized = newAddresses.map((addr) => ({
+    const newSerialized = newAddresses?.map((addr) => ({
       ...serializeAddress(addr),
       employee_id: parseInt(id),
-    }));
+    })) || [];
 
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
@@ -223,11 +235,12 @@ const updateEmployee = async (id, data) => {
       //   where: { employee_id: parseInt(id) },
       //   select: { id: true },
       // });
-      const dbIds = employee.hrms_employee_address?.map((a) => a.id);
-      const requestIds = existingAddresses.map((a) => a.id);
+        if (Array.isArray(empAddressData) && empAddressData.length > 0) {
+      const dbIds = employee?.hrms_employee_address?.map((a) => a.id);
+      const requestIds = existingAddresses?.map((a) => a.id);
 
       // 3. Delete removed addresses (if any)
-      const toDeleteIds = dbIds.filter((id) => !requestIds.includes(id));
+      const toDeleteIds = empAddressData ? dbIds.filter((id) => !requestIds.includes(id)) : [];
       if (toDeleteIds.length > 0) {
         await prisma.hrms_d_employee_address.deleteMany({
           where: { id: { in: toDeleteIds } },
@@ -235,7 +248,7 @@ const updateEmployee = async (id, data) => {
       }
 
       // 4. Update existing addresses
-      for (const addr of existingAddresses) {
+     for (const addr of existingAddresses) {
         await prisma.hrms_d_employee_address.update({
           where: { id: addr.id },
           data: serializeAddress(addr),
@@ -248,6 +261,7 @@ const updateEmployee = async (id, data) => {
           data: newSerialized,
         });
       }
+    }
       //  const serializedAddres = serializeAddress(empAddressData);
       // // Map contacts to the employee
       // const addressDatas = {
