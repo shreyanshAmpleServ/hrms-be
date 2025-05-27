@@ -752,36 +752,38 @@ model hrms_m_bank_master {
 }
 
 model hrms_m_branch_master {
-  id          Int       @id(map: "PK__hrms_m_b__3213E83FF8103A9B") @default(autoincrement())
-  company_id  Int
-  branch_name String?   @db.NVarChar(255)
-  location    String?   @db.NVarChar(255)
-  createdate  DateTime? @default(now(), map: "DF__hrms_m_br__creat__17036CC0") @db.DateTime
-  createdby   Int
-  updatedate  DateTime?
-  updatedby   Int?
-  log_inst    Int?
-  is_active   String?   @default("Y") @db.Char(1)
+  id             Int                   @id(map: "PK__hrms_m_b__3213E83FF8103A9B") @default(autoincrement())
+  company_id     Int
+  branch_name    String?               @db.NVarChar(255)
+  location       String?               @db.NVarChar(255)
+  createdate     DateTime?             @default(now(), map: "DF__hrms_m_br__creat__17036CC0") @db.DateTime
+  createdby      Int
+  updatedate     DateTime?
+  updatedby      Int?
+  log_inst       Int?
+  is_active      String?               @default("Y") @db.Char(1)
+  branch_company hrms_m_company_master @relation(fields: [company_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_m_company_master {
-  id                   Int       @id(map: "PK__hrms_m_c__3213E83F22908E36") @default(autoincrement())
-  company_name         String?   @db.NVarChar(200)
-  company_code         String?   @db.NVarChar(50)
-  address              String?   @db.NVarChar(255)
-  contact_person       String?   @db.NVarChar(100)
-  contact_email        String?   @db.NVarChar(100)
-  contact_phone        String?   @db.NVarChar(50)
+  id                   Int                    @id(map: "PK__hrms_m_c__3213E83F22908E36") @default(autoincrement())
+  company_name         String?                @db.NVarChar(200)
+  company_code         String?                @db.NVarChar(50)
+  address              String?                @db.NVarChar(255)
+  contact_person       String?                @db.NVarChar(100)
+  contact_email        String?                @db.NVarChar(100)
+  contact_phone        String?                @db.NVarChar(50)
   country_id           Int
-  currency_code        String?   @db.VarChar(5)
-  financial_year_start DateTime? @db.Date
-  timezone             String?   @db.VarChar(100)
-  createdate           DateTime? @default(now(), map: "DF__hrms_m_co__creat__6501FCD8") @db.DateTime
+  currency_code        String?                @db.VarChar(5)
+  financial_year_start DateTime?              @db.Date
+  timezone             String?                @db.VarChar(100)
+  createdate           DateTime?              @default(now(), map: "DF__hrms_m_co__creat__6501FCD8") @db.DateTime
   createdby            Int
-  updatedate           DateTime? @db.DateTime
+  updatedate           DateTime?              @db.DateTime
   updatedby            Int?
   log_inst             Int?
-  is_active            String?   @default("Y") @db.Char(1)
+  is_active            String?                @default("Y") @db.Char(1)
+  branch_company       hrms_m_branch_master[]
 }
 
 model hrms_m_currency_master {
