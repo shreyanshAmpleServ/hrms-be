@@ -37,7 +37,7 @@ const serializeTags = (data) => {
   if ("spouse_name" in data) serialized.spouse_name = data.spouse_name;
   if ("marital_status" in data) serialized.marital_status = data.marital_status;
   if ("no_of_child" in data) serialized.no_of_child = Number(data.no_of_child);
-  if ("social_medias" in data) serialized.social_medias = Number(data.social_medias);
+  if ("social_medias" in data) serialized.social_medias = data.social_medias;
 
   if ("father_name" in data) serialized.father_name = data.father_name;
   if ("mother_name" in data) serialized.mother_name = data.mother_name;
@@ -47,6 +47,7 @@ const serializeTags = (data) => {
   if ("secondary_contact_mumber" in data) serialized.secondary_contact_mumber = data.secondary_contact_mumber;
   if ("secondary_contact_name" in data) serialized.secondary_contact_name = data.secondary_contact_name;
   if ("secondary_contact_relation" in data) serialized.secondary_contact_relation = data.secondary_contact_relation;
+  // if ("bank_id" in data) serialized.bank_id = Number(data.bank_id);
 
   // Relations (only connect if provided)
   if ("designation_id" in data) {
@@ -64,6 +65,7 @@ const serializeTags = (data) => {
       connect: { id: Number(data.bank_id) },
     };
   }
+
   if ("manager_id" in data) {
     serialized.hrms_manager = {
       connect: { id: Number(data.manager_id) },
@@ -119,8 +121,19 @@ const validateContactsExist = async (contactIds) => {
 const createEmployee = async (data) => {
   const { empAddressData, ...employeeData } = data; // Separate `contactIds` from other deal data
   try {
-    const serializedData = serializeTags(employeeData);
+console.log("Employee Data: ", employeeData);
+    if (!data.bank_id ) {
+      throw new CustomError(`Bank with ID ${data.bank_id} does not exist`, 400);
+    }
+    if (!data.designation_id ) {
+      throw new CustomError(`Designation with ID ${data.designation_id} does not exist`, 400);
+    }
+    if (!data.department_id) {
+      throw new CustomError(`Department with ID ${data.department_id} does not exist`, 400);
+    }
 
+    const serializedData = serializeTags(employeeData);
+console.log("Serialized Data: ", serializedData);
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
       // Create the employee
