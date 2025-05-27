@@ -197,7 +197,7 @@ console.log("Serialized Data: ", serializedData);
       },
     });
 
-    return {...fullData, data:{...fullData.data, social_medias: JSON.parse(fullData.data.social_medias)}};
+    return parseData(fullData);
   } catch (error) {
     console.log("Error to Create employee : ", error);
     throw new CustomError(`Error creating employee: ${error.message}`, 500);
@@ -321,7 +321,7 @@ const updateEmployee = async (id, data) => {
       return updatedEmp;
     });
 
- return {...result, data:{...result.data, social_medias: JSON.parse(result.data.social_medias)}};
+ return parseData(result);
 ;
   } catch (error) {
     console.log("Updating error in employee", error);
@@ -469,7 +469,7 @@ const getAllEmployee = async (
       where: filters,
     });
     return {
-      data: parseData(employee),
+      data: employee,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
