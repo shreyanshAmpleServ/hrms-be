@@ -1,26 +1,42 @@
 const express = require("express");
 const router = express.Router();
 const disciplinaryActionController = require("../controller/disciplinaryActionController.js");
+const { authenticateToken } = require("../middlewares/authMiddleware.js");
 
 // Create disciplinary action routes
 router.post(
-  "/createDiscplinaryAction",
+  "/diciplinary-action",
+  authenticateToken,
+
   disciplinaryActionController.createDisciplinaryAction
 );
 
 // Get all disciplinary actions routes
 router.get(
-  "/getAllDiscplinaryAction",
+  "/diciplinary-action",
+  authenticateToken,
   disciplinaryActionController.getAllDisciplinaryActions
 );
 
 // Get a single disciplinary action by ID routes
-router.get("/:id", disciplinaryActionController.getDisciplinaryActionById);
+router.get(
+  "/diciplinary-action/:id",
+  authenticateToken,
+  disciplinaryActionController.getDisciplinaryActionById
+);
 
 // Update a disciplinary action by ID routes
-router.put("/:id", disciplinaryActionController.updateDisciplinaryAction);
+router.put(
+  "/diciplinary-action/:id",
+  authenticateToken,
+  disciplinaryActionController.updateDisciplinaryAction
+);
 
 // Delete  disciplinary action by ID routes
-router.delete("/:id", disciplinaryActionController.deleteDisciplinaryAction);
+router.delete(
+  "/diciplinary-action/:id",
+  authenticateToken,
+  disciplinaryActionController.deleteDisciplinaryAction
+);
 
 module.exports = router;

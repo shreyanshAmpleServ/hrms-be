@@ -5,7 +5,7 @@ const moment = require("moment");
 // Controller on create a new disciplinary action
 const createDisciplinaryAction = async (req, res, next) => {
   try {
-    const data = req.body;
+    const data = { ...req.body, createdby: req.user.id };
     const result = await disciplinaryActionService.createDisciplinaryAction(
       data
     );
@@ -32,7 +32,7 @@ const getDisciplinaryActionById = async (req, res, next) => {
 const updateDisciplinaryAction = async (req, res, next) => {
   try {
     const id = req.params.id;
-    const data = req.body;
+    const data = { ...req.body, updatedby: req.user.id };
     const result = await disciplinaryActionService.updateDisciplinaryAction(
       id,
       data
@@ -47,8 +47,8 @@ const updateDisciplinaryAction = async (req, res, next) => {
 const deleteDisciplinaryAction = async (req, res, next) => {
   try {
     const id = req.params.id;
-    await disciplinaryActionService.deleteDisciplinaryAction(id);
-    res.status(204).send();
+    const result = await disciplinaryActionService.deleteDisciplinaryAction(id);
+    res.status(200).json(result);
   } catch (error) {
     next(new CustomError(error.message, 404));
   }
