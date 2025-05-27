@@ -92,11 +92,11 @@ const serializeAddress = (data) => {
 };
 
 // Parse  after retrieving it
-const parseTags = (deal) => {
-  if (deal && deal.tags) {
-    deal.tags = JSON.parse(deal.tags);
+const parseData = (data) => {
+  if (data && data.social_medias) {
+    data.social_medias = JSON.parse(data.social_medias);
   }
-  return deal;
+  return data;
 };
 
 // Check if contactIds are valid and exist
@@ -197,7 +197,7 @@ console.log("Serialized Data: ", serializedData);
       },
     });
 
-    return fullData;
+    return {...fullData, data:{...fullData.data, social_medias: JSON.parse(fullData.data.social_medias)}};
   } catch (error) {
     console.log("Error to Create employee : ", error);
     throw new CustomError(`Error creating employee: ${error.message}`, 500);
@@ -321,7 +321,8 @@ const updateEmployee = async (id, data) => {
       return updatedEmp;
     });
 
-    return result;
+ return {...result, data:{...result.data, social_medias: JSON.parse(result.data.social_medias)}};
+;
   } catch (error) {
     console.log("Updating error in employee", error);
     throw new CustomError(`Error updating employee: ${error.message}`, 500);
@@ -365,7 +366,7 @@ const findEmployeeById = async (id) => {
         },
       },
     });
-    return parseTags(employee);
+    return parseData(employee);
   } catch (error) {
     throw new CustomError("Error finding employee by ID", 503);
   }
@@ -460,7 +461,7 @@ const getAllEmployee = async (
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     // const formattedDeals = employee.map((deal) => {
-    //   const { employee_contact, ...rest } = parseTags(deal); // Remove "deals" key
+    //   const { employee_contact, ...rest } = parseData(deal); // Remove "deals" key
     //   const finalContact = employee_contact.map((item) => item.camp_contact);
     //   return { ...rest, employee_contact: finalContact }; // Rename "stages" to "deals"
     // });
@@ -468,7 +469,7 @@ const getAllEmployee = async (
       where: filters,
     });
     return {
-      data: employee,
+      data: parseData(employee),
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
