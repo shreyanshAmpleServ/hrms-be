@@ -305,8 +305,12 @@ const getAllDisciplinaryAction = async (
   size,
   search,
   dateFilter,
-  start_date, // change param names to match API query params
-  end_date
+  customStartDate,
+  customEndDate,
+  empName,
+  actionTaken,
+  penalty,
+  status
 ) => {
   try {
     const currentPage = Number(page) > 0 ? Number(page) : 1;
@@ -315,75 +319,92 @@ const getAllDisciplinaryAction = async (
 
     const filters = {};
 
-    // Search filter
-    if (search) {
-      filters.OR = [
-        { incident_description: { contains: search, mode: "insensitive" } },
-        { action_taken: { contains: search, mode: "insensitive" } },
-        { committee_notes: { contains: search, mode: "insensitive" } },
-        { penalty_type: { contains: search, mode: "insensitive" } },
-        { status: { contains: search, mode: "insensitive" } },
-      ];
-    }
+    // Helper to parse DD-MM-YYYY to Date object
+    const parseDate = (dateStr) => {
+      const [day, month, year] = dateStr.split("-");
+      return new Date(`${year}-${month}-${day}`);
+    };
 
-    // Date filtering logic
+    // Date filters
     const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
     let startDate, endDate;
 
-    if (start_date && end_date) {
-      // Use the dates directly from query params if provided
-      startDate = new Date(start_date);
-      endDate = new Date(end_date);
-      // Normalize endDate to end of the day
-      endDate.setHours(23, 59, 59, 999);
-    } else if (dateFilter) {
-      // If no explicit start/end date, use dateFilter options
-      switch (dateFilter) {
-        case "Last 30 days":
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 30);
-          endDate = new Date();
-          break;
-        case "Last 7 weeks":
-          startDate = new Date();
-          startDate.setDate(startDate.getDate() - 49);
-          endDate = new Date();
-          break;
-        case "Last Month":
-          startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-          endDate = new Date(today.getFullYear(), today.getMonth(), 0);
-          break;
-        case "This Month":
-          startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-          endDate = new Date();
-          break;
-        case "Today":
-          startDate = new Date(today);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(today);
+    switch (dateFilter) {
+      case "today":
+        startDate = new Date(today);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case "yesterday":
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 1);
+        endDate = new Date(startDate);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case "last7days":
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 6);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case "last30days":
+        startDate = new Date(today);
+        startDate.setDate(startDate.getDate() - 29);
+        endDate = new Date(today);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case "thisMonth":
+        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
+        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case "lastMonth":
+        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
+        endDate.setHours(23, 59, 59, 999);
+        break;
+      case "custom":
+        if (customStartDate && customEndDate) {
+          startDate = parseDate(customStartDate);
+          endDate = parseDate(customEndDate);
           endDate.setHours(23, 59, 59, 999);
-          break;
-        case "Yesterday":
-          startDate = new Date(today);
-          startDate.setDate(startDate.getDate() - 1);
-          startDate.setHours(0, 0, 0, 0);
-          endDate = new Date(startDate);
-          endDate.setHours(23, 59, 59, 999);
-          break;
-        case "Custom Date Range":
-          // Only apply if custom dates were passed (handled above)
-          break;
-        default:
-          // No date filtering
-          break;
-      }
+        }
+        break;
     }
 
     if (startDate && endDate) {
-      filters.createdate = {
-        gte: startDate,
-        lte: endDate,
+      filters.createdate = { gte: startDate, lte: endDate };
+    }
+
+    // General search without mode "insensitive"
+    if (search) {
+      filters.OR = [
+        { incident_description: { contains: search } },
+        { action_taken: { contains: search } },
+        { committee_notes: { contains: search } },
+        { penalty_type: { contains: search } },
+        { status: { contains: search } },
+      ];
+    }
+
+    if (empName) {
+      filters.employee = {
+        full_name: { contains: empName },
       };
+    }
+
+    if (actionTaken) {
+      filters.action_taken = { contains: actionTaken };
+    }
+
+    if (penalty) {
+      filters.penalty_type = { contains: penalty };
+    }
+
+    if (status) {
+      filters.status = { contains: status };
     }
 
     const [disciplinaryActions, totalCount] = await Promise.all([
@@ -404,13 +425,11 @@ const getAllDisciplinaryAction = async (
       prisma.hrms_d_disciplinary_action.count({ where: filters }),
     ]);
 
-    const totalPages = Math.ceil(totalCount / pageSize);
-
     return {
       data: disciplinaryActions,
       currentPage,
       size: pageSize,
-      totalPages,
+      totalPages: Math.ceil(totalCount / pageSize),
       totalCount,
     };
   } catch (error) {
@@ -420,7 +439,6 @@ const getAllDisciplinaryAction = async (
     );
   }
 };
-
 module.exports = {
   createDisciplinaryAction,
   findDisciplinaryActionById,

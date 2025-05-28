@@ -173,72 +173,74 @@ model hrms_d_document_upload {
 }
 
 model hrms_d_employee {
-  id                         Int                           @id(map: "PK__hrms_d_e__3213E83F2F671AFD") @default(autoincrement())
-  employee_code              String                        @unique(map: "UQ__hrms_d_e__B0AA73455BFB8896") @db.VarChar(20)
-  first_name                 String?                       @db.NVarChar(100)
-  last_name                  String?                       @db.NVarChar(100)
-  gender                     String?                       @db.VarChar(10)
-  date_of_birth              DateTime?                     @db.Date
-  national_id_number         String?                       @db.VarChar(50)
-  passport_number            String?                       @db.VarChar(50)
-  employment_type            String?                       @db.VarChar(50)
-  employee_category          String?                       @db.VarChar(50)
-  designation_id             Int?
-  department_id              Int?
-  join_date                  DateTime?                     @db.Date
-  confirm_date               DateTime?                     @db.Date
-  resign_date                DateTime?                     @db.Date
-  bank_id                    Int?
-  account_number             String?                       @db.VarChar(30)
-  work_location              String?                       @db.NVarChar(100)
-  email                      String?                       @db.NVarChar(100)
-  phone_number               String?                       @db.VarChar(20)
-  status                     String?                       @db.VarChar(20)
-  createdate                 DateTime?                     @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
-  createdby                  Int
-  updatedate                 DateTime?                     @db.DateTime
-  updatedby                  Int?
-  log_inst                   Int?
-  full_name                  String?                       @db.NVarChar(100)
-  profile_pic                String?
-  father_name                String?
-  manager_id                 Int?
-  marital_status             String?
-  mother_name                String?
-  no_of_child                Int?
-  spouse_name                String?
-  account_holder_name        String?                       @db.VarChar(100)
-  address                    String?
-  ifsc                       String?
-  nationality                String?
-  passport_expiry_date       DateTime?
-  passport_issue_date        DateTime?
-  primary_contact_name       String?
-  primary_contact_number     String?
-  primary_contact_relation   String?
-  secondary_contact_mumber   String?
-  secondary_contact_name     String?
-  secondary_contact_relation String?
-  social_medias              String?
-  appointment_employee       hrms_d_appointment_letter[]
-  appraisal_employee         hrms_d_appraisal[]
-  hrms_employee_bank         hrms_m_bank_master?           @relation(fields: [bank_id], references: [id], onUpdate: NoAction)
-  hrms_employee_department   hrms_m_department_master?     @relation(fields: [department_id], references: [id], onUpdate: NoAction)
-  hrms_employee_designation  hrms_m_designation_master?    @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
-  hrms_manager               hrms_d_employee?              @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  subordinates               hrms_d_employee[]             @relation("EmployeeManager")
-  hrms_employee_address      hrms_d_employee_address[]
-  contracted_employee        hrms_d_employment_contract[]
-  leave_employee             hrms_d_leave_application[]
-  leave_encashment_employee  hrms_d_leave_encashment[]
-  loan_req_employee          hrms_d_loan_request[]
-  offered_employee           hrms_d_offer_letter[]
-  payslip_employee           hrms_d_payslip[]
-  resume_employee            hrms_d_resume[]
-  time_sheet_employee        hrms_d_time_sheet[]
-  eduction_of_employee       hrms_employee_d_educations[]
-  experiance_of_employee     hrms_employee_d_experiences[]
-  disciplinary_actions       hrms_d_disciplinary_action[]
+  id                                                             Int                           @id(map: "PK__hrms_d_e__3213E83F2F671AFD") @default(autoincrement())
+  employee_code                                                  String                        @unique(map: "UQ__hrms_d_e__B0AA73455BFB8896") @db.VarChar(20)
+  first_name                                                     String?                       @db.NVarChar(100)
+  last_name                                                      String?                       @db.NVarChar(100)
+  gender                                                         String?                       @db.VarChar(10)
+  date_of_birth                                                  DateTime?                     @db.Date
+  national_id_number                                             String?                       @db.VarChar(50)
+  passport_number                                                String?                       @db.VarChar(50)
+  employment_type                                                String?                       @db.VarChar(50)
+  employee_category                                              String?                       @db.VarChar(50)
+  designation_id                                                 Int?
+  department_id                                                  Int?
+  join_date                                                      DateTime?                     @db.Date
+  confirm_date                                                   DateTime?                     @db.Date
+  resign_date                                                    DateTime?                     @db.Date
+  bank_id                                                        Int?
+  account_number                                                 String?                       @db.VarChar(30)
+  work_location                                                  String?                       @db.NVarChar(100)
+  email                                                          String?                       @db.NVarChar(100)
+  phone_number                                                   String?                       @db.VarChar(20)
+  status                                                         String?                       @db.VarChar(20)
+  createdate                                                     DateTime?                     @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
+  createdby                                                      Int
+  updatedate                                                     DateTime?                     @db.DateTime
+  updatedby                                                      Int?
+  log_inst                                                       Int?
+  full_name                                                      String?                       @db.NVarChar(100)
+  profile_pic                                                    String?
+  father_name                                                    String?
+  manager_id                                                     Int?
+  marital_status                                                 String?
+  mother_name                                                    String?
+  no_of_child                                                    Int?
+  spouse_name                                                    String?
+  account_holder_name                                            String?                       @db.VarChar(100)
+  address                                                        String?
+  ifsc                                                           String?
+  nationality                                                    String?
+  passport_expiry_date                                           DateTime?
+  passport_issue_date                                            DateTime?
+  primary_contact_name                                           String?
+  primary_contact_number                                         String?
+  primary_contact_relation                                       String?
+  secondary_contact_mumber                                       String?
+  secondary_contact_name                                         String?
+  secondary_contact_relation                                     String?
+  social_medias                                                  String?
+  appointment_employee                                           hrms_d_appointment_letter[]
+  appraisal_employee                                             hrms_d_appraisal[]
+  disciplinary_actions                                           hrms_d_disciplinary_action[]
+  hrms_employee_bank                                             hrms_m_bank_master?           @relation(fields: [bank_id], references: [id], onUpdate: NoAction)
+  hrms_employee_department                                       hrms_m_department_master?     @relation(fields: [department_id], references: [id], onUpdate: NoAction)
+  hrms_employee_designation                                      hrms_m_designation_master?    @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
+  hrms_manager                                                   hrms_d_employee?              @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subordinates                                                   hrms_d_employee[]             @relation("EmployeeManager")
+  hrms_employee_address                                          hrms_d_employee_address[]
+  contracted_employee                                            hrms_d_employment_contract[]
+  hrms_d_grievance_hrms_d_grievance_assigned_toTohrms_d_employee hrms_d_grievance[]            @relation("hrms_d_grievance_assigned_toTohrms_d_employee")
+  hrms_d_grievance_hrms_d_grievance_employee_idTohrms_d_employee hrms_d_grievance[]            @relation("hrms_d_grievance_employee_idTohrms_d_employee")
+  leave_employee                                                 hrms_d_leave_application[]
+  leave_encashment_employee                                      hrms_d_leave_encashment[]
+  loan_req_employee                                              hrms_d_loan_request[]
+  offered_employee                                               hrms_d_offer_letter[]
+  payslip_employee                                               hrms_d_payslip[]
+  resume_employee                                                hrms_d_resume[]
+  time_sheet_employee                                            hrms_d_time_sheet[]
+  eduction_of_employee                                           hrms_employee_d_educations[]
+  experiance_of_employee                                         hrms_employee_d_experiences[]
 }
 
 model hrms_d_employee_address {
@@ -316,21 +318,24 @@ model hrms_d_exit_interview {
 }
 
 model hrms_d_grievance {
-  id               Int       @id(map: "PK__hrms_d_g__3213E83FF9AE53A7") @default(autoincrement())
-  employee_id      Int
-  grievance_type   String?   @db.NVarChar(100)
-  description      String?
-  anonymous        Boolean?
-  submitted_on     DateTime? @db.DateTime
-  status           String?   @db.VarChar(50)
-  assigned_to      Int?
-  resolution_notes String?
-  resolved_on      DateTime? @db.DateTime
-  createdate       DateTime? @default(now(), map: "DF__hrms_d_gr__creat__0A688BB1") @db.DateTime
-  createdby        Int
-  updatedate       DateTime? @db.DateTime
-  updatedby        Int?
-  log_inst         Int?
+  id                                                            Int                    @id(map: "PK__hrms_d_g__3213E83FF9AE53A7") @default(autoincrement())
+  employee_id                                                   Int
+  grievance_type                                                Int?
+  description                                                   String?
+  anonymous                                                     Boolean?
+  submitted_on                                                  DateTime?              @db.DateTime
+  status                                                        String?                @db.VarChar(50)
+  assigned_to                                                   Int?
+  resolution_notes                                              String?
+  resolved_on                                                   DateTime?              @db.DateTime
+  createdate                                                    DateTime?              @default(now(), map: "DF__hrms_d_gr__creat__0A688BB1") @db.DateTime
+  createdby                                                     Int
+  updatedate                                                    DateTime?              @db.DateTime
+  updatedby                                                     Int?
+  log_inst                                                      Int?
+  hrms_d_employee_hrms_d_grievance_assigned_toTohrms_d_employee hrms_d_employee?       @relation("hrms_d_grievance_assigned_toTohrms_d_employee", fields: [assigned_to], references: [id], onUpdate: NoAction)
+  hrms_d_employee_hrms_d_grievance_employee_idTohrms_d_employee hrms_d_employee        @relation("hrms_d_grievance_employee_idTohrms_d_employee", fields: [employee_id], references: [id], onUpdate: NoAction)
+  hrms_m_grievance_type                                         hrms_m_grievance_type? @relation(fields: [grievance_type], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_helpdesk_ticket {
@@ -754,7 +759,7 @@ model hrms_m_branch_master {
   updatedby      Int?
   log_inst       Int?
   is_active      String?               @default("Y") @db.Char(1)
-  branch_company hrms_m_company_master @relation(fields: [company_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  branch_company hrms_m_company_master @relation(fields: [company_id], references: [id], onUpdate: NoAction)
 }
 
 model hrms_m_company_master {
@@ -871,13 +876,14 @@ model hrms_m_goal_category {
 }
 
 model hrms_m_grievance_type {
-  id                  Int       @id(map: "PK__hrms_m_g__3213E83FADA6089E") @default(autoincrement())
-  grievance_type_name String?   @db.NVarChar(100)
-  createdate          DateTime? @default(now(), map: "DF__hrms_m_gr__creat__2CBDA3B5") @db.DateTime
+  id                  Int                @id(map: "PK__hrms_m_g__3213E83FADA6089E") @default(autoincrement())
+  grievance_type_name String?            @db.NVarChar(100)
+  createdate          DateTime?          @default(now(), map: "DF__hrms_m_gr__creat__2CBDA3B5") @db.DateTime
   createdby           Int
-  updatedate          DateTime? @db.DateTime
+  updatedate          DateTime?          @db.DateTime
   updatedby           Int?
   log_inst            Int?
+  hrms_d_grievance    hrms_d_grievance[]
 }
 
 model hrms_m_holiday_calendar {
