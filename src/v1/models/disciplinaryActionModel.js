@@ -156,6 +156,65 @@ const deleteDisciplinaryAction = async (id) => {
 };
 
 // To get all disciplinary action
+// const getAllDisciplinaryAction = async (
+//   page,
+//   size,
+//   search,
+//   startDate,
+//   endDate
+// ) => {
+//   try {
+//     const currentPage = Number(page) > 0 ? Number(page) : 1;
+//     const pageSize = Number(size) > 0 ? Number(size) : 10;
+//     const skip = (currentPage - 1) * pageSize;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         { incident_description: { contains: search } },
+//         { action_taken: { contains: search } },
+//         { committee_notes: { contains: search } },
+//         { penalty_type: { contains: search } },
+//         { status: { contains: search } },
+//       ];
+//     }
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = { gte: start, lte: end };
+//       }
+//     }
+
+//     const disciplinaryActions =
+//       await prisma.hrms_d_disciplinary_action.findMany({
+//         where: filters,
+//         skip: skip,
+//         take: pageSize,
+//         orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//       });
+
+//     const totalCount = await prisma.hrms_d_disciplinary_action.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: disciplinaryActions,
+//       currentPage,
+//       size: pageSize,
+//       totalPages: Math.ceil(totalCount / pageSize),
+//       totalCount: totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error retrieving disciplinary actions: ${error.message}`,
+//       503
+//     );
+//   }
+// };
+
+// service/getAllDisciplinaryAction.js
 const getAllDisciplinaryAction = async (
   page,
   size,
@@ -182,29 +241,30 @@ const getAllDisciplinaryAction = async (
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      if (!isNaN(start) && !isNaN(end)) {
         filters.createdate = { gte: start, lte: end };
       }
     }
 
-    const disciplinaryActions =
-      await prisma.hrms_d_disciplinary_action.findMany({
+    // execute both queries in parallel
+    const [disciplinaryActions, totalCount] = await Promise.all([
+      prisma.hrms_d_disciplinary_action.findMany({
         where: filters,
-        skip: skip,
+        skip,
         take: pageSize,
         orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      });
+      }),
+      prisma.hrms_d_disciplinary_action.count({ where: filters }),
+    ]);
 
-    const totalCount = await prisma.hrms_d_disciplinary_action.count({
-      where: filters,
-    });
+    const totalPages = Math.ceil(totalCount / pageSize);
 
     return {
       data: disciplinaryActions,
       currentPage,
       size: pageSize,
-      totalPages: Math.ceil(totalCount / pageSize),
-      totalCount: totalCount,
+      totalPages,
+      totalCount,
     };
   } catch (error) {
     throw new CustomError(
