@@ -155,54 +155,129 @@ const deleteDisciplinaryAction = async (id) => {
   }
 };
 
+// To get all disciplinary action
+// const getAllDisciplinaryAction = async (
+//   page,
+//   size,
+//   search,
+//   startDate,
+//   endDate
+// ) => {
+//   try {
+//     const currentPage = Number(page) > 0 ? Number(page) : 1;
+//     const pageSize = Number(size) > 0 ? Number(size) : 10;
+//     const skip = (currentPage - 1) * pageSize;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         { incident_description: { contains: search } },
+//         { action_taken: { contains: search } },
+//         { committee_notes: { contains: search } },
+//         { penalty_type: { contains: search } },
+//         { status: { contains: search } },
+//       ];
+//     }
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = { gte: start, lte: end };
+//       }
+//     }
+
+//     const disciplinaryActions =
+//       await prisma.hrms_d_disciplinary_action.findMany({
+//         where: filters,
+//         skip: skip,
+//         take: pageSize,
+//         orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//       });
+
+//     const totalCount = await prisma.hrms_d_disciplinary_action.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: disciplinaryActions,
+//       currentPage,
+//       size: pageSize,
+//       totalPages: Math.ceil(totalCount / pageSize),
+//       totalCount: totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error retrieving disciplinary actions: ${error.message}`,
+//       503
+//     );
+//   }
+// };
+
+// service/getAllDisciplinaryAction.js
 const getAllDisciplinaryAction = async (
+  search,
   page,
   size,
-  search,
   startDate,
   endDate
 ) => {
   try {
-    const currentPage = Number(page) > 0 ? Number(page) : 1;
-    const pageSize = Number(size) > 0 ? Number(size) : 10;
-    const skip = (currentPage - 1) * pageSize;
+    page = !page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
 
     const filters = {};
+    // Handle search
     if (search) {
       filters.OR = [
-        { incident_description: { contains: search } },
-        { action_taken: { contains: search } },
-        { committee_notes: { contains: search } },
-        { penalty_type: { contains: search } },
-        { status: { contains: search } },
+        {
+          employee: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          status: { contains: search.toLowerCase() },
+        },
       ];
     }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      if (!isNaN(start) && !isNaN(end)) {
-        filters.createdate = { gte: start, lte: end };
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = {
+          gte: start,
+          lte: end,
+        };
       }
     }
-    // execute both queries in parallel
-    const [disciplinaryActions, totalCount] = await Promise.all([
-      prisma.hrms_d_disciplinary_action.findMany({
-        where: filters,
-        skip,
-        take: pageSize,
-        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      }),
-      prisma.hrms_d_disciplinary_action.count({ where: filters }),
-    ]);
-    const totalPages = Math.ceil(totalCount / pageSize);
+    const datas = await prisma.hrms_d_disciplinary_action.findMany({
+      where: filters,
+      skip: skip,
+      take: size,
+      include: {
+        employee: {
+          select: {
+            full_name: true,
+            employee_code: true,
+          },
+        },
+      },
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+    });
+    // const totalCount = await prisma.hrms_d_time_sheet.count();
+    const totalCount = await prisma.hrms_d_disciplinary_action.count({
+      where: filters,
+    });
 
     return {
-      data: disciplinaryActions,
-      currentPage,
-      size: pageSize,
-      totalPages,
-      totalCount,
+      data: datas,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
     };
   } catch (error) {
     throw new CustomError(
