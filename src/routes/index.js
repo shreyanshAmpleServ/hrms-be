@@ -87,7 +87,7 @@ const appraisalRoute = require("../v1/routes/appraisalRoute")
 const wpsFileLogRoutes = require("../v1/routes/wpsFileLogRoutes")
 const grievanceRoute = require("../v1/routes/grievanceRoute")
 const disciplinaryActionRoute = require("../v1/routes/disciplinaryActionRoute.js");
-
+const trainingSessionRoutes = require("../v1/routes/trainingSessionRoutes.js");
 const router = express.Router();
 
 // Version 1 API
@@ -179,7 +179,8 @@ router.use('/v1', appraisalRoute);
 router.use('/v1', wpsFileLogRoutes);
 router.use('/v1', grievanceRoute);
 router.use("/v1", disciplinaryActionRoute);
-
+router.use("/v1", trainingSessionRoutes); 
+// Base path: /v1
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
 

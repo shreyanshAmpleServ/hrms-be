@@ -142,7 +142,7 @@ model hrms_d_disciplinary_action {
   incident_description String?
   action_taken         String?         @db.NVarChar(255)
   committee_notes      String?
-  penalty_type         String?         @db.VarChar(100)
+  penalty_type         Int?         @db.VarChar(100)
   effective_from       DateTime?       @db.Date
   status               String?         @db.VarChar(50)
   createdate           DateTime?       @default(now(), map: "DF__hrms_d_di__creat__0D44F85C") @db.DateTime
