@@ -215,222 +215,70 @@ const deleteDisciplinaryAction = async (id) => {
 // };
 
 // service/getAllDisciplinaryAction.js
-// const getAllDisciplinaryAction = async (
-//   page,
-//   size,
-//   search,
-//   startDate,
-//   endDate,
-//   empName,
-//   actionTaken,
-//   penalty,
-//   status
-// ) => {
-//   try {
-//     const currentPage = Number(page) > 0 ? Number(page) : 1;
-//     const pageSize = Number(size) > 0 ? Number(size) : 10;
-//     const skip = (currentPage - 1) * pageSize;
-
-//     const filters = {};
-//     if (search) {
-//       filters.OR = [
-//         { incident_description: { contains: search } },
-//         { action_taken: { contains: search } },
-//         { committee_notes: { contains: search } },
-//         { penalty_type: { contains: search } },
-//         { status: { contains: search } },
-//       ];
-//     }
-
-//     if (empName) {
-//       filters.employee = { full_name: { contains: empName } };
-//     }
-
-//     if (actionTaken) {
-//       filters.action_taken = { contains: actionTaken };
-//     }
-
-//     if (penalty) {
-//       filters.penalty_type = { contains: penalty };
-//     }
-
-//     if (status) {
-//       filters.status = { contains: status };
-//     }
-
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-//       if (!isNaN(start) && !isNaN(end)) {
-//         filters.createdate = { gte: start, lte: end };
-//       }
-//     }
-
-//     const [disciplinaryActions, totalCount] = await Promise.all([
-//       prisma.hrms_d_disciplinary_action.findMany({
-//         where: filters,
-//         skip,
-//         take: pageSize,
-//         include: {
-//           employee: {
-//             select: {
-//               full_name: true,
-//               id: true,
-//             },
-//           },
-//         },
-//         orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-//       }),
-//       prisma.hrms_d_disciplinary_action.count({ where: filters }),
-//     ]);
-
-//     const totalPages = Math.ceil(totalCount / pageSize);
-
-//     return {
-//       data: disciplinaryActions,
-//       currentPage,
-//       size: pageSize,
-//       totalPages,
-//       totalCount,
-//     };
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error retrieving disciplinary actions: ${error.message}`,
-//       503
-//     );
-//   }
-// };
 const getAllDisciplinaryAction = async (
+  search,
   page,
   size,
-  search,
-  dateFilter,
-  customStartDate,
-  customEndDate,
-  empName,
-  actionTaken,
-  penalty,
-  status
+  startDate,
+  endDate
 ) => {
   try {
-    const currentPage = Number(page) > 0 ? Number(page) : 1;
-    const pageSize = Number(size) > 0 ? Number(size) : 10;
-    const skip = (currentPage - 1) * pageSize;
+    page = !page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
 
     const filters = {};
-
-    // Helper to parse DD-MM-YYYY to Date object
-    const parseDate = (dateStr) => {
-      const [day, month, year] = dateStr.split("-");
-      return new Date(`${year}-${month}-${day}`);
-    };
-
-    // Date filters
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    let startDate, endDate;
-
-    switch (dateFilter) {
-      case "today":
-        startDate = new Date(today);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case "yesterday":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 1);
-        endDate = new Date(startDate);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case "last7days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 6);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case "last30days":
-        startDate = new Date(today);
-        startDate.setDate(startDate.getDate() - 29);
-        endDate = new Date(today);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case "thisMonth":
-        startDate = new Date(today.getFullYear(), today.getMonth(), 1);
-        endDate = new Date(today.getFullYear(), today.getMonth() + 1, 0);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case "lastMonth":
-        startDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
-        endDate = new Date(today.getFullYear(), today.getMonth(), 0);
-        endDate.setHours(23, 59, 59, 999);
-        break;
-      case "custom":
-        if (customStartDate && customEndDate) {
-          startDate = parseDate(customStartDate);
-          endDate = parseDate(customEndDate);
-          endDate.setHours(23, 59, 59, 999);
-        }
-        break;
-    }
-
-    if (startDate && endDate) {
-      filters.createdate = { gte: startDate, lte: endDate };
-    }
-
-    // General search without mode "insensitive"
+    // Handle search
     if (search) {
       filters.OR = [
-        { incident_description: { contains: search } },
-        { action_taken: { contains: search } },
-        { committee_notes: { contains: search } },
-        { penalty_type: { contains: search } },
-        { status: { contains: search } },
+        {
+          employee: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          status: { contains: search.toLowerCase() },
+        },
       ];
     }
 
-    if (empName) {
-      filters.employee = {
-        full_name: { contains: empName },
-      };
-    }
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
 
-    if (actionTaken) {
-      filters.action_taken = { contains: actionTaken };
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = {
+          gte: start,
+          lte: end,
+          //Test
+        };
+      }
     }
-
-    if (penalty) {
-      filters.penalty_type = { contains: penalty };
-    }
-
-    if (status) {
-      filters.status = { contains: status };
-    }
-
-    const [disciplinaryActions, totalCount] = await Promise.all([
-      prisma.hrms_d_disciplinary_action.findMany({
-        where: filters,
-        skip,
-        take: pageSize,
-        include: {
-          employee: {
-            select: {
-              full_name: true,
-              id: true,
-            },
+    const datas = await prisma.hrms_d_disciplinary_action.findMany({
+      where: filters,
+      skip: skip,
+      take: size,
+      include: {
+        employee: {
+          select: {
+            full_name: true,
+            employee_code: true,
           },
         },
-        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      }),
-      prisma.hrms_d_disciplinary_action.count({ where: filters }),
-    ]);
+      },
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+    });
+    // const totalCount = await prisma.hrms_d_time_sheet.count();
+    const totalCount = await prisma.hrms_d_disciplinary_action.count({
+      where: filters,
+    });
 
     return {
-      data: disciplinaryActions,
-      currentPage,
-      size: pageSize,
-      totalPages: Math.ceil(totalCount / pageSize),
-      totalCount,
+      data: datas,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
     };
   } catch (error) {
     throw new CustomError(
@@ -439,6 +287,7 @@ const getAllDisciplinaryAction = async (
     );
   }
 };
+
 module.exports = {
   createDisciplinaryAction,
   findDisciplinaryActionById,
