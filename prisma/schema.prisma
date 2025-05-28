@@ -246,7 +246,7 @@ model hrms_d_employee {
   grievance_assigned_to      hrms_d_grievance[]            @relation("GrievanceAssignedTo")
   training_employee          hrms_d_training_feedback[]
   competency_employee        hrms_d_competency[]
-  hrms_d_work_life_event     hrms_d_work_life_event[]
+  work_life_event_employee   hrms_d_work_life_event[]
 }
 
 model hrms_d_employee_address {
