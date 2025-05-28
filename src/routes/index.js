@@ -85,7 +85,7 @@ const loanReqRoute = require("../v1/routes/loanReqRoute");
 const loanTypeRoute = require("../v1/routes/loanTypeRoute");
 const appraisalRoute = require("../v1/routes/appraisalRoute");
 const disciplinaryActionRoute = require("../v1/routes/disciplinaryActionRoute.js");
-
+const trainingSessionRoutes = require("../v1/routes/trainingSessionRoutes.js");
 const router = express.Router();
 
 // Version 1 API
@@ -175,7 +175,8 @@ router.use("/v1", loanReqRoute);
 router.use("/v1", loanTypeRoute);
 router.use("/v1", appraisalRoute);
 router.use("/v1", disciplinaryActionRoute);
-
+router.use("/v1", trainingSessionRoutes); 
+// Base path: /v1
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
 
