@@ -133,7 +133,6 @@ console.log("Employee Data: ", employeeData);
     }
 
     const serializedData = serializeTags(employeeData);
-console.log("Serialized Data: ", serializedData);
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
       // Create the employee
