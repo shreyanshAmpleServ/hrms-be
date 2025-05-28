@@ -252,6 +252,14 @@ const getAllDisciplinaryAction = async (
         where: filters,
         skip,
         take: pageSize,
+        include: {
+          employee: {
+            select: {
+              full_name: true,
+              id: true,
+            },
+          },
+        },
         orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       }),
       prisma.hrms_d_disciplinary_action.count({ where: filters }),
