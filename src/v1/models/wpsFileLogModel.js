@@ -92,7 +92,7 @@ const getAllWPSFile = async (search, page, size, startDate, endDate) => {
         //   },
         // },
         {
-          contract_type: { contains: search.toLowerCase() },
+          payroll_month: { contains: search.toLowerCase() },
         }
       ];
     }

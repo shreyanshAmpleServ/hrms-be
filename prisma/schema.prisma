@@ -133,6 +133,8 @@ model hrms_d_competency {
   updatedate         DateTime? @db.DateTime
   updatedby          Int?
   log_inst           Int?
+
+  competency_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_disciplinary_action {
@@ -241,6 +243,9 @@ model hrms_d_employee {
   experiance_of_employee     hrms_employee_d_experiences[]
   grievance_employee         hrms_d_grievance[]            @relation("GrievanceSubmittedBy")
   grievance_assigned_to      hrms_d_grievance[]            @relation("GrievanceAssignedTo")
+  training_employee          hrms_d_training_feedback[]
+  competency_employee        hrms_d_competency[]
+  hrms_d_work_life_event     hrms_d_work_life_event[]
 }
 
 model hrms_d_employee_address {
@@ -630,20 +635,24 @@ model hrms_d_training_feedback {
   updatedate    DateTime? @db.DateTime
   updatedby     Int?
   log_inst      Int?
+
+  training_employee hrms_d_employee?         @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  training_details  hrms_d_training_session? @relation(fields: [training_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_training_session {
-  id             Int       @id(map: "PK__hrms_d_t__3213E83F1B83D284") @default(autoincrement())
-  training_title String?   @db.NVarChar(255)
-  trainer_name   String?   @db.NVarChar(100)
-  training_date  DateTime? @db.Date
-  location       String?   @db.NVarChar(100)
-  training_type  String?   @db.VarChar(50)
-  createdate     DateTime? @default(now(), map: "DF__hrms_d_tr__creat__4865BE2A") @db.DateTime
-  createdby      Int
-  updatedate     DateTime? @db.DateTime
-  updatedby      Int?
-  log_inst       Int?
+  id               Int                        @id(map: "PK__hrms_d_t__3213E83F1B83D284") @default(autoincrement())
+  training_title   String?                    @db.NVarChar(255)
+  trainer_name     String?                    @db.NVarChar(100)
+  training_date    DateTime?                  @db.Date
+  location         String?                    @db.NVarChar(100)
+  training_type    String?                    @db.VarChar(50)
+  createdate       DateTime?                  @default(now(), map: "DF__hrms_d_tr__creat__4865BE2A") @db.DateTime
+  createdby        Int
+  updatedate       DateTime?                  @db.DateTime
+  updatedby        Int?
+  log_inst         Int?
+  training_details hrms_d_training_feedback[]
 }
 
 model hrms_d_travel_expense {
@@ -664,17 +673,19 @@ model hrms_d_travel_expense {
 }
 
 model hrms_d_work_life_event {
-  id                Int       @id(map: "PK__hrms_d_w__3213E83F17E65FDB") @default(autoincrement())
-  employee_id       Int
-  event_type        String?   @db.NVarChar(100)
-  event_date        DateTime? @db.Date
-  notes             String?
-  requires_followup Boolean?
-  createdate        DateTime? @default(now(), map: "DF__hrms_d_wo__creat__10216507") @db.DateTime
-  createdby         Int
-  updatedate        DateTime? @db.DateTime
-  updatedby         Int?
-  log_inst          Int?
+  id                       Int                          @id(map: "PK__hrms_d_w__3213E83F17E65FDB") @default(autoincrement())
+  employee_id              Int
+  event_type               Int?
+  event_date               DateTime?                    @db.Date
+  notes                    String?
+  requires_followup        Boolean?
+  createdate               DateTime?                    @default(now(), map: "DF__hrms_d_wo__creat__10216507") @db.DateTime
+  createdby                Int
+  updatedate               DateTime?                    @db.DateTime
+  updatedby                Int?
+  log_inst                 Int?
+  work_life_event_employee hrms_d_employee?             @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  work_life_event_type     hrms_m_work_life_event_type? @relation(fields: [event_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_work_permit {
@@ -1079,13 +1090,14 @@ model hrms_m_tax_relief {
 }
 
 model hrms_m_work_life_event_type {
-  id              Int       @id(map: "PK__hrms_m_w__3213E83FCFB88DCB") @default(autoincrement())
-  event_type_name String?   @db.NVarChar(100)
-  createdate      DateTime? @default(now(), map: "DF__hrms_m_wo__creat__32767D0B") @db.DateTime
-  createdby       Int
-  updatedate      DateTime? @db.DateTime
-  updatedby       Int?
-  log_inst        Int?
+  id                   Int                      @id(map: "PK__hrms_m_w__3213E83FCFB88DCB") @default(autoincrement())
+  event_type_name      String?                  @db.NVarChar(100)
+  createdate           DateTime?                @default(now(), map: "DF__hrms_m_wo__creat__32767D0B") @db.DateTime
+  createdby            Int
+  updatedate           DateTime?                @db.DateTime
+  updatedby            Int?
+  log_inst             Int?
+  work_life_event_type hrms_d_work_life_event[]
 }
 
 model hrms_m_work_schedule_template {
