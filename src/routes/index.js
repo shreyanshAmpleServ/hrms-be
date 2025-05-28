@@ -1,34 +1,34 @@
-const express = require('express');
-const authRoutesv1 = require('../v1/routes/authRoutes'); // Import version 1 routes
-const contactRoute = require('../v1/routes/contactRoutes');
-const dealRoute = require('../v1/routes/dealRoutes');
-const companyRoute = require('../v1/routes/companyRoutes');
-const pipelineRoute = require('../v1/routes/pipelineRoute');
-const sourceRoute = require('../v1/routes/sourceRoute');
-const callsRoutes = require('../v1/routes/callsRoute');
-const callStatusRoutes = require('../v1/routes/callStatusRoute');
-const callTypeRoutes = require('../v1/routes/callTypeRoute');
-const callResultRoutes = require('../v1/routes/callResultRoute');
+const express = require("express");
+const authRoutesv1 = require("../v1/routes/authRoutes"); // Import version 1 routes
+const contactRoute = require("../v1/routes/contactRoutes");
+const dealRoute = require("../v1/routes/dealRoutes");
+const companyRoute = require("../v1/routes/companyRoutes");
+const pipelineRoute = require("../v1/routes/pipelineRoute");
+const sourceRoute = require("../v1/routes/sourceRoute");
+const callsRoutes = require("../v1/routes/callsRoute");
+const callStatusRoutes = require("../v1/routes/callStatusRoute");
+const callTypeRoutes = require("../v1/routes/callTypeRoute");
+const callResultRoutes = require("../v1/routes/callResultRoute");
 // const callPurposeRoutes = require('../v1/routes/callPurposeRoute');
-const contactStageRoutes = require('../v1/routes/contactStageRoute');
-const industryRoutes = require('../v1/routes/industryRoute');
-const lostReasonRoutes = require('../v1/routes/lostReasonRoute');
-const projectRoutes = require('../v1/routes/projectRoutes');
-const userRoutes = require('../v1/routes/userRoutes');
-const roleRoutes = require('../v1/routes/roleRoute');
-const leadRoutes = require('../v1/routes/leadRoutes');
-const countryRoutes = require('../v1/routes/countryRoutes')
-const currencyRoutes = require('../v1/routes/currencyRoutes')
-const activitiesRoutes = require('../v1/routes/activitiesRoutes')
+const contactStageRoutes = require("../v1/routes/contactStageRoute");
+const industryRoutes = require("../v1/routes/industryRoute");
+const lostReasonRoutes = require("../v1/routes/lostReasonRoute");
+const projectRoutes = require("../v1/routes/projectRoutes");
+const userRoutes = require("../v1/routes/userRoutes");
+const roleRoutes = require("../v1/routes/roleRoute");
+const leadRoutes = require("../v1/routes/leadRoutes");
+const countryRoutes = require("../v1/routes/countryRoutes");
+const currencyRoutes = require("../v1/routes/currencyRoutes");
+const activitiesRoutes = require("../v1/routes/activitiesRoutes");
 // const noteRoutes = require('../v1/routes/noteRoute');
-const dashboardRoutes = require('../v1/routes/dashboardRoutes')
-const vendorRoutes = require('../v1/routes/vendorRoutes')
-const meetingTypeRoutes = require('../v1/routes/meetingTypeRoute')
-const stateRoutes = require('../v1/routes/stateRoute')
-const modulesRoutes = require('../v1/routes/ModuleRoute')
-const permissionsRoutes = require('../v1/routes/roleModulePermissionRoute')
-const fileAttachmentRoutes = require('../v1/routes/fileAttachmentRoute')
-const productCategoryRoutes = require('../v1/routes/productCategoryRoute')
+const dashboardRoutes = require("../v1/routes/dashboardRoutes");
+const vendorRoutes = require("../v1/routes/vendorRoutes");
+const meetingTypeRoutes = require("../v1/routes/meetingTypeRoute");
+const stateRoutes = require("../v1/routes/stateRoute");
+const modulesRoutes = require("../v1/routes/ModuleRoute");
+const permissionsRoutes = require("../v1/routes/roleModulePermissionRoute");
+const fileAttachmentRoutes = require("../v1/routes/fileAttachmentRoute");
+const productCategoryRoutes = require("../v1/routes/productCategoryRoute");
 // const manufacturerRoutes = require('../v1/routes/manufacturerRoute')
 const productRoutes = require('../v1/routes/productRoute')
 const taxSetupRoutes = require('../v1/routes/taxSetupRoute')
@@ -86,34 +86,35 @@ const loanTypeRoute = require("../v1/routes/loanTypeRoute")
 const appraisalRoute = require("../v1/routes/appraisalRoute")
 const wpsFileLogRoutes = require("../v1/routes/wpsFileLogRoutes")
 const grievanceRoute = require("../v1/routes/grievanceRoute")
+const disciplinaryActionRoute = require("../v1/routes/disciplinaryActionRoute.js");
 
 const router = express.Router();
 
 // Version 1 API
-router.use('/v1', authRoutesv1); // Base path: /v1
-router.use('/v1', dashboardRoutes); // Base path: /v1
-router.use('/v1', contactRoute); // Base path: /v1
-router.use('/v1', vendorRoutes); // Base path: /v1
-router.use('/v1', dealRoute); // Base path: /v1
-router.use('/v1', companyRoute); // Base path: /v1
-router.use('/v1', pipelineRoute); // Base path: /v1
-router.use('/v1', pipelineRoute); // Base path: /v1
-router.use('/v1', sourceRoute); // Base path: /v1
-router.use('/v1', callsRoutes);// Base path: /v1
-router.use('/v1', callStatusRoutes);// Base path: /v1
-router.use('/v1', callTypeRoutes);// Base path: /v1
-router.use('/v1', callResultRoutes);// Base path: /v1
+router.use("/v1", authRoutesv1); // Base path: /v1
+router.use("/v1", dashboardRoutes); // Base path: /v1
+router.use("/v1", contactRoute); // Base path: /v1
+router.use("/v1", vendorRoutes); // Base path: /v1
+router.use("/v1", dealRoute); // Base path: /v1
+router.use("/v1", companyRoute); // Base path: /v1
+router.use("/v1", pipelineRoute); // Base path: /v1
+router.use("/v1", pipelineRoute); // Base path: /v1
+router.use("/v1", sourceRoute); // Base path: /v1
+router.use("/v1", callsRoutes); // Base path: /v1
+router.use("/v1", callStatusRoutes); // Base path: /v1
+router.use("/v1", callTypeRoutes); // Base path: /v1
+router.use("/v1", callResultRoutes); // Base path: /v1
 // router.use('/v1', callPurposeRoutes);// Base path: /v1
-router.use('/v1', contactStageRoutes);// Base path: /v1
-router.use('/v1', industryRoutes);// Base path: /v1
-router.use('/v1', lostReasonRoutes);// Base path: /v1
-router.use('/v1', projectRoutes);
-router.use('/v1', userRoutes);
-router.use('/v1', roleRoutes);
-router.use('/v1', leadRoutes);
-router.use('/v1', countryRoutes);
-router.use('/v1', currencyRoutes);
-router.use('/v1', activitiesRoutes);
+router.use("/v1", contactStageRoutes); // Base path: /v1
+router.use("/v1", industryRoutes); // Base path: /v1
+router.use("/v1", lostReasonRoutes); // Base path: /v1
+router.use("/v1", projectRoutes);
+router.use("/v1", userRoutes);
+router.use("/v1", roleRoutes);
+router.use("/v1", leadRoutes);
+router.use("/v1", countryRoutes);
+router.use("/v1", currencyRoutes);
+router.use("/v1", activitiesRoutes);
 // router.use('/v1', noteRoutes);
 router.use('/v1', meetingTypeRoutes);
 router.use('/v1', stateRoutes);
@@ -177,6 +178,7 @@ router.use('/v1', loanTypeRoute);
 router.use('/v1', appraisalRoute);
 router.use('/v1', wpsFileLogRoutes);
 router.use('/v1', grievanceRoute);
+router.use("/v1", disciplinaryActionRoute);
 
 // Add future versions here
 // Example: router.use('/v2', v2Routes);

@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 const createEmpCategory = async (data) => {
@@ -9,16 +9,19 @@ const createEmpCategory = async (data) => {
         category_name: data.category_name,
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
-        is_active: data.is_active || 'Y',
-        createdate:new Date(),
+        is_active: data.is_active || "Y",
+        createdate: new Date(),
         updatedate: new Date(),
-        updatedby:1,
+        updatedby: 1,
       },
     });
     return empCategory;
   } catch (error) {
-    console.log("Create employee category ",error)
-    throw new CustomError(`Error creating employee category: ${error.message}`, 500);
+    console.log("Create employee category ", error);
+    throw new CustomError(
+      `Error creating employee category: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -28,12 +31,15 @@ const findEmpCategoryById = async (id) => {
       where: { id: parseInt(id) },
     });
     if (!empCategory) {
-      throw new CustomError('employee category not found', 404);
+      throw new CustomError("employee category not found", 404);
     }
     return empCategory;
   } catch (error) {
-    console.log("employee category By Id  ",error)
-    throw new CustomError(`Error finding employee category by ID: ${error.message}`, 503);
+    console.log("employee category By Id  ", error);
+    throw new CustomError(
+      `Error finding employee category by ID: ${error.message}`,
+      503
+    );
   }
 };
 
@@ -48,7 +54,10 @@ const updateEmpCategory = async (id, data) => {
     });
     return updatedEmpCategory;
   } catch (error) {
-    throw new CustomError(`Error updating employee category: ${error.message}`, 500);
+    throw new CustomError(
+      `Error updating employee category: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -58,83 +67,51 @@ const deleteEmpCategory = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting employee category: ${error.message}`, 500);
+    throw new CustomError(
+      `Error deleting employee category: ${error.message}`,
+      500
+    );
   }
 };
 
 // Get all employee category
-const getAllEmpCategory = async (  page,
-  size,
-  search,
-  startDate,
-  endDate) => {
+const getAllEmpCategory = async (page, size, search) => {
   try {
-      page = page || page == 0 ? 1 : page;
-      size = size || 10;
-      const skip = (page - 1) * size || 0;
-  
-      const filters = {};
-      // Handle search
-      // if (search) {
-      //   filters.OR = [
-      //     {
-      //       campaign_user: {
-      //         full_name: { contains: search.toLowerCase() },
-      //       }, // Include contact details
-      //     },
-      //     {
-      //       campaign_leads: {
-      //         title: { contains: search.toLowerCase() },
-      //       }, // Include contact details
-      //     },
-      //     {
-      //       name: { contains: search.toLowerCase() },
-      //     },
-      //     {
-      //       status: { contains: search.toLowerCase() },
-      //     },
-      //   ];
-      // }
-      // if (status) {
-      //   filters.is_active = { equals: status };
-      // }
-  
-      if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-  
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          filters.createdate = {
-            gte: start,
-            lte: end,
-          };
-        }
-      }
-      const empCategories = await prisma.hrms_m_employee_category.findMany({
-      //   where: filters,
-        skip: skip,
-        take: size,
+    page = page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
 
-        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      });
+    let filters = {};
 
-      const totalCount = await prisma.hrms_m_employee_category.count({
-      //   where: filters,
-      });
-      return {
-        data: empCategories,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount: totalCount,
-      };
+    if (search) {
+      filters.OR = [
+        {
+          category_name: { contains: search.toLowerCase() },
+        },
+      ];
+    }
 
+    const empCategories = await prisma.hrms_m_employee_category.findMany({
+      where: filters,
+      skip: skip,
+      take: size,
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+    });
+
+    const totalCount = await prisma.hrms_m_employee_category.count({
+      where: filters,
+    });
+    return {
+      data: empCategories,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
-      console.log(error)
-      throw new CustomError('Error retrieving empCategories', 503);
+    throw new CustomError("Error retrieving empCategories", 503);
   }
 };
-
 
 module.exports = {
   createEmpCategory,
