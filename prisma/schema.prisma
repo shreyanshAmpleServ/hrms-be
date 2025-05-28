@@ -138,21 +138,22 @@ model hrms_d_competency {
 }
 
 model hrms_d_disciplinary_action {
-  id                   Int             @id(map: "PK__hrms_d_d__3213E83F3B5CF98E") @default(autoincrement())
+  id                   Int                          @id(map: "PK__hrms_d_d__3213E83F3B5CF98E") @default(autoincrement())
   employee_id          Int
-  incident_date        DateTime?       @db.Date
+  incident_date        DateTime?                    @db.Date
   incident_description String?
-  action_taken         String?         @db.NVarChar(255)
+  action_taken         String?                      @db.NVarChar(255)
   committee_notes      String?
-  penalty_type         Int?         @db.VarChar(100)
-  effective_from       DateTime?       @db.Date
-  status               String?         @db.VarChar(50)
-  createdate           DateTime?       @default(now(), map: "DF__hrms_d_di__creat__0D44F85C") @db.DateTime
+  penalty_type         Int?
+  effective_from       DateTime?                    @db.Date
+  status               String?                      @db.VarChar(50)
+  createdate           DateTime?                    @default(now(), map: "DF__hrms_d_di__creat__0D44F85C") @db.DateTime
   createdby            Int
-  updatedate           DateTime?       @db.DateTime
+  updatedate           DateTime?                    @db.DateTime
   updatedby            Int?
   log_inst             Int?
-  employee             hrms_d_employee @relation(fields: [employee_id], references: [id])
+  employee             hrms_d_employee              @relation(fields: [employee_id], references: [id])
+  disciplinary_penalty hrms_m_disciplinary_penalty? @relation(fields: [penalty_type], references: [id])
 }
 
 model hrms_d_document_upload {
@@ -834,14 +835,15 @@ model hrms_m_designation_master {
 }
 
 model hrms_m_disciplinary_penalty {
-  id           Int       @id(map: "PK__hrms_m_d__3213E83F893BEA80") @default(autoincrement())
-  penalty_type String?   @db.NVarChar(100)
-  description  String?   @db.NVarChar(255)
-  createdate   DateTime? @default(now(), map: "DF__hrms_m_di__creat__2F9A1060") @db.DateTime
-  createdby    Int
-  updatedate   DateTime? @db.DateTime
-  updatedby    Int?
-  log_inst     Int?
+  id                   Int                          @id(map: "PK__hrms_m_d__3213E83F893BEA80") @default(autoincrement())
+  penalty_type         String?                      @db.NVarChar(100)
+  description          String?                      @db.NVarChar(255)
+  createdate           DateTime?                    @default(now(), map: "DF__hrms_m_di__creat__2F9A1060") @db.DateTime
+  createdby            Int
+  updatedate           DateTime?                    @db.DateTime
+  updatedby            Int?
+  log_inst             Int?
+  disciplinary_actions hrms_d_disciplinary_action[]
 }
 
 model hrms_m_document_type {

@@ -56,6 +56,7 @@ const createDisciplinaryAction = async (data) => {
             employee_code: true,
           },
         },
+         disciplinary_penalty: true, 
       },
     });
 
@@ -109,6 +110,7 @@ const updateDisciplinaryAction = async (id, data) => {
           updatedate: new Date(),
         },
         include: {
+          disciplinary_penalty: true,
           employee: {
             select: { full_name: true, employee_code: true },
           },
