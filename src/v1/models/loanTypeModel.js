@@ -74,43 +74,27 @@ const deleteLoanType = async (id) => {
 };
 
 // Get all loan types
-const getAllLoanType = async (search, page, size, startDate, endDate) => {
+const getAllLoanType = async (search, page, size) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    // Handle search
     if (search) {
       filters.OR = [
         {
           loan_name: { contains: search.toLowerCase() },
         },
-        // {
-        //   interest_rate: { equals: search },
-        // },
       ];
     }
 
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = {
-          gte: start,
-          lte: end,
-        };
-      }
-    }
     const datas = await prisma.hrms_m_loan_type.findMany({
       where: filters,
       skip: skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_m_loan_type.count();
     const totalCount = await prisma.hrms_m_loan_type.count({
       where: filters,
     });
