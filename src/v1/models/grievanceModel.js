@@ -84,10 +84,11 @@ const findGrievanceSubmissionById = async (id) => {
 // Update a loan request
 const updateGrievanceSubmission = async (id, data) => {
   try {
-   if( data.employee_id ){ await errorNotExist("hrms_d_employee", data.employee_id, "Employee");}
-   else{
-    throw new Error("Employee is required");
-   }
+    if (data.employee_id) {
+      await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    } else {
+      throw new Error("Employee is required");
+    }
     await errorNotExist("hrms_d_employee", data.assigned_to, "Assign to");
 
     const updatedGrievanceSubmission = await prisma.hrms_d_grievance.update({

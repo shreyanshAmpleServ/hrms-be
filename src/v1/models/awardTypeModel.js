@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 const createAwardType = async (data) => {
@@ -10,14 +10,14 @@ const createAwardType = async (data) => {
         description: data.description || "",
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
-        createdate:new Date(),
+        createdate: new Date(),
         updatedate: new Date(),
-        updatedby:1,
+        updatedby: 1,
       },
     });
     return finalData;
   } catch (error) {
-    console.log("Create award type ",error)
+    console.log("Create award type ", error);
     throw new CustomError(`Error creating award type: ${error.message}`, 500);
   }
 };
@@ -28,12 +28,15 @@ const findAwardTypeById = async (id) => {
       where: { id: parseInt(id) },
     });
     if (!data) {
-      throw new CustomError('award type not found', 404);
+      throw new CustomError("award type not found", 404);
     }
     return data;
   } catch (error) {
-    console.log("award type By Id  ",error)
-    throw new CustomError(`Error finding award type by ID: ${error.message}`, 503);
+    console.log("award type By Id  ", error);
+    throw new CustomError(
+      `Error finding award type by ID: ${error.message}`,
+      503
+    );
   }
 };
 
@@ -63,78 +66,55 @@ const deleteAwardType = async (id) => {
 };
 
 // Get all award type
-const getAllAwardType = async (  page,
-  size,
-  search,
-  startDate,
-  endDate) => {
+const getAllAwardType = async (page, size, search, startDate, endDate) => {
   try {
-      page = page || page == 0 ? 1 : page;
-      size = size || 10;
-      const skip = (page - 1) * size || 0;
-  
-      const filters = {};
-      // Handle search
-      if (search) {
-        filters.OR = [
-          // {
-          //   campaign_user: {
-          //     full_name: { contains: search.toLowerCase() },
-          //   }, // Include contact details
-          // },
-          // {
-          //   campaign_leads: {
-          //     title: { contains: search.toLowerCase() },
-          //   }, // Include contact details
-          // },
-          {
-            award_name: { contains: search.toLowerCase() },
-          },
-          // {
-          //   status: { contains: search.toLowerCase() },
-          // },
-        ];
-      }
-      // if (status) {
-      //   filters.is_active = { equals: status };
-      // }
-  
-      if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-  
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          filters.createdate = {
-            gte: start,
-            lte: end,
-          };
-        }
-      }
-      const data = await prisma.hrms_m_award_type.findMany({
-      //   where: filters,
-        skip: skip,
-        take: size,
+    page = page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
 
-        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      });
+    const filters = {};
+    if (search) {
+      filters.OR = [
+        {
+          award_name: { contains: search.toLowerCase() },
+        },
+      ];
+    }
 
-      const totalCount = await prisma.hrms_m_award_type.count({
-      //   where: filters,
-      });
-      return {
-        data: data,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount: totalCount,
-      };
+    // if (startDate && endDate) {
+    //   const start = new Date(startDate);
+    //   const end = new Date(endDate);
 
+    //   if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+    //     filters.createdate = {
+    //       gte: start,
+    //       lte: end,
+    //     };
+    //   }
+    // }
+    const data = await prisma.hrms_m_award_type.findMany({
+      where: filters,
+      skip: skip,
+      take: size,
+
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+    });
+
+    const totalCount = await prisma.hrms_m_award_type.count({
+      where: filters,
+    });
+    return {
+      data: data,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
-      console.log(error)
-      throw new CustomError('Error retrieving award type', 503);
+    console.log(error);
+    throw new CustomError("Error retrieving award type", 503);
   }
 };
-
 
 module.exports = {
   createAwardType,
