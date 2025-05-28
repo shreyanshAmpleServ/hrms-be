@@ -1056,15 +1056,15 @@ model hrms_m_survey_master {
 }
 
 model hrms_m_tax_regime {
-  id                    Int                    @id(map: "PK__hrms_m_t__3213E83F93DEC7A5") @default(autoincrement())
-  regime_name           String?                @db.NVarChar(100)
-  country_code          Int?
-  createdate            DateTime?              @default(now(), map: "DF__hrms_m_ta__creat__47A6A41B") @db.DateTime
-  createdby             Int
-  updatedate            DateTime?              @db.DateTime
-  updatedby             Int?
-  log_inst              Int?
-  hrms_m_country_master hrms_m_country_master? @relation(fields: [country_code], references: [id], onUpdate: NoAction)
+  id             Int                    @id(map: "PK__hrms_m_t__3213E83F93DEC7A5") @default(autoincrement())
+  regime_name    String?                @db.NVarChar(100)
+  country_code   Int?
+  createdate     DateTime?              @default(now(), map: "DF__hrms_m_ta__creat__47A6A41B") @db.DateTime
+  createdby      Int
+  updatedate     DateTime?              @db.DateTime
+  updatedby      Int?
+  log_inst       Int?
+  regime_country hrms_m_country_master? @relation(fields: [country_code], references: [id], onUpdate: NoAction)
 }
 
 model hrms_m_tax_relief {
@@ -1100,18 +1100,18 @@ model hrms_m_work_schedule_template {
 }
 
 model hrms_m_country_master {
-  id                Int                       @id(map: "PK__hrms_m_c__3213E83F1EDF4224") @default(autoincrement())
-  is_active         String?                   @default("Y", map: "DF__hrms_m_co__is_ac__67DE6983") @db.Char(1)
-  createdate        DateTime?                 @default(now(), map: "DF__hrms_m_co__creat__68D28DBC") @db.DateTime
-  createdby         Int
-  updatedate        DateTime?                 @db.DateTime
-  updatedby         Int?
-  log_inst          Int?
-  code              String?                   @db.VarChar(5)
-  name              String?                   @db.NVarChar(100)
-  country_details   crms_m_states[]
-  employee_country  hrms_d_employee_address[]
-  hrms_m_tax_regime hrms_m_tax_regime[]
+  id               Int                       @id(map: "PK__hrms_m_c__3213E83F1EDF4224") @default(autoincrement())
+  is_active        String?                   @default("Y", map: "DF__hrms_m_co__is_ac__67DE6983") @db.Char(1)
+  createdate       DateTime?                 @default(now(), map: "DF__hrms_m_co__creat__68D28DBC") @db.DateTime
+  createdby        Int
+  updatedate       DateTime?                 @db.DateTime
+  updatedby        Int?
+  log_inst         Int?
+  code             String?                   @db.VarChar(5)
+  name             String?                   @db.NVarChar(100)
+  country_details  crms_m_states[]
+  employee_country hrms_d_employee_address[]
+  regime_country   hrms_m_tax_regime[]
 }
 
 model hrms_m_country_tax_rule_template {
