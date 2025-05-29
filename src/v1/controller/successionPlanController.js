@@ -7,7 +7,7 @@ const createSuccessionPlan = async (req, res, next) => {
   try {
     const data = { ...req.body, createdby: req.user.id };
     const result = await successionPlanService.createSuccessionPlan(data);
-    res.status(201).json(result);
+    res.status(200).success("Succession Plan created successfully", result);
   } catch (error) {
     next(new CustomError(error.message, 400));
   }
@@ -30,7 +30,7 @@ const updateSuccessionPlan = async (req, res, next) => {
     const id = req.params.id;
     const data = { ...req.body, updatedby: req.user.id };
     const result = await successionPlanService.updateSuccessionPlan(id, data);
-    res.status(200).json(result);
+    res.status(200).success("Succession Plan updated successfully", result);
   } catch (error) {
     next(new CustomError(error.message, 400));
   }
