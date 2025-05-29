@@ -14,12 +14,10 @@ const serializeData = (data) => {
   if (data.action_taken !== undefined) result.action_taken = data.action_taken;
   if (data.committee_notes !== undefined)
     result.committee_notes = data.committee_notes;
-  if (data.penalty_type !== undefined) result.penalty_type = data.penalty_type;
   if (data.effective_from)
     result.effective_from = new Date(data.effective_from);
   if (data.status !== undefined) result.status = data.status;
 
-  // Convert employee_code to integer if it's a string
   if (data.employee_code !== undefined) {
     const employeeCodeInt = parseInt(data.employee_code, 10);
     if (!isNaN(employeeCodeInt)) {
@@ -32,6 +30,21 @@ const serializeData = (data) => {
   return result;
 };
 
+const resolvePenaltyType = async (penaltyType) => {
+  if (penaltyType === undefined || penaltyType === null) return null;
+
+  const asInt = parseInt(penaltyType, 10);
+  if (!isNaN(asInt)) return asInt;
+
+  const penalty = await prisma.hrms_m_disciplinary_penalty.findFirst({
+    where: { penalty_type: penaltyType },
+  });
+  if (!penalty) {
+    throw new CustomError(`Penalty type "${penaltyType}" not found.`, 400);
+  }
+  return penalty.id;
+};
+
 // To create disciplinary action
 const createDisciplinaryAction = async (data) => {
   try {
@@ -42,13 +55,18 @@ const createDisciplinaryAction = async (data) => {
 
     await errorNotExist("hrms_d_employee", employeeId, "Employee");
 
+    const penaltyTypeId = await resolvePenaltyType(data.penalty_type);
+
+    const payload = {
+      ...serializeData(data),
+      ...(penaltyTypeId !== null && { penalty_type: penaltyTypeId }),
+      createdby: Number(data.createdby) || 1,
+      createdate: new Date(),
+      log_inst: data.log_inst || 1,
+    };
+
     const disciplinaryAction = await prisma.hrms_d_disciplinary_action.create({
-      data: {
-        ...serializeData(data),
-        createdby: Number(data.createdby) || 1,
-        createdate: new Date(),
-        log_inst: data.log_inst || 1,
-      },
+      data: payload,
       include: {
         employee: {
           select: {
@@ -56,7 +74,12 @@ const createDisciplinaryAction = async (data) => {
             employee_code: true,
           },
         },
-         disciplinary_penalty: true, 
+        disciplinary_penalty: {
+          select: {
+            id: true,
+            penalty_type: true,
+          },
+        },
       },
     });
 
@@ -91,26 +114,38 @@ const findDisciplinaryActionById = async (id) => {
 // To update disciplinary action
 const updateDisciplinaryAction = async (id, data) => {
   try {
-    if (data.employee_id) {
-      await errorNotExist(
-        "hrms_d_employee",
-        Number(data.employee_id),
-        "Employee"
-      );
-    } else {
+    if (!data.employee_id) {
       throw new Error(`Employee is required`);
     }
+
+    await errorNotExist(
+      "hrms_d_employee",
+      Number(data.employee_id),
+      "Employee"
+    );
+
+    const penaltyTypeId = await resolvePenaltyType(data.penalty_type);
+
+    const payload = {
+      ...serializeData(data),
+      penalty_type: penaltyTypeId,
+      updatedby: Number(data.updatedby) || null,
+      updatedate: new Date(),
+    };
+
+    console.log("Update Payload ===>", payload);
 
     const updatedDisciplinaryAction =
       await prisma.hrms_d_disciplinary_action.update({
         where: { id: parseInt(id) },
-        data: {
-          ...serializeData(data),
-          updatedby: Number(data.updatedby) || null,
-          updatedate: new Date(),
-        },
+        data: payload,
         include: {
-          disciplinary_penalty: true,
+          disciplinary_penalty: {
+            select: {
+              id: true,
+              penalty_type: true,
+            },
+          },
           employee: {
             select: { full_name: true, employee_code: true },
           },
@@ -158,65 +193,6 @@ const deleteDisciplinaryAction = async (id) => {
 };
 
 // To get all disciplinary action
-// const getAllDisciplinaryAction = async (
-//   page,
-//   size,
-//   search,
-//   startDate,
-//   endDate
-// ) => {
-//   try {
-//     const currentPage = Number(page) > 0 ? Number(page) : 1;
-//     const pageSize = Number(size) > 0 ? Number(size) : 10;
-//     const skip = (currentPage - 1) * pageSize;
-
-//     const filters = {};
-//     if (search) {
-//       filters.OR = [
-//         { incident_description: { contains: search } },
-//         { action_taken: { contains: search } },
-//         { committee_notes: { contains: search } },
-//         { penalty_type: { contains: search } },
-//         { status: { contains: search } },
-//       ];
-//     }
-
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-//         filters.createdate = { gte: start, lte: end };
-//       }
-//     }
-
-//     const disciplinaryActions =
-//       await prisma.hrms_d_disciplinary_action.findMany({
-//         where: filters,
-//         skip: skip,
-//         take: pageSize,
-//         orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-//       });
-
-//     const totalCount = await prisma.hrms_d_disciplinary_action.count({
-//       where: filters,
-//     });
-
-//     return {
-//       data: disciplinaryActions,
-//       currentPage,
-//       size: pageSize,
-//       totalPages: Math.ceil(totalCount / pageSize),
-//       totalCount: totalCount,
-//     };
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error retrieving disciplinary actions: ${error.message}`,
-//       503
-//     );
-//   }
-// };
-
-// service/getAllDisciplinaryAction.js
 const getAllDisciplinaryAction = async (
   search,
   page,
@@ -230,7 +206,6 @@ const getAllDisciplinaryAction = async (
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    // Handle search
     if (search) {
       filters.OR = [
         {
@@ -252,7 +227,6 @@ const getAllDisciplinaryAction = async (
         filters.createdate = {
           gte: start,
           lte: end,
-          //Test
         };
       }
     }
@@ -267,10 +241,11 @@ const getAllDisciplinaryAction = async (
             employee_code: true,
           },
         },
+        disciplinary_penalty: true,
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_time_sheet.count();
+
     const totalCount = await prisma.hrms_d_disciplinary_action.count({
       where: filters,
     });
