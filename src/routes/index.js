@@ -91,7 +91,7 @@ const trainingFeedbackRoute = require("../v1/routes/trainingFeedbackRoute");
 const competencyTrackingRoute = require("../v1/routes/competencyTrackingRoute");
 const trainingSessionRoutes = require("../v1/routes/trainingSessionRoutes.js");
 const probationReviewRoute = require("../v1/routes/probationReviewRoute.js");
-
+const successionPlanRoute = require("../v1/routes/successionPlanRoute.js");
 const router = express.Router();
 
 // Version 1 API
@@ -187,6 +187,7 @@ router.use("/v1", trainingFeedbackRoute);
 router.use("/v1", competencyTrackingRoute);
 router.use("/v1", trainingSessionRoutes);
 router.use("/v1", probationReviewRoute);
+router.use("/v1", successionPlanRoute);
 // Base path: /v1
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
