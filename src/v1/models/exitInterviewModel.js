@@ -123,9 +123,14 @@ const getAllExitInterviews = async (search, page, size, startDate, endDate) => {
     if (search) {
       filterConditions.push({
         OR: [
-          { reason_for_leaving: { contains: search } },
-          { feedback: { contains: search } },
-          { suggestions: { contains: search } },
+          {
+            exit_interview_employee: {
+              full_name: { contains: search.toLowerCase() },
+            },
+          },
+          { reason_for_leaving: { contains: search.toLowerCase() } },
+          { feedback: { contains: search.toLowerCase() } },
+          { suggestions: { contains: search.toLowerCase() } },
         ],
       });
     }

@@ -117,54 +117,62 @@ const getAllTrainingSessions = async (
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
-    const skip = (page - 1) * size || 0;
+    const skip = (page - 1) * size;
 
     const filterConditions = [];
 
-    // Search OR condition on multiple fields
     if (search) {
       filterConditions.push({
         OR: [
-          { training_title: { contains: search } },
-          { trainer_name: { contains: search } },
-          { location: { contains: search } },
-          { training_type: { contains: search } },
+          {
+            training_session_employee: {
+              full_name: { contains: search.toLowerCase() },
+            },
+          },
+          { training_title: { contains: search.toLowerCase() } },
+          // trainer_name removed here
+          { location: { contains: search.toLowerCase() } },
+          { training_type: { contains: search.toLowerCase() } },
         ],
       });
     }
 
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      if (!isNaN(start) && !isNaN(end)) {
         filterConditions.push({
-          createdate: {
-            gte: start,
-            lte: end,
-          },
+          createdate: { gte: start, lte: end },
         });
       }
     }
 
-    // Combine all conditions with AND
-    const filters =
-      filterConditions.length > 0 ? { AND: filterConditions } : {};
-    console.log("Filters:", JSON.stringify(filters, null, 2));
+    const filters = filterConditions.length ? { AND: filterConditions } : {};
 
-    const datas = await prisma.hrms_d_training_session.findMany({
+    const sessions = await prisma.hrms_d_training_session.findMany({
       where: filters,
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      include: {
+        training_session_employee: {
+          select: { id: true, full_name: true },
+        },
+      },
     });
+
+    const data = sessions.map(({ training_session_employee, ...rest }) => ({
+      ...rest,
+      trainer_id: training_session_employee?.id || null,
+      trainer_name: training_session_employee?.full_name || null,
+    }));
 
     const totalCount = await prisma.hrms_d_training_session.count({
       where: filters,
     });
 
     return {
-      data: datas,
+      data,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),

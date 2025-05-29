@@ -121,8 +121,13 @@ const getAllProbationReviews = async (
     if (search) {
       filterConditions.push({
         OR: [
-          { review_notes: { contains: search } },
-          { confirmation_status: { contains: search } },
+          {
+            probation_review_employee: {
+              full_name: { contains: search.toLowerCase() },
+            },
+          },
+          { review_notes: { contains: search.toLowerCase() } },
+          { confirmation_status: { contains: search.toLowerCase() } },
         ],
       });
     }
