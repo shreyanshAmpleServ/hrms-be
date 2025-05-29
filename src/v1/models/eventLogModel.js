@@ -9,19 +9,22 @@ const serializeData = (data) => {
     event_type: Number(data.event_type) || null,
     event_date: data.event_date || null,
     notes: data.notes || "",
-    requires_followup:data.requires_followup === "true" ? true :  false ,
+    requires_followup: data.requires_followup,
   };
 };
 
 // Create a new event log
 const createEventLog = async (data) => {
   try {
-    //     if (data.requires_followup === "false" ||  ) {
-    //   data.requires_followup === "false" ?
-    //   throw new CustomError(`Bank with ID ${data.bank_id} does not exist`, 400);
-    // }
+    if (!data.event_type) {
+      throw new CustomError(`Event type is required`, 400);
+    }
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
-    await errorNotExist("hrms_m_work_life_event_type", data.event_type, "Event type");
+    await errorNotExist(
+      "hrms_m_work_life_event_type",
+      data.event_type,
+      "Event type"
+    );
     const reqData = await prisma.hrms_d_work_life_event.create({
       data: {
         ...serializeData(data),
@@ -46,7 +49,10 @@ const createEventLog = async (data) => {
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(`Error creating event log: ${error.message}`, 500);
+    throw new CustomError(
+      `Error creating event log: ${error.message}`,
+      error.status || 500
+    );
   }
 };
 
@@ -72,7 +78,11 @@ const findEventLogById = async (id) => {
 const updateEventLog = async (id, data) => {
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
-    await errorNotExist("hrms_m_work_life_event_type", data.event_type, "Event type");
+    await errorNotExist(
+      "hrms_m_work_life_event_type",
+      data.event_type,
+      "Event type"
+    );
 
     const updatedEventLog = await prisma.hrms_d_work_life_event.update({
       where: { id: parseInt(id) },
@@ -98,7 +108,7 @@ const updateEventLog = async (id, data) => {
     });
     return updatedEventLog;
   } catch (error) {
-    console.log("Error ", error)
+    console.log("Error ", error);
     throw new CustomError(`Error updating event log: ${error.message}`, 500);
   }
 };
