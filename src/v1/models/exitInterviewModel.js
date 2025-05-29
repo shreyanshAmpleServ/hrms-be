@@ -69,12 +69,22 @@ const findExitInterviewById = async (id) => {
 // Update an exit interview
 const updateExitInterview = async (id, data) => {
   try {
+    const payload = {
+      ...serializeExitInterview(data),
+      updatedby: Number(data.updatedby) || 1,
+      updatedate: new Date(),
+    };
+    if (data.employee_id === undefined) {
+      delete payload.employee_id;
+    }
+
     const updatedInterview = await prisma.hrms_d_exit_interview.update({
       where: { id: parseInt(id) },
-      data: {
-        ...serializeExitInterview(data),
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
+      data: payload,
+      include: {
+        exit_interview_employee: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
       },
     });
     return updatedInterview;
