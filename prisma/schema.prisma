@@ -48,21 +48,22 @@ model hrms_m_role {
 }
 
 model hrms_m_user {
-  id               Int                @id(map: "PK__hrms_m_u__3213E83FD9B9A3C4") @default(autoincrement())
-  username         String             @db.NVarChar(100)
-  password         String             @db.NVarChar(255)
-  email            String             @db.NVarChar(255)
-  full_name        String?            @db.NVarChar(255)
-  is_active        String             @default("Y", map: "DF__hrms_m_us__is_ac__4AB81AF0") @db.Char(1)
-  log_inst         Int                @default(1, map: "DF__hrms_m_us__log_i__4BAC3F29")
-  createdate       DateTime           @default(now(), map: "DF__hrms_m_us__creat__4CA06362") @db.DateTime
-  updatedate       DateTime?          @db.DateTime
-  createdby        Int                @default(1, map: "DF__hrms_m_us__creat__4D94879B")
-  updatedby        Int?
-  address          String?            @db.NVarChar(255)
-  phone            String?            @db.NVarChar(15)
-  profile_img      String?            @db.NVarChar(255)
-  hrms_d_user_role hrms_d_user_role[]
+  id                     Int                     @id(map: "PK__hrms_m_u__3213E83FD9B9A3C4") @default(autoincrement())
+  username               String                  @db.NVarChar(100)
+  password               String                  @db.NVarChar(255)
+  email                  String                  @db.NVarChar(255)
+  full_name              String?                 @db.NVarChar(255)
+  is_active              String                  @default("Y", map: "DF__hrms_m_us__is_ac__4AB81AF0") @db.Char(1)
+  log_inst               Int                     @default(1, map: "DF__hrms_m_us__log_i__4BAC3F29")
+  createdate             DateTime                @default(now(), map: "DF__hrms_m_us__creat__4CA06362") @db.DateTime
+  updatedate             DateTime?               @db.DateTime
+  createdby              Int                     @default(1, map: "DF__hrms_m_us__creat__4D94879B")
+  updatedby              Int?
+  address                String?                 @db.NVarChar(255)
+  phone                  String?                 @db.NVarChar(15)
+  profile_img            String?                 @db.NVarChar(255)
+  hrms_d_user_role       hrms_d_user_role[]
+  exit_clearance_by_user hrms_d_exit_clearance[] @relation("UserCleared")
 }
 
 model hrms_m_module {
@@ -313,6 +314,7 @@ model hrms_d_exit_clearance {
   updatedby               Int?
   log_inst                Int?
   exit_clearance_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exit_clearance_by_user  hrms_m_user?     @relation("UserCleared", fields: [cleared_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_exit_interview {
