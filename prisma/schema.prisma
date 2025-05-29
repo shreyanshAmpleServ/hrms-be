@@ -691,7 +691,7 @@ model hrms_d_work_life_event {
   updatedate               DateTime?                    @db.DateTime
   updatedby                Int?
   log_inst                 Int?
-  work_life_event_employee hrms_d_employee?             @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  work_life_event_employee hrms_d_employee            @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   work_life_event_type     hrms_m_work_life_event_type? @relation(fields: [event_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
