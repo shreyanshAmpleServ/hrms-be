@@ -134,8 +134,18 @@ const getAllSuccessionPlans = async (
     if (search) {
       filterConditions.push({
         OR: [
-          { critical_position: { contains: search } },
-          { readiness_level: { contains: search } },
+          {
+            succession_potentialSuccessor: {
+              full_name: { contains: search.toLowerCase() },
+            },
+          },
+          {
+            succession_currentHolder: {
+              full_name: { contains: search.toLowerCase() },
+            },
+          },
+          { critical_position: { contains: search.toLowerCase() } },
+          { readiness_level: { contains: search.toLowerCase() } },
         ],
       });
     }
