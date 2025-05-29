@@ -250,6 +250,7 @@ model hrms_d_employee {
   probation_review_employee     hrms_d_probation_review[]
   succession_currentHolder      hrms_d_succession_plan[]      @relation("CurrentHolder")
   succession_potentialSuccessor hrms_d_succession_plan[]      @relation("PotentialSuccessor")
+  exit_interview_employee       hrms_d_exit_interview[]
 }
 
 model hrms_d_employee_address {
@@ -313,17 +314,18 @@ model hrms_d_exit_clearance {
 }
 
 model hrms_d_exit_interview {
-  id                 Int       @id(map: "PK__hrms_d_e__3213E83F32172285") @default(autoincrement())
-  employee_id        Int?
-  interview_date     DateTime? @db.Date
-  reason_for_leaving String?   @db.NVarChar(255)
-  feedback           String?
-  suggestions        String?
-  createdate         DateTime? @default(now(), map: "DF__hrms_d_ex__creat__2704CA5F") @db.DateTime
-  createdby          Int
-  updatedate         DateTime? @db.DateTime
-  updatedby          Int?
-  log_inst           Int?
+  id                      Int              @id(map: "PK__hrms_d_e__3213E83F32172285") @default(autoincrement())
+  employee_id             Int?
+  interview_date          DateTime?        @db.Date
+  reason_for_leaving      String?          @db.NVarChar(255)
+  feedback                String?
+  suggestions             String?
+  createdate              DateTime?        @default(now(), map: "DF__hrms_d_ex__creat__2704CA5F") @db.DateTime
+  createdby               Int
+  updatedate              DateTime?        @db.DateTime
+  updatedby               Int?
+  log_inst                Int?
+  exit_interview_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_grievance {
