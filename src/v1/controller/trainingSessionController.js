@@ -5,12 +5,12 @@ const moment = require("moment");
 // Create
 const createTrainingSession = async (req, res, next) => {
   try {
-        console.log("Request body received:", req.body);  // <-- Add this here
+    console.log("Request body received:", req.body); // <-- Add this here
 
-        const data = { ...req.body, createdby: req.user.id };
+    const data = { ...req.body, createdby: req.user.id };
 
     const result = await trainingSessionService.createTrainingSession(data);
-    res.status(201).json( result);
+    res.status(201).success("Training Session Created Successfully", result);
   } catch (error) {
     next(new CustomError(error.message, 400));
   }
@@ -19,7 +19,9 @@ const createTrainingSession = async (req, res, next) => {
 // Get by ID
 const findTrainingSessionById = async (req, res, next) => {
   try {
-    const data = await trainingSessionService.getTrainingSessionById(req.params.id);
+    const data = await trainingSessionService.getTrainingSessionById(
+      req.params.id
+    );
     res.status(200).json({ success: true, data });
   } catch (error) {
     next(new CustomError(error.message, 400));
@@ -29,8 +31,11 @@ const findTrainingSessionById = async (req, res, next) => {
 // Update
 const updateTrainingSession = async (req, res, next) => {
   try {
-    const data = await trainingSessionService.updateTrainingSession(req.params.id, req.body);
-    res.status(200).json({ success: true, data });
+    const data = await trainingSessionService.updateTrainingSession(
+      req.params.id,
+      req.body
+    );
+    res.status(200).success("Training Session updated Successfully", data);
   } catch (error) {
     next(new CustomError(error.message, 400));
   }
@@ -40,7 +45,9 @@ const updateTrainingSession = async (req, res, next) => {
 const deleteTrainingSession = async (req, res, next) => {
   try {
     await trainingSessionService.deleteTrainingSession(req.params.id);
-    res.status(200).json({ success: true, message: "Training session deleted" });
+    res
+      .status(200)
+      .json({ success: true, message: "Training session deleted" });
   } catch (error) {
     next(new CustomError(error.message, 400));
   }
@@ -50,11 +57,13 @@ const deleteTrainingSession = async (req, res, next) => {
 const getAllTrainingSession = async (req, res, next) => {
   try {
     const { search, page, size, startDate, endDate } = req.query;
-    const data = await trainingSessionService.getAllTrainingSession(  search,
-          Number(page),
-          Number(size),
-          startDate && moment(startDate),
-          endDate && moment(endDate));
+    const data = await trainingSessionService.getAllTrainingSession(
+      search,
+      Number(page),
+      Number(size),
+      startDate && moment(startDate),
+      endDate && moment(endDate)
+    );
     res.status(200).json({ success: true, ...data });
   } catch (error) {
     next(new CustomError(error.message, 400));

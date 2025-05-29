@@ -5,10 +5,10 @@ const prisma = new PrismaClient();
 // Serialize training session data
 const serializeTrainingSession = (data) => ({
   training_title: data.training_title || "",
-  trainer_name:   data.trainer_name   || "",
-  training_date:  data.training_date ? new Date(data.training_date) : null,
-  location:       data.location       || "",
-  training_type:  data.training_type || "",
+  trainer_id: data.trainer_id ? Number(data.trainer_id) : null, // use trainer_id here
+  training_date: data.training_date ? new Date(data.training_date) : null,
+  location: data.location || "",
+  training_type: data.training_type || "",
 });
 
 // Create a new training session
@@ -21,8 +21,22 @@ const createTrainingSession = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+      include: {
+        training_session_employee: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+      },
     });
-    return reqData;
+
+    return {
+      ...reqData,
+      trainer_name: reqData.training_session_employee
+        ? reqData.training_session_employee.full_name
+        : null,
+    };
   } catch (error) {
     throw new CustomError(
       `Error creating training session: ${error.message}`,
@@ -30,7 +44,6 @@ const createTrainingSession = async (data) => {
     );
   }
 };
-
 
 // Find a training session by ID
 const findTrainingSessionById = async (id) => {
@@ -71,8 +84,17 @@ const updateTrainingSession = async (id, data) => {
 };
 
 // Delete a training session
+// Delete a training session (after deleting related feedback)
 const deleteTrainingSession = async (id) => {
   try {
+    // First, delete related feedback records
+    await prisma.hrms_d_training_feedback.deleteMany({
+      where: {
+        training_id: parseInt(id),
+      },
+    });
+
+    // Then delete the training session
     await prisma.hrms_d_training_session.delete({
       where: { id: parseInt(id) },
     });
@@ -85,7 +107,13 @@ const deleteTrainingSession = async (id) => {
 };
 
 // Get all training sessions with pagination and search
-const getAllTrainingSessions = async (search, page, size, startDate, endDate) => {
+const getAllTrainingSessions = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -94,17 +122,16 @@ const getAllTrainingSessions = async (search, page, size, startDate, endDate) =>
     const filterConditions = [];
 
     // Search OR condition on multiple fields
-   if (search) {
-  filterConditions.push({
-    OR: [
-      { training_title: { contains: search } },
-      { trainer_name: { contains: search } },
-      { location: { contains: search } },
-      { training_type: { contains: search } },
-    ],
-  });
-}
-
+    if (search) {
+      filterConditions.push({
+        OR: [
+          { training_title: { contains: search } },
+          { trainer_name: { contains: search } },
+          { location: { contains: search } },
+          { training_type: { contains: search } },
+        ],
+      });
+    }
 
     // Date range condition
     if (startDate && endDate) {
@@ -121,8 +148,9 @@ const getAllTrainingSessions = async (search, page, size, startDate, endDate) =>
     }
 
     // Combine all conditions with AND
-    const filters = filterConditions.length > 0 ? { AND: filterConditions } : {};
-console.log('Filters:', JSON.stringify(filters, null, 2));
+    const filters =
+      filterConditions.length > 0 ? { AND: filterConditions } : {};
+    console.log("Filters:", JSON.stringify(filters, null, 2));
 
     const datas = await prisma.hrms_d_training_session.findMany({
       where: filters,
@@ -131,7 +159,9 @@ console.log('Filters:', JSON.stringify(filters, null, 2));
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
-    const totalCount = await prisma.hrms_d_training_session.count({ where: filters });
+    const totalCount = await prisma.hrms_d_training_session.count({
+      where: filters,
+    });
 
     return {
       data: datas,
@@ -152,4 +182,4 @@ module.exports = {
   updateTrainingSession,
   deleteTrainingSession,
   getAllTrainingSessions,
-}
+};
