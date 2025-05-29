@@ -65,6 +65,15 @@ const updateProbationReview = async (id, data) => {
   try {
     const updatedReview = await prisma.hrms_d_probation_review.update({
       where: { id: parseInt(id) },
+      include: {
+        probation_review_employee: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+      },
       data: {
         ...serializeProbationReview(data),
         updatedby: data.updatedby || 1,
@@ -141,6 +150,15 @@ const getAllProbationReviews = async (
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      include: {
+        probation_review_employee: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+      },
     });
 
     const totalCount = await prisma.hrms_d_probation_review.count({
