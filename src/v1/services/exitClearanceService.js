@@ -1,4 +1,4 @@
-const exitClearanceModel = require("../models/probationReviewModel.js");
+const exitClearanceModel = require("../models/exitClearanceModal.js");
 
 const createExitClearance = async (data) => {
   return await exitClearanceModel.createExitClearance(data);
