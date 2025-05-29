@@ -246,7 +246,7 @@ model hrms_d_employee {
   grievance_assigned_to         hrms_d_grievance[]            @relation("GrievanceAssignedTo")
   training_employee             hrms_d_training_feedback[]
   competency_employee           hrms_d_competency[]
-  hrms_d_work_life_event        hrms_d_work_life_event[]
+  work_life_event_employee      hrms_d_work_life_event[]
   probation_review_employee     hrms_d_probation_review[]
   succession_currentHolder      hrms_d_succession_plan[]      @relation("CurrentHolder")
   succession_potentialSuccessor hrms_d_succession_plan[]      @relation("PotentialSuccessor")
@@ -693,7 +693,7 @@ model hrms_d_work_life_event {
   updatedate               DateTime?                    @db.DateTime
   updatedby                Int?
   log_inst                 Int?
-  work_life_event_employee hrms_d_employee?             @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  work_life_event_employee hrms_d_employee            @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   work_life_event_type     hrms_m_work_life_event_type? @relation(fields: [event_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
