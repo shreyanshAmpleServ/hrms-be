@@ -94,7 +94,6 @@ const getAllDocType = async (page, size, search) => {
       where: filters,
       skip: skip,
       take: size,
-
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
