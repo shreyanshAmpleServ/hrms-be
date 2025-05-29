@@ -247,6 +247,7 @@ model hrms_d_employee {
   training_employee          hrms_d_training_feedback[]
   competency_employee        hrms_d_competency[]
   hrms_d_work_life_event     hrms_d_work_life_event[]
+  probation_review_employee  hrms_d_probation_review[]
 }
 
 model hrms_d_employee_address {
@@ -518,17 +519,18 @@ model hrms_d_payslip {
 }
 
 model hrms_d_probation_review {
-  id                  Int       @id(map: "PK__hrms_d_p__3213E83FAF32F81C") @default(autoincrement())
-  employee_id         Int?
-  probation_end_date  DateTime? @db.Date
-  review_notes        String?
-  confirmation_status String?   @db.VarChar(50)
-  confirmation_date   DateTime? @db.Date
-  createdate          DateTime? @default(now(), map: "DF__hrms_d_pr__creat__59904A2C") @db.DateTime
-  createdby           Int
-  updatedate          DateTime? @db.DateTime
-  updatedby           Int?
-  log_inst            Int?
+  id                        Int              @id(map: "PK__hrms_d_p__3213E83FAF32F81C") @default(autoincrement())
+  employee_id               Int?
+  probation_end_date        DateTime?        @db.Date
+  review_notes              String?
+  confirmation_status       String?          @db.VarChar(50)
+  confirmation_date         DateTime?        @db.Date
+  createdate                DateTime?        @default(now(), map: "DF__hrms_d_pr__creat__59904A2C") @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?        @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
+  probation_review_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_recognition_award {
