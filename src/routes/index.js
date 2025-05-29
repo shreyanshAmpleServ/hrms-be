@@ -94,6 +94,7 @@ const probationReviewRoute = require("../v1/routes/probationReviewRoute.js");
 const successionPlanRoute = require("../v1/routes/successionPlanRoute.js");
 const eventLogRoute = require("../v1/routes/eventLogRoute");
 const exitInterview = require("../v1/routes/exitInterviewRoute.js");
+const exitClearance = require("../v1/routes/exitClearanceRoute.js");
 const router = express.Router();
 
 // Version 1 API
@@ -192,6 +193,7 @@ router.use("/v1", probationReviewRoute);
 router.use("/v1", successionPlanRoute);
 router.use("/v1", eventLogRoute);
 router.use("/v1", exitInterview);
+router.use("/v1", exitClearance);
 // Base path: /v1
 // Add future versions here
 // Example: router.use('/v2', v2Routes);
