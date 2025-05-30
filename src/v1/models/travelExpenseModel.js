@@ -12,6 +12,7 @@ const serializeTravelExpense = (data) => ({
   total_amount: data.total_amount ? Number(data.total_amount) : null,
   approved_by: data.approved_by ? Number(data.approved_by) : null,
   approval_status: data.approval_status || "",
+  approved_by: data.approved_by ? Number(data.approved_by) : null,
 });
 
 // Create a new travel expense
@@ -27,6 +28,7 @@ const createTravelExpense = async (data) => {
       include: {
         travel_expense_employee: { select: { id: true, full_name: true } },
         travel_expense_createdby: { select: { id: true, full_name: true } },
+        travel_expense_approver: { select: { id: true, full_name: true } }, // ← new
       },
     });
     return reqData;
@@ -46,6 +48,7 @@ const findTravelExpenseById = async (id) => {
       include: {
         travel_expense_employee: { select: { id: true, full_name: true } },
         travel_expense_createdby: { select: { id: true, full_name: true } },
+        travel_expense_approver: { select: { id: true, full_name: true } }, // ← new
       },
     });
 
@@ -70,6 +73,7 @@ const updateTravelExpense = async (id, data) => {
       include: {
         travel_expense_employee: { select: { id: true, full_name: true } },
         travel_expense_createdby: { select: { id: true, full_name: true } },
+        travel_expense_approver: { select: { id: true, full_name: true } },
       },
       data: {
         ...serializeTravelExpense(data),
@@ -147,6 +151,7 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
       include: {
         travel_expense_employee: { select: { id: true, full_name: true } },
         travel_expense_createdby: { select: { id: true, full_name: true } },
+        travel_expense_approver: { select: { id: true, full_name: true } },
       },
     });
 
