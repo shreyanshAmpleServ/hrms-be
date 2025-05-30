@@ -256,6 +256,7 @@ model hrms_d_employee {
   hrms_d_training_session       hrms_d_training_session[]
   relieving_letter_employee     hrms_d_relieving_letter[]
   travel_expense_employee       hrms_d_travel_expense[]       @relation("TravelExpenseEmployee")
+  survey_employee               hrms_d_survey_response[]
 }
 
 model hrms_d_employee_address {
@@ -619,16 +620,18 @@ model hrms_d_succession_plan {
 }
 
 model hrms_d_survey_response {
-  id            Int       @id(map: "PK__hrms_d_s__3213E83F38538453") @default(autoincrement())
-  employee_id   Int?
-  survey_id     Int?
-  response_text String?
-  submitted_on  DateTime? @db.DateTime
-  createdate    DateTime? @default(now(), map: "DF__hrms_d_su__creat__214BF109") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id               Int       @id(map: "PK__hrms_d_s__3213E83F38538453") @default(autoincrement())
+  employee_id      Int?
+  survey_id        Int?
+  response_text    String?
+  submitted_on     DateTime? @db.DateTime
+  createdate       DateTime? @default(now(), map: "DF__hrms_d_su__creat__214BF109") @db.DateTime
+  createdby        Int
+  updatedate       DateTime? @db.DateTime
+  updatedby        Int?
+  log_inst         Int?
+  survey_employee  hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  survey_type      hrms_m_survey_master? @relation(fields: [survey_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_time_sheet {
@@ -1089,6 +1092,7 @@ model hrms_m_survey_master {
   updatedate   DateTime? @db.DateTime
   updatedby    Int?
   log_inst     Int?
+  survey_type  hrms_d_survey_response[]
 }
 
 model hrms_m_tax_regime {
