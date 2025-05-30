@@ -263,6 +263,8 @@ model hrms_d_employee {
   suggestion_box_employee       hrms_d_employee_suggestion[]
   recognition_award_employee    hrms_d_recognition_award[]    @relation("RecognitionAwardEmployee")
   recognition_award_nominated   hrms_d_recognition_award[]    @relation("RecognitionAwardNominated")
+  helpdesk_employee             hrms_d_helpdesk_ticket[]      @relation("HelpdeskEmployee")
+  helpdesk_assign_to            hrms_d_helpdesk_ticket[]      @relation("HelpdeskAssignedTo")
 }
 
 model hrms_d_employee_address {
@@ -365,20 +367,22 @@ model hrms_d_grievance {
 }
 
 model hrms_d_helpdesk_ticket {
-  id             Int       @id(map: "PK__hrms_d_h__3213E83F10017242") @default(autoincrement())
-  employee_id    Int?
-  ticket_subject String?   @db.NVarChar(255)
-  ticket_type    String?   @db.NVarChar(100)
-  status         String?   @db.VarChar(50)
-  priority       String?   @db.VarChar(50)
-  assigned_to    Int?
-  description    String?
-  submitted_on   DateTime? @db.DateTime
-  createdate     DateTime? @default(now(), map: "DF__hrms_d_he__creat__53D770D6") @db.DateTime
-  createdby      Int
-  updatedate     DateTime? @db.DateTime
-  updatedby      Int?
-  log_inst       Int?
+  id                 Int              @id(map: "PK__hrms_d_h__3213E83F10017242") @default(autoincrement())
+  employee_id        Int?
+  ticket_subject     String?          @db.NVarChar(255)
+  ticket_type        String?          @db.NVarChar(100)
+  status             String?          @db.VarChar(50)
+  priority           String?          @db.VarChar(50)
+  assigned_to        Int?
+  description        String?
+  submitted_on       DateTime?        @db.DateTime
+  createdate         DateTime?        @default(now(), map: "DF__hrms_d_he__creat__53D770D6") @db.DateTime
+  createdby          Int
+  updatedate         DateTime?        @db.DateTime
+  updatedby          Int?
+  log_inst           Int?
+  helpdesk_employee  hrms_d_employee? @relation("HelpdeskEmployee", fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  helpdesk_assign_to hrms_d_employee? @relation("HelpdeskAssignedTo", fields: [assigned_to], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_hr_letter {
