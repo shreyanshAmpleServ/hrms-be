@@ -32,8 +32,6 @@ const findTravelExpense = async (req, res, next) => {
 
 const updateTravelExpense = async (req, res, next) => {
   try {
-    console.log("Incoming request body:", req.body); // ADD THIS LINE
-
     const data = {
       ...req.body,
       updatedby: req.user.id,

@@ -109,7 +109,6 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
 
     const filterConditions = [];
 
-    // Search OR condition on multiple fields
     if (search) {
       filterConditions.push({
         OR: [
