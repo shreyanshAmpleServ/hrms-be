@@ -32,6 +32,8 @@ const findTravelExpense = async (req, res, next) => {
 
 const updateTravelExpense = async (req, res, next) => {
   try {
+    console.log("Incoming request body:", req.body); // ADD THIS LINE
+
     const data = {
       ...req.body,
       updatedby: req.user.id,
@@ -59,7 +61,7 @@ const deleteTravelExpense = async (req, res, next) => {
 const getAllTravelExpenses = async (req, res, next) => {
   try {
     const { page, size, search, startDate, endDate } = req.query;
-    const data = await travelExpenseService.getAllTravelExpenses(
+    const data = await travelExpenseService.getAllTravelExpense(
       search,
       Number(page),
       Number(size),

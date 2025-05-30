@@ -16,7 +16,7 @@ const deleteTravelExpense = async (id) => {
 };
 
 const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
-  return await travelExpenseModel.getAllTravelExpenses(
+  return await travelExpenseModel.getAllTravelExpense(
     search,
     page,
     size,
