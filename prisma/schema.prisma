@@ -259,6 +259,7 @@ model hrms_d_employee {
   relieving_letter_employee     hrms_d_relieving_letter[]
   travel_expense_employee       hrms_d_travel_expense[]       @relation("TravelExpenseEmployee")
   asset_assignment_employee     hrms_d_asset_assignment[]     @relation("AssetAssignmentEmployee")
+  suggestion_box_employee       hrms_d_employee_suggestion[]
 }
 
 model hrms_d_employee_address {
@@ -280,16 +281,17 @@ model hrms_d_employee_address {
 }
 
 model hrms_d_employee_suggestion {
-  id              Int       @id(map: "PK__hrms_d_e__3213E83F31DC0BE7") @default(autoincrement())
-  employee_id     Int?
-  suggestion_text String?
-  votes           Int?
-  submitted_on    DateTime? @db.DateTime
-  createdate      DateTime? @default(now(), map: "DF__hrms_d_em__creat__6225902D") @db.DateTime
-  createdby       Int
-  updatedate      DateTime? @db.DateTime
-  updatedby       Int?
-  log_inst        Int?
+  id                      Int              @id(map: "PK__hrms_d_e__3213E83F31DC0BE7") @default(autoincrement())
+  employee_id             Int?
+  suggestion_text         String?
+  votes                   Int?
+  submitted_on            DateTime?        @db.DateTime
+  createdate              DateTime?        @default(now(), map: "DF__hrms_d_em__creat__6225902D") @db.DateTime
+  createdby               Int
+  updatedate              DateTime?        @db.DateTime
+  updatedby               Int?
+  log_inst                Int?
+  suggestion_box_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_employment_contract {
