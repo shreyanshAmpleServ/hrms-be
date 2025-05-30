@@ -121,15 +121,27 @@ const validateContactsExist = async (contactIds) => {
 const createEmployee = async (data) => {
   const { empAddressData, ...employeeData } = data; // Separate `contactIds` from other deal data
   try {
-console.log("Employee Data: ", employeeData);
-    if (!data.bank_id ) {
-      throw new CustomError(`Bank with ID ${data.bank_id} does not exist`, 400);
+    console.log("Employee Data: ", employeeData);
+    if (!data.phone_number) {
+      throw new CustomError(`Employee Code is required`, 400);
     }
-    if (!data.designation_id ) {
-      throw new CustomError(`Designation with ID ${data.designation_id} does not exist`, 400);
+    if (!data.email) {
+      throw new CustomError(`Employee Code is required`, 400);
+    }
+    if (!data.employment_type) {
+      throw new CustomError(`Employee Code is required`, 400);
+    }
+    if (!data.employee_code) {
+      throw new CustomError(`Employee Code is required`, 400);
+    }
+    if (!data.gender) {
+      throw new CustomError(`Employee Code is required`, 400);
+    }
+    if (!data.designation_id) {
+      throw new CustomError(`Designation is required`, 400);
     }
     if (!data.department_id) {
-      throw new CustomError(`Department with ID ${data.department_id} does not exist`, 400);
+      throw new CustomError(`Department is required`, 400);
     }
 
     const serializedData = serializeTags(employeeData);
@@ -164,18 +176,18 @@ console.log("Employee Data: ", employeeData);
     const fullData = await prisma.hrms_d_employee.findFirst({
       where: { id: result },
       include: {
-       hrms_employee_address: {
+        hrms_employee_address: {
           include: {
-            employee_state:{
-              select:{
+            employee_state: {
+              select: {
                 id: true,
-                name: true, 
+                name: true,
               }
             },
-            employee_country:{
-              select:{
+            employee_country: {
+              select: {
                 id: true,
-                name: true, 
+                name: true,
               }
             },
 
@@ -199,7 +211,7 @@ console.log("Employee Data: ", employeeData);
     return parseData(fullData);
   } catch (error) {
     console.log("Error to Create employee : ", error);
-    throw new CustomError(`Error creating employee: ${error.message}`, 500);
+    throw new CustomError(`Error creating employee: ${error.message}`, error.status || 500);
   }
 };
 
@@ -247,33 +259,33 @@ const updateEmployee = async (id, data) => {
       //   where: { employee_id: parseInt(id) },
       //   select: { id: true },
       // });
-        if (Array.isArray(empAddressData) && empAddressData.length > 0) {
-      const dbIds = employee?.hrms_employee_address?.map((a) => a.id);
-      const requestIds = existingAddresses?.map((a) => a.id);
+      if (Array.isArray(empAddressData) && empAddressData.length > 0) {
+        const dbIds = employee?.hrms_employee_address?.map((a) => a.id);
+        const requestIds = existingAddresses?.map((a) => a.id);
 
-      // 3. Delete removed addresses (if any)
-      const toDeleteIds = empAddressData ? dbIds.filter((id) => !requestIds.includes(id)) : [];
-      if (toDeleteIds.length > 0) {
-        await prisma.hrms_d_employee_address.deleteMany({
-          where: { id: { in: toDeleteIds } },
-        });
-      }
+        // 3. Delete removed addresses (if any)
+        const toDeleteIds = empAddressData ? dbIds.filter((id) => !requestIds.includes(id)) : [];
+        if (toDeleteIds.length > 0) {
+          await prisma.hrms_d_employee_address.deleteMany({
+            where: { id: { in: toDeleteIds } },
+          });
+        }
 
-      // 4. Update existing addresses
-     for (const addr of existingAddresses) {
-        await prisma.hrms_d_employee_address.update({
-          where: { id: addr.id },
-          data: serializeAddress(addr),
-        });
-      }
+        // 4. Update existing addresses
+        for (const addr of existingAddresses) {
+          await prisma.hrms_d_employee_address.update({
+            where: { id: addr.id },
+            data: serializeAddress(addr),
+          });
+        }
 
-      // 5. Create new addresses in bulk
-      if (newSerialized.length > 0) {
-        await prisma.hrms_d_employee_address.createMany({
-          data: newSerialized,
-        });
+        // 5. Create new addresses in bulk
+        if (newSerialized.length > 0) {
+          await prisma.hrms_d_employee_address.createMany({
+            data: newSerialized,
+          });
+        }
       }
-    }
       //  const serializedAddres = serializeAddress(empAddressData);
       // // Map contacts to the employee
       // const addressDatas = {
@@ -286,22 +298,22 @@ const updateEmployee = async (id, data) => {
         where: { id: parseInt(id) },
         include: {
           hrms_employee_address: {
-          include: {
-            employee_state:{
-              select:{
-                id: true,
-                name: true, 
-              }
-            },
-            employee_country:{
-              select:{
-                id: true,
-                name: true, 
-              }
-            },
+            include: {
+              employee_state: {
+                select: {
+                  id: true,
+                  name: true,
+                }
+              },
+              employee_country: {
+                select: {
+                  id: true,
+                  name: true,
+                }
+              },
 
+            },
           },
-        },
           hrms_employee_designation: {
             select: { id: true, designation_name: true },
           },
@@ -320,11 +332,11 @@ const updateEmployee = async (id, data) => {
       return updatedEmp;
     });
 
- return parseData(result);
-;
+    return parseData(result);
+    ;
   } catch (error) {
     console.log("Updating error in employee", error);
-    throw new CustomError(`Error updating employee: ${error.message}`, 500);
+    throw new CustomError(`Error updating employee: ${error.message}`, error.status || 500);
   }
 };
 
@@ -334,18 +346,18 @@ const findEmployeeById = async (id) => {
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(id) },
       include: {
-       hrms_employee_address: {
+        hrms_employee_address: {
           include: {
-            employee_state:{
-              select:{
+            employee_state: {
+              select: {
                 id: true,
-                name: true, 
+                name: true,
               }
             },
-            employee_country:{
-              select:{
+            employee_country: {
+              select: {
                 id: true,
-                name: true, 
+                name: true,
               }
             },
 
@@ -367,7 +379,7 @@ const findEmployeeById = async (id) => {
     });
     return parseData(employee);
   } catch (error) {
-    throw new CustomError("Error finding employee by ID", 503);
+    throw new CustomError("Error finding employee by ID", error.status || 503);
   }
 };
 
@@ -432,16 +444,16 @@ const getAllEmployee = async (
       include: {
         hrms_employee_address: {
           include: {
-            employee_state:{
-              select:{
+            employee_state: {
+              select: {
                 id: true,
-                name: true, 
+                name: true,
               }
             },
-            employee_country:{
-              select:{
+            employee_country: {
+              select: {
                 id: true,
-                name: true, 
+                name: true,
               }
             },
 
@@ -476,7 +488,7 @@ const getAllEmployee = async (
     };
   } catch (error) {
     console.log("Error employee get : ", error);
-    throw new CustomError("Error retrieving employees", 503);
+    throw new CustomError("Error retrieving employees", error.status || 503);
   }
 };
 
@@ -495,7 +507,7 @@ const deleteEmployee = async (id) => {
     });
   } catch (error) {
     console.log("Error to delete employee : ", error);
-    throw new CustomError(`Error deleting employee: ${error.message}`, 500);
+    throw new CustomError(`Error deleting employee: ${error.message}`, error.status || 500);
   }
 };
 module.exports = {
