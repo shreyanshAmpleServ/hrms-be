@@ -65,6 +65,7 @@ model hrms_m_user {
   hrms_d_user_role         hrms_d_user_role[]
   exit_clearance_by_user   hrms_d_exit_clearance[] @relation("UserCleared")
   travel_expense_createdby hrms_d_travel_expense[] @relation("TravelExpenseCreatedBy")
+  travel_expense_approver  hrms_d_travel_expense[] @relation("TravelExpenseApprover")
 }
 
 model hrms_m_module {
@@ -706,6 +707,7 @@ model hrms_d_travel_expense {
   log_inst                 Int?
   travel_expense_employee  hrms_d_employee? @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   travel_expense_createdby hrms_m_user      @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_approver  hrms_m_user?     @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_work_life_event {
