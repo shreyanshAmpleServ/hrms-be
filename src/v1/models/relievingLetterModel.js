@@ -159,9 +159,14 @@ const getAllRelievingLetters = async (
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      // include: {
-      //   relieving_letter_employee: true,
-      // },
+      include: {
+        relieving_letter_employee: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+      },
     });
 
     const totalCount = await prisma.hrms_d_relieving_letter.count({

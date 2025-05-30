@@ -1,5 +1,4 @@
-const travelExpenseModel = require("../models/probationReviewModel.js");
-
+const travelExpenseModel = require("../models/travelExpenseModel.js");
 const createTravelExpense = async (data) => {
   return await travelExpenseModel.createTravelExpense(data);
 };
