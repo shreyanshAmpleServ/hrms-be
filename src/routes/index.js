@@ -96,6 +96,7 @@ const eventLogRoute = require("../v1/routes/eventLogRoute");
 const exitInterview = require("../v1/routes/exitInterviewRoute.js");
 const exitClearance = require("../v1/routes/exitClearanceRoute.js");
 const relievingLetter = require("../v1/routes/relievingLetterRoute.js");
+const travelExpenseRoute = require("../v1/routes/travelExpenseRoute.js");
 const router = express.Router();
 
 // Version 1 API
@@ -196,6 +197,7 @@ router.use("/v1", eventLogRoute);
 router.use("/v1", exitInterview);
 router.use("/v1", exitClearance);
 router.use("/v1", relievingLetter);
+router.use("/v1", travelExpenseRoute);
 // Base path: /v1
 // Add future versions here
 // Example: router.use('/v2', v2Routes);

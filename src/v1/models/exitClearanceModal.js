@@ -141,7 +141,6 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 
@@ -156,14 +155,20 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
       },
     });
 
-    const processed = datas.map(
-      ({ exit_clearance_employee, exit_clearance_by_user, ...rest }) => ({
-        ...rest,
-        employee_name: exit_clearance_employee?.full_name || null,
-        cleared_by_id: exit_clearance_by_user?.id || null,
-        cleared_by_name: exit_clearance_by_user?.full_name || null,
-      })
-    );
+    const processed = datas.map((item) => ({
+      id: item.id,
+      employee_id: item.employee_id,
+      clearance_date: item.clearance_date,
+      cleared_by: item.cleared_by,
+      remarks: item.remarks,
+      createdate: item.createdate,
+      createdby: item.createdby,
+      updatedate: item.updatedate,
+      updatedby: item.updatedby,
+      log_inst: item.log_inst,
+      exit_clearance_by_user: item.exit_clearance_by_user,
+      exit_clearance_employee: item.exit_clearance_employee,
+    }));
     const totalCount = await prisma.hrms_d_exit_clearance.count({
       where: filters,
     });
