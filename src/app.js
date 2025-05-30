@@ -24,9 +24,11 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
+      "http://localhost:3001",
       "http://192.168.29.90:3000",
       "http://192.168.29.74:3000",
       "http://10.160.5.101:3000",
+      "http://10.160.5.101:3001",
     ], // Replace with your frontend URL
     credentials: true, // Allow cookies to be sent
   })

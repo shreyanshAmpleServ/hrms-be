@@ -20,7 +20,18 @@ const createExitClearance = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+      include: {
+        exit_clearance_by_user: {
+          // <-- include the user who cleared
+          select: { id: true, full_name: true },
+        },
+        exit_clearance_employee: {
+          // still include the employee
+          select: { id: true, full_name: true },
+        },
+      },
     });
+
     return reqData;
   } catch (error) {
     throw new CustomError(
@@ -36,13 +47,19 @@ const findExitClearanceById = async (id) => {
     const reqData = await prisma.hrms_d_exit_clearance.findUnique({
       where: { id: parseInt(id) },
       include: {
-        exit_clearance_employee: true,
+        exit_clearance_employee: { select: { id: true, full_name: true } },
+        exit_clearance_by_user: { select: { id: true, full_name: true } },
       },
     });
+
     if (!reqData) {
       throw new CustomError("Exit clearance not found", 404);
     }
-    return reqData;
+    return {
+      ...reqData,
+      cleared_by_id: reqData.exit_clearance_by_user?.id || null,
+      cleared_by_name: reqData.exit_clearance_by_user?.full_name || null,
+    };
   } catch (error) {
     throw new CustomError(
       `Error finding exit clearance by ID: ${error.message}`,
@@ -61,8 +78,28 @@ const updateExitClearance = async (id, data) => {
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
+      include: {
+        exit_clearance_by_user: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+        exit_clearance_employee: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+      },
     });
-    return updatedClearance;
+
+    return {
+      success: true,
+      data: updatedClearance,
+      message: "Exit clearance updated successfully",
+      status: 200,
+    };
   } catch (error) {
     throw new CustomError(
       `Error updating exit clearance: ${error.message}`,
@@ -86,7 +123,7 @@ const deleteExitClearance = async (id) => {
 };
 
 // Get all exit clearances with pagination and search
-const getAllExitClearances = async (search, page, size, startDate, endDate) => {
+const getAllExitClearance = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -97,7 +134,16 @@ const getAllExitClearances = async (search, page, size, startDate, endDate) => {
     // Search OR condition on remarks
     if (search) {
       filterConditions.push({
-        remarks: { contains: search },
+        OR: [
+          {
+            exit_clearance_employee: {
+              full_name: {
+                contains: search.toLowerCase(),
+              },
+            },
+          },
+          { remarks: { contains: search.toLowerCase() } },
+        ],
       });
     }
 
@@ -115,7 +161,6 @@ const getAllExitClearances = async (search, page, size, startDate, endDate) => {
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 
@@ -125,16 +170,31 @@ const getAllExitClearances = async (search, page, size, startDate, endDate) => {
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
-        exit_clearance_employee: true,
+        exit_clearance_employee: { select: { id: true, full_name: true } },
+        exit_clearance_by_user: { select: { id: true, full_name: true } },
       },
     });
 
+    const processed = datas.map((item) => ({
+      id: item.id,
+      employee_id: item.employee_id,
+      clearance_date: item.clearance_date,
+      cleared_by: item.cleared_by,
+      remarks: item.remarks,
+      createdate: item.createdate,
+      createdby: item.createdby,
+      updatedate: item.updatedate,
+      updatedby: item.updatedby,
+      log_inst: item.log_inst,
+      exit_clearance_by_user: item.exit_clearance_by_user,
+      exit_clearance_employee: item.exit_clearance_employee,
+    }));
     const totalCount = await prisma.hrms_d_exit_clearance.count({
       where: filters,
     });
 
     return {
-      data: datas,
+      data: processed,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
@@ -150,5 +210,5 @@ module.exports = {
   findExitClearanceById,
   updateExitClearance,
   deleteExitClearance,
-  getAllExitClearances,
+  getAllExitClearance,
 };

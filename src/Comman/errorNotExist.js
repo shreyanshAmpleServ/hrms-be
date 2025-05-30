@@ -1,9 +1,9 @@
-import { PrismaClient } from "@prisma/client";
+// import { PrismaClient } from "@prisma/client";
 
-// const { PrismaClient } = require("@prisma/client");
+const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 
-export const errorNotExist = async (modelName, id , name) => {
+ const errorNotExist = async (modelName, id , name) => {
   const record = await prisma[modelName].findUnique({
     where: { id: Number(id) },
   });
@@ -13,4 +13,6 @@ export const errorNotExist = async (modelName, id , name) => {
   }
 
   return true;
-};
+}
+
+module.exports = {errorNotExist}
