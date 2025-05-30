@@ -253,6 +253,7 @@ model hrms_d_employee {
   experiance_of_employee        hrms_employee_d_experiences[]
   exit_clearance_employee       hrms_d_exit_clearance[]
   hrms_d_training_session       hrms_d_training_session[]
+  relieving_letter_employee     hrms_d_relieving_letter[]
 }
 
 model hrms_d_employee_address {
@@ -556,15 +557,16 @@ model hrms_d_recognition_award {
 }
 
 model hrms_d_relieving_letter {
-  id             Int       @id(map: "PK__hrms_d_r__3213E83F4F0CC987") @default(autoincrement())
-  employee_id    Int?
-  relieving_date DateTime? @db.Date
-  remarks        String?   @db.NVarChar(255)
-  createdate     DateTime? @default(now(), map: "DF__hrms_d_re__creat__7EF6D905") @db.DateTime
-  createdby      Int
-  updatedate     DateTime? @db.DateTime
-  updatedby      Int?
-  log_inst       Int?
+  id                        Int              @id(map: "PK__hrms_d_r__3213E83F4F0CC987") @default(autoincrement())
+  employee_id               Int?
+  relieving_date            DateTime?        @db.Date
+  remarks                   String?          @db.NVarChar(255)
+  createdate                DateTime?        @default(now(), map: "DF__hrms_d_re__creat__7EF6D905") @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?        @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
+  relieving_letter_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_remote_work_log {
