@@ -24,6 +24,10 @@ const createTravelExpense = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+      include: {
+        travel_expense_employee: { select: { id: true, full_name: true } },
+        travel_expense_createdby: { select: { id: true, full_name: true } },
+      },
     });
     return reqData;
   } catch (error) {
@@ -38,15 +42,17 @@ const createTravelExpense = async (data) => {
 const findTravelExpenseById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_travel_expense.findUnique({
-      where: { id: created.id },
+      where: { id: parseInt(id) },
       include: {
-        travel_expense_employee: { select: { id: true, name: true } },
-        approved_by_user: { select: { id: true, name: true } },
+        travel_expense_employee: { select: { id: true, full_name: true } },
+        travel_expense_createdby: { select: { id: true, full_name: true } },
       },
     });
+
     if (!reqData) {
       throw new CustomError("Travel expense not found", 404);
     }
+
     return reqData;
   } catch (error) {
     throw new CustomError(
@@ -61,6 +67,10 @@ const updateTravelExpense = async (id, data) => {
   try {
     const updatedExpense = await prisma.hrms_d_travel_expense.update({
       where: { id: parseInt(id) },
+      include: {
+        travel_expense_employee: { select: { id: true, full_name: true } },
+        travel_expense_createdby: { select: { id: true, full_name: true } },
+      },
       data: {
         ...serializeTravelExpense(data),
         updatedby: data.updatedby || 1,
@@ -91,7 +101,7 @@ const deleteTravelExpense = async (id) => {
 };
 
 // Get all travel expenses with pagination and search
-const getAllTravelExpenses = async (search, page, size, startDate, endDate) => {
+const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -103,9 +113,11 @@ const getAllTravelExpenses = async (search, page, size, startDate, endDate) => {
     if (search) {
       filterConditions.push({
         OR: [
-          { travel_purpose: { contains: search } },
-          { destination: { contains: search } },
-          { approval_status: { contains: search } },
+          { travel_expense_employee: { full_name: { contains: search } } },
+          { travel_expense_createdby: { full_name: { contains: search } } },
+          { travel_purpose: { contains: search.toLowerCase() } },
+          { destination: { contains: search.toLowerCase() } },
+          { approval_status: { contains: search.toLowerCase() } },
         ],
       });
     }
@@ -134,8 +146,8 @@ const getAllTravelExpenses = async (search, page, size, startDate, endDate) => {
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
-        travel_expense_employee: true,
-        travel_expense_createdby: true,
+        travel_expense_employee: { select: { id: true, full_name: true } },
+        travel_expense_createdby: { select: { id: true, full_name: true } },
       },
     });
 
@@ -160,4 +172,5 @@ module.exports = {
   findTravelExpenseById,
   updateTravelExpense,
   deleteTravelExpense,
+  getAllTravelExpense,
 };
