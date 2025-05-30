@@ -109,19 +109,21 @@ model hrms_d_appraisal {
 }
 
 model hrms_d_asset_assignment {
-  id            Int       @id(map: "PK__hrms_d_a__3213E83F53CB6E63") @default(autoincrement())
-  employee_id   Int?
-  asset_type_id Int?
-  asset_name    String?   @db.NVarChar(100)
-  serial_number String?   @db.NVarChar(100)
-  issued_on     DateTime? @db.Date
-  returned_on   DateTime? @db.Date
-  status        String?   @db.VarChar(50)
-  createdate    DateTime? @default(now(), map: "DF__hrms_d_as__creat__15DA3E5D") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id                        Int                @id(map: "PK__hrms_d_a__3213E83F53CB6E63") @default(autoincrement())
+  employee_id               Int?
+  asset_type_id             Int?
+  asset_name                String?            @db.NVarChar(100)
+  serial_number             String?            @db.NVarChar(100)
+  issued_on                 DateTime?          @db.Date
+  returned_on               DateTime?          @db.Date
+  status                    String?            @db.VarChar(50)
+  createdate                DateTime?          @default(now(), map: "DF__hrms_d_as__creat__15DA3E5D") @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?          @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
+  asset_assignment_employee hrms_d_employee?   @relation("AssetAssignmentEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  asset_assignment_type     hrms_m_asset_type? @relation("AssetAssignmentId", fields: [asset_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_competency {
@@ -257,6 +259,7 @@ model hrms_d_employee {
   relieving_letter_employee     hrms_d_relieving_letter[]
   travel_expense_employee       hrms_d_travel_expense[]       @relation("TravelExpenseEmployee")
   survey_employee               hrms_d_survey_response[]
+  asset_assignment_employee     hrms_d_asset_assignment[]     @relation("AssetAssignmentEmployee")
 }
 
 model hrms_d_employee_address {
@@ -753,14 +756,15 @@ model hrms_m_advance_type {
 }
 
 model hrms_m_asset_type {
-  id                Int       @id(map: "PK__hrms_m_a__3213E83FAD5C7A8E") @default(autoincrement())
-  asset_type_name   String?   @db.NVarChar(100)
-  depreciation_rate Decimal?  @db.Decimal(5, 2)
-  createdate        DateTime? @default(now(), map: "DF__hrms_m_as__creat__41EDCAC5") @db.DateTime
-  createdby         Int
-  updatedate        DateTime? @db.DateTime
-  updatedby         Int?
-  log_inst          Int?
+  id                    Int                       @id(map: "PK__hrms_m_a__3213E83FAD5C7A8E") @default(autoincrement())
+  asset_type_name       String?                   @db.NVarChar(100)
+  depreciation_rate     Decimal?                  @db.Decimal(5, 2)
+  createdate            DateTime?                 @default(now(), map: "DF__hrms_m_as__creat__41EDCAC5") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?                 @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  asset_assignment_type hrms_d_asset_assignment[] @relation("AssetAssignmentId")
 }
 
 model hrms_m_award_type {
