@@ -99,6 +99,8 @@ const relievingLetter = require("../v1/routes/relievingLetterRoute.js");
 const travelExpenseRoute = require("../v1/routes/travelExpenseRoute.js");
 const surveyResponseRoute = require("../v1/routes/surveyResponseRoute.js");
 const assetAssignmentRoute = require("../v1/routes/assetAssignmentRoute.js");
+const suggestionBoxRoute = require("../v1/routes/suggestionBoxRoute.js");
+const recognitionAwardRoute = require("../v1/routes/recognitionAwardRoute.js");
 const router = express.Router();
 
 // Version 1 API
@@ -201,9 +203,9 @@ router.use("/v1", exitClearance);
 router.use("/v1", relievingLetter);
 router.use("/v1", travelExpenseRoute);
 router.use("/v1", surveyResponseRoute);
-router.use("/v1", assetAssignmentRoute); // Base path: /v1
-// Base path: /v1
-// Add future versions here
+router.use("/v1", assetAssignmentRoute);
+router.use("/v1", suggestionBoxRoute);
+router.use("/v1", recognitionAwardRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
