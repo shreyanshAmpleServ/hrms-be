@@ -78,8 +78,28 @@ const updateExitClearance = async (id, data) => {
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
+      include: {
+        exit_clearance_by_user: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+        exit_clearance_employee: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+      },
     });
-    return updatedClearance;
+
+    return {
+      success: true,
+      data: updatedClearance,
+      message: "Exit clearance updated successfully",
+      status: 200,
+    };
   } catch (error) {
     throw new CustomError(
       `Error updating exit clearance: ${error.message}`,
