@@ -11,23 +11,40 @@ const serializeTags = (data) => {
   if ("first_name" in data) serialized.first_name = data.first_name;
   if ("last_name" in data) serialized.last_name = data.last_name;
   if ("first_name" in data || "last_name" in data)
-    serialized.full_name = `${data.first_name || ""} ${data.last_name || ""}`.trim();
+    serialized.full_name = `${data.first_name || ""} ${
+      data.last_name || ""
+    }`.trim();
 
   if ("gender" in data) serialized.gender = data.gender;
-  if ("date_of_birth" in data) serialized.date_of_birth = data.date_of_birth ? moment(data.date_of_birth) : null;
-  if ("national_id_number" in data) serialized.national_id_number = data.national_id_number;
+  if ("date_of_birth" in data)
+    serialized.date_of_birth = data.date_of_birth
+      ? moment(data.date_of_birth)
+      : null;
+  if ("national_id_number" in data)
+    serialized.national_id_number = data.national_id_number;
   if ("nationality" in data) serialized.nationality = data.nationality;
-  if ("passport_issue_date" in data) serialized.passport_issue_date = data.passport_issue_date;
-  if ("passport_expiry_date" in data) serialized.passport_expiry_date = data.passport_expiry_date;
-  if ("passport_number" in data) serialized.passport_number = data.passport_number;
+  if ("passport_issue_date" in data)
+    serialized.passport_issue_date = data.passport_issue_date;
+  if ("passport_expiry_date" in data)
+    serialized.passport_expiry_date = data.passport_expiry_date;
+  if ("passport_number" in data)
+    serialized.passport_number = data.passport_number;
   if ("address" in data) serialized.address = data.address;
-  if ("employment_type" in data) serialized.employment_type = data.employment_type;
-  if ("employee_category" in data) serialized.employee_category = data.employee_category;
-  if ("join_date" in data) serialized.join_date = data.join_date ? moment(data.join_date) : null;
-  if ("confirm_date" in data) serialized.confirm_date = data.confirm_date ? moment(data.confirm_date) : null;
-  if ("resign_date" in data) serialized.resign_date = data.resign_date ? moment(data.resign_date) : null;
+  if ("employment_type" in data)
+    serialized.employment_type = data.employment_type;
+  if ("employee_category" in data)
+    serialized.employee_category = data.employee_category;
+  if ("join_date" in data)
+    serialized.join_date = data.join_date ? moment(data.join_date) : null;
+  if ("confirm_date" in data)
+    serialized.confirm_date = data.confirm_date
+      ? moment(data.confirm_date)
+      : null;
+  if ("resign_date" in data)
+    serialized.resign_date = data.resign_date ? moment(data.resign_date) : null;
   if ("ifsc" in data) serialized.ifsc = data.ifsc;
-  if ("account_holder_name" in data) serialized.account_holder_name = data.account_holder_name;
+  if ("account_holder_name" in data)
+    serialized.account_holder_name = data.account_holder_name;
   if ("account_number" in data) serialized.account_number = data.account_number;
   if ("work_location" in data) serialized.work_location = data.work_location;
   if ("email" in data) serialized.email = data.email;
@@ -41,12 +58,18 @@ const serializeTags = (data) => {
 
   if ("father_name" in data) serialized.father_name = data.father_name;
   if ("mother_name" in data) serialized.mother_name = data.mother_name;
-  if ("primary_contact_number" in data) serialized.primary_contact_number = data.primary_contact_number;
-  if ("primary_contact_name" in data) serialized.primary_contact_name = data.primary_contact_name;
-  if ("primary_contact_relation" in data) serialized.primary_contact_relation = data.primary_contact_relation;
-  if ("secondary_contact_mumber" in data) serialized.secondary_contact_mumber = data.secondary_contact_mumber;
-  if ("secondary_contact_name" in data) serialized.secondary_contact_name = data.secondary_contact_name;
-  if ("secondary_contact_relation" in data) serialized.secondary_contact_relation = data.secondary_contact_relation;
+  if ("primary_contact_number" in data)
+    serialized.primary_contact_number = data.primary_contact_number;
+  if ("primary_contact_name" in data)
+    serialized.primary_contact_name = data.primary_contact_name;
+  if ("primary_contact_relation" in data)
+    serialized.primary_contact_relation = data.primary_contact_relation;
+  if ("secondary_contact_mumber" in data)
+    serialized.secondary_contact_mumber = data.secondary_contact_mumber;
+  if ("secondary_contact_name" in data)
+    serialized.secondary_contact_name = data.secondary_contact_name;
+  if ("secondary_contact_relation" in data)
+    serialized.secondary_contact_relation = data.secondary_contact_relation;
   // if ("bank_id" in data) serialized.bank_id = Number(data.bank_id);
 
   // Relations (only connect if provided)
@@ -74,7 +97,6 @@ const serializeTags = (data) => {
 
   return serialized;
 };
-
 
 const serializeAddress = (data) => {
   return {
@@ -123,19 +145,19 @@ const createEmployee = async (data) => {
   try {
     console.log("Employee Data: ", employeeData);
     if (!data.phone_number) {
-      throw new CustomError(`Employee Code is required`, 400);
+      throw new CustomError(`Phone Number is required`, 400);
     }
     if (!data.email) {
-      throw new CustomError(`Employee Code is required`, 400);
+      throw new CustomError(`Email is required`, 400);
     }
     if (!data.employment_type) {
-      throw new CustomError(`Employee Code is required`, 400);
+      throw new CustomError(`Employment Type is required`, 400);
     }
     if (!data.employee_code) {
       throw new CustomError(`Employee Code is required`, 400);
     }
     if (!data.gender) {
-      throw new CustomError(`Employee Code is required`, 400);
+      throw new CustomError(`Gender is required`, 400);
     }
     if (!data.designation_id) {
       throw new CustomError(`Designation is required`, 400);
@@ -182,15 +204,14 @@ const createEmployee = async (data) => {
               select: {
                 id: true,
                 name: true,
-              }
+              },
             },
             employee_country: {
               select: {
                 id: true,
                 name: true,
-              }
+              },
             },
-
           },
         },
         hrms_employee_designation: {
@@ -211,7 +232,10 @@ const createEmployee = async (data) => {
     return parseData(fullData);
   } catch (error) {
     console.log("Error to Create employee : ", error);
-    throw new CustomError(`Error creating employee: ${error.message}`, error.status || 500);
+    throw new CustomError(
+      `Error creating employee: ${error.message}`,
+      error.status || 500
+    );
   }
 };
 
@@ -219,7 +243,6 @@ const createEmployee = async (data) => {
 const updateEmployee = async (id, data) => {
   const { empAddressData, ...employeeData } = data; // Separate `contactIds` from other employee data
   try {
-
     const updatedData = {
       ...employeeData,
       updatedby: data.updatedby || 1,
@@ -232,10 +255,11 @@ const updateEmployee = async (id, data) => {
     const existingAddresses = empAddressData?.filter((addr) => addr.id) || [];
 
     // Prepare address data
-    const newSerialized = newAddresses?.map((addr) => ({
-      ...serializeAddress(addr),
-      employee_id: parseInt(id),
-    })) || [];
+    const newSerialized =
+      newAddresses?.map((addr) => ({
+        ...serializeAddress(addr),
+        employee_id: parseInt(id),
+      })) || [];
 
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
@@ -264,7 +288,9 @@ const updateEmployee = async (id, data) => {
         const requestIds = existingAddresses?.map((a) => a.id);
 
         // 3. Delete removed addresses (if any)
-        const toDeleteIds = empAddressData ? dbIds.filter((id) => !requestIds.includes(id)) : [];
+        const toDeleteIds = empAddressData
+          ? dbIds.filter((id) => !requestIds.includes(id))
+          : [];
         if (toDeleteIds.length > 0) {
           await prisma.hrms_d_employee_address.deleteMany({
             where: { id: { in: toDeleteIds } },
@@ -303,15 +329,14 @@ const updateEmployee = async (id, data) => {
                 select: {
                   id: true,
                   name: true,
-                }
+                },
               },
               employee_country: {
                 select: {
                   id: true,
                   name: true,
-                }
+                },
               },
-
             },
           },
           hrms_employee_designation: {
@@ -333,10 +358,12 @@ const updateEmployee = async (id, data) => {
     });
 
     return parseData(result);
-    ;
   } catch (error) {
     console.log("Updating error in employee", error);
-    throw new CustomError(`Error updating employee: ${error.message}`, error.status || 500);
+    throw new CustomError(
+      `Error updating employee: ${error.message}`,
+      error.status || 500
+    );
   }
 };
 
@@ -352,15 +379,14 @@ const findEmployeeById = async (id) => {
               select: {
                 id: true,
                 name: true,
-              }
+              },
             },
             employee_country: {
               select: {
                 id: true,
                 name: true,
-              }
+              },
             },
-
           },
         },
         hrms_employee_designation: {
@@ -448,15 +474,14 @@ const getAllEmployee = async (
               select: {
                 id: true,
                 name: true,
-              }
+              },
             },
             employee_country: {
               select: {
                 id: true,
                 name: true,
-              }
+              },
             },
-
           },
         },
         hrms_employee_designation: {
@@ -507,7 +532,10 @@ const deleteEmployee = async (id) => {
     });
   } catch (error) {
     console.log("Error to delete employee : ", error);
-    throw new CustomError(`Error deleting employee: ${error.message}`, error.status || 500);
+    throw new CustomError(
+      `Error deleting employee: ${error.message}`,
+      error.status || 500
+    );
   }
 };
 module.exports = {
