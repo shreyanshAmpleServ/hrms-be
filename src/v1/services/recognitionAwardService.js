@@ -1,4 +1,4 @@
-const recognitionAwardModel = require("../models/probationReviewModel.js");
+const recognitionAwardModel = require("../models/recognitionAwardModel.js");
 
 const createRecognitionAward = async (data) => {
   return await recognitionAwardModel.createRecognitionAward(data);

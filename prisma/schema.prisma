@@ -261,6 +261,8 @@ model hrms_d_employee {
   survey_employee               hrms_d_survey_response[]
   asset_assignment_employee     hrms_d_asset_assignment[]     @relation("AssetAssignmentEmployee")
   suggestion_box_employee       hrms_d_employee_suggestion[]
+  recognition_award_employee    hrms_d_recognition_award[]    @relation("RecognitionAwardEmployee")
+  recognition_award_nominated   hrms_d_recognition_award[]    @relation("RecognitionAwardNominated")
 }
 
 model hrms_d_employee_address {
@@ -551,17 +553,19 @@ model hrms_d_probation_review {
 }
 
 model hrms_d_recognition_award {
-  id           Int       @id(map: "PK__hrms_d_r__3213E83FAC65FB35") @default(autoincrement())
-  employee_id  Int?
-  award_title  String?   @db.NVarChar(100)
-  description  String?   @db.NVarChar(500)
-  award_date   DateTime? @db.Date
-  nominated_by Int?
-  createdate   DateTime? @default(now(), map: "DF__hrms_d_re__creat__24285DB4") @db.DateTime
-  createdby    Int
-  updatedate   DateTime? @db.DateTime
-  updatedby    Int?
-  log_inst     Int?
+  id                          Int              @id(map: "PK__hrms_d_r__3213E83FAC65FB35") @default(autoincrement())
+  employee_id                 Int?
+  award_title                 String?          @db.NVarChar(100)
+  description                 String?          @db.NVarChar(500)
+  award_date                  DateTime?        @db.Date
+  nominated_by                Int?
+  createdate                  DateTime?        @default(now(), map: "DF__hrms_d_re__creat__24285DB4") @db.DateTime
+  createdby                   Int
+  updatedate                  DateTime?        @db.DateTime
+  updatedby                   Int?
+  log_inst                    Int?
+  recognition_award_employee  hrms_d_employee? @relation("RecognitionAwardEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  recognition_award_nominated hrms_d_employee? @relation("RecognitionAwardNominated", fields: [nominated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_relieving_letter {
@@ -625,18 +629,18 @@ model hrms_d_succession_plan {
 }
 
 model hrms_d_survey_response {
-  id               Int       @id(map: "PK__hrms_d_s__3213E83F38538453") @default(autoincrement())
-  employee_id      Int?
-  survey_id        Int?
-  response_text    String?
-  submitted_on     DateTime? @db.DateTime
-  createdate       DateTime? @default(now(), map: "DF__hrms_d_su__creat__214BF109") @db.DateTime
-  createdby        Int
-  updatedate       DateTime? @db.DateTime
-  updatedby        Int?
-  log_inst         Int?
-  survey_employee  hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  survey_type      hrms_m_survey_master? @relation(fields: [survey_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id              Int                   @id(map: "PK__hrms_d_s__3213E83F38538453") @default(autoincrement())
+  employee_id     Int?
+  survey_id       Int?
+  response_text   String?
+  submitted_on    DateTime?             @db.DateTime
+  createdate      DateTime?             @default(now(), map: "DF__hrms_d_su__creat__214BF109") @db.DateTime
+  createdby       Int
+  updatedate      DateTime?             @db.DateTime
+  updatedby       Int?
+  log_inst        Int?
+  survey_employee hrms_d_employee?      @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  survey_type     hrms_m_survey_master? @relation(fields: [survey_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_time_sheet {
@@ -1088,14 +1092,14 @@ model hrms_m_statutory_rate {
 }
 
 model hrms_m_survey_master {
-  id           Int       @id(map: "PK__hrms_m_s__3213E83FA2306E59") @default(autoincrement())
-  survey_title String?   @db.NVarChar(255)
-  description  String?   @db.NVarChar(500)
-  launch_date  DateTime? @db.Date
-  close_date   DateTime? @db.Date
-  createdate   DateTime? @default(now(), map: "DF__hrms_m_su__creat__3B0BC30C") @db.DateTime
+  id           Int                      @id(map: "PK__hrms_m_s__3213E83FA2306E59") @default(autoincrement())
+  survey_title String?                  @db.NVarChar(255)
+  description  String?                  @db.NVarChar(500)
+  launch_date  DateTime?                @db.Date
+  close_date   DateTime?                @db.Date
+  createdate   DateTime?                @default(now(), map: "DF__hrms_m_su__creat__3B0BC30C") @db.DateTime
   createdby    Int
-  updatedate   DateTime? @db.DateTime
+  updatedate   DateTime?                @db.DateTime
   updatedby    Int?
   log_inst     Int?
   survey_type  hrms_d_survey_response[]
