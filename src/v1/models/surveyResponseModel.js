@@ -1,15 +1,62 @@
+/**
+ * @fileoverview Survey response model handling CRUD operations for survey responses
+ * @module surveyResponseModel
+ */
+
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { z } = require("zod");
 const prisma = new PrismaClient();
 
-// Serialize survey response data
-const serializeSurveyResponse = (data) => ({
-  employee_id: data.employee_id ? Number(data.employee_id) : null,
-  submitted_on: data.submitted_on ? new Date(data.submitted_on) : null,
-  response_text: data.response_text || "",
-  survey_id: data.survey_id || "",
+/**
+ * Zod schema for validating survey response data
+ * @type {z.ZodObject}
+ */
+const surveyResponseSchema = z.object({
+  employee_id: z
+    .string({
+      required_error: "Employee ID is required",
+    })
+    .min(1, "Employee ID is required"),
+  submitted_on: z
+    .string({
+      required_error: "Submitted date is required",
+    })
+    .min(1, "Submitted date is required")
+    .transform((val) => new Date(val)),
+  response_text: z
+    .string({
+      required_error: "Response text is required",
+    })
+    .min(1, "Response text is required"),
+  survey_id: z
+    .string({
+      required_error: "Survey ID is required",
+    })
+    .min(1, "Survey ID is required"),
 });
-// Create a new survey response
+
+/**
+ * Validates and serializes survey response data
+ * @param {Object} data - Raw survey response data
+ * @returns {Object} Validated and serialized survey response data
+ */
+const serializeSurveyResponse = (data) => {
+  const validatedData = surveyResponseSchema.parse(data);
+  return {
+    employee_id: validatedData.employee_id,
+    submitted_on: validatedData.submitted_on,
+    response_text: validatedData.response_text,
+    survey_id: validatedData.survey_id,
+  };
+};
+
+/**
+ * Creates a new survey response
+ * @param {Object} data - Survey response data to create
+ * @returns {Promise<Object>} Created survey response with related data
+ * @throws {CustomError} If validation fails or database error occurs
+ */
 const createSurveyResponse = async (data) => {
   try {
     const reqData = await prisma.hrms_d_survey_response.create({
@@ -21,22 +68,16 @@ const createSurveyResponse = async (data) => {
       },
       include: {
         survey_employee: {
-          select: {
-            id: true,
-            employee_code: true,
-            full_name: true,
-          },
+          select: { id: true, employee_code: true, full_name: true },
         },
-        survey_type: {
-          select: {
-            id: true,
-            survey_title: true,
-          },
-        },
+        survey_type: { select: { id: true, survey_title: true } },
       },
     });
     return reqData;
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new CustomError(error.errors[0].message, 400);
+    }
     throw new CustomError(
       `Error creating survey response: ${error.message}`,
       500
@@ -44,25 +85,21 @@ const createSurveyResponse = async (data) => {
   }
 };
 
-// Find an survey response by ID
+/**
+ * Finds a survey response by ID
+ * @param {number|string} id - Survey response ID
+ * @returns {Promise<Object>} Survey response with related data
+ * @throws {CustomError} If survey response not found or database error occurs
+ */
 const findSurveyResponseById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_survey_response.findUnique({
       where: { id: parseInt(id) },
       include: {
         survey_employee: {
-          select: {
-            id: true,
-            employee_code: true,
-            full_name: true,
-          },
+          select: { id: true, employee_code: true, full_name: true },
         },
-        survey_type: {
-          select: {
-            id: true,
-            survey_title: true,
-          },
-        },
+        survey_type: { select: { id: true, survey_title: true } },
       },
     });
     if (!reqData) {
@@ -77,7 +114,13 @@ const findSurveyResponseById = async (id) => {
   }
 };
 
-// Update an survey response
+/**
+ * Updates a survey response
+ * @param {number|string} id - Survey response ID to update
+ * @param {Object} data - Updated survey response data
+ * @returns {Promise<Object>} Updated survey response with related data
+ * @throws {CustomError} If validation fails or database error occurs
+ */
 const updateSurveyResponse = async (id, data) => {
   try {
     const payload = {
@@ -96,16 +139,14 @@ const updateSurveyResponse = async (id, data) => {
         survey_employee: {
           select: { id: true, employee_code: true, full_name: true },
         },
-        survey_type: {
-          select: {
-            id: true,
-            survey_title: true,
-          },
-        },
+        survey_type: { select: { id: true, survey_title: true } },
       },
     });
     return updatedInterview;
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      throw new CustomError(error.errors[0].message, 400);
+    }
     throw new CustomError(
       `Error updating survey response: ${error.message}`,
       500
@@ -113,7 +154,11 @@ const updateSurveyResponse = async (id, data) => {
   }
 };
 
-// Delete an survey response
+/**
+ * Deletes a survey response
+ * @param {number|string} id - Survey response ID to delete
+ * @throws {CustomError} If database error occurs
+ */
 const deleteSurveyResponse = async (id) => {
   try {
     await prisma.hrms_d_survey_response.delete({
@@ -127,7 +172,16 @@ const deleteSurveyResponse = async (id) => {
   }
 };
 
-// Get all survey responses with pagination and search
+/**
+ * Gets all survey responses with pagination and filtering
+ * @param {string} [search] - Search term for filtering responses
+ * @param {number} [page=1] - Page number for pagination
+ * @param {number} [size=10] - Number of items per page
+ * @param {string} [startDate] - Start date for date range filter
+ * @param {string} [endDate] - End date for date range filter
+ * @returns {Promise<Object>} Paginated survey responses with metadata
+ * @throws {CustomError} If database error occurs
+ */
 const getAllSurveyResponses = async (
   search,
   page,
@@ -142,39 +196,25 @@ const getAllSurveyResponses = async (
 
     const filterConditions = [];
 
-    // Search OR condition on multiple fields
     if (search) {
       filterConditions.push({
         OR: [
           {
-            survey_employee: {
-              full_name: { contains: search.toLowerCase() },
-            },
+            survey_employee: { full_name: { contains: search.toLowerCase() } },
           },
-          {
-            survey_type: {
-              survey_title: { contains: search.toLowerCase() },
-            },
-          },
+          { survey_type: { survey_title: { contains: search.toLowerCase() } } },
           { response_text: { contains: search.toLowerCase() } },
         ],
       });
     }
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filterConditions.push({
-          createdate: {
-            gte: start,
-            lte: end,
-          },
-        });
+        filterConditions.push({ createdate: { gte: start, lte: end } });
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 
@@ -185,18 +225,9 @@ const getAllSurveyResponses = async (
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
         survey_employee: {
-          select: {
-            id: true,
-            employee_code: true,
-            full_name: true,
-          },
+          select: { id: true, employee_code: true, full_name: true },
         },
-        survey_type: {
-          select: {
-            id: true,
-            survey_title: true,
-          },
-        },
+        survey_type: { select: { id: true, survey_title: true } },
       },
     });
 
