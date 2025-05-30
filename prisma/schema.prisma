@@ -48,22 +48,23 @@ model hrms_m_role {
 }
 
 model hrms_m_user {
-  id                     Int                     @id(map: "PK__hrms_m_u__3213E83FD9B9A3C4") @default(autoincrement())
-  username               String                  @db.NVarChar(100)
-  password               String                  @db.NVarChar(255)
-  email                  String                  @db.NVarChar(255)
-  full_name              String?                 @db.NVarChar(255)
-  is_active              String                  @default("Y", map: "DF__hrms_m_us__is_ac__4AB81AF0") @db.Char(1)
-  log_inst               Int                     @default(1, map: "DF__hrms_m_us__log_i__4BAC3F29")
-  createdate             DateTime                @default(now(), map: "DF__hrms_m_us__creat__4CA06362") @db.DateTime
-  updatedate             DateTime?               @db.DateTime
-  createdby              Int                     @default(1, map: "DF__hrms_m_us__creat__4D94879B")
-  updatedby              Int?
-  address                String?                 @db.NVarChar(255)
-  phone                  String?                 @db.NVarChar(15)
-  profile_img            String?                 @db.NVarChar(255)
-  hrms_d_user_role       hrms_d_user_role[]
-  exit_clearance_by_user hrms_d_exit_clearance[] @relation("UserCleared")
+  id                       Int                     @id(map: "PK__hrms_m_u__3213E83FD9B9A3C4") @default(autoincrement())
+  username                 String                  @db.NVarChar(100)
+  password                 String                  @db.NVarChar(255)
+  email                    String                  @db.NVarChar(255)
+  full_name                String?                 @db.NVarChar(255)
+  is_active                String                  @default("Y", map: "DF__hrms_m_us__is_ac__4AB81AF0") @db.Char(1)
+  log_inst                 Int                     @default(1, map: "DF__hrms_m_us__log_i__4BAC3F29")
+  createdate               DateTime                @default(now(), map: "DF__hrms_m_us__creat__4CA06362") @db.DateTime
+  updatedate               DateTime?               @db.DateTime
+  createdby                Int                     @default(1, map: "DF__hrms_m_us__creat__4D94879B")
+  updatedby                Int?
+  address                  String?                 @db.NVarChar(255)
+  phone                    String?                 @db.NVarChar(15)
+  profile_img              String?                 @db.NVarChar(255)
+  hrms_d_user_role         hrms_d_user_role[]
+  exit_clearance_by_user   hrms_d_exit_clearance[] @relation("UserCleared")
+  travel_expense_createdby hrms_d_travel_expense[] @relation("TravelExpenseCreatedBy")
 }
 
 model hrms_m_module {
@@ -254,6 +255,7 @@ model hrms_d_employee {
   exit_clearance_employee       hrms_d_exit_clearance[]
   hrms_d_training_session       hrms_d_training_session[]
   relieving_letter_employee     hrms_d_relieving_letter[]
+  travel_expense_employee       hrms_d_travel_expense[]       @relation("TravelExpenseEmployee")
 }
 
 model hrms_d_employee_address {
@@ -676,20 +678,22 @@ model hrms_d_training_session {
 }
 
 model hrms_d_travel_expense {
-  id              Int       @id(map: "PK__hrms_d_t__3213E83F0E6C7ED4") @default(autoincrement())
-  employee_id     Int?
-  travel_purpose  String?   @db.NVarChar(255)
-  start_date      DateTime? @db.Date
-  end_date        DateTime? @db.Date
-  destination     String?   @db.NVarChar(255)
-  total_amount    Decimal?  @db.Decimal(10, 2)
-  approved_by     Int?
-  approval_status String?   @db.VarChar(50)
-  createdate      DateTime? @default(now(), map: "DF__hrms_d_tr__creat__1B9317B3") @db.DateTime
-  createdby       Int
-  updatedate      DateTime? @db.DateTime
-  updatedby       Int?
-  log_inst        Int?
+  id                       Int              @id(map: "PK__hrms_d_t__3213E83F0E6C7ED4") @default(autoincrement())
+  employee_id              Int?
+  travel_purpose           String?          @db.NVarChar(255)
+  start_date               DateTime?        @db.Date
+  end_date                 DateTime?        @db.Date
+  destination              String?          @db.NVarChar(255)
+  total_amount             Decimal?         @db.Decimal(10, 2)
+  approved_by              Int?
+  approval_status          String?          @db.VarChar(50)
+  createdate               DateTime?        @default(now(), map: "DF__hrms_d_tr__creat__1B9317B3") @db.DateTime
+  createdby                Int
+  updatedate               DateTime?        @db.DateTime
+  updatedby                Int?
+  log_inst                 Int?
+  travel_expense_employee  hrms_d_employee? @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_createdby hrms_m_user      @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_work_life_event {
