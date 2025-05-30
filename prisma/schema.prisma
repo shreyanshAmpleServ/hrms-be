@@ -264,6 +264,7 @@ model hrms_d_employee {
   suggestion_box_employee       hrms_d_employee_suggestion[]
   recognition_award_employee    hrms_d_recognition_award[]    @relation("RecognitionAwardEmployee")
   recognition_award_nominated   hrms_d_recognition_award[]    @relation("RecognitionAwardNominated")
+  notification_log_employee     hrms_d_notification_log[]
 }
 
 model hrms_d_employee_address {
@@ -480,18 +481,19 @@ model hrms_d_medical_record {
 }
 
 model hrms_d_notification_log {
-  id            Int       @id(map: "PK__hrms_d_n__3213E83FE7247C57") @default(autoincrement())
-  employee_id   Int?
-  message_title String?   @db.NVarChar(255)
-  message_body  String?
-  channel       String?   @db.VarChar(50)
-  sent_on       DateTime? @db.DateTime
-  status        String?   @db.VarChar(50)
-  createdate    DateTime? @default(now(), map: "DF__hrms_d_no__creat__5F492382") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id                        Int              @id(map: "PK__hrms_d_n__3213E83FE7247C57") @default(autoincrement())
+  employee_id               Int?
+  message_title             String?          @db.NVarChar(255)
+  message_body              String?
+  channel                   String?          @db.VarChar(50)
+  sent_on                   DateTime?        @db.DateTime
+  status                    String?          @db.VarChar(50)
+  createdate                DateTime?        @default(now(), map: "DF__hrms_d_no__creat__5F492382") @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?        @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
+  notification_log_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_offer_letter {
