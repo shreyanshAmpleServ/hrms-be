@@ -236,6 +236,12 @@ const createEmployee = async (data) => {
             experiance_of_employee: true,
           },
         },
+        experiance_of_employee: {
+          include: {
+            experiance_of_employee: true,
+          },
+        },
+        eduction_of_employee: true,
       },
     });
 
@@ -285,6 +291,12 @@ const updateEmployee = async (id, data) => {
               id: true,
             },
           },
+          experiance_of_employee: {
+            include: {
+              experiance_of_employee: true,
+            },
+          },
+          eduction_of_employee: true,
         },
       });
 
@@ -411,6 +423,12 @@ const findEmployeeById = async (id) => {
         hrms_employee_bank: {
           select: { id: true, bank_name: true },
         },
+        experiance_of_employee: {
+          include: {
+            experiance_of_employee: true,
+          },
+        },
+        eduction_of_employee: true,
       },
     });
     return parseData(employee);
