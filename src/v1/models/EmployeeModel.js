@@ -423,11 +423,7 @@ const findEmployeeById = async (id) => {
         hrms_employee_bank: {
           select: { id: true, bank_name: true },
         },
-        experiance_of_employee: {
-          include: {
-            experiance_of_employee: true,
-          },
-        },
+        experiance_of_employee: true,
         eduction_of_employee: true,
       },
     });
@@ -513,11 +509,7 @@ const getAllEmployee = async (
         hrms_employee_bank: {
           select: { id: true, bank_name: true },
         },
-        experiance_of_employee: {
-          include: {
-            experiance_of_employee: true,
-          },
-        },
+        experiance_of_employee: true,
         eduction_of_employee: true, // <== all education rows (no nested employee)
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
