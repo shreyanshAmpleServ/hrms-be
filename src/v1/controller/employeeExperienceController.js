@@ -8,6 +8,7 @@ const createEmployeeExperience = async (req, res, next) => {
 
     const data = {
       ...req.body,
+      experiance_of_employee: req.body.experiance_of_employee,
       createdby: req.user.id,
       log_inst: req.user.log_inst,
     };
