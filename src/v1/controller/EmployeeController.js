@@ -57,7 +57,7 @@ const updateEmployee = async (req, res, next) => {
         "employee"
       );
     }
-    console.log("Huuuu:", imageUrl);
+
     let employeeData = {
       ...req.body,
       updatedby: req.user.id,
