@@ -226,6 +226,16 @@ const createEmployee = async (data) => {
         hrms_manager: {
           select: { id: true, full_name: true },
         },
+        hrms_emp_experience: {
+          include: {
+            hrms_employee_experience: true,
+          },
+        },
+        hrms_emp_experiences: {
+          include: {
+            experiance_of_employee: true,
+          },
+        },
       },
     });
 
@@ -419,9 +429,12 @@ const getAllEmployee = async (
   status
 ) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    // Fix page default logic
+    if (!page || page === 0) {
+      page = 1;
+    }
     size = size || 10;
-    const skip = (page - 1) * size || 0;
+    const skip = (page - 1) * size;
 
     const filters = {};
     // Handle search
@@ -430,57 +443,46 @@ const getAllEmployee = async (
         {
           hrms_employee_designation: {
             designation_name: { contains: search.toLowerCase() },
-          }, // Include contact details
+          },
+        },
+        {
+          hrms_emp_experience: {
+            experiance_of_employee: {
+              experience_title: { contains: search.toLowerCase() },
+            },
+          },
         },
         {
           hrms_employee_department: {
             department_name: { contains: search.toLowerCase() },
-          }, // Include contact details
+          },
         },
-        {
-          first_name: { contains: search.toLowerCase() },
-        },
-        {
-          full_name: { contains: search.toLowerCase() },
-        },
-        {
-          employee_code: { contains: search.toLowerCase() },
-        },
+        { first_name: { contains: search.toLowerCase() } },
+        { full_name: { contains: search.toLowerCase() } },
+        { employee_code: { contains: search.toLowerCase() } },
       ];
     }
-    // if (status) {
-    //   filters.is_active = { equals: status };
-    // }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = {
-          gte: start,
-          lte: end,
-        };
+        filters.createdate = { gte: start, lte: end };
       }
     }
-    const employee = await prisma.hrms_d_employee.findMany({
+
+    const employees = await prisma.hrms_d_employee.findMany({
       where: filters,
-      skip: skip,
+      skip,
       take: size,
       include: {
         hrms_employee_address: {
           include: {
             employee_state: {
-              select: {
-                id: true,
-                name: true,
-              },
+              select: { id: true, name: true },
             },
             employee_country: {
-              select: {
-                id: true,
-                name: true,
-              },
+              select: { id: true, name: true },
             },
           },
         },
@@ -493,27 +495,30 @@ const getAllEmployee = async (
         hrms_employee_bank: {
           select: { id: true, bank_name: true },
         },
+        experiance_of_employee: {
+          include: {
+            experiance_of_employee: true,
+          },
+        },
+        eduction_of_employee: true, // <== all education rows (no nested employee)
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const formattedDeals = employee.map((deal) => {
-    //   const { employee_contact, ...rest } = parseData(deal); // Remove "deals" key
-    //   const finalContact = employee_contact.map((item) => item.camp_contact);
-    //   return { ...rest, employee_contact: finalContact }; // Rename "stages" to "deals"
-    // });
+
     const totalCount = await prisma.hrms_d_employee.count({
       where: filters,
     });
+
     return {
-      data: employee,
+      data: employees,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount: totalCount,
+      totalCount,
     };
   } catch (error) {
-    console.log("Error employee get : ", error);
-    throw new CustomError("Error retrieving employees", error.status || 503);
+    console.error("Error employee get : ", error);
+    throw new CustomError("Error retrieving employees", 503);
   }
 };
 
