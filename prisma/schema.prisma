@@ -65,6 +65,7 @@ model hrms_m_user {
   hrms_d_user_role         hrms_d_user_role[]
   exit_clearance_by_user   hrms_d_exit_clearance[] @relation("UserCleared")
   travel_expense_createdby hrms_d_travel_expense[] @relation("TravelExpenseCreatedBy")
+  travel_expense_approver  hrms_d_travel_expense[] @relation("TravelExpenseApprover")
 }
 
 model hrms_m_module {
@@ -265,6 +266,7 @@ model hrms_d_employee {
   recognition_award_nominated   hrms_d_recognition_award[]    @relation("RecognitionAwardNominated")
   helpdesk_employee             hrms_d_helpdesk_ticket[]      @relation("HelpdeskEmployee")
   helpdesk_assign_to            hrms_d_helpdesk_ticket[]      @relation("HelpdeskAssignedTo")
+  notification_log_employee     hrms_d_notification_log[]
 }
 
 model hrms_d_employee_address {
@@ -483,18 +485,19 @@ model hrms_d_medical_record {
 }
 
 model hrms_d_notification_log {
-  id            Int       @id(map: "PK__hrms_d_n__3213E83FE7247C57") @default(autoincrement())
-  employee_id   Int?
-  message_title String?   @db.NVarChar(255)
-  message_body  String?
-  channel       String?   @db.VarChar(50)
-  sent_on       DateTime? @db.DateTime
-  status        String?   @db.VarChar(50)
-  createdate    DateTime? @default(now(), map: "DF__hrms_d_no__creat__5F492382") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id                        Int              @id(map: "PK__hrms_d_n__3213E83FE7247C57") @default(autoincrement())
+  employee_id               Int?
+  message_title             String?          @db.NVarChar(255)
+  message_body              String?
+  channel                   String?          @db.VarChar(50)
+  sent_on                   DateTime?        @db.DateTime
+  status                    String?          @db.VarChar(50)
+  createdate                DateTime?        @default(now(), map: "DF__hrms_d_no__creat__5F492382") @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?        @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
+  notification_log_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_offer_letter {
@@ -710,6 +713,7 @@ model hrms_d_travel_expense {
   log_inst                 Int?
   travel_expense_employee  hrms_d_employee? @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   travel_expense_createdby hrms_m_user      @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_approver  hrms_m_user?     @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_work_life_event {
