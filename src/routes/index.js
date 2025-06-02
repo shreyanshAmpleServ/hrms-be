@@ -103,6 +103,7 @@ const suggestionBoxRoute = require("../v1/routes/suggestionBoxRoute.js");
 const recognitionAwardRoute = require("../v1/routes/recognitionAwardRoute.js");
 const notificationLogRoute = require("../v1/routes/notificationLogRoute.js");
 const employeeExperienceRoute = require("../v1/routes/employeeExperienceRoute.js");
+const employeeEducationRoute = require("../v1/routes/employeeEducationRoutes.js");
 const router = express.Router();
 
 // Version 1 API
@@ -210,6 +211,7 @@ router.use("/v1", suggestionBoxRoute);
 router.use("/v1", recognitionAwardRoute);
 router.use("/v1", notificationLogRoute);
 router.use("/v1", employeeExperienceRoute);
+router.use("/v1", employeeEducationRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
