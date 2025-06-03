@@ -6,7 +6,7 @@ const prisma = new PrismaClient();
 // Serialize education data
 const serializeEducationData = (data) => ({
   employee_id: Number(data.employee_id) || null,
-  institute_name: data.institute_name || "",
+  institute_name: data.institute || data.institute_name || "", // <-- Fix here
   degree: data.degree || "",
   specialization: data.specialization || "",
   start_from: data.start_from ? new Date(data.start_from) : null,
@@ -54,17 +54,65 @@ const findEmployeeEducationById = async (id) => {
 // Update education record
 const updateEmployeeEducation = async (employeeId, data) => {
   try {
-    // Update all education records for this employee
-    await prisma.hrms_employee_d_educations.updateMany({
+    const inputEducations = data.educations || [];
+
+    // Separate new and existing educations
+    const newEducations = inputEducations.filter((edu) => !edu.id);
+    const existingEducations = inputEducations.filter((edu) => edu.id);
+
+    // Fetch current educations from DB
+    const existingInDb = await prisma.hrms_employee_d_educations.findMany({
       where: { employee_id: Number(employeeId) },
-      data: {
-        ...serializeEducationData(data),
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
-      },
+      select: { id: true },
+    });
+    const existingIdsInDb = existingInDb.map((edu) => edu.id);
+    const incomingIds = existingEducations.map((edu) => edu.id);
+
+    // Determine which to delete
+    const toDeleteIds = existingIdsInDb.filter(
+      (id) => !incomingIds.includes(id)
+    );
+
+    // Prepare new educations for create
+    const newSerialized = newEducations.map((edu) => ({
+      ...serializeEducationData({ ...edu, employee_id: Number(employeeId) }),
+      createdby: data.updatedby || 1,
+      createdate: new Date(),
+      log_inst: edu.log_inst || 1,
+    }));
+
+    // Start transaction
+    await prisma.$transaction(async (tx) => {
+      // Delete removed educations
+      if (toDeleteIds.length > 0) {
+        await tx.hrms_employee_d_educations.deleteMany({
+          where: { id: { in: toDeleteIds } },
+        });
+      }
+
+      // Update existing educations one by one
+      for (const edu of existingEducations) {
+        const sanitizedData = serializeEducationData(edu);
+        delete sanitizedData.employee_id; // Remove employee_id to avoid conflict
+        await tx.hrms_employee_d_educations.update({
+          where: { id: edu.id },
+          data: {
+            ...sanitizedData,
+            updatedby: data.updatedby || 1,
+            updatedate: new Date(),
+          },
+        });
+      }
+
+      // Create new educations in bulk if any
+      if (newSerialized.length > 0) {
+        await tx.hrms_employee_d_educations.createMany({
+          data: newSerialized,
+        });
+      }
     });
 
-    // Fetch updated employee details
+    // Return updated employee with educations and related data
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(employeeId) },
       include: {
@@ -74,7 +122,7 @@ const updateEmployeeEducation = async (employeeId, data) => {
         hrms_manager: true,
         experiance_of_employee: true,
         eduction_of_employee: true,
-        hrms_employee_address: true, // add this if you want address too
+        hrms_employee_address: true,
       },
     });
 
@@ -82,16 +130,11 @@ const updateEmployeeEducation = async (employeeId, data) => {
       throw new CustomError("Employee not found", 404);
     }
 
-    return {
-      success: true,
-      data: employee,
-      message: "Employee education updated successfully",
-      status: 200,
-    };
+    return employee;
   } catch (error) {
     throw new CustomError(
       `Error updating education record: ${error.message}`,
-      500
+      error.status || 500
     );
   }
 };
