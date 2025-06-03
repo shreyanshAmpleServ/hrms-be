@@ -132,7 +132,7 @@ const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
         { document_type: { contains: search.toLowerCase() } },
         {
           document_number: {
-            contains: search.toLowerCase(),
+            contains: search,
           },
         },
         {
