@@ -212,6 +212,8 @@ const createEmployee = async (data) => {
                 name: true,
               },
             },
+            experiance_of_employee: true,
+            eduction_of_employee: true,
           },
         },
         hrms_employee_designation: {
@@ -291,11 +293,7 @@ const updateEmployee = async (id, data) => {
               id: true,
             },
           },
-          experiance_of_employee: {
-            include: {
-              experiance_of_employee: true,
-            },
-          },
+          experiance_of_employee: true,
           eduction_of_employee: true,
         },
       });
@@ -373,6 +371,8 @@ const updateEmployee = async (id, data) => {
           hrms_manager: {
             select: { id: true, full_name: true },
           },
+          experiance_of_employee: true,
+          eduction_of_employee: true,
         },
       });
 
