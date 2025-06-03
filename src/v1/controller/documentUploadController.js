@@ -30,6 +30,8 @@ const createDocument = async (req, res, next) => {
     const doc = await documentUploadService.createDocument(documentData);
     res.status(201).success("Document uploaded successfully", doc);
   } catch (error) {
+    console.log("Error in createDocument:", error);
+
     next(error);
   }
 };
@@ -46,6 +48,8 @@ const getDocumentById = async (req, res, next) => {
 
 const updateDocument = async (req, res, next) => {
   try {
+    const employeeId = req.body.employee_id;
+
     const existingDoc = await documentUploadService.getDocumentById(
       req.params.id
     );
@@ -65,7 +69,7 @@ const updateDocument = async (req, res, next) => {
       ...req.body,
       document_path: fileUrl,
       document_owner_id: employeeId,
-      updated_by: req.user.id,
+      updatedby: req.user.id,
     };
 
     const doc = await documentUploadService.updateDocument(

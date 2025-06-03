@@ -48,24 +48,25 @@ model hrms_m_role {
 }
 
 model hrms_m_user {
-  id                       Int                     @id(map: "PK__hrms_m_u__3213E83FD9B9A3C4") @default(autoincrement())
-  username                 String                  @db.NVarChar(100)
-  password                 String                  @db.NVarChar(255)
-  email                    String                  @db.NVarChar(255)
-  full_name                String?                 @db.NVarChar(255)
-  is_active                String                  @default("Y", map: "DF__hrms_m_us__is_ac__4AB81AF0") @db.Char(1)
-  log_inst                 Int                     @default(1, map: "DF__hrms_m_us__log_i__4BAC3F29")
-  createdate               DateTime                @default(now(), map: "DF__hrms_m_us__creat__4CA06362") @db.DateTime
-  updatedate               DateTime?               @db.DateTime
-  createdby                Int                     @default(1, map: "DF__hrms_m_us__creat__4D94879B")
-  updatedby                Int?
-  address                  String?                 @db.NVarChar(255)
-  phone                    String?                 @db.NVarChar(15)
-  profile_img              String?                 @db.NVarChar(255)
-  hrms_d_user_role         hrms_d_user_role[]
-  exit_clearance_by_user   hrms_d_exit_clearance[] @relation("UserCleared")
-  travel_expense_createdby hrms_d_travel_expense[] @relation("TravelExpenseCreatedBy")
-  travel_expense_approver  hrms_d_travel_expense[] @relation("TravelExpenseApprover")
+  id                                     Int                            @id(map: "PK__hrms_m_u__3213E83FD9B9A3C4") @default(autoincrement())
+  username                               String                         @db.NVarChar(100)
+  password                               String                         @db.NVarChar(255)
+  email                                  String                         @db.NVarChar(255)
+  full_name                              String?                        @db.NVarChar(255)
+  is_active                              String                         @default("Y", map: "DF__hrms_m_us__is_ac__4AB81AF0") @db.Char(1)
+  log_inst                               Int                            @default(1, map: "DF__hrms_m_us__log_i__4BAC3F29")
+  createdate                             DateTime                       @default(now(), map: "DF__hrms_m_us__creat__4CA06362") @db.DateTime
+  updatedate                             DateTime?                      @db.DateTime
+  createdby                              Int                            @default(1, map: "DF__hrms_m_us__creat__4D94879B")
+  updatedby                              Int?
+  address                                String?                        @db.NVarChar(255)
+  phone                                  String?                        @db.NVarChar(15)
+  profile_img                            String?                        @db.NVarChar(255)
+  hrms_d_user_role                       hrms_d_user_role[]
+  exit_clearance_by_user                 hrms_d_exit_clearance[]        @relation("UserCleared")
+  travel_expense_createdby               hrms_d_travel_expense[]        @relation("TravelExpenseCreatedBy")
+  travel_expense_approver                hrms_d_travel_expense[]        @relation("TravelExpenseApprover")
+  hrms_advance_payement_entry_approvedBy hrms_d_advance_payment_entry[] @relation("AdvanceApprovedBy")
 }
 
 model hrms_m_module {
@@ -181,94 +182,98 @@ model hrms_d_document_upload {
 }
 
 model hrms_d_employee {
-  id                            Int                           @id(map: "PK__hrms_d_e__3213E83F2F671AFD") @default(autoincrement())
-  employee_code                 String                        @unique(map: "UQ__hrms_d_e__B0AA73455BFB8896") @db.VarChar(20)
-  first_name                    String?                       @db.NVarChar(100)
-  last_name                     String?                       @db.NVarChar(100)
-  gender                        String?                       @db.VarChar(10)
-  date_of_birth                 DateTime?                     @db.Date
-  national_id_number            String?                       @db.VarChar(50)
-  passport_number               String?                       @db.VarChar(50)
-  employment_type               String?                       @db.VarChar(50)
-  employee_category             String?                       @db.VarChar(50)
-  designation_id                Int?
-  department_id                 Int?
-  join_date                     DateTime?                     @db.Date
-  confirm_date                  DateTime?                     @db.Date
-  resign_date                   DateTime?                     @db.Date
-  bank_id                       Int?
-  account_number                String?                       @db.VarChar(30)
-  work_location                 String?                       @db.NVarChar(100)
-  email                         String?                       @db.NVarChar(100)
-  phone_number                  String?                       @db.VarChar(20)
-  status                        String?                       @db.VarChar(20)
-  createdate                    DateTime?                     @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
-  createdby                     Int
-  updatedate                    DateTime?                     @db.DateTime
-  updatedby                     Int?
-  log_inst                      Int?
-  full_name                     String?                       @db.NVarChar(100)
-  profile_pic                   String?
-  father_name                   String?
-  manager_id                    Int?
-  marital_status                String?
-  mother_name                   String?
-  no_of_child                   Int?
-  spouse_name                   String?
-  account_holder_name           String?                       @db.VarChar(100)
-  address                       String?
-  ifsc                          String?
-  nationality                   String?
-  passport_expiry_date          DateTime?
-  passport_issue_date           DateTime?
-  primary_contact_name          String?
-  primary_contact_number        String?
-  primary_contact_relation      String?
-  secondary_contact_mumber      String?
-  secondary_contact_name        String?
-  secondary_contact_relation    String?
-  social_medias                 String?
-  appointment_employee          hrms_d_appointment_letter[]
-  appraisal_employee            hrms_d_appraisal[]
-  competency_employee           hrms_d_competency[]
-  employee                      hrms_d_disciplinary_action[]
-  hrms_employee_bank            hrms_m_bank_master?           @relation(fields: [bank_id], references: [id], onUpdate: NoAction)
-  hrms_employee_department      hrms_m_department_master?     @relation(fields: [department_id], references: [id], onUpdate: NoAction)
-  hrms_employee_designation     hrms_m_designation_master?    @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
-  hrms_manager                  hrms_d_employee?              @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  subordinates                  hrms_d_employee[]             @relation("EmployeeManager")
-  hrms_employee_address         hrms_d_employee_address[]
-  contracted_employee           hrms_d_employment_contract[]
-  exit_interview_employee       hrms_d_exit_interview[]
-  grievance_assigned_to         hrms_d_grievance[]            @relation("GrievanceAssignedTo")
-  grievance_employee            hrms_d_grievance[]            @relation("GrievanceSubmittedBy")
-  leave_employee                hrms_d_leave_application[]
-  leave_encashment_employee     hrms_d_leave_encashment[]
-  loan_req_employee             hrms_d_loan_request[]
-  offered_employee              hrms_d_offer_letter[]
-  payslip_employee              hrms_d_payslip[]
-  probation_review_employee     hrms_d_probation_review[]
-  resume_employee               hrms_d_resume[]
-  succession_currentHolder      hrms_d_succession_plan[]      @relation("CurrentHolder")
-  succession_potentialSuccessor hrms_d_succession_plan[]      @relation("PotentialSuccessor")
-  time_sheet_employee           hrms_d_time_sheet[]
-  training_employee             hrms_d_training_feedback[]
-  work_life_event_employee      hrms_d_work_life_event[]
-  eduction_of_employee          hrms_employee_d_educations[]
-  experiance_of_employee        hrms_employee_d_experiences[]
-  exit_clearance_employee       hrms_d_exit_clearance[]
-  hrms_d_training_session       hrms_d_training_session[]
-  relieving_letter_employee     hrms_d_relieving_letter[]
-  travel_expense_employee       hrms_d_travel_expense[]       @relation("TravelExpenseEmployee")
-  survey_employee               hrms_d_survey_response[]
-  asset_assignment_employee     hrms_d_asset_assignment[]     @relation("AssetAssignmentEmployee")
-  suggestion_box_employee       hrms_d_employee_suggestion[]
-  recognition_award_employee    hrms_d_recognition_award[]    @relation("RecognitionAwardEmployee")
-  recognition_award_nominated   hrms_d_recognition_award[]    @relation("RecognitionAwardNominated")
-  helpdesk_employee             hrms_d_helpdesk_ticket[]      @relation("HelpdeskEmployee")
-  helpdesk_assign_to            hrms_d_helpdesk_ticket[]      @relation("HelpdeskAssignedTo")
-  notification_log_employee     hrms_d_notification_log[]
-  document_upload_employee      hrms_d_document_upload[]
+  id                                   Int                                 @id(map: "PK__hrms_d_e__3213E83F2F671AFD") @default(autoincrement())
+  employee_code                        String                              @unique(map: "UQ__hrms_d_e__B0AA73455BFB8896") @db.VarChar(20)
+  first_name                           String?                             @db.NVarChar(100)
+  last_name                            String?                             @db.NVarChar(100)
+  gender                               String?                             @db.VarChar(10)
+  date_of_birth                        DateTime?                           @db.Date
+  national_id_number                   String?                             @db.VarChar(50)
+  passport_number                      String?                             @db.VarChar(50)
+  employment_type                      String?                             @db.VarChar(50)
+  employee_category                    String?                             @db.VarChar(50)
+  designation_id                       Int?
+  department_id                        Int?
+  join_date                            DateTime?                           @db.Date
+  confirm_date                         DateTime?                           @db.Date
+  resign_date                          DateTime?                           @db.Date
+  bank_id                              Int?
+  account_number                       String?                             @db.VarChar(30)
+  work_location                        String?                             @db.NVarChar(100)
+  email                                String?                             @db.NVarChar(100)
+  phone_number                         String?                             @db.VarChar(20)
+  status                               String?                             @db.VarChar(20)
+  createdate                           DateTime?                           @default(now(), map: "DF__hrms_d_em__creat__625A9A57") @db.DateTime
+  createdby                            Int
+  updatedate                           DateTime?                           @db.DateTime
+  updatedby                            Int?
+  log_inst                             Int?
+  full_name                            String?                             @db.NVarChar(100)
+  profile_pic                          String?
+  father_name                          String?
+  manager_id                           Int?
+  marital_status                       String?
+  mother_name                          String?
+  no_of_child                          Int?
+  spouse_name                          String?
+  account_holder_name                  String?                             @db.VarChar(100)
+  address                              String?
+  ifsc                                 String?
+  nationality                          String?
+  passport_expiry_date                 DateTime?
+  passport_issue_date                  DateTime?
+  primary_contact_name                 String?
+  primary_contact_number               String?
+  primary_contact_relation             String?
+  secondary_contact_mumber             String?
+  secondary_contact_name               String?
+  secondary_contact_relation           String?
+  social_medias                        String?
+  appointment_employee                 hrms_d_appointment_letter[]
+  appraisal_employee                   hrms_d_appraisal[]
+  competency_employee                  hrms_d_competency[]
+  employee                             hrms_d_disciplinary_action[]
+  hrms_employee_bank                   hrms_m_bank_master?                 @relation(fields: [bank_id], references: [id], onUpdate: NoAction)
+  hrms_employee_department             hrms_m_department_master?           @relation(fields: [department_id], references: [id], onUpdate: NoAction)
+  hrms_employee_designation            hrms_m_designation_master?          @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
+  hrms_manager                         hrms_d_employee?                    @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  subordinates                         hrms_d_employee[]                   @relation("EmployeeManager")
+  hrms_employee_address                hrms_d_employee_address[]
+  contracted_employee                  hrms_d_employment_contract[]
+  exit_interview_employee              hrms_d_exit_interview[]
+  grievance_assigned_to                hrms_d_grievance[]                  @relation("GrievanceAssignedTo")
+  grievance_employee                   hrms_d_grievance[]                  @relation("GrievanceSubmittedBy")
+  leave_employee                       hrms_d_leave_application[]
+  leave_encashment_employee            hrms_d_leave_encashment[]
+  loan_req_employee                    hrms_d_loan_request[]
+  offered_employee                     hrms_d_offer_letter[]
+  payslip_employee                     hrms_d_payslip[]
+  probation_review_employee            hrms_d_probation_review[]
+  resume_employee                      hrms_d_resume[]
+  succession_currentHolder             hrms_d_succession_plan[]            @relation("CurrentHolder")
+  succession_potentialSuccessor        hrms_d_succession_plan[]            @relation("PotentialSuccessor")
+  time_sheet_employee                  hrms_d_time_sheet[]
+  training_employee                    hrms_d_training_feedback[]
+  work_life_event_employee             hrms_d_work_life_event[]
+  eduction_of_employee                 hrms_employee_d_educations[]
+  experiance_of_employee               hrms_employee_d_experiences[]
+  exit_clearance_employee              hrms_d_exit_clearance[]
+  hrms_d_training_session              hrms_d_training_session[]
+  relieving_letter_employee            hrms_d_relieving_letter[]
+  travel_expense_employee              hrms_d_travel_expense[]             @relation("TravelExpenseEmployee")
+  survey_employee                      hrms_d_survey_response[]
+  asset_assignment_employee            hrms_d_asset_assignment[]           @relation("AssetAssignmentEmployee")
+  suggestion_box_employee              hrms_d_employee_suggestion[]
+  recognition_award_employee           hrms_d_recognition_award[]          @relation("RecognitionAwardEmployee")
+  recognition_award_nominated          hrms_d_recognition_award[]          @relation("RecognitionAwardNominated")
+  helpdesk_employee                    hrms_d_helpdesk_ticket[]            @relation("HelpdeskEmployee")
+  helpdesk_assign_to                   hrms_d_helpdesk_ticket[]            @relation("HelpdeskAssignedTo")
+  notification_log_employee            hrms_d_notification_log[]
+  document_upload_employee             hrms_d_document_upload[]
+  hrms_daily_attendance_employee       hrms_d_daily_attendance_entry[]     @relation("DailyAttendanceRelation")
+  hrms_monthly_payroll_employee        hrms_d_monthly_payroll_processing[] @relation("MonthlyPayrollRelation")
+  hrms_arrear_adjustments_employee     hrms_d_arrear_adjustments[]         @relation("ArrearAdjustmentRelation")
+  hrms_advance_payement_entry_employee hrms_d_advance_payment_entry[]      @relation("AdvancePayementEntry")
 }
 
 model hrms_d_employee_address {
@@ -1332,4 +1337,75 @@ model hrms_d_kpi_progress_entry {
   updatedate     DateTime? @db.DateTime
   updatedby      Int?
   log_inst       Int?
+}
+
+model hrms_d_daily_attendance_entry {
+  id                             Int             @id @default(autoincrement())
+  employee_id                    Int
+  attendance_date                DateTime        @db.Date
+  check_in_time                  DateTime?       @db.DateTime
+  check_out_time                 DateTime?       @db.DateTime
+  status                         String          @db.NVarChar(20) // e.g. Present, Absent, Late, Half-Day
+  remarks                        String?         @db.NVarChar(250)
+  createdate                     DateTime        @default(now()) @db.DateTime
+  createdby                      Int
+  updatedate                     DateTime?       @db.DateTime
+  updatedby                      Int?
+  log_inst                       Int?
+  hrms_daily_attendance_employee hrms_d_employee @relation("DailyAttendanceRelation", fields: [employee_id], references: [id], onUpdate: NoAction)
+}
+
+model hrms_d_monthly_payroll_processing {
+  id                            Int             @id @default(autoincrement())
+  employee_id                   Int
+  payroll_month                 String          @db.VarChar(7)
+  basic_salary                  Decimal         @db.Decimal(18, 2)
+  total_earnings                Decimal         @db.Decimal(18, 2)
+  total_deductions              Decimal         @db.Decimal(18, 2)
+  net_pay                       Decimal         @db.Decimal(18, 2)
+  status                        String          @db.NVarChar(20)
+  processed_on                  DateTime?       @db.DateTime
+  remarks                       String?         @db.NVarChar(250)
+  createdate                    DateTime        @default(now()) @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?       @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction)
+}
+
+model hrms_d_arrear_adjustments {
+  id                               Int             @id @default(autoincrement())
+  employee_id                      Int
+  payroll_month                    String          @db.VarChar(7)
+  arrear_reason                    String          @db.NVarChar(250)
+  arrear_amount                    Decimal         @db.Decimal(18, 2)
+  adjustment_type                  String          @db.NVarChar(20)
+  remarks                          String?         @db.NVarChar(250)
+  createdate                       DateTime        @default(now()) @db.DateTime
+  createdby                        Int
+  updatedate                       DateTime?       @db.DateTime
+  updatedby                        Int?
+  log_inst                         Int?
+  hrms_arrear_adjustments_employee hrms_d_employee @relation("ArrearAdjustmentRelation", fields: [employee_id], references: [id], onUpdate: NoAction)
+}
+
+model hrms_d_advance_payment_entry {
+  id                                     Int             @id @default(autoincrement())
+  employee_id                            Int
+  request_date                           DateTime        @db.Date
+  amount_requested                       Decimal         @db.Decimal(18, 2)
+  amount_approved                        Decimal?        @db.Decimal(18, 2)
+  approval_status                        String          @db.NVarChar(20) // Pending, Approved, Rejected
+  approval_date                          DateTime?       @db.Date
+  approved_by                            Int?
+  reason                                 String?         @db.NVarChar(250)
+  repayment_schedule                     String?         @db.NVarChar(100)
+  createdate                             DateTime        @default(now()) @db.DateTime
+  createdby                              Int
+  updatedate                             DateTime?       @db.DateTime
+  updatedby                              Int?
+  log_inst                               Int?
+  hrms_advance_payement_entry_employee   hrms_d_employee @relation("AdvancePayementEntry", fields: [employee_id], references: [id], onUpdate: NoAction)
+  hrms_advance_payement_entry_approvedBy hrms_m_user?    @relation("AdvanceApprovedBy", fields: [approved_by], references: [id])
 }
