@@ -119,7 +119,6 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    // Handle search
     if (search) {
       filters.OR = [
         {
@@ -127,12 +126,6 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
             full_name: { contains: search.toLowerCase() },
           },
         },
-        // {
-        //   rating: { equals: search },
-        // },
-        // {
-        //   interest_rate: { equals: search },
-        // },
       ];
     }
 
