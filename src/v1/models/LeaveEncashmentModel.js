@@ -72,29 +72,28 @@ const updateLeaveEncashment = async (id, data) => {
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
-    const updatedLeaveEncashment =
-      await prisma.hrms_d_leave_encashment.update({
-        where: { id: parseInt(id) },
-        data: {
-          ...serializeJobData(data),
-          updatedby: data.updatedby || 1,
-          updatedate: new Date(),
-        },
-        include: {
-          leave_encashment_employee: {
-            select: {
-              full_name: true,
-              id: true,
-            },
-          },
-          encashment_leave_types: {
-            select: {
-              leave_type: true,
-              id: true,
-            },
+    const updatedLeaveEncashment = await prisma.hrms_d_leave_encashment.update({
+      where: { id: parseInt(id) },
+      data: {
+        ...serializeJobData(data),
+        updatedby: data.updatedby || 1,
+        updatedate: new Date(),
+      },
+      include: {
+        leave_encashment_employee: {
+          select: {
+            full_name: true,
+            id: true,
           },
         },
-      });
+        encashment_leave_types: {
+          select: {
+            leave_type: true,
+            id: true,
+          },
+        },
+      },
+    });
     return updatedLeaveEncashment;
   } catch (error) {
     throw new CustomError(
@@ -145,9 +144,6 @@ const getAllLeaveEncashment = async (
             leave_type: { contains: search.toLowerCase() },
           },
         },
-        {
-          status: { contains: search.toLowerCase() },
-        },
       ];
     }
 
@@ -195,6 +191,7 @@ const getAllLeaveEncashment = async (
       totalCount: totalCount,
     };
   } catch (error) {
+    console.log(error);
     throw new CustomError("Error retrieving leave encashments", 503);
   }
 };
