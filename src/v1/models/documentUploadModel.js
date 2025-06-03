@@ -115,28 +115,47 @@ const deleteDocumentUpload = async (id) => {
 // Get all document uploads
 const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
   try {
-    page = !page || page == 0 ? 1 : page;
-    size = size || 10;
-    const skip = (page - 1) * size || 0;
+    page =
+      !page || isNaN(parseInt(page)) || parseInt(page) <= 0
+        ? 1
+        : parseInt(page);
+    size =
+      !size || isNaN(parseInt(size)) || parseInt(size) <= 0
+        ? 10
+        : parseInt(size);
+    const skip = (page - 1) * size;
 
-    const filters = {};
+    const filters = { AND: [] };
+
     if (search) {
-      filters.OR = [
-        {
-          document_upload_employee: {
-            full_name: {
+      filters.AND.push({
+        OR: [
+          {
+            document_upload_employee: {
+              full_name: {
+                contains: search.toLowerCase(),
+              },
+            },
+          },
+          {
+            document_type: {
               contains: search.toLowerCase(),
             },
           },
-        },
-        { document_type: { contains: search.toLowerCase() } },
-      ];
+        ],
+      });
     }
+
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = { gte: start, lte: end };
+        filters.AND.push({
+          createdate: {
+            gte: start,
+            lte: end,
+          },
+        });
       }
     }
 
@@ -155,6 +174,7 @@ const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
         },
       },
     });
+
     const totalCount = await prisma.hrms_d_document_upload.count({
       where: filters,
     });
@@ -167,6 +187,7 @@ const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
       totalCount,
     };
   } catch (error) {
+    console.error("Error in getAllDocumentUpload:", error);
     throw new CustomError("Error retrieving document uploads", 503);
   }
 };
