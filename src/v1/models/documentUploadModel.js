@@ -130,11 +130,6 @@ const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
           },
         },
         { document_type: { contains: search.toLowerCase() } },
-        {
-          document_owner_type: {
-            contains: search.toLowerCase(),
-          },
-        },
       ];
     }
     if (startDate && endDate) {
