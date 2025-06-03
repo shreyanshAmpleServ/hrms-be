@@ -125,10 +125,11 @@ const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
         : parseInt(size);
     const skip = (page - 1) * size;
 
-    const filters = { AND: [] };
+    const filters = {};
+    const andConditions = [];
 
     if (search) {
-      filters.AND.push({
+      andConditions.push({
         OR: [
           {
             document_upload_employee: {
@@ -150,13 +151,17 @@ const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.AND.push({
+        andConditions.push({
           createdate: {
             gte: start,
             lte: end,
           },
         });
       }
+    }
+
+    if (andConditions.length > 0) {
+      filters.AND = andConditions;
     }
 
     const datas = await prisma.hrms_d_document_upload.findMany({
