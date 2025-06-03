@@ -127,9 +127,9 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
             full_name: { contains: search.toLowerCase() },
           },
         },
-        {
-          rating: { equals: search },
-        },
+        // {
+        //   rating: { equals: search },
+        // },
         // {
         //   interest_rate: { equals: search },
         // },
