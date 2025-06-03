@@ -1,6 +1,6 @@
 const JobPostingService = require("../services/JobPostingService");
 const CustomError = require("../../utils/CustomError");
-const momemt = require("moment");
+const moment = require("moment");
 const createJobPosting = async (req, res, next) => {
   try {
     const data = {
