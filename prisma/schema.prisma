@@ -62,11 +62,11 @@ model hrms_m_user {
   address                                String?                        @db.NVarChar(255)
   phone                                  String?                        @db.NVarChar(15)
   profile_img                            String?                        @db.NVarChar(255)
-  hrms_d_user_role                       hrms_d_user_role[]
-  exit_clearance_by_user                 hrms_d_exit_clearance[]        @relation("UserCleared")
-  travel_expense_createdby               hrms_d_travel_expense[]        @relation("TravelExpenseCreatedBy")
-  travel_expense_approver                hrms_d_travel_expense[]        @relation("TravelExpenseApprover")
   hrms_advance_payement_entry_approvedBy hrms_d_advance_payment_entry[] @relation("AdvanceApprovedBy")
+  exit_clearance_by_user                 hrms_d_exit_clearance[]        @relation("UserCleared")
+  travel_expense_approver                hrms_d_travel_expense[]        @relation("TravelExpenseApprover")
+  travel_expense_createdby               hrms_d_travel_expense[]        @relation("TravelExpenseCreatedBy")
+  hrms_d_user_role                       hrms_d_user_role[]
 }
 
 model hrms_m_module {
@@ -124,8 +124,8 @@ model hrms_d_asset_assignment {
   updatedate                DateTime?          @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
-  asset_assignment_employee hrms_d_employee?   @relation("AssetAssignmentEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   asset_assignment_type     hrms_m_asset_type? @relation("AssetAssignmentId", fields: [asset_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  asset_assignment_employee hrms_d_employee?   @relation("AssetAssignmentEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_competency {
@@ -229,51 +229,51 @@ model hrms_d_employee {
   secondary_contact_name               String?
   secondary_contact_relation           String?
   social_medias                        String?
+  hrms_advance_payement_entry_employee hrms_d_advance_payment_entry[]      @relation("AdvancePayementEntry")
   appointment_employee                 hrms_d_appointment_letter[]
   appraisal_employee                   hrms_d_appraisal[]
+  hrms_arrear_adjustments_employee     hrms_d_arrear_adjustments[]         @relation("ArrearAdjustmentRelation")
+  asset_assignment_employee            hrms_d_asset_assignment[]           @relation("AssetAssignmentEmployee")
   competency_employee                  hrms_d_competency[]
+  hrms_daily_attendance_employee       hrms_d_daily_attendance_entry[]     @relation("DailyAttendanceRelation")
   employee                             hrms_d_disciplinary_action[]
+  document_upload_employee             hrms_d_document_upload[]
   hrms_employee_bank                   hrms_m_bank_master?                 @relation(fields: [bank_id], references: [id], onUpdate: NoAction)
   hrms_employee_department             hrms_m_department_master?           @relation(fields: [department_id], references: [id], onUpdate: NoAction)
   hrms_employee_designation            hrms_m_designation_master?          @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
   hrms_manager                         hrms_d_employee?                    @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates                         hrms_d_employee[]                   @relation("EmployeeManager")
   hrms_employee_address                hrms_d_employee_address[]
+  suggestion_box_employee              hrms_d_employee_suggestion[]
   contracted_employee                  hrms_d_employment_contract[]
+  exit_clearance_employee              hrms_d_exit_clearance[]
   exit_interview_employee              hrms_d_exit_interview[]
   grievance_assigned_to                hrms_d_grievance[]                  @relation("GrievanceAssignedTo")
   grievance_employee                   hrms_d_grievance[]                  @relation("GrievanceSubmittedBy")
+  helpdesk_assign_to                   hrms_d_helpdesk_ticket[]            @relation("HelpdeskAssignedTo")
+  helpdesk_employee                    hrms_d_helpdesk_ticket[]            @relation("HelpdeskEmployee")
   leave_employee                       hrms_d_leave_application[]
   leave_encashment_employee            hrms_d_leave_encashment[]
   loan_req_employee                    hrms_d_loan_request[]
+  hrms_monthly_payroll_employee        hrms_d_monthly_payroll_processing[] @relation("MonthlyPayrollRelation")
+  notification_log_employee            hrms_d_notification_log[]
   offered_employee                     hrms_d_offer_letter[]
   payslip_employee                     hrms_d_payslip[]
   probation_review_employee            hrms_d_probation_review[]
+  recognition_award_employee           hrms_d_recognition_award[]          @relation("RecognitionAwardEmployee")
+  recognition_award_nominated          hrms_d_recognition_award[]          @relation("RecognitionAwardNominated")
+  relieving_letter_employee            hrms_d_relieving_letter[]
   resume_employee                      hrms_d_resume[]
   succession_currentHolder             hrms_d_succession_plan[]            @relation("CurrentHolder")
   succession_potentialSuccessor        hrms_d_succession_plan[]            @relation("PotentialSuccessor")
+  survey_employee                      hrms_d_survey_response[]
   time_sheet_employee                  hrms_d_time_sheet[]
   training_employee                    hrms_d_training_feedback[]
+  hrms_d_training_session              hrms_d_training_session[]
+  travel_expense_employee              hrms_d_travel_expense[]             @relation("TravelExpenseEmployee")
   work_life_event_employee             hrms_d_work_life_event[]
   eduction_of_employee                 hrms_employee_d_educations[]
   experiance_of_employee               hrms_employee_d_experiences[]
-  exit_clearance_employee              hrms_d_exit_clearance[]
-  hrms_d_training_session              hrms_d_training_session[]
-  relieving_letter_employee            hrms_d_relieving_letter[]
-  travel_expense_employee              hrms_d_travel_expense[]             @relation("TravelExpenseEmployee")
-  survey_employee                      hrms_d_survey_response[]
-  asset_assignment_employee            hrms_d_asset_assignment[]           @relation("AssetAssignmentEmployee")
-  suggestion_box_employee              hrms_d_employee_suggestion[]
-  recognition_award_employee           hrms_d_recognition_award[]          @relation("RecognitionAwardEmployee")
-  recognition_award_nominated          hrms_d_recognition_award[]          @relation("RecognitionAwardNominated")
-  helpdesk_employee                    hrms_d_helpdesk_ticket[]            @relation("HelpdeskEmployee")
-  helpdesk_assign_to                   hrms_d_helpdesk_ticket[]            @relation("HelpdeskAssignedTo")
-  notification_log_employee            hrms_d_notification_log[]
-  document_upload_employee             hrms_d_document_upload[]
-  hrms_daily_attendance_employee       hrms_d_daily_attendance_entry[]     @relation("DailyAttendanceRelation")
-  hrms_monthly_payroll_employee        hrms_d_monthly_payroll_processing[] @relation("MonthlyPayrollRelation")
-  hrms_arrear_adjustments_employee     hrms_d_arrear_adjustments[]         @relation("ArrearAdjustmentRelation")
-  hrms_advance_payement_entry_employee hrms_d_advance_payment_entry[]      @relation("AdvancePayementEntry")
 }
 
 model hrms_d_employee_address {
@@ -335,8 +335,8 @@ model hrms_d_exit_clearance {
   updatedate              DateTime?        @db.DateTime
   updatedby               Int?
   log_inst                Int?
-  exit_clearance_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   exit_clearance_by_user  hrms_m_user?     @relation("UserCleared", fields: [cleared_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exit_clearance_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_exit_interview {
@@ -390,8 +390,8 @@ model hrms_d_helpdesk_ticket {
   updatedate         DateTime?        @db.DateTime
   updatedby          Int?
   log_inst           Int?
-  helpdesk_employee  hrms_d_employee? @relation("HelpdeskEmployee", fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  helpdesk_assign_to hrms_d_employee? @relation("HelpdeskAssignedTo", fields: [assigned_to], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  helpdesk_assign_to hrms_d_employee? @relation("HelpdeskAssignedTo", fields: [assigned_to], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  helpdesk_employee  hrms_d_employee? @relation("HelpdeskEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_hr_letter {
@@ -699,8 +699,8 @@ model hrms_d_training_session {
   updatedate                DateTime?                  @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
-  training_session_employee hrms_d_employee?           @relation(fields: [trainer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_d_training_feedback  hrms_d_training_feedback[]
+  training_session_employee hrms_d_employee?           @relation(fields: [trainer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_travel_expense {
@@ -718,9 +718,9 @@ model hrms_d_travel_expense {
   updatedate               DateTime?        @db.DateTime
   updatedby                Int?
   log_inst                 Int?
-  travel_expense_employee  hrms_d_employee? @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  travel_expense_createdby hrms_m_user      @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onDelete: NoAction, onUpdate: NoAction)
   travel_expense_approver  hrms_m_user?     @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_createdby hrms_m_user      @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onUpdate: NoAction)
+  travel_expense_employee  hrms_d_employee? @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_work_life_event {
@@ -1282,13 +1282,13 @@ model hrms_employee_d_educations {
   institute_name       String?
   degree               String?
   specialization       String?
-  start_from           DateTime?
-  end_to               DateTime?
   createdate           DateTime        @default(now()) @db.DateTime
   createdby            Int
   log_inst             Int?
   updatedate           DateTime?       @db.DateTime
   updatedby            Int?
+  end_to               DateTime?
+  start_from           DateTime?
   eduction_of_employee hrms_d_employee @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
 }
 
@@ -1345,7 +1345,7 @@ model hrms_d_daily_attendance_entry {
   attendance_date                DateTime        @db.Date
   check_in_time                  DateTime?       @db.DateTime
   check_out_time                 DateTime?       @db.DateTime
-  status                         String          @db.NVarChar(20) // e.g. Present, Absent, Late, Half-Day
+  status                         String          @db.NVarChar(20)
   remarks                        String?         @db.NVarChar(250)
   createdate                     DateTime        @default(now()) @db.DateTime
   createdby                      Int
@@ -1396,7 +1396,7 @@ model hrms_d_advance_payment_entry {
   request_date                           DateTime        @db.Date
   amount_requested                       Decimal         @db.Decimal(18, 2)
   amount_approved                        Decimal?        @db.Decimal(18, 2)
-  approval_status                        String          @db.NVarChar(20) // Pending, Approved, Rejected
+  approval_status                        String          @db.NVarChar(20)
   approval_date                          DateTime?       @db.Date
   approved_by                            Int?
   reason                                 String?         @db.NVarChar(250)
@@ -1406,6 +1406,6 @@ model hrms_d_advance_payment_entry {
   updatedate                             DateTime?       @db.DateTime
   updatedby                              Int?
   log_inst                               Int?
-  hrms_advance_payement_entry_employee   hrms_d_employee @relation("AdvancePayementEntry", fields: [employee_id], references: [id], onUpdate: NoAction)
   hrms_advance_payement_entry_approvedBy hrms_m_user?    @relation("AdvanceApprovedBy", fields: [approved_by], references: [id])
+  hrms_advance_payement_entry_employee   hrms_d_employee @relation("AdvancePayementEntry", fields: [employee_id], references: [id], onUpdate: NoAction)
 }
