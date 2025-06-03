@@ -8,7 +8,7 @@ const upload = require("../middlewares/UploadFileMiddleware"); // Your multer mi
 router.post(
   "/document-upload",
   authenticateToken,
-  upload.single("file"),
+  upload.single("document_path"),
   documentUploadController.createDocument
 );
 
@@ -30,7 +30,7 @@ router.get(
 router.put(
   "/document-upload/:id",
   authenticateToken,
-  upload.single("file"),
+  upload.single("document_path"),
   documentUploadController.updateDocument
 );
 
