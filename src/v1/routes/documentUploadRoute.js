@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const documentUploadController = require("../controller/documentUploadController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
-const upload = require("../middlewares/UploadFileMiddleware"); // Your multer middleware
+const upload = require("../middlewares/UploadFileMiddleware");
 
 //Creaet document upload
 router.post(

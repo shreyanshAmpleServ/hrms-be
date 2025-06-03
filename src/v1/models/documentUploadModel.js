@@ -85,7 +85,7 @@ const updateDocumentUpload = async (id, data) => {
       },
       data: {
         ...serializeDocumentData(data),
-        updatedby: data.updatedby || 1,
+        updatedby: data.updatedby || null,
         updatedate: new Date(),
       },
     });
