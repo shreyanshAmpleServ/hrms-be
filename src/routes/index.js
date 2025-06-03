@@ -106,8 +106,10 @@ const notificationLogRoute = require("../v1/routes/notificationLogRoute.js");
 const employeeExperienceRoute = require("../v1/routes/employeeExperienceRoute.js");
 const employeeEducationRoute = require("../v1/routes/employeeEducationRoutes.js");
 const documentUploadRoute = require("../v1/routes/documentUploadRoute.js");
+const dailyAttendanceRoute = require("../v1/routes/dailyAttendanceRoute.js");
 const upload = require("../v1/middlewares/uploadMiddleware.js");
 const advancePaymentRoute = require("../v1/routes/advancePaymentRoute.js");
+
 const router = express.Router();
 
 // Version 1 API
@@ -219,6 +221,7 @@ router.use("/v1", employeeExperienceRoute);
 router.use("/v1", employeeEducationRoute);
 router.use("/v1", documentUploadRoute);
 router.use("/v1", advancePaymentRoute);
+router.use("/v1", dailyAttendanceRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
