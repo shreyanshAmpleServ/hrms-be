@@ -1,4 +1,4 @@
-const dailyAttendanceService = require("../services/probationReviewService.js");
+const dailyAttendanceService = require("../services/dailyAttendanceService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 

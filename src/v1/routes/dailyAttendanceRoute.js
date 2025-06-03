@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router();
-const dailyAttendanceController = require("../controller/probationReviewController.js");
+const dailyAttendanceController = require("../controller/dailyAttendanceController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 
 // Create daily attendance routes
