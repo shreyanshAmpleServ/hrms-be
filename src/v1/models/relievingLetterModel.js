@@ -108,7 +108,7 @@ const deleteRelievingLetter = async (id) => {
   }
 };
 
-// Get all relieving letters with pagination and search
+// Get all relieving letters
 const getAllRelievingLetters = async (
   search,
   page,
@@ -137,7 +137,6 @@ const getAllRelievingLetters = async (
       });
     }
 
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);

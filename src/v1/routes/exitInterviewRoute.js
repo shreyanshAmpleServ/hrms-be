@@ -17,21 +17,21 @@ router.get(
   exitInterview.getAllExitInterviews
 );
 
-// Get a single exit interview by ID routes
+// Get a single exit interview by ID
 router.get(
   "/exit-interview/:id",
   authenticateToken,
   exitInterview.findExitInterview
 );
 
-// Update a exit interview by ID routes
+// Update a exit interview by ID
 router.put(
   "/exit-interview/:id",
   authenticateToken,
   exitInterview.updateExitInterview
 );
 
-// Delete  exit interview by ID routes
+// Delete  exit interview by ID
 router.delete(
   "/exit-interview/:id",
   authenticateToken,

@@ -21,7 +21,6 @@ const createSuggestionBox = async (data) => {
         log_inst: data.log_inst || 1,
       },
     });
-    // Fetch with relations for employee name
     return await prisma.hrms_d_employee_suggestion.findUnique({
       where: { id: created.id },
       include: {
@@ -97,7 +96,7 @@ const deleteSuggestionBox = async (id) => {
   }
 };
 
-// Get all suggestion boxes with pagination and search
+// Get all suggestion boxes
 const getAllSuggestionBox = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -106,7 +105,6 @@ const getAllSuggestionBox = async (search, page, size, startDate, endDate) => {
 
     const filterConditions = [];
 
-    // Search OR condition on suggestion_text
     if (search) {
       filterConditions.push({
         OR: [
@@ -125,7 +123,6 @@ const getAllSuggestionBox = async (search, page, size, startDate, endDate) => {
       });
     }
 
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -139,7 +136,6 @@ const getAllSuggestionBox = async (search, page, size, startDate, endDate) => {
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 

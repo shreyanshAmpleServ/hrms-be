@@ -24,7 +24,6 @@ const createNotificationLog = async (data) => {
         log_inst: data.log_inst || 1,
       },
     });
-    // Fetch with relations for employee name
     return await prisma.hrms_d_notification_log.findUnique({
       where: { id: created.id },
       include: {
@@ -71,7 +70,6 @@ const updateNotificationLog = async (id, data) => {
         updatedate: new Date(),
       },
     });
-    // Fetch with relations for employee name
     return await prisma.hrms_d_notification_log.findUnique({
       where: { id: updated.id },
       include: {
@@ -100,7 +98,6 @@ const deleteNotificationLog = async (id) => {
   }
 };
 
-// Get all notification logs with pagination and search
 const getAllNotificationLog = async (
   search,
   page,
@@ -144,7 +141,6 @@ const getAllNotificationLog = async (
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 

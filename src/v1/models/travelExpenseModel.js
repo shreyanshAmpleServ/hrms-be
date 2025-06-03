@@ -104,7 +104,7 @@ const deleteTravelExpense = async (id) => {
   }
 };
 
-// Get all travel expenses with pagination and search
+// Get all travel expenses
 const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -125,7 +125,6 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
       });
     }
 
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -139,7 +138,6 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 

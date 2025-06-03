@@ -18,21 +18,21 @@ router.get(
   successionPlanController.getAllSuccessionPlan
 );
 
-// Get a single succession plan by ID routes
+// Get a single succession plan by ID
 router.get(
   "/succession-plan/:id",
   authenticateToken,
   successionPlanController.getSuccessionPlanById
 );
 
-// Update a succession plan by ID routes
+// Update a succession plan by ID
 router.put(
   "/succession-plan/:id",
   authenticateToken,
   successionPlanController.updateSuccessionPlan
 );
 
-// Delete  succession plan by ID routes
+// Delete  succession plan by ID
 router.delete(
   "/succession-plan/:id",
   authenticateToken,

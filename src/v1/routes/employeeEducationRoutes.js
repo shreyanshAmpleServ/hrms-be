@@ -17,21 +17,21 @@ router.get(
   employeeEducationController.getAllEmployeeEducation
 );
 
-// Get a single employee education by ID routes
+// Get a single employee education by ID
 router.get(
   "/employee-education/:id",
   authenticateToken,
   employeeEducationController.findEmployeeEducation
 );
 
-// Update a employee education by ID routes
+// Update a employee education by ID
 router.put(
   "/employee-education/:id",
   authenticateToken,
   employeeEducationController.updateEmployeeEducation
 );
 
-// Delete  employee education by ID routes
+// Delete  employee education by ID
 router.delete(
   "/employee-education/:id",
   authenticateToken,

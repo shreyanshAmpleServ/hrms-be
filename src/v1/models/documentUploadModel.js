@@ -112,7 +112,7 @@ const deleteDocumentUpload = async (id) => {
   }
 };
 
-// Get all document uploads with pagination and search
+// Get all document uploads
 const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;

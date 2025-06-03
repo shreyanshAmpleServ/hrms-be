@@ -24,7 +24,6 @@ const createAssetAssignment = async (data) => {
         log_inst: data.log_inst || 1,
       },
     });
-    // Fetch with relations for names
     return await prisma.hrms_d_asset_assignment.findUnique({
       where: { id: created.id },
       include: {
@@ -85,7 +84,6 @@ const updateAssetAssignment = async (id, data) => {
         updatedate: new Date(),
       },
     });
-    // Fetch with relations for names
     return await prisma.hrms_d_asset_assignment.findUnique({
       where: { id: updated.id },
       include: {
@@ -121,8 +119,7 @@ const deleteAssetAssignment = async (id) => {
   }
 };
 
-// Get all asset assignments with pagination and search
-// Get all asset assignments with pagination and search
+// Get all asset assignments
 const getAllAssetAssignments = async (
   search,
   page,

@@ -17,21 +17,21 @@ router.get(
   notificationLogController.getAllNotificationLog
 );
 
-// Get a single notification log by ID routes
+// Get a single notification log by ID
 router.get(
   "/notification-log/:id",
   authenticateToken,
   notificationLogController.findNotificationLog
 );
 
-// Update a notification log by ID routes
+// Update a notification log by ID
 router.put(
   "/notification-log/:id",
   authenticateToken,
   notificationLogController.updateNotificationLog
 );
 
-// Delete  notification log by ID routes
+// Delete  notification log by ID
 router.delete(
   "/notification-log/:id",
   authenticateToken,
