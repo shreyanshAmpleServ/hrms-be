@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const e = require("express");
 const prisma = new PrismaClient();
 
 // Serialize education data
@@ -51,17 +52,42 @@ const findEmployeeEducationById = async (id) => {
 };
 
 // Update education record
-const updateEmployeeEducation = async (id, data) => {
+const updateEmployeeEducation = async (employeeId, data) => {
   try {
-    const updatedEducation = await prisma.hrms_employee_d_educations.update({
-      where: { id: parseInt(id) },
+    // Update all education records for this employee
+    await prisma.hrms_employee_d_educations.updateMany({
+      where: { employee_id: Number(employeeId) },
       data: {
         ...serializeEducationData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
     });
-    return updatedEducation;
+
+    // Fetch updated employee details
+    const employee = await prisma.hrms_d_employee.findUnique({
+      where: { id: Number(employeeId) },
+      include: {
+        hrms_employee_designation: true,
+        hrms_employee_department: true,
+        hrms_employee_bank: true,
+        hrms_manager: true,
+        experiance_of_employee: true,
+        eduction_of_employee: true,
+        hrms_employee_address: true, // add this if you want address too
+      },
+    });
+
+    if (!employee) {
+      throw new CustomError("Employee not found", 404);
+    }
+
+    return {
+      success: true,
+      data: employee,
+      message: "Employee education updated successfully",
+      status: 200,
+    };
   } catch (error) {
     throw new CustomError(
       `Error updating education record: ${error.message}`,

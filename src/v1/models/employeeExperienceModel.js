@@ -68,20 +68,60 @@ const findEmployeeExperienceById = async (id) => {
 // Update an employee experience
 const updateEmployeeExperience = async (employeeId, data) => {
   try {
-    const updateData = {
-      company_name: data.company_name || "",
-      position: data.position || "",
-      start_from: data.start_from ? new Date(data.start_from) : null,
-      end_to: data.end_to ? new Date(data.end_to) : null,
-      updatedby: data.updatedby || 1,
-      updatedate: new Date(),
-    };
+    const inputExperiences = data.experiences || [];
 
-    await prisma.hrms_employee_d_experiences.updateMany({
+    // Separate new and existing experiences
+    const newExperiences = inputExperiences.filter((exp) => !exp.id);
+    const existingExperiences = inputExperiences.filter((exp) => exp.id);
+
+    // Get current experience IDs in DB
+    const existingInDb = await prisma.hrms_employee_d_experiences.findMany({
       where: { employee_id: Number(employeeId) },
-      data: updateData,
+      select: { id: true },
     });
 
+    const existingIdsInDb = existingInDb.map((exp) => exp.id);
+    const incomingIds = existingExperiences.map((exp) => exp.id);
+
+    // Determine which to delete
+    const toDeleteIds = existingIdsInDb.filter(
+      (id) => !incomingIds.includes(id)
+    );
+
+    await prisma.$transaction(async (tx) => {
+      // Delete removed experiences
+      if (toDeleteIds.length > 0) {
+        await tx.hrms_employee_d_experiences.deleteMany({
+          where: { id: { in: toDeleteIds } },
+        });
+      }
+
+      // Update existing experiences
+      for (const exp of existingExperiences) {
+        await tx.hrms_employee_d_experiences.update({
+          where: { id: exp.id },
+          data: {
+            ...serializeEmployeeExperienceForUpdate(exp),
+            updatedby: data.updatedby || 1,
+            updatedate: new Date(),
+          },
+        });
+      }
+
+      // Create new experiences
+      for (const exp of newExperiences) {
+        await tx.hrms_employee_d_experiences.create({
+          data: {
+            ...serializeEmployeeExperience({ ...exp, employee_id: employeeId }),
+            createdby: data.updatedby || 1,
+            createdate: new Date(),
+            log_inst: exp.log_inst || 1,
+          },
+        });
+      }
+    });
+
+    // Return updated employee with experiences
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(employeeId) },
       include: {
