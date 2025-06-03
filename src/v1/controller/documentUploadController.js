@@ -64,7 +64,7 @@ const updateDocument = async (req, res, next) => {
     const documentData = {
       ...req.body,
       document_path: fileUrl,
-
+      document_owner_id: employeeId,
       updated_by: req.user.id,
     };
 

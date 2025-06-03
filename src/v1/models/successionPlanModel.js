@@ -116,7 +116,7 @@ const deleteSuccessionPlan = async (id) => {
   }
 };
 
-// Get all succession plans with pagination and search
+// Get all succession plans
 const getAllSuccessionPlans = async (
   search,
   page,
@@ -150,7 +150,6 @@ const getAllSuccessionPlans = async (
       });
     }
 
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -164,7 +163,6 @@ const getAllSuccessionPlans = async (
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 

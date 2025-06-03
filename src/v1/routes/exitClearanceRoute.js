@@ -18,21 +18,21 @@ router.get(
   exitClearanceController.getAllExitClearance
 );
 
-// Get a single exit clearance by ID routes
+// Get a single exit clearance by ID
 router.get(
   "/exit-clearance/:id",
   authenticateToken,
   exitClearanceController.findExitClearance
 );
 
-// Update a exit clearance by ID routes
+// Update a exit clearance by ID
 router.put(
   "/exit-clearance/:id",
   authenticateToken,
   exitClearanceController.updateExitClearance
 );
 
-// Delete  exit clearance by ID routes
+// Delete  exit clearance by ID
 router.delete(
   "/exit-clearance/:id",
   authenticateToken,

@@ -71,7 +71,6 @@ const updateRecognitionAward = async (id, data) => {
         updatedate: new Date(),
       },
     });
-    // Fetch with relations for employee and nominator names
     return await prisma.hrms_d_recognition_award.findUnique({
       where: { id: updated.id },
       include: {
@@ -101,7 +100,6 @@ const deleteRecognitionAward = async (id) => {
   }
 };
 
-// Get all recognition awards with pagination and search
 const getAllRecognitionAwards = async (
   search,
   page,
@@ -116,7 +114,6 @@ const getAllRecognitionAwards = async (
 
     const filterConditions = [];
 
-    // Search OR condition on multiple fields
     if (search) {
       filterConditions.push({
         OR: [
@@ -136,7 +133,6 @@ const getAllRecognitionAwards = async (
       });
     }
 
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -150,7 +146,6 @@ const getAllRecognitionAwards = async (
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 

@@ -11,28 +11,28 @@ router.post(
   recognitionAwardController.createRecognitionAward
 );
 
-// Get all recognition awards routes
+// Get all recognition awards
 router.get(
   "/recognition-award",
   authenticateToken,
   recognitionAwardController.getAllRecognitionAward
 );
 
-// Get a single recognition award by ID routes
+// Get a single recognition award by ID
 router.get(
   "/recognition-award/:id",
   authenticateToken,
   recognitionAwardController.findRecognitionAward
 );
 
-// Update a recognition award by ID routes
+// Update a recognition award by ID
 router.put(
   "/recognition-award/:id",
   authenticateToken,
   recognitionAwardController.updateRecognitionAward
 );
 
-// Delete  recognition award by ID routes
+// Delete  recognition award by ID
 router.delete(
   "/recognition-award/:id",
   authenticateToken,

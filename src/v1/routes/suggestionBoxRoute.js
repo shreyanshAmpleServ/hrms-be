@@ -18,7 +18,7 @@ router.get(
   suggestionBoxController.getAllSuggestionBox
 );
 
-// Get a single suggestion box by ID routes
+// Get a single suggestion box by ID
 router.get(
   "/suggestion-box/:id",
   authenticateToken,

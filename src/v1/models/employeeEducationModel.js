@@ -56,11 +56,9 @@ const updateEmployeeEducation = async (employeeId, data) => {
   try {
     const inputEducations = data.educations || [];
 
-    // Separate new and existing educations
     const newEducations = inputEducations.filter((edu) => !edu.id);
     const existingEducations = inputEducations.filter((edu) => edu.id);
 
-    // Fetch current educations from DB
     const existingInDb = await prisma.hrms_employee_d_educations.findMany({
       where: { employee_id: Number(employeeId) },
       select: { id: true },
@@ -68,12 +66,10 @@ const updateEmployeeEducation = async (employeeId, data) => {
     const existingIdsInDb = existingInDb.map((edu) => edu.id);
     const incomingIds = existingEducations.map((edu) => edu.id);
 
-    // Determine which to delete
     const toDeleteIds = existingIdsInDb.filter(
       (id) => !incomingIds.includes(id)
     );
 
-    // Prepare new educations for create
     const newSerialized = newEducations.map((edu) => ({
       ...serializeEducationData({ ...edu, employee_id: Number(employeeId) }),
       createdby: data.updatedby || 1,
@@ -81,19 +77,16 @@ const updateEmployeeEducation = async (employeeId, data) => {
       log_inst: edu.log_inst || 1,
     }));
 
-    // Start transaction
     await prisma.$transaction(async (tx) => {
-      // Delete removed educations
       if (toDeleteIds.length > 0) {
         await tx.hrms_employee_d_educations.deleteMany({
           where: { id: { in: toDeleteIds } },
         });
       }
 
-      // Update existing educations one by one
       for (const edu of existingEducations) {
         const sanitizedData = serializeEducationData(edu);
-        delete sanitizedData.employee_id; // Remove employee_id to avoid conflict
+        delete sanitizedData.employee_id;
         await tx.hrms_employee_d_educations.update({
           where: { id: edu.id },
           data: {
@@ -104,7 +97,6 @@ const updateEmployeeEducation = async (employeeId, data) => {
         });
       }
 
-      // Create new educations in bulk if any
       if (newSerialized.length > 0) {
         await tx.hrms_employee_d_educations.createMany({
           data: newSerialized,
@@ -112,7 +104,6 @@ const updateEmployeeEducation = async (employeeId, data) => {
       }
     });
 
-    // Return updated employee with educations and related data
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(employeeId) },
       include: {

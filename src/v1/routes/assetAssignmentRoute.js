@@ -24,14 +24,14 @@ router.get(
   assetAssignmentController.findAssetAssignment
 );
 
-// Update a asset assignment by ID routes
+// Update a asset assignment by ID
 router.put(
   "/asset-assignment/:id",
   authenticateToken,
   assetAssignmentController.updateAssetAssignment
 );
 
-// Delete  asset assignment by ID routes
+// Delete  asset assignment by ID
 router.delete(
   "/asset-assignment/:id",
   authenticateToken,

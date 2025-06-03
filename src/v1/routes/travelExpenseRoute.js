@@ -17,14 +17,14 @@ router.get(
   travelExpenseController.getAllTravelExpenses
 );
 
-// Get a single travel expense by ID routes
+// Get a single travel expense by ID
 router.get(
   "/travel-expense/:id",
   authenticateToken,
   travelExpenseController.findTravelExpense
 );
 
-// Update a travel expense by ID routes
+// Update a travel expense by ID
 router.put(
   "/travel-expense/:id",
   authenticateToken,

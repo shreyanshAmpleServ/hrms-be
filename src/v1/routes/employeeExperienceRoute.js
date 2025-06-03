@@ -18,21 +18,21 @@ router.get(
   employeeExperienceController.getAllEmployeeExperience
 );
 
-// Get a single employee review by ID routes
+// Get a single employee review by ID
 router.get(
   "/employee-experience/:id",
   authenticateToken,
   employeeExperienceController.findEmployeeExperience
 );
 
-// Update a employee review by ID routes
+// Update a employee review by ID
 router.put(
   "/employee-experience/:id",
   authenticateToken,
   employeeExperienceController.updateEmployeeExperience
 );
 
-// Delete  employee review by ID routes
+// Delete  employee review by ID
 router.delete(
   "/employee-experience/:id",
   authenticateToken,

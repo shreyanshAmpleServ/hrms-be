@@ -24,14 +24,14 @@ router.get(
   relievingLetterController.findRelievingLetter
 );
 
-// Update a relieving letter by ID routes
+// Update a relieving letter by ID
 router.put(
   "/relieving-letter/:id",
   authenticateToken,
   relievingLetterController.updateRelievingLetter
 );
 
-// Delete  relieving letter by ID routes
+// Delete  relieving letter by ID
 router.delete(
   "/relieving-letter/:id",
   authenticateToken,

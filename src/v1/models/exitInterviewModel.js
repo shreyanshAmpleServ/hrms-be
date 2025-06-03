@@ -110,7 +110,7 @@ const deleteExitInterview = async (id) => {
   }
 };
 
-// Get all exit interviews with pagination and search
+// Get all exit interviews
 const getAllExitInterviews = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -119,7 +119,6 @@ const getAllExitInterviews = async (search, page, size, startDate, endDate) => {
 
     const filterConditions = [];
 
-    // Search OR condition on multiple fields
     if (search) {
       filterConditions.push({
         OR: [
@@ -134,7 +133,6 @@ const getAllExitInterviews = async (search, page, size, startDate, endDate) => {
         ],
       });
     }
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -148,7 +146,6 @@ const getAllExitInterviews = async (search, page, size, startDate, endDate) => {
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 

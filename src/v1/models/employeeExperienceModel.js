@@ -29,7 +29,6 @@ const createEmployeeExperience = async (data) => {
         log_inst: data.log_inst || 1,
       },
     });
-    // Fetch with relation for employee name
     return await prisma.hrms_employee_d_experiences.findUnique({
       where: { id: created.id },
       include: {
@@ -89,14 +88,12 @@ const updateEmployeeExperience = async (employeeId, data) => {
     );
 
     await prisma.$transaction(async (tx) => {
-      // Delete removed experiences
       if (toDeleteIds.length > 0) {
         await tx.hrms_employee_d_experiences.deleteMany({
           where: { id: { in: toDeleteIds } },
         });
       }
 
-      // Update existing experiences
       for (const exp of existingExperiences) {
         await tx.hrms_employee_d_experiences.update({
           where: { id: exp.id },
@@ -108,7 +105,6 @@ const updateEmployeeExperience = async (employeeId, data) => {
         });
       }
 
-      // Create new experiences
       for (const exp of newExperiences) {
         await tx.hrms_employee_d_experiences.create({
           data: {
@@ -121,7 +117,6 @@ const updateEmployeeExperience = async (employeeId, data) => {
       }
     });
 
-    // Return updated employee with experiences
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(employeeId) },
       include: {
@@ -163,7 +158,6 @@ const deleteEmployeeExperience = async (id) => {
   }
 };
 
-// Get all employee experiences with pagination and search
 const getAllEmployeeExperience = async (
   search,
   page,
