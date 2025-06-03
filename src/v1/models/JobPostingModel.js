@@ -11,7 +11,12 @@ const serializeJobData = (data) => {
     required_experience: data.required_experience || "",
     posting_date: data.posting_date || new Date(),
     closing_date: data.closing_date || null,
-    is_internal: Boolean(data.is_internal) || false || 1,
+    is_internal:
+      typeof data.is_internal === "boolean"
+        ? data.is_internal
+        : data.is_internal === "true" ||
+          data.is_internal === 1 ||
+          data.is_internal === "1",
   };
 };
 
@@ -89,6 +94,7 @@ const updateJobPosting = async (id, data) => {
         },
       },
     });
+
     return updatedJobPosting;
   } catch (error) {
     throw new CustomError(`Error updating job posting: ${error.message}`, 500);
@@ -107,9 +113,9 @@ const deleteJobPosting = async (id) => {
 };
 
 // Get all job postings
-const getAllJobPosting = async (search,page,size ,startDate, endDate) => {
+const getAllJobPosting = async (search, page, size, startDate, endDate) => {
   try {
-    page = (!page || page == 0) ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -166,7 +172,7 @@ const getAllJobPosting = async (search,page,size ,startDate, endDate) => {
     });
     // const totalCount = await prisma.hrms_d_job_posting.count();
     const totalCount = await prisma.hrms_d_job_posting.count({
-        where: filters,
+      where: filters,
     });
 
     return {
