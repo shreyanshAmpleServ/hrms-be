@@ -161,22 +161,23 @@ model hrms_d_disciplinary_action {
 }
 
 model hrms_d_document_upload {
-  id                  Int       @id(map: "PK__hrms_d_d__3213E83F12C70662") @default(autoincrement())
-  employee_id         Int?
-  document_type       String?   @db.NVarChar(100)
-  document_path       String?   @db.NVarChar(255)
-  uploaded_on         DateTime? @db.DateTime
-  createdate          DateTime? @default(now(), map: "DF__hrms_d_do__creat__6DCC4D03") @db.DateTime
-  createdby           Int
-  updatedate          DateTime? @db.DateTime
-  updatedby           Int?
-  log_inst            Int?
-  document_number     String?   @db.NVarChar(100)
-  issued_date         DateTime? @db.Date
-  expiry_date         DateTime? @db.Date
-  is_mandatory        String    @default("Y", map: "DF__hrms_d_do__is_ma__056ECC6A") @db.Char(1)
-  document_owner_type String?   @default("employee", map: "DF__hrms_d_do__docum__0662F0A3") @db.VarChar(20)
-  document_owner_id   Int?
+  id                       Int              @id(map: "PK__hrms_d_d__3213E83F12C70662") @default(autoincrement())
+  employee_id              Int?
+  document_type            String?          @db.NVarChar(100)
+  document_path            String?          @db.NVarChar(255)
+  uploaded_on              DateTime?        @db.DateTime
+  createdate               DateTime?        @default(now(), map: "DF__hrms_d_do__creat__6DCC4D03") @db.DateTime
+  createdby                Int
+  updatedate               DateTime?        @db.DateTime
+  updatedby                Int?
+  log_inst                 Int?
+  document_number          String?          @db.NVarChar(100)
+  issued_date              DateTime?        @db.Date
+  expiry_date              DateTime?        @db.Date
+  is_mandatory             String           @default("Y", map: "DF__hrms_d_do__is_ma__056ECC6A") @db.Char(1)
+  document_owner_type      String?          @default("employee", map: "DF__hrms_d_do__docum__0662F0A3") @db.VarChar(20)
+  document_owner_id        Int?
+  document_upload_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_employee {
@@ -267,6 +268,7 @@ model hrms_d_employee {
   helpdesk_employee             hrms_d_helpdesk_ticket[]      @relation("HelpdeskEmployee")
   helpdesk_assign_to            hrms_d_helpdesk_ticket[]      @relation("HelpdeskAssignedTo")
   notification_log_employee     hrms_d_notification_log[]
+  document_upload_employee      hrms_d_document_upload[]
 }
 
 model hrms_d_employee_address {
@@ -1275,6 +1277,8 @@ model hrms_employee_d_educations {
   institute_name       String?
   degree               String?
   specialization       String?
+  start_from           DateTime?
+  end_to               DateTime?
   createdate           DateTime        @default(now()) @db.DateTime
   createdby            Int
   log_inst             Int?

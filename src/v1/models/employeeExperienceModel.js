@@ -2,6 +2,13 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
+const serializeEmployeeExperienceForUpdate = (data) => ({
+  company_name: data.company_name || "",
+  position: data.position || "",
+  start_from: data.start_from ? new Date(data.start_from) : null,
+  end_to: data.end_to ? new Date(data.end_to) : null,
+});
+
 // Serialize employee experience data
 const serializeEmployeeExperience = (data) => ({
   employee_id: Number(data.employee_id),
@@ -59,26 +66,44 @@ const findEmployeeExperienceById = async (id) => {
 };
 
 // Update an employee experience
-const updateEmployeeExperience = async (id, data) => {
+const updateEmployeeExperience = async (employeeId, data) => {
   try {
-    const updated = await prisma.hrms_employee_d_experiences.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...serializeEmployeeExperience(data),
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
-      },
+    const updateData = {
+      company_name: data.company_name || "",
+      position: data.position || "",
+      start_from: data.start_from ? new Date(data.start_from) : null,
+      end_to: data.end_to ? new Date(data.end_to) : null,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+
+    await prisma.hrms_employee_d_experiences.updateMany({
+      where: { employee_id: Number(employeeId) },
+      data: updateData,
     });
-    // Fetch with relation for employee name
-    return await prisma.hrms_employee_d_experiences.findUnique({
-      where: { id: updated.id },
+
+    const employee = await prisma.hrms_d_employee.findUnique({
+      where: { id: Number(employeeId) },
       include: {
+        hrms_employee_designation: true,
+        hrms_employee_department: true,
+        hrms_employee_bank: true,
+        hrms_manager: true,
         experiance_of_employee: true,
+        eduction_of_employee: true,
       },
     });
+
+    if (!employee) {
+      throw new CustomError("Employee not found", 404);
+    }
+
+    return {
+      ...employee,
+    };
   } catch (error) {
     throw new CustomError(
-      `Error updating employee experience: ${error.message}`,
+      `Error updating employee experience by employee ID: ${error.message}`,
       500
     );
   }
@@ -113,7 +138,6 @@ const getAllEmployeeExperience = async (
 
     const filterConditions = [];
 
-    // Search OR condition on company_name and position
     if (search) {
       filterConditions.push({
         OR: [
@@ -152,7 +176,6 @@ const getAllEmployeeExperience = async (
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 
