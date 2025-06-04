@@ -1,4 +1,4 @@
-const monthlyPayrollModel = require("../models/probationReviewModel.js");
+const monthlyPayrollModel = require("../models/monthlyPayrollModel.js");
 
 const createMonthlyPayroll = async (data) => {
   return await monthlyPayrollModel.createMonthlyPayroll(data);
