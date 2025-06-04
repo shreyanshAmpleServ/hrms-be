@@ -156,6 +156,7 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
     const totalCount = await prisma.hrms_d_travel_expense.count({
       where: filters,
     });
+    console.log("getAllTravelExpense called with:", datas);
 
     return {
       data: datas,

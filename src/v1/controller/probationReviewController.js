@@ -4,7 +4,7 @@ const moment = require("moment");
 
 const createProbationReview = async (req, res, next) => {
   try {
-    console.log("Incoming request body:", req.body); // ADD THIS LINE
+    console.log("Incoming request body:", req.body);
 
     const data = {
       ...req.body,

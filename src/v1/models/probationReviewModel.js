@@ -132,7 +132,6 @@ const getAllProbationReviews = async (
       });
     }
 
-    // Date range condition
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -146,7 +145,6 @@ const getAllProbationReviews = async (
       }
     }
 
-    // Combine all conditions with AND
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
 
