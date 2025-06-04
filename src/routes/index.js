@@ -111,7 +111,8 @@ const monthlyPayrollRoute = require("../v1/routes/monthlyPayrollRoute.js");
 const upload = require("../v1/middlewares/uploadMiddleware.js");
 const advancePaymentRoute = require("../v1/routes/advancePaymentRoute.js");
 const arrearAdjustmentsRoute = require("../v1/routes/arrearAdjustmentsRoute.js");
-
+const timeSheetProjectRoute = require("../v1/routes/timeSheetProjectRoute.js");
+const goalSheetRoute = require("../v1/routes/goalSheetRoute.js");
 const { months } = require("moment");
 
 const router = express.Router();
@@ -228,6 +229,8 @@ router.use("/v1", advancePaymentRoute);
 router.use("/v1", dailyAttendanceRoute);
 router.use("/v1", monthlyPayrollRoute);
 router.use("/v1", arrearAdjustmentsRoute);
+router.use("/v1", timeSheetProjectRoute);
+router.use("/v1", goalSheetRoute); // Base path: /v1
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
