@@ -15,7 +15,7 @@ const serializeData = (data) => {
 // Create a new training feedback
 const createTrainingFeedback = async (data) => {
   try {
-   await errorNotExist('hrms_d_employee',data.employee_id ,"Employee" );
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const reqData = await prisma.hrms_d_training_feedback.create({
       data: {
         ...serializeData(data),
@@ -24,24 +24,16 @@ const createTrainingFeedback = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        training_employee:{
-          select: {
-            full_name: true,
-            id:true,
-          }
-        },
-        training_details:{
-          select: {
-            training_title: true,
-            trainer_name: true,
-            id:true,
-          }
-        },
+        training_employee: true,
+        training_details: true,
       },
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(`Error creating training feedback: ${error.message}`, 500);
+    throw new CustomError(
+      `Error creating training feedback: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -66,34 +58,27 @@ const findTrainingFeedbackById = async (id) => {
 // Update a training feedback
 const updateTrainingFeedback = async (id, data) => {
   try {
-    await errorNotExist("hrms_d_employee",data.employee_id , "Employee");
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
-    const updatedTrainingFeedback = await prisma.hrms_d_training_feedback.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...serializeData(data),
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
-      },
-      include: {
-                training_employee:{
-          select: {
-            full_name: true,
-            id:true,
-          }
+    const updatedTrainingFeedback =
+      await prisma.hrms_d_training_feedback.update({
+        where: { id: parseInt(id) },
+        data: {
+          ...serializeData(data),
+          updatedby: data.updatedby || 1,
+          updatedate: new Date(),
         },
-         training_details:{
-          select: {
-            training_title: true,
-            trainer_name: true,
-            id:true,
-          }
+        include: {
+          training_employee: true,
+          training_details: true,
         },
-      },
-    });
+      });
     return updatedTrainingFeedback;
   } catch (error) {
-    throw new CustomError(`Error updating training feedback: ${error.message}`, 500);
+    throw new CustomError(
+      `Error updating training feedback: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -104,14 +89,23 @@ const deleteTrainingFeedback = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting training feedback: ${error.message}`, 500);
+    throw new CustomError(
+      `Error deleting training feedback: ${error.message}`,
+      500
+    );
   }
 };
 
 // Get all training feedback
-const getAllTrainingFeedback = async (search,page,size ,startDate, endDate) => {
+const getAllTrainingFeedback = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
   try {
-    page = (!page || page == 0) ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -151,25 +145,14 @@ const getAllTrainingFeedback = async (search,page,size ,startDate, endDate) => {
       skip: skip,
       take: size,
       include: {
-        training_employee:{
-          select: {
-            full_name: true,
-            id:true,
-          }
-        },
-         training_details:{
-          select: {
-            training_title: true,
-            trainer_name: true,
-            id:true,
-          }
-        },
+        training_employee: true,
+        training_details: true,
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     // const totalCount = await prisma.hrms_d_training_feedback.count();
     const totalCount = await prisma.hrms_d_training_feedback.count({
-        where: filters,
+      where: filters,
     });
 
     return {
@@ -180,7 +163,7 @@ const getAllTrainingFeedback = async (search,page,size ,startDate, endDate) => {
       totalCount: totalCount,
     };
   } catch (error) {
-    console.log("Error", error)
+    console.log("Error", error);
     throw new CustomError("Error retrieving training feedback", 503);
   }
 };
