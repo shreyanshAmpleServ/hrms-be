@@ -18,12 +18,22 @@ const serializePayrollData = (data) => ({
 // Create a new payroll entry
 const createMonthlyPayroll = async (data) => {
   try {
+    const serializedData = serializePayrollData(data);
+
+    // Separate employee_id from other fields
+    const { employee_id, ...payrollData } = serializedData;
+
     const reqData = await prisma.hrms_d_monthly_payroll_processing.create({
       data: {
-        ...serializePayrollData(data),
+        ...payrollData,
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
+        hrms_monthly_payroll_employee: {
+          connect: {
+            id: employee_id,
+          },
+        },
       },
       include: {
         hrms_monthly_payroll_employee: {
@@ -105,14 +115,8 @@ const deleteMonthlyPayroll = async (id) => {
   }
 };
 
-// Get all payroll entries with pagination and search
-const getAllMonthlyPayrolls = async (
-  search,
-  page,
-  size,
-  startDate,
-  endDate
-) => {
+// Get all payroll entries
+const getAllMonthlyPayroll = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -175,5 +179,5 @@ module.exports = {
   findMonthlyPayrollById,
   updateMonthlyPayroll,
   deleteMonthlyPayroll,
-  getAllMonthlyPayrolls,
+  getAllMonthlyPayroll,
 };

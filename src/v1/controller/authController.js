@@ -22,7 +22,7 @@ const login = async (req, res, next) => {
       secure: false, // Set `true` in production for HTTPS
       // sameSite: 'Lax',
       sameSite: "Strict",
-      maxAge: 24 * 60 * 60 * 1000, // Cookie  valid for 1 day
+      maxAge: 30 * 24 * 60 * 60 * 1000, // Cookie  valid for 30 days
     });
     res.status(200).success("Login successful", data.user);
   } catch (error) {
