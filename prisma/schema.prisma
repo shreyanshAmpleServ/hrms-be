@@ -97,17 +97,18 @@ model hrms_d_appointment_letter {
 }
 
 model hrms_d_appraisal {
-  id                 Int              @id(map: "PK__hrms_d_a__3213E83F2F13CC8B") @default(autoincrement())
-  employee_id        Int?
-  review_period      String?          @db.VarChar(50)
-  rating             Int?
-  reviewer_comments  String?          @db.NVarChar(500)
-  createdate         DateTime?        @default(now(), map: "DF__hrms_d_ap__creat__76619304") @db.DateTime
-  createdby          Int
-  updatedate         DateTime?        @db.DateTime
-  updatedby          Int?
-  log_inst           Int?
-  appraisal_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                              Int                            @id(map: "PK__hrms_d_a__3213E83F2F13CC8B") @default(autoincrement())
+  employee_id                     Int?
+  review_period                   String?                        @db.VarChar(50)
+  rating                          Int?
+  reviewer_comments               String?                        @db.NVarChar(500)
+  createdate                      DateTime?                      @default(now(), map: "DF__hrms_d_ap__creat__76619304") @db.DateTime
+  createdby                       Int
+  updatedate                      DateTime?                      @db.DateTime
+  updatedby                       Int?
+  log_inst                        Int?
+  appraisal_employee              hrms_d_employee?               @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  goal_sheet_assignment_appraisal hrms_d_goal_sheet_assignment[]
 }
 
 model hrms_d_asset_assignment {
@@ -946,13 +947,14 @@ model hrms_m_employment_type {
 }
 
 model hrms_m_goal_category {
-  id            Int       @id(map: "PK__hrms_m_g__3213E83FFCE2E4CE") @default(autoincrement())
-  category_name String?   @db.NVarChar(100)
-  createdate    DateTime? @default(now(), map: "DF__hrms_m_go__creat__55F4C372") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id                                 Int                            @id(map: "PK__hrms_m_g__3213E83FFCE2E4CE") @default(autoincrement())
+  category_name                      String?                        @db.NVarChar(100)
+  createdate                         DateTime?                      @default(now(), map: "DF__hrms_m_go__creat__55F4C372") @db.DateTime
+  createdby                          Int
+  updatedate                         DateTime?                      @db.DateTime
+  updatedby                          Int?
+  log_inst                           Int?
+  goal_sheet_assignment_goalCategory hrms_d_goal_sheet_assignment[]
 }
 
 model hrms_m_grievance_type {
@@ -1483,8 +1485,10 @@ model hrms_d_goal_sheet_assignment {
   updatedby            Int?
   log_inst             Int?
 
-  goal_sheet_assignment_employee hrms_d_employee             @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
-  kpi_progress_entry_goal        hrms_d_kpi_progress_entry[]
+  goal_sheet_assignment_employee     hrms_d_employee             @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  goal_sheet_assignment_goalCategory hrms_m_goal_category?       @relation(fields: [goal_category_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  goal_sheet_assignment_appraisal    hrms_d_appraisal            @relation(fields: [appraisal_cycle_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kpi_progress_entry_goal            hrms_d_kpi_progress_entry[]
 }
 
 model hrms_d_warning_letters {
