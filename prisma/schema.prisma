@@ -273,9 +273,13 @@ model hrms_d_employee {
   work_life_event_employee             hrms_d_work_life_event[]
   eduction_of_employee                 hrms_employee_d_educations[]
   experiance_of_employee               hrms_employee_d_experiences[]
- hrms_time_sheets_submitted           hrms_d_time_sheet[]                 @relation("SubmittedBy")
+  hrms_time_sheets_submitted           hrms_d_time_sheet[]                 @relation("SubmittedBy")
   hrms_time_sheets_approved            hrms_d_time_sheet[]                 @relation("ApprovedBy")
-hrms_time_sheets_employee               hrms_d_time_sheet[]   @relation("EmployeeId")
+  hrms_time_sheets_employee            hrms_d_time_sheet[]                 @relation("EmployeeId")
+
+  goal_sheet_assignment_employee hrms_d_goal_sheet_assignment[]
+  kpi_progress_entry_employee    hrms_d_kpi_progress_entry[]
+  warning_letters_employee       hrms_d_warning_letters[]
 }
 
 model hrms_d_employee_address {
@@ -659,34 +663,30 @@ model hrms_d_survey_response {
   survey_type     hrms_m_survey_master? @relation(fields: [survey_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
-
 model hrms_d_time_sheet {
-  id                     Int                      @id @default(autoincrement())
-  employee_id            Int?
-  approved_by            Int?
-  project_id             Int
-  task_id                Int
-  work_date              DateTime?                @db.Date
-  hours_worked           Decimal?                 @db.Decimal(5, 2)
-  remarks                String?                  @db.NVarChar(250)
-  status                 String                   @default("Draft") @db.NVarChar(20)
-  approved_on            DateTime?                @db.DateTime
-  project_name           String?                  @db.NVarChar(100)
-  task_description       String?                  @db.NVarChar(500)
-  createdate             DateTime?                @default(now()) @db.DateTime
-  createdby              Int
-  updatedate             DateTime?                @db.DateTime
-  updatedby              Int?
-  log_inst               Int?
-  hrms_time_sheets_submitted                 hrms_d_employee?         @relation("SubmittedBy", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_submitted_by")
-  hrms_time_sheets_approved                  hrms_d_employee?         @relation("ApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_approved_by")
-  hrms_time_sheets_employee                  hrms_d_employee?        @relation("EmployeeId",fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  time_sheet_project hrms_m_timesheet_project @relation("ProjectTimeSheets", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  time_sheet_task    hrms_m_timesheet_task    @relation("TaskTimeSheets", fields: [task_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-
+  id                         Int                      @id @default(autoincrement())
+  employee_id                Int?
+  approved_by                Int?
+  project_id                 Int
+  task_id                    Int
+  work_date                  DateTime?                @db.Date
+  hours_worked               Decimal?                 @db.Decimal(5, 2)
+  remarks                    String?                  @db.NVarChar(250)
+  status                     String                   @default("Draft") @db.NVarChar(20)
+  approved_on                DateTime?                @db.DateTime
+  project_name               String?                  @db.NVarChar(100)
+  task_description           String?                  @db.NVarChar(500)
+  createdate                 DateTime?                @default(now()) @db.DateTime
+  createdby                  Int
+  updatedate                 DateTime?                @db.DateTime
+  updatedby                  Int?
+  log_inst                   Int?
+  hrms_time_sheets_submitted hrms_d_employee?         @relation("SubmittedBy", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_submitted_by")
+  hrms_time_sheets_approved  hrms_d_employee?         @relation("ApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_approved_by")
+  hrms_time_sheets_employee  hrms_d_employee?         @relation("EmployeeId", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  time_sheet_project         hrms_m_timesheet_project @relation("ProjectTimeSheets", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  time_sheet_task            hrms_m_timesheet_task    @relation("TaskTimeSheets", fields: [task_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
-
-
 
 model hrms_d_training_feedback {
   id                Int                      @id(map: "PK__hrms_d_t__3213E83F64122CB7") @default(autoincrement())
@@ -1340,19 +1340,21 @@ model hrms_d_company_policy_upload {
 }
 
 model hrms_d_kpi_progress_entry {
-  id             Int       @id(map: "PK__hrms_d_k__3213E83F196354CE") @default(autoincrement())
-  employee_id    Int
-  goal_id        Int
-  entry_date     DateTime  @db.Date
-  progress_value String    @db.NVarChar(100)
-  remarks        String?   @db.NVarChar(250)
-  reviewed_by    Int?
-  reviewed_on    DateTime? @db.DateTime
-  createdate     DateTime  @default(now(), map: "DF__hrms_d_kp__creat__7D98A078") @db.DateTime
-  createdby      Int
-  updatedate     DateTime? @db.DateTime
-  updatedby      Int?
-  log_inst       Int?
+  id                          Int                          @id(map: "PK__hrms_d_k__3213E83F196354CE") @default(autoincrement())
+  employee_id                 Int
+  goal_id                     Int
+  entry_date                  DateTime                     @db.Date
+  progress_value              String                       @db.NVarChar(100)
+  remarks                     String?                      @db.NVarChar(250)
+  reviewed_by                 Int?
+  reviewed_on                 DateTime?                    @db.DateTime
+  createdate                  DateTime                     @default(now(), map: "DF__hrms_d_kp__creat__7D98A078") @db.DateTime
+  createdby                   Int
+  updatedate                  DateTime?                    @db.DateTime
+  updatedby                   Int?
+  log_inst                    Int?
+  kpi_progress_entry_employee hrms_d_employee              @relation(fields: [employee_id], references: [id])
+  kpi_progress_entry_goal     hrms_d_goal_sheet_assignment @relation(fields: [goal_id], references: [id])
 }
 
 model hrms_d_daily_attendance_entry {
@@ -1426,111 +1428,80 @@ model hrms_d_advance_payment_entry {
   hrms_advance_payement_entry_employee   hrms_d_employee @relation("AdvancePayementEntry", fields: [employee_id], references: [id], onUpdate: NoAction)
 }
 
-
 model hrms_m_timesheet_project {
-  id                Int                     @id @default(autoincrement())
-  project_code      String                  @db.NVarChar(50)
-  project_name      String                  @db.NVarChar(200)
-  client_name       String?                 @db.NVarChar(150)
+  id                 Int       @id @default(autoincrement())
+  project_code       String    @db.NVarChar(50)
+  project_name       String    @db.NVarChar(200)
+  client_name        String?   @db.NVarChar(150)
   project_manager_id Int?
-  start_date        DateTime?               @db.Date
-  end_date          DateTime?               @db.Date
-  status            String                  @db.NVarChar(20)
-  createdate        DateTime                @default(now()) @db.DateTime
-  createdby         Int
-  updatedate        DateTime?               @db.DateTime
-  updatedby         Int?
-  log_inst          Int?
+  start_date         DateTime? @db.Date
+  end_date           DateTime? @db.Date
+  status             String    @db.NVarChar(20)
+  createdate         DateTime  @default(now()) @db.DateTime
+  createdby          Int
+  updatedate         DateTime? @db.DateTime
+  updatedby          Int?
+  log_inst           Int?
 
-  timesheet_task_project   hrms_m_timesheet_task[] @relation("ProjectTasks")
-  time_sheet_project        hrms_d_time_sheet[]     @relation("ProjectTimeSheets")
+  timesheet_task_project hrms_m_timesheet_task[] @relation("ProjectTasks")
+  time_sheet_project     hrms_d_time_sheet[]     @relation("ProjectTimeSheets")
 }
-
-
 
 model hrms_m_timesheet_task {
-  id             Int                  @id @default(autoincrement())
-  task_code      String               @db.NVarChar(50)
-  task_name      String               @db.NVarChar(200)
-  task_description String?            @db.NVarChar(500)
-  project_id     Int?
-  estimated_hours Decimal?            @db.Decimal(10, 2)
-  task_type      String?              @db.NVarChar(50)
-  status         String               @db.NVarChar(20)
-  createdate     DateTime             @default(now()) @db.DateTime
-  createdby      Int
-  updatedate     DateTime?            @db.DateTime
-  updatedby      Int?
-  log_inst       Int?
+  id               Int       @id @default(autoincrement())
+  task_code        String    @db.NVarChar(50)
+  task_name        String    @db.NVarChar(200)
+  task_description String?   @db.NVarChar(500)
+  project_id       Int?
+  estimated_hours  Decimal?  @db.Decimal(10, 2)
+  task_type        String?   @db.NVarChar(50)
+  status           String    @db.NVarChar(20)
+  createdate       DateTime  @default(now()) @db.DateTime
+  createdby        Int
+  updatedate       DateTime? @db.DateTime
+  updatedby        Int?
+  log_inst         Int?
 
- timesheet_task_project        hrms_m_timesheet_project? @relation("ProjectTasks", fields: [project_id], references: [id], onUpdate: NoAction)
- time_sheet_task               hrms_d_time_sheet[]       @relation("TaskTimeSheets")
+  timesheet_task_project hrms_m_timesheet_project? @relation("ProjectTasks", fields: [project_id], references: [id], onUpdate: NoAction)
+  time_sheet_task        hrms_d_time_sheet[]       @relation("TaskTimeSheets")
 }
 
-
-
-
-
 model hrms_d_goal_sheet_assignment {
-  id                   Int                      @id @default(autoincrement())
+  id                   Int       @id @default(autoincrement())
   employee_id          Int
   appraisal_cycle_id   Int
   goal_category_id     Int?
-  goal_description     String                   @db.NVarChar(500)
+  goal_description     String    @db.NVarChar(500)
   weightage            Int
-  target_value         String?                  @db.NVarChar(100)
-  measurement_criteria String?                  @db.NVarChar(250)
-  due_date             DateTime?                @db.Date
-  status               String                   @default("Draft") @db.NVarChar(20)
-  createdate           DateTime?                @default(now()) @db.DateTime
+  target_value         String?   @db.NVarChar(100)
+  measurement_criteria String?   @db.NVarChar(250)
+  due_date             DateTime? @db.Date
+  status               String    @default("Draft") @db.NVarChar(20)
+  createdate           DateTime? @default(now()) @db.DateTime
   createdby            Int
-  updatedate           DateTime?                @db.DateTime
+  updatedate           DateTime? @db.DateTime
   updatedby            Int?
   log_inst             Int?
 
-  employee             hrms_d_employee          @relation(fields: [employee_id], references: [id])
-  kpi_progress_entries hrms_d_kpi_progress_entry[]
+  goal_sheet_assignment_employee hrms_d_employee             @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
+  kpi_progress_entry_goal        hrms_d_kpi_progress_entry[]
 }
-
-
-model hrms_d_kpi_progress_entry {
-  id             Int                      @id @default(autoincrement())
-  employee_id    Int
-  goal_id        Int
-  entry_date     DateTime                 @db.Date
-  progress_value String                   @db.NVarChar(100)
-  remarks        String?                  @db.NVarChar(250)
-  reviewed_by    Int?
-  reviewed_on    DateTime?
-  createdate     DateTime?                @default(now()) @db.DateTime
-  createdby      Int
-  updatedate     DateTime?                @db.DateTime
-  updatedby      Int?
-  log_inst       Int?
-
-  employee       hrms_d_employee          @relation(fields: [employee_id], references: [id])
-    kpi_progress_entry_goal           hrms_d_goal_sheet_assignment @relation(fields: [goal_id], references: [id])
-}
-
 
 model hrms_d_warning_letters {
-  id             Int       @id @default(autoincrement())
-  employee_id    Int
-  letter_type    String    @db.NVarChar(100)
-  reason         String    @db.NVarChar(500)
-  issued_date    DateTime  @db.Date
-  issued_by      Int
-  severity_level String?   @db.NVarChar(50)
-  remarks        String?   @db.NVarChar(250)
-  attachment_path String?  @db.NVarChar(250)
-  createdate     DateTime? @default(now()) @db.DateTime
-  createdby      Int
-  updatedate     DateTime? @db.DateTime
-  updatedby      Int?
-  log_inst       Int?
+  id              Int       @id @default(autoincrement())
+  employee_id     Int
+  letter_type     String    @db.NVarChar(100)
+  reason          String    @db.NVarChar(500)
+  issued_date     DateTime  @db.Date
+  issued_by       Int
+  severity_level  String?   @db.NVarChar(50)
+  remarks         String?   @db.NVarChar(250)
+  attachment_path String?   @db.NVarChar(250)
+  createdate      DateTime? @default(now()) @db.DateTime
+  createdby       Int
+  updatedate      DateTime? @db.DateTime
+  updatedby       Int?
+  log_inst        Int?
 
-  employee       hrms_d_employee @relation(fields: [employee_id], references: [id])
+  warning_letters_employee hrms_d_employee @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
 }
-
-
-
