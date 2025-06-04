@@ -5,7 +5,7 @@ const { authenticateToken } = require("../middlewares/authMiddleware.js");
 
 // Create disciplinary action routes
 router.post(
-  "/diciplinary-action",
+  "/disciplinary-action",
   authenticateToken,
 
   disciplinaryActionController.createDisciplinaryAction
@@ -13,28 +13,28 @@ router.post(
 
 // Get all disciplinary actions routes
 router.get(
-  "/diciplinary-action",
+  "/disciplinary-action",
   authenticateToken,
   disciplinaryActionController.getAllDisciplinaryActions
 );
 
 // Get a single disciplinary action by ID routes
 router.get(
-  "/diciplinary-action/:id",
+  "/disciplinary-action/:id",
   authenticateToken,
   disciplinaryActionController.getDisciplinaryActionById
 );
 
 // Update a disciplinary action by ID routes
 router.put(
-  "/diciplinary-action/:id",
+  "/disciplinary-action/:id",
   authenticateToken,
   disciplinaryActionController.updateDisciplinaryAction
 );
 
 // Delete  disciplinary action by ID routes
 router.delete(
-  "/diciplinary-action/:id",
+  "/disciplinary-action/:id",
   authenticateToken,
   disciplinaryActionController.deleteDisciplinaryAction
 );

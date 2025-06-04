@@ -8,8 +8,8 @@ const serializeJobData = (data) => {
   return {
     employee_id: Number(data.employee_id) || null,
     leave_type_id: Number(data.leave_type_id) || null,
-    start_date: data.start_date || new Date(),
-    end_date: data.end_date || new Date(),
+    start_date: data.start_date ? new Date(data.start_date) : new Date(),
+    end_date: data.end_date ? new Date(data.end_date) : new Date(),
     reason: data.reason || "",
     status: data.status || "",
   };
@@ -18,7 +18,7 @@ const serializeJobData = (data) => {
 // Create a new leave application
 const createLeaveApplication = async (data) => {
   try {
-   const validatedData = leaveApplicationSchema.parse(data);
+    const validatedData = leaveApplicationSchema.parse(data);
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const reqData = await prisma.hrms_d_leave_application.create({
       data: {
@@ -72,7 +72,7 @@ const findLeaveApplicationById = async (id) => {
 // Update a leave application
 const updateLeaveApplication = async (id, data) => {
   try {
-   const validatedData = leaveApplicationSchema.parse(data);
+    const validatedData = leaveApplicationSchema.parse(data);
 
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
