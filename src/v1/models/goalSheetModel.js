@@ -114,13 +114,26 @@ const updateGoalSheet = async (id, data) => {
 // Delete goal sheet assignment
 const deleteGoalSheet = async (id) => {
   try {
+    const progressEntryCount = await prisma.hrms_d_kpi_progress_entry.count({
+      where: { goal_id: Number(id) },
+    });
+
+    if (progressEntryCount > 0) {
+      throw new CustomError(
+        "Cannot delete: This goal is referenced by KPI progress entries.",
+        409 // HTTP 409 Conflict
+      );
+    }
+
     await prisma.hrms_d_goal_sheet_assignment.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
     throw new CustomError(
-      `Error deleting goal sheet assignment: ${error.message}`,
-      500
+      error.message?.includes("referenced by KPI progress")
+        ? error.message
+        : `Error deleting goal sheet assignment: ${error.message}`,
+      error.statusCode || 500
     );
   }
 };
