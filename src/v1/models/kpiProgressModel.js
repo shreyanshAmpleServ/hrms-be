@@ -3,15 +3,19 @@ const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 // Serialize KPI progress entry data
-const serializeKpiProgressEntryData = (data) => ({
-  employee_id: Number(data.employee_id),
-  goal_id: Number(data.goal_id),
-  entry_date: data.entry_date ? new Date(data.entry_date) : new Date(),
-  progress_value: data.progress_value || "",
-  remarks: data.remarks || "",
-  reviewed_by: data.reviewed_by ? Number(data.reviewed_by) : null,
-  reviewed_on: data.reviewed_on ? new Date(data.reviewed_on) : null,
-});
+const serializeKpiProgressEntryData = (data) => {
+  const reviewedBy = data.reviewed_by ? Number(data.reviewed_by) : null;
+
+  return {
+    employee_id: Number(data.employee_id),
+    goal_id: Number(data.goal_id),
+    entry_date: data.entry_date ? new Date(data.entry_date) : new Date(),
+    progress_value: data.progress_value || "",
+    remarks: data.remarks || "",
+    reviewed_by: reviewedBy,
+    reviewed_on: reviewedBy ? new Date() : null, // 👈 Set current date if reviewed_by is present
+  };
+};
 
 // Create a new KPI progress entry
 const createKpiProgress = async (data) => {
@@ -32,6 +36,13 @@ const createKpiProgress = async (data) => {
           },
         },
         kpi_progress_entry_goal: true,
+        kpi_progress_entry_reviewedBy: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
       },
     });
     return reqData;
@@ -75,6 +86,13 @@ const updateKpiProgress = async (id, data) => {
           },
         },
         kpi_progress_entry_goal: true,
+        kpi_progress_entry_reviewedBy: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
       },
 
       data: {
@@ -122,6 +140,11 @@ const getAllKpiProgress = async (search, page, size, startDate, endDate) => {
           },
         },
 
+        {
+          kpi_progress_entry_reviewedBy: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
         { progress_value: { contains: search.toLowerCase() } },
         { remarks: { contains: search.toLowerCase() } },
       ];
@@ -148,6 +171,13 @@ const getAllKpiProgress = async (search, page, size, startDate, endDate) => {
           },
         },
         kpi_progress_entry_goal: true,
+        kpi_progress_entry_reviewedBy: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
       },
     });
     const totalCount = await prisma.hrms_d_kpi_progress_entry.count({

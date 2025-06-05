@@ -279,9 +279,11 @@ model hrms_d_employee {
   hrms_time_sheets_employee            hrms_d_time_sheet[]                 @relation("EmployeeId")
 
   goal_sheet_assignment_employee hrms_d_goal_sheet_assignment[]
-  kpi_progress_entry_employee    hrms_d_kpi_progress_entry[]
-  warning_letters_employee       hrms_d_warning_letters[]       @relation("EmployeeWarningLetters")
-  warning_letters_issuedBy       hrms_d_warning_letters[]       @relation("IssuedByWarningLetters")
+  kpi_progress_entry_employee    hrms_d_kpi_progress_entry[]    @relation("KpiEmployee")
+  kpi_progress_entry_reviewedBy  hrms_d_kpi_progress_entry[]    @relation("KpiReviewedBy")
+
+  warning_letters_employee hrms_d_warning_letters[] @relation("EmployeeWarningLetters")
+  warning_letters_issuedBy hrms_d_warning_letters[] @relation("IssuedByWarningLetters")
 }
 
 model hrms_d_employee_address {
@@ -1343,21 +1345,23 @@ model hrms_d_company_policy_upload {
 }
 
 model hrms_d_kpi_progress_entry {
-  id                          Int                          @id(map: "PK__hrms_d_k__3213E83F196354CE") @default(autoincrement())
-  employee_id                 Int
-  goal_id                     Int
-  entry_date                  DateTime                     @db.Date
-  progress_value              String                       @db.NVarChar(100)
-  remarks                     String?                      @db.NVarChar(250)
-  reviewed_by                 Int?
-  reviewed_on                 DateTime?                    @db.DateTime
-  createdate                  DateTime                     @default(now(), map: "DF__hrms_d_kp__creat__7D98A078") @db.DateTime
-  createdby                   Int
-  updatedate                  DateTime?                    @db.DateTime
-  updatedby                   Int?
-  log_inst                    Int?
-  kpi_progress_entry_employee hrms_d_employee              @relation(fields: [employee_id], references: [id])
-  kpi_progress_entry_goal     hrms_d_goal_sheet_assignment @relation(fields: [goal_id], references: [id])
+  id             Int       @id(map: "PK__hrms_d_k__3213E83F196354CE") @default(autoincrement())
+  employee_id    Int
+  goal_id        Int
+  entry_date     DateTime  @db.Date
+  progress_value String    @db.NVarChar(100)
+  remarks        String?   @db.NVarChar(250)
+  reviewed_by    Int?
+  reviewed_on    DateTime? @db.DateTime
+  createdate     DateTime  @default(now(), map: "DF__hrms_d_kp__creat__7D98A078") @db.DateTime
+  createdby      Int
+  updatedate     DateTime? @db.DateTime
+  updatedby      Int?
+  log_inst       Int?
+
+  kpi_progress_entry_employee   hrms_d_employee              @relation("KpiEmployee", fields: [employee_id], references: [id], onUpdate: NoAction)
+  kpi_progress_entry_reviewedBy hrms_d_employee?             @relation("KpiReviewedBy", fields: [reviewed_by], references: [id], onUpdate: NoAction)
+  kpi_progress_entry_goal       hrms_d_goal_sheet_assignment @relation(fields: [goal_id], references: [id])
 }
 
 model hrms_d_daily_attendance_entry {
