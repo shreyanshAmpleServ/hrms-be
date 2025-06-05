@@ -280,7 +280,8 @@ model hrms_d_employee {
 
   goal_sheet_assignment_employee hrms_d_goal_sheet_assignment[]
   kpi_progress_entry_employee    hrms_d_kpi_progress_entry[]
-  warning_letters_employee       hrms_d_warning_letters[]
+  warning_letters_employee       hrms_d_warning_letters[]       @relation("EmployeeWarningLetters")
+  warning_letters_issuedBy       hrms_d_warning_letters[]       @relation("IssuedByWarningLetters")
 }
 
 model hrms_d_employee_address {
@@ -1507,5 +1508,6 @@ model hrms_d_warning_letters {
   updatedby       Int?
   log_inst        Int?
 
-  warning_letters_employee hrms_d_employee @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
+  warning_letters_employee hrms_d_employee @relation("EmployeeWarningLetters", fields: [employee_id], references: [id], onUpdate: NoAction)
+  warning_letters_issuedBy hrms_d_employee @relation("IssuedByWarningLetters", fields: [issued_by], references: [id], onUpdate: NoAction)
 }

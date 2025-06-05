@@ -135,9 +135,18 @@ const getAllGoalSheet = async (search, page, size, startDate, endDate) => {
     const filters = {};
     if (search) {
       filters.OR = [
-        { goal_description: { contains: search, mode: "insensitive" } },
-        { status: { contains: search, mode: "insensitive" } },
-        { measurement_criteria: { contains: search, mode: "insensitive" } },
+        {
+          goal_sheet_assignment_employee: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        { goal_description: { contains: search.toLowerCase() } },
+        { status: { contains: search.toLowerCase() } },
+        {
+          measurement_criteria: {
+            contains: search.toLowerCase(),
+          },
+        },
       ];
     }
     if (startDate && endDate) {
