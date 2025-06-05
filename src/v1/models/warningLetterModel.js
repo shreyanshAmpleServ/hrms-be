@@ -4,40 +4,27 @@ const prisma = new PrismaClient();
 
 // Serialize warning letter data
 const serializeWarningLetterData = (data) => ({
-  employee_id: Number(data.employee_id),
   letter_type: data.letter_type || "",
   reason: data.reason || "",
-  issued_date: data.issued_date ? new Date(data.issued_date) : null,
-  issued_by: Number(data.issued_by),
+  issued_date: data.issued_date ? new Date(data.issued_date) : new Date(),
   severity_level: data.severity_level || "",
   remarks: data.remarks || "",
   attachment_path: data.attachment_path || "",
+  createdby: data.createdby || 1,
+  createdate: new Date(),
+  log_inst: data.log_inst || 1,
 });
 
 // Create a new warning letter
 const createWarningLetter = async (data) => {
   try {
-    const issuedDate = data.issued_date
-      ? new Date(data.issued_date)
-      : new Date();
-    const issuedBy = Number(data.issued_by) || null;
-
     const reqData = await prisma.hrms_d_warning_letters.create({
       data: {
-        letter_type: data.letter_type || "",
-        reason: data.reason || "",
-        issued_date: data.issued_date ? new Date(data.issued_date) : new Date(),
-        severity_level: data.severity_level || "",
-        remarks: data.remarks || "",
-        attachment_path: data.attachment_path || "",
-        createdby: data.createdby || 1,
-        createdate: new Date(),
-        log_inst: data.log_inst || 1,
+        ...serializeWarningLetterData(data),
 
         warning_letters_employee: {
           connect: { id: Number(data.employee_id) },
         },
-
         warning_letters_issuedBy: {
           connect: { id: Number(data.issued_by) },
         },
@@ -59,6 +46,7 @@ const createWarningLetter = async (data) => {
         },
       },
     });
+
     return reqData;
   } catch (error) {
     throw new CustomError(

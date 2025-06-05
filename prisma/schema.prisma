@@ -1361,7 +1361,7 @@ model hrms_d_kpi_progress_entry {
 
   kpi_progress_entry_employee   hrms_d_employee              @relation("KpiEmployee", fields: [employee_id], references: [id], onUpdate: NoAction)
   kpi_progress_entry_reviewedBy hrms_d_employee?             @relation("KpiReviewedBy", fields: [reviewed_by], references: [id], onUpdate: NoAction)
-  kpi_progress_entry_goal       hrms_d_goal_sheet_assignment @relation(fields: [goal_id], references: [id])
+  kpi_progress_entry_goal       hrms_d_goal_sheet_assignment @relation(fields: [goal_id], references: [id], onDelete: NoAction)
 }
 
 model hrms_d_daily_attendance_entry {
