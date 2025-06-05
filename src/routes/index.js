@@ -114,6 +114,7 @@ const arrearAdjustmentsRoute = require("../v1/routes/arrearAdjustmentsRoute.js")
 const timeSheetProjectRoute = require("../v1/routes/timeSheetProjectRoute.js");
 const goalSheetRoute = require("../v1/routes/goalSheetRoute.js");
 const kpiProgressRoute = require("../v1/routes/kpiProgressRoute.js");
+const warningLetterRoute = require("../v1/routes/warningLetterRoute.js");
 const { months } = require("moment");
 
 const router = express.Router();
@@ -231,8 +232,9 @@ router.use("/v1", dailyAttendanceRoute);
 router.use("/v1", monthlyPayrollRoute);
 router.use("/v1", arrearAdjustmentsRoute);
 router.use("/v1", timeSheetProjectRoute);
-router.use("/v1", goalSheetRoute); // Base path: /v1
-router.use("/v1", kpiProgressRoute); // Base path: /v1
+router.use("/v1", goalSheetRoute);
+router.use("/v1", kpiProgressRoute);
+router.use("/v1", warningLetterRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
