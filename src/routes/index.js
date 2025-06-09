@@ -115,6 +115,7 @@ const timeSheetProjectRoute = require("../v1/routes/timeSheetProjectRoute.js");
 const goalSheetRoute = require("../v1/routes/goalSheetRoute.js");
 const kpiProgressRoute = require("../v1/routes/kpiProgressRoute.js");
 const warningLetterRoute = require("../v1/routes/warningLetterRoute.js");
+const timeSheetTaskRoute = require("../v1/routes/timeSheetTaskRoute.js");
 const { months } = require("moment");
 
 const router = express.Router();
@@ -235,6 +236,7 @@ router.use("/v1", timeSheetProjectRoute);
 router.use("/v1", goalSheetRoute);
 router.use("/v1", kpiProgressRoute);
 router.use("/v1", warningLetterRoute);
+router.use("/v1", timeSheetTaskRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
