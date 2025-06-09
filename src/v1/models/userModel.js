@@ -56,8 +56,78 @@ const getUserWithRole = async (userId, is_password = false) => {
 };
 
 // Create a new user with role
+// const createUser = async (data) => {
+//   try {
+//     if (data.employee_id) {
+//       const employee = await prisma.hrms_d_employee.findUnique({
+//         where: { id: data.employee_id },
+//         select: {
+//           full_name: true,
+//           email: true,
+//           phone_number: true,
+//           address: true,
+//         },
+//       });
+
+//       if (!employee) {
+//         return {
+//           success: false,
+//           message: "Employee not found with the given ID.",
+//           status: 400,
+//         };
+//       }
+
+//       data.full_name = data.full_name || employee.full_name;
+//       data.email = data.email || employee.email;
+//       data.phone = data.phone || employee.phone_number;
+//       data.address = data.address || employee.address;
+//     }
+
+//     const newUser = await prisma.hrms_m_user.create({
+//       data: {
+//         username: data.username,
+//         password: data.password,
+//         email: data.email,
+//         full_name: data.full_name,
+//         phone: data.phone,
+//         profile_img: data.profile_img,
+//         address: data.address,
+//         createdby: data.createdby || 1,
+//         log_inst: data.log_inst || 1,
+//         createdate: new Date(),
+
+//         user_employee: {
+//           connect: { id: data.employee_id },
+//         },
+//       },
+//       include: {
+//         user_employee: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//             email: true,
+//             phone_number: true,
+//             address: true,
+//           },
+//         },
+//       },
+//     });
+
+//     return newUser;
+//   } catch (err) {
+//     console.error("Error creating user:", err);
+//     return {
+//       success: false,
+//       data: null,
+//       message: `Error creating user: ${err.message}`,
+//       status: 500,
+//     };
+//   }
+// };
+
 const createUser = async (data) => {
   try {
+    // 1. Enrich from employee if provided
     if (data.employee_id) {
       const employee = await prisma.hrms_d_employee.findUnique({
         where: { id: data.employee_id },
@@ -83,6 +153,7 @@ const createUser = async (data) => {
       data.address = data.address || employee.address;
     }
 
+    // 2. Create User
     const newUser = await prisma.hrms_m_user.create({
       data: {
         username: data.username,
@@ -92,7 +163,7 @@ const createUser = async (data) => {
         phone: data.phone,
         profile_img: data.profile_img,
         address: data.address,
-        employee_id: data.employee_id,
+        employee_id: data.employee_id || null,
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
         createdate: new Date(),
@@ -107,17 +178,53 @@ const createUser = async (data) => {
             address: true,
           },
         },
-        hrms_d_user_role: {
+      },
+    });
+
+    // 3. Validate and create user-role mapping
+    if (data.role_id) {
+      const role = await prisma.hrms_m_role.findUnique({
+        where: { id: data.role_id },
+      });
+
+      if (!role) {
+        return {
+          success: false,
+          message: `Role not found with ID: ${data.role_id}`,
+          status: 400,
+        };
+      }
+
+      await prisma.hrms_d_user_role.create({
+        data: {
+          user_id: newUser.id,
+          role_id: data.role_id,
+        },
+      });
+    }
+
+    // 4. Fetch user again with roles
+    const completeUser = await prisma.hrms_m_user.findUnique({
+      where: { id: newUser.id },
+      include: {
+        user_employee: {
           select: {
-            hrms_m_role: {
-              select: { role_name: true, id: true },
-            },
+            id: true,
+            full_name: true,
+            email: true,
+            phone_number: true,
+            address: true,
+          },
+        },
+        hrms_d_user_role: {
+          include: {
+            hrms_m_role: true, // assuming this is the relation name
           },
         },
       },
     });
 
-    return newUser;
+    return completeUser;
   } catch (err) {
     console.error("Error creating user:", err);
     return {
