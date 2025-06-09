@@ -107,29 +107,22 @@ const createUser = async (data) => {
             address: true,
           },
         },
+        hrms_d_user_role: {
+          select: {
+            hrms_m_role: {
+              select: { role_name: true, id: true },
+            },
+          },
+        },
       },
     });
 
-    if (data.role_id) {
-      await prisma.hrms_d_user_role.create({
-        data: {
-          user_id: newUser.id,
-          role_id: data.role_id,
-          createdby: data.createdby || 1,
-          createdate: new Date(),
-        },
-      });
-    }
-
-    return {
-      success: true,
-      message: "User created successfully",
-      data: newUser,
-    };
+    return newUser;
   } catch (err) {
     console.error("Error creating user:", err);
     return {
       success: false,
+      data: null,
       message: `Error creating user: ${err.message}`,
       status: 500,
     };
