@@ -62,11 +62,13 @@ model hrms_m_user {
   address                                String?                        @db.NVarChar(255)
   phone                                  String?                        @db.NVarChar(15)
   profile_img                            String?                        @db.NVarChar(255)
+  employee_id                            Int?
   hrms_advance_payement_entry_approvedBy hrms_d_advance_payment_entry[] @relation("AdvanceApprovedBy")
   exit_clearance_by_user                 hrms_d_exit_clearance[]        @relation("UserCleared")
   travel_expense_approver                hrms_d_travel_expense[]        @relation("TravelExpenseApprover")
   travel_expense_createdby               hrms_d_travel_expense[]        @relation("TravelExpenseCreatedBy")
   hrms_d_user_role                       hrms_d_user_role[]
+  user_employee                          hrms_d_employee?               @relation(fields: [employee_id], references: [id])
 }
 
 model hrms_m_module {
@@ -332,6 +334,7 @@ model hrms_d_employee {
   work_life_event_employee             hrms_d_work_life_event[]
   eduction_of_employee                 hrms_employee_d_educations[]
   experiance_of_employee               hrms_employee_d_experiences[]
+  user_employee                        hrms_m_user[]
 }
 
 model hrms_d_employee_address {
