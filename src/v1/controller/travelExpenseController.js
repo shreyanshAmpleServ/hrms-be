@@ -1,17 +1,28 @@
 const travelExpenseService = require("../services/travelExpenseService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-
+const { uploadToBackblaze } = require("../../utils/uploadBackblaze.js");
+const fs = require("fs");
 const createTravelExpense = async (req, res, next) => {
   try {
     console.log("Incoming request body:", req.body);
+    if (!req.file) throw new CustomError("No file uploaded", 400);
 
-    const data = {
+    const fileBuffer = await fs.promises.readFile(req.file.path);
+    const fileUrl = await uploadToBackblaze(
+      fileBuffer,
+      req.file.originalname,
+      req.file.mimetype,
+      "attachment_path"
+    );
+
+    const travelData = {
       ...req.body,
-      createdby: req.user.id,
-      log_inst: req.user.log_inst,
+      attachment_path: fileUrl,
+      created_by: req.user.id,
     };
-    const reqData = await travelExpenseService.createTravelExpense(data);
+
+    const reqData = await travelExpenseService.createTravelExpense(travelData);
     res.status(201).success("Travel expense created successfully", reqData);
   } catch (error) {
     next(error);
@@ -32,16 +43,31 @@ const findTravelExpense = async (req, res, next) => {
 
 const updateTravelExpense = async (req, res, next) => {
   try {
-    const data = {
+    const existingTravelExpense =
+      await travelExpenseService.findTravelExpenseById(req.params.id);
+    if (!existingTravelExpense) {
+      throw new CustomError("Travel expense not found", 404);
+    }
+
+    let fileUrl = existingTravelExpense.attachment_path;
+    if (req.file) {
+      const fileBuffer = await fs.promises.readFile(req.file.path);
+      fileUrl = await uploadToBackblaze(
+        fileBuffer,
+        req.file.originalname,
+        req.file.mimetype,
+        "attachment_path"
+      );
+    }
+    const travelData = {
       ...req.body,
       updatedby: req.user.id,
-      log_inst: req.user.log_inst,
     };
-    const reqData = await travelExpenseService.updateTravelExpense(
+    const result = await travelExpenseService.updateTravelExpense(
       req.params.id,
-      data
+      travelData
     );
-    res.status(200).success("Travel expense updated successfully", reqData);
+    res.status(200).success("Travel expense updated successfully", result);
   } catch (error) {
     next(error);
   }
