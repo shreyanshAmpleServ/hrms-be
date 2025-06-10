@@ -2,11 +2,13 @@ const express = require("express");
 const router = express.Router();
 const travelExpenseController = require("../controller/travelExpenseController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const upload = require("../middlewares/uploadMiddleware.js");
 
 // Create travel expense routes
 router.post(
   "/travel-expense",
   authenticateToken,
+  upload.single("attachment_path"),
   travelExpenseController.createTravelExpense
 );
 
@@ -14,6 +16,7 @@ router.post(
 router.get(
   "/travel-expense",
   authenticateToken,
+
   travelExpenseController.getAllTravelExpenses
 );
 
@@ -28,6 +31,7 @@ router.get(
 router.put(
   "/travel-expense/:id",
   authenticateToken,
+  upload.single("attachment_path"),
   travelExpenseController.updateTravelExpense
 );
 

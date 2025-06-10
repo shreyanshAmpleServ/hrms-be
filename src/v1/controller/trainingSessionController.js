@@ -1,15 +1,32 @@
 const trainingSessionService = require("../services/trainingSessionService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const fs = require("fs");
+const fsPromises = require("fs").promises;
+const { uploadToBackblaze } = require("../../utils/uploadBackblaze.js");
 
 // Create
 const createTrainingSession = async (req, res, next) => {
   try {
-    console.log("Request body received:", req.body); // <-- Add this here
+    if (!req.file) throw new CustomError("No file uploaded", 400);
 
-    const data = { ...req.body, createdby: req.user.id };
+    const fileBuffer = await fs.promises.readFile(req.file.path);
+    const fileUrl = await uploadToBackblaze(
+      fileBuffer,
+      req.file.originalname,
+      req.file.mimetype,
+      "training_material_path"
+    );
 
-    const result = await trainingSessionService.createTrainingSession(data);
+    const trainingData = {
+      ...req.body,
+      training_material_path: fileUrl,
+      createdby: req.user.id,
+    };
+
+    const result = await trainingSessionService.createTrainingSession(
+      trainingData
+    );
     res.status(201).success("Training Session Created Successfully", result);
   } catch (error) {
     next(new CustomError(error.message, 400));
@@ -31,11 +48,37 @@ const findTrainingSessionById = async (req, res, next) => {
 // Update
 const updateTrainingSession = async (req, res, next) => {
   try {
-    const data = await trainingSessionService.updateTrainingSession(
+    const existingTrainingSession =
+      await trainingSessionService.getTrainingSessionById(req.params.id);
+
+    if (!existingTrainingSession) {
+      throw new CustomError("Training session not found", 404);
+    }
+
+    let fileUrl = existingTrainingSession.training_material_path;
+
+    if (req.file) {
+      const fileBuffer = await fs.promises.readFile(req.file.path);
+
+      fileUrl = await uploadToBackblaze(
+        fileBuffer,
+        req.file.originalname,
+        req.file.mimetype,
+        "training_material_path"
+      );
+    }
+
+    const trainingData = {
+      ...req.body,
+      training_material_path: fileUrl,
+      updatedby: req.user.id,
+    };
+
+    const result = await trainingSessionService.updateTrainingSession(
       req.params.id,
-      req.body
+      trainingData
     );
-    res.status(200).success("Training Session updated Successfully", data);
+    res.status(200).success("Training Session updated Successfully", result);
   } catch (error) {
     next(new CustomError(error.message, 400));
   }

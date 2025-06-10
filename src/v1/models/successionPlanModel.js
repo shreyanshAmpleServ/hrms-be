@@ -2,7 +2,8 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
-const serializeSuccessionPlan = (data) => ({
+// Serialize succession plan data
+const serializeSuccessionPlanData = (data) => ({
   critical_position: data.critical_position || "",
   current_holder_id: data.current_holder_id
     ? Number(data.current_holder_id)
@@ -12,6 +13,24 @@ const serializeSuccessionPlan = (data) => ({
     : null,
   readiness_level: data.readiness_level || "",
   plan_date: data.plan_date ? new Date(data.plan_date) : null,
+  role_id: data.role_id ? Number(data.role_id) : null,
+  notes: data.notes || "",
+  evaluation_date: data.evaluation_date ? new Date(data.evaluation_date) : null,
+  evaluated_by: data.evaluated_by ? Number(data.evaluated_by) : null,
+  status: data.status || "Draft",
+  development_plan: data.development_plan || "",
+  successor_rank: data.successor_rank ? Number(data.successor_rank) : null,
+  expected_transition_date: data.expected_transition_date
+    ? new Date(data.expected_transition_date)
+    : null,
+  risk_of_loss: data.risk_of_loss || "",
+  retention_plan: data.retention_plan || "",
+  last_updated_by_hr: data.last_updated_by_hr
+    ? Number(data.last_updated_by_hr)
+    : null,
+  last_review_date: data.last_review_date
+    ? new Date(data.last_review_date)
+    : null,
 });
 
 // Create a new succession plan
@@ -19,8 +38,8 @@ const createSuccessionPlan = async (data) => {
   try {
     const reqData = await prisma.hrms_d_succession_plan.create({
       data: {
-        ...serializeSuccessionPlan(data),
-        createdby: Number(data.createdby) || 1,
+        ...serializeSuccessionPlanData(data),
+        createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
@@ -32,10 +51,23 @@ const createSuccessionPlan = async (data) => {
             full_name: true,
           },
         },
+
         succession_potentialSuccessor: {
           select: {
             id: true,
             employee_code: true,
+            full_name: true,
+          },
+        },
+        succession_updateByHR: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+        succession_evaluatedBy: {
+          select: {
+            id: true,
             full_name: true,
           },
         },
@@ -50,26 +82,11 @@ const createSuccessionPlan = async (data) => {
   }
 };
 
+// Find succession plan by ID
 const findSuccessionPlanById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_succession_plan.findUnique({
       where: { id: parseInt(id) },
-      include: {
-        succession_currentHolder: {
-          select: {
-            id: true,
-            employee_code: true,
-            full_name: true,
-          },
-        },
-        succession_potentialSuccessor: {
-          select: {
-            id: true,
-            employee_code: true,
-            full_name: true,
-          },
-        },
-      },
     });
     if (!reqData) {
       throw new CustomError("Succession plan not found", 404);
@@ -83,18 +100,47 @@ const findSuccessionPlanById = async (id) => {
   }
 };
 
-// Update a succession plan
+// Update succession plan
 const updateSuccessionPlan = async (id, data) => {
   try {
-    const updatedPlan = await prisma.hrms_d_succession_plan.update({
+    const updatedEntry = await prisma.hrms_d_succession_plan.update({
       where: { id: parseInt(id) },
       data: {
-        ...serializeSuccessionPlan(data),
+        ...serializeSuccessionPlanData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
+      include: {
+        succession_currentHolder: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+
+        succession_potentialSuccessor: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+        succession_updateByHR: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+        succession_evaluatedBy: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+      },
     });
-    return updatedPlan;
+    return updatedEntry;
   } catch (error) {
     throw new CustomError(
       `Error updating succession plan: ${error.message}`,
@@ -102,7 +148,8 @@ const updateSuccessionPlan = async (id, data) => {
     );
   }
 };
-// Delete a succession plan
+
+// Delete succession plan
 const deleteSuccessionPlan = async (id) => {
   try {
     await prisma.hrms_d_succession_plan.delete({
@@ -116,7 +163,7 @@ const deleteSuccessionPlan = async (id) => {
   }
 };
 
-// Get all succession plans
+// Get all succession plans with pagination and search
 const getAllSuccessionPlans = async (
   search,
   page,
@@ -128,43 +175,54 @@ const getAllSuccessionPlans = async (
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
-    const filterConditions = [];
 
-    // Search OR condition on multiple fields
+    const filters = {};
     if (search) {
-      filterConditions.push({
-        OR: [
-          {
-            succession_potentialSuccessor: {
-              full_name: { contains: search.toLowerCase() },
-            },
+      filters.OR = [
+        {
+          succession_currentHolder: {
+            full_name: { contains: search.toLowerCase() },
           },
-          {
-            succession_currentHolder: {
-              full_name: { contains: search.toLowerCase() },
-            },
+        },
+        {
+          succession_potentialSuccessor: {
+            full_name: { contains: search.toLowerCase() },
           },
-          { critical_position: { contains: search.toLowerCase() } },
-          { readiness_level: { contains: search.toLowerCase() } },
-        ],
-      });
+        },
+        {
+          succession_updateByHR: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          succession_evaluatedBy: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          critical_position: { contains: search.toLowerCase() },
+        },
+        {
+          readiness_level: { contains: search.toLowerCase() },
+        },
+        {
+          status: { contains: search.toLowerCase() },
+        },
+        {
+          notes: { contains: search.toLowerCase() },
+        },
+        {
+          risk_of_loss: { contains: search.toLowerCase() },
+        },
+      ];
     }
-
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filterConditions.push({
-          createdate: {
-            gte: start,
-            lte: end,
-          },
-        });
+        filters.plan_date = { gte: start, lte: end };
       }
     }
-
-    const filters =
-      filterConditions.length > 0 ? { AND: filterConditions } : {};
 
     const datas = await prisma.hrms_d_succession_plan.findMany({
       where: filters,
@@ -179,6 +237,7 @@ const getAllSuccessionPlans = async (
             full_name: true,
           },
         },
+
         succession_potentialSuccessor: {
           select: {
             id: true,
@@ -186,9 +245,20 @@ const getAllSuccessionPlans = async (
             full_name: true,
           },
         },
+        succession_updateByHR: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+        succession_evaluatedBy: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
       },
     });
-
     const totalCount = await prisma.hrms_d_succession_plan.count({
       where: filters,
     });
@@ -201,7 +271,7 @@ const getAllSuccessionPlans = async (
       totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving succession plans", 400);
+    throw new CustomError("Error retrieving succession plans", 503);
   }
 };
 

@@ -1,9 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { toLowerCase } = require("zod/v4");
 const prisma = new PrismaClient();
 
 // Serialize travel expense data
-const serializeTravelExpense = (data) => ({
+const serializeTravelExpenseData = (data) => ({
   employee_id: data.employee_id ? Number(data.employee_id) : null,
   travel_purpose: data.travel_purpose || "",
   start_date: data.start_date ? new Date(data.start_date) : null,
@@ -12,7 +13,16 @@ const serializeTravelExpense = (data) => ({
   total_amount: data.total_amount ? Number(data.total_amount) : null,
   approved_by: data.approved_by ? Number(data.approved_by) : null,
   approval_status: data.approval_status || "",
-  approved_by: data.approved_by ? Number(data.approved_by) : null,
+  travel_mode: data.travel_mode || "",
+  advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
+  expense_breakdown: data.expense_breakdown || "",
+  attachment_path: data.attachment_path || "",
+  currency: data.currency || "",
+  exchange_rate: data.exchange_rate ? Number(data.exchange_rate) : null,
+  final_approved_amount: data.final_approved_amount
+    ? Number(data.final_approved_amount)
+    : 0,
+  remarks: data.remarks || "",
 });
 
 // Create a new travel expense
@@ -20,15 +30,21 @@ const createTravelExpense = async (data) => {
   try {
     const reqData = await prisma.hrms_d_travel_expense.create({
       data: {
-        ...serializeTravelExpense(data),
-        createdby: Number(data.createdby) || 1,
+        ...serializeTravelExpenseData(data),
+        createdby: data.createdby ? Number(data.createdby) : 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
       include: {
-        travel_expense_employee: { select: { id: true, full_name: true } },
-        travel_expense_createdby: { select: { id: true, full_name: true } },
-        travel_expense_approver: { select: { id: true, full_name: true } }, // ← new
+        travel_expense_approver: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_createdby: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_employee: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
       },
     });
     return reqData;
@@ -40,22 +56,26 @@ const createTravelExpense = async (data) => {
   }
 };
 
-// Find a travel expense by ID
+// Find travel expense by ID
 const findTravelExpenseById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_travel_expense.findUnique({
       where: { id: parseInt(id) },
       include: {
-        travel_expense_employee: { select: { id: true, full_name: true } },
-        travel_expense_createdby: { select: { id: true, full_name: true } },
-        travel_expense_approver: { select: { id: true, full_name: true } }, // ← new
+        travel_expense_approver: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_createdby: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_employee: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
       },
     });
-
     if (!reqData) {
       throw new CustomError("Travel expense not found", 404);
     }
-
     return reqData;
   } catch (error) {
     throw new CustomError(
@@ -65,23 +85,40 @@ const findTravelExpenseById = async (id) => {
   }
 };
 
-// Update a travel expense
+// Update travel expense
 const updateTravelExpense = async (id, data) => {
   try {
-    const updatedExpense = await prisma.hrms_d_travel_expense.update({
+    const updatedEntry = await prisma.hrms_d_travel_expense.update({
       where: { id: parseInt(id) },
       include: {
-        travel_expense_employee: { select: { id: true, full_name: true } },
-        travel_expense_createdby: { select: { id: true, full_name: true } },
-        travel_expense_approver: { select: { id: true, full_name: true } },
+        travel_expense_approver: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_createdby: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_employee: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
       },
       data: {
-        ...serializeTravelExpense(data),
-        updatedby: data.updatedby || 1,
+        ...serializeTravelExpenseData(data),
+        updatedby: data.updatedby ? Number(data.updatedby) : 1,
         updatedate: new Date(),
       },
+      include: {
+        travel_expense_approver: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_createdby: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_employee: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+      },
     });
-    return updatedExpense;
+    return updatedEntry;
   } catch (error) {
     throw new CustomError(
       `Error updating travel expense: ${error.message}`,
@@ -90,7 +127,7 @@ const updateTravelExpense = async (id, data) => {
   }
 };
 
-// Delete a travel expense
+// Delete travel expense
 const deleteTravelExpense = async (id) => {
   try {
     await prisma.hrms_d_travel_expense.delete({
@@ -104,59 +141,54 @@ const deleteTravelExpense = async (id) => {
   }
 };
 
-// Get all travel expenses
+// Get all travel expenses with pagination and search
 const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
-    const filterConditions = [];
-
+    const filters = {};
     if (search) {
-      filterConditions.push({
-        OR: [
-          { travel_expense_employee: { full_name: { contains: search } } },
-          { travel_expense_createdby: { full_name: { contains: search } } },
-          { travel_purpose: { contains: search.toLowerCase() } },
-          { destination: { contains: search.toLowerCase() } },
-          { approval_status: { contains: search.toLowerCase() } },
-        ],
-      });
+      filters.OR = [
+        {
+          travel_expense_approver: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          travel_expense_createdby: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          travel_expense_employee: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        { travel_purpose: { contains: search.toLowerCase() } },
+        { destination: { contains: search.toLowerCase() } },
+        { approval_status: { contains: search.toLowerCase() } },
+        { remarks: { contains: search } },
+      ];
     }
-
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filterConditions.push({
-          createdate: {
-            gte: start,
-            lte: end,
-          },
-        });
+        filters.start_date = { gte: start, lte: end };
       }
     }
-
-    const filters =
-      filterConditions.length > 0 ? { AND: filterConditions } : {};
 
     const datas = await prisma.hrms_d_travel_expense.findMany({
       where: filters,
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      include: {
-        travel_expense_employee: { select: { id: true, full_name: true } },
-        travel_expense_createdby: { select: { id: true, full_name: true } },
-        travel_expense_approver: { select: { id: true, full_name: true } },
-      },
     });
-
     const totalCount = await prisma.hrms_d_travel_expense.count({
       where: filters,
     });
-    console.log("getAllTravelExpense called with:", datas);
 
     return {
       data: datas,
@@ -166,7 +198,7 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
       totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving travel expenses", 400);
+    throw new CustomError("Error retrieving travel expenses", 503);
   }
 };
 

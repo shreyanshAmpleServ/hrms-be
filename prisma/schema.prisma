@@ -65,10 +65,9 @@ model hrms_m_user {
   employee_id                            Int?
   hrms_advance_payement_entry_approvedBy hrms_d_advance_payment_entry[] @relation("AdvanceApprovedBy")
   exit_clearance_by_user                 hrms_d_exit_clearance[]        @relation("UserCleared")
-  travel_expense_approver                hrms_d_travel_expense[]        @relation("TravelExpenseApprover")
-  travel_expense_createdby               hrms_d_travel_expense[]        @relation("TravelExpenseCreatedBy")
-  hrms_d_user_role                       hrms_d_user_role[]
-  user_employee                          hrms_d_employee?               @relation(fields: [employee_id], references: [id])
+
+  hrms_d_user_role hrms_d_user_role[]
+  user_employee    hrms_d_employee?   @relation(fields: [employee_id], references: [id])
 }
 
 model hrms_m_module {
@@ -335,6 +334,10 @@ model hrms_d_employee {
   eduction_of_employee                 hrms_employee_d_educations[]
   experiance_of_employee               hrms_employee_d_experiences[]
   user_employee                        hrms_m_user[]
+  succession_updateByHR                hrms_d_succession_plan[]            @relation("UpdateByHR")
+  succession_evaluatedBy               hrms_d_succession_plan[]            @relation("EvaluatedBy")
+  travel_expense_approver              hrms_d_travel_expense[]             @relation("TravelExpenseApprover")
+  travel_expense_createdby             hrms_d_travel_expense[]             @relation("TravelExpenseCreatedBy")
 }
 
 model hrms_d_employee_address {
@@ -736,6 +739,8 @@ model hrms_d_succession_plan {
   last_review_date              DateTime?        @db.Date
   succession_currentHolder      hrms_d_employee? @relation("CurrentHolder", fields: [current_holder_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   succession_potentialSuccessor hrms_d_employee? @relation("PotentialSuccessor", fields: [potential_successor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  succession_updateByHR         hrms_d_employee? @relation("UpdateByHR", fields: [last_updated_by_hr], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  succession_evaluatedBy        hrms_d_employee? @relation("EvaluatedBy", fields: [evaluated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_survey_response {
@@ -846,8 +851,8 @@ model hrms_d_travel_expense {
   exchange_rate            Decimal?         @db.Decimal(10, 4)
   final_approved_amount    Decimal?         @db.Decimal(10, 2)
   remarks                  String?
-  travel_expense_approver  hrms_m_user?     @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  travel_expense_createdby hrms_m_user      @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onUpdate: NoAction)
+  travel_expense_approver  hrms_d_employee? @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_createdby hrms_d_employee? @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onUpdate: NoAction)
   travel_expense_employee  hrms_d_employee? @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
