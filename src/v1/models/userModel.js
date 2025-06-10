@@ -127,10 +127,9 @@ const getUserWithRole = async (userId, is_password = false) => {
 
 const createUser = async (data) => {
   try {
-    // 1. Enrich from employee if provided
     if (data.employee_id) {
       const employee = await prisma.hrms_d_employee.findUnique({
-        where: { id: data.employee_id },
+        where: { id: Number(data.employee_id) },
         select: {
           full_name: true,
           email: true,
@@ -153,7 +152,6 @@ const createUser = async (data) => {
       data.address = data.address || employee.address;
     }
 
-    // 2. Create User
     const newUser = await prisma.hrms_m_user.create({
       data: {
         username: data.username,
@@ -163,7 +161,7 @@ const createUser = async (data) => {
         phone: data.phone,
         profile_img: data.profile_img,
         address: data.address,
-        employee_id: data.employee_id || null,
+        employee_id: Number(data.employee_id) || null,
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
         createdate: new Date(),
@@ -181,7 +179,6 @@ const createUser = async (data) => {
       },
     });
 
-    // 3. Validate and create user-role mapping
     if (data.role_id) {
       const role = await prisma.hrms_m_role.findUnique({
         where: { id: data.role_id },
@@ -203,7 +200,6 @@ const createUser = async (data) => {
       });
     }
 
-    // 4. Fetch user again with roles
     const completeUser = await prisma.hrms_m_user.findUnique({
       where: { id: newUser.id },
       include: {
@@ -218,30 +214,44 @@ const createUser = async (data) => {
         },
         hrms_d_user_role: {
           include: {
-            hrms_m_role: true, // assuming this is the relation name
+            hrms_m_role: true,
           },
         },
       },
     });
 
     return completeUser;
-  } catch (err) {
-    console.error("Error creating user:", err);
-    return {
-      success: false,
-      data: null,
-      message: `Error creating user: ${err.message}`,
-      status: 500,
-    };
+  } catch (error) {
+    console.log(error);
+    throw new CustomError(`Error creating user: ${error.message}`, 500);
   }
 };
 
 // Update a user and their role
 const updateUser = async (id, data) => {
   try {
-    // Create the data object conditionally including password
+    if (data.employee_id) {
+      const employee = await prisma.hrms_d_employee.findUnique({
+        where: { id: Number(data.employee_id) },
+        select: {
+          full_name: true,
+          email: true,
+          phone_number: true,
+          address: true,
+        },
+      });
+
+      if (!employee) {
+        throw new CustomError("Employee not found with the given ID.", 400);
+      }
+
+      data.full_name = data.full_name || employee.full_name;
+      data.email = data.email || employee.email;
+      data.phone = data.phone || employee.phone_number;
+      data.address = data.address || employee.address;
+    }
+
     const updateData = {
-      username: data.username || "",
       email: data.email,
       full_name: data.full_name,
       phone: data.phone || "",
@@ -251,24 +261,28 @@ const updateUser = async (id, data) => {
       updatedate: new Date(),
     };
 
-    // Include password only if it exists
+    if (data.username) {
+      updateData.username = data.username;
+    }
+
     if (data.password) {
       updateData.password = data.password;
     }
-    // Update user fields
+
+    if (data.employee_id) {
+      updateData.employee_id = Number(data.employee_id);
+    }
+
     const updatedUser = await prisma.hrms_m_user.update({
       where: { id: parseInt(id) },
       data: updateData,
     });
 
-    // Handle role switching
     if (data.role_id) {
-      // Remove any existing roles for the user
       await prisma.hrms_d_user_role.deleteMany({
         where: { user_id: updatedUser.id },
       });
 
-      // Assign the new role to the user
       await prisma.hrms_d_user_role.create({
         data: {
           user_id: updatedUser.id,
@@ -281,7 +295,7 @@ const updateUser = async (id, data) => {
       });
     }
 
-    // Return the updated user with their role
+    // Step 5: Return full user details
     return await getUserWithRole(updatedUser.id);
   } catch (error) {
     console.log(error);
@@ -326,6 +340,8 @@ const deleteUser = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
+    console.log(error);
+
     throw new CustomError(`Error deleting user: ${error.message}`, 500);
   }
 };
