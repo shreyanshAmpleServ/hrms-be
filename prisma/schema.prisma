@@ -798,28 +798,29 @@ model hrms_d_training_feedback {
 }
 
 model hrms_d_training_session {
-  id                        Int                        @id(map: "PK__hrms_d_t__3213E83F1B83D284") @default(autoincrement())
-  training_title            String?                    @db.NVarChar(255)
-  trainer_id                Int?
-  training_date             DateTime?                  @db.Date
-  location                  String?                    @db.NVarChar(100)
-  training_type             String?                    @db.VarChar(50)
-  createdate                DateTime?                  @default(now(), map: "DF__hrms_d_tr__creat__4865BE2A") @db.DateTime
-  createdby                 Int
-  updatedate                DateTime?                  @db.DateTime
-  updatedby                 Int?
-  log_inst                  Int?
-  training_objective        String?
-  department_id             Int?
-  audience_level            String?                    @db.VarChar(50)
-  participant_limit         Int?
-  duration_hours            Decimal?                   @db.Decimal(5, 2)
-  training_material_path    String?                    @db.NVarChar(255)
-  evaluation_required       String?                    @db.VarChar(5)
-  feedback_required         String?                    @db.VarChar(5)
-  training_status           String?                    @db.VarChar(50)
-  hrms_d_training_feedback  hrms_d_training_feedback[]
-  training_session_employee hrms_d_employee?           @relation(fields: [trainer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                            Int                        @id(map: "PK__hrms_d_t__3213E83F1B83D284") @default(autoincrement())
+  training_title                String?                    @db.NVarChar(255)
+  trainer_id                    Int?
+  training_date                 DateTime?                  @db.Date
+  location                      String?                    @db.NVarChar(100)
+  training_type                 String?                    @db.VarChar(50)
+  createdate                    DateTime?                  @default(now(), map: "DF__hrms_d_tr__creat__4865BE2A") @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?                  @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  training_objective            String?
+  department_id                 Int?
+  audience_level                String?                    @db.VarChar(50)
+  participant_limit             Int?
+  duration_hours                Decimal?                   @db.Decimal(5, 2)
+  training_material_path        String?                    @db.NVarChar(255)
+  evaluation_required           String?                    @db.VarChar(5)
+  feedback_required             String?                    @db.VarChar(5)
+  training_status               String?                    @db.VarChar(50)
+  hrms_d_training_feedback      hrms_d_training_feedback[]
+  training_session_employee     hrms_d_employee?           @relation(fields: [trainer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  training_session_departmentID hrms_m_department_master?  @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_travel_expense {
@@ -986,16 +987,17 @@ model hrms_m_currency_master {
 }
 
 model hrms_m_department_master {
-  id                       Int                  @id(map: "PK__hrms_m_d__3213E83F972A91BD") @default(autoincrement())
-  department_name          String?              @db.NVarChar(255)
-  createdate               DateTime?            @default(now(), map: "DF__hrms_m_de__creat__19DFD96B") @db.DateTime
-  createdby                Int
-  updatedate               DateTime?            @db.DateTime
-  updatedby                Int?
-  log_inst                 Int?
-  is_active                String?              @default("Y") @db.Char(1)
-  hrms_employee_department hrms_d_employee[]
-  hrms_job_department      hrms_d_job_posting[]
+  id                            Int                       @id(map: "PK__hrms_m_d__3213E83F972A91BD") @default(autoincrement())
+  department_name               String?                   @db.NVarChar(255)
+  createdate                    DateTime?                 @default(now(), map: "DF__hrms_m_de__creat__19DFD96B") @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?                 @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  is_active                     String?                   @default("Y") @db.Char(1)
+  hrms_employee_department      hrms_d_employee[]
+  hrms_job_department           hrms_d_job_posting[]
+  training_session_departmentID hrms_d_training_session[]
 }
 
 model hrms_m_designation_master {

@@ -3,12 +3,23 @@ const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 // Serialize training session data
-const serializeTrainingSession = (data) => ({
+const serializeTrainingSessionData = (data) => ({
   training_title: data.training_title || "",
-  trainer_id: data.trainer_id ? Number(data.trainer_id) : null, // use trainer_id here
+  trainer_id: data.trainer_id ? Number(data.trainer_id) : null,
   training_date: data.training_date ? new Date(data.training_date) : null,
   location: data.location || "",
   training_type: data.training_type || "",
+  training_objective: data.training_objective || "",
+  department_id: data.department_id ? Number(data.department_id) : null,
+  audience_level: data.audience_level || "",
+  participant_limit: data.participant_limit
+    ? Number(data.participant_limit)
+    : null,
+  duration_hours: data.duration_hours ? Number(data.duration_hours) : null,
+  training_material_path: data.training_material_path || "",
+  evaluation_required: data.evaluation_required || "",
+  feedback_required: data.feedback_required || "",
+  training_status: data.training_status || "",
 });
 
 // Create a new training session
@@ -16,8 +27,8 @@ const createTrainingSession = async (data) => {
   try {
     const reqData = await prisma.hrms_d_training_session.create({
       data: {
-        ...serializeTrainingSession(data),
-        createdby: Number(data.createdby) || 1,
+        ...serializeTrainingSessionData(data),
+        createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
@@ -28,15 +39,15 @@ const createTrainingSession = async (data) => {
             full_name: true,
           },
         },
+        training_session_departmentID: {
+          select: {
+            id: true,
+            department_name: true,
+          },
+        },
       },
     });
-
-    return {
-      ...reqData,
-      trainer_name: reqData.training_session_employee
-        ? reqData.training_session_employee.full_name
-        : null,
-    };
+    return reqData;
   } catch (error) {
     throw new CustomError(
       `Error creating training session: ${error.message}`,
@@ -45,7 +56,7 @@ const createTrainingSession = async (data) => {
   }
 };
 
-// Find a training session by ID
+// Find training session by ID
 const findTrainingSessionById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_training_session.findUnique({
@@ -63,13 +74,27 @@ const findTrainingSessionById = async (id) => {
   }
 };
 
-// Update a training session
+// Update training session
 const updateTrainingSession = async (id, data) => {
   try {
     const updatedSession = await prisma.hrms_d_training_session.update({
       where: { id: parseInt(id) },
+      include: {
+        training_session_employee: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+        training_session_departmentID: {
+          select: {
+            id: true,
+            department_name: true,
+          },
+        },
+      },
       data: {
-        ...serializeTrainingSession(data),
+        ...serializeTrainingSessionData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
@@ -83,18 +108,9 @@ const updateTrainingSession = async (id, data) => {
   }
 };
 
-// Delete a training session
-// Delete a training session (after deleting related feedback)
+// Delete training session
 const deleteTrainingSession = async (id) => {
   try {
-    // First, delete related feedback records
-    await prisma.hrms_d_training_feedback.deleteMany({
-      where: {
-        training_id: parseInt(id),
-      },
-    });
-
-    // Then delete the training session
     await prisma.hrms_d_training_session.delete({
       where: { id: parseInt(id) },
     });
@@ -117,70 +133,80 @@ const getAllTrainingSessions = async (
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
-    const skip = (page - 1) * size;
+    const skip = (page - 1) * size || 0;
 
-    const filterConditions = [];
-
+    const filters = {};
     if (search) {
-      filterConditions.push({
-        OR: [
-          {
-            training_session_employee: {
-              full_name: { contains: search.toLowerCase() },
-            },
+      filters.OR = [
+        {
+          training_session_employee: {
+            full_name: { contains: search.toLowerCase() },
           },
-          { training_title: { contains: search.toLowerCase() } },
-          // trainer_name removed here
-          { location: { contains: search.toLowerCase() } },
-          { training_type: { contains: search.toLowerCase() } },
-        ],
-      });
+        },
+        {
+          training_session_departmentID: {
+            department_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          training_title: {
+            contains: search.toLowerCase(),
+          },
+        },
+        { location: { contains: search.toLowerCase() } },
+        {
+          training_type: {
+            contains: search.toLowerCase(),
+          },
+        },
+        {
+          training_status: {
+            contains: search.toLowerCase(),
+          },
+        },
+      ];
     }
-
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
-      if (!isNaN(start) && !isNaN(end)) {
-        filterConditions.push({
-          createdate: { gte: start, lte: end },
-        });
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.training_date = { gte: start, lte: end };
       }
     }
 
-    const filters = filterConditions.length ? { AND: filterConditions } : {};
-
-    const sessions = await prisma.hrms_d_training_session.findMany({
+    const datas = await prisma.hrms_d_training_session.findMany({
       where: filters,
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
         training_session_employee: {
-          select: { id: true, full_name: true },
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+        training_session_departmentID: {
+          select: {
+            id: true,
+            department_name: true,
+          },
         },
       },
     });
-
-    const data = sessions.map(({ training_session_employee, ...rest }) => ({
-      ...rest,
-      trainer_id: training_session_employee?.id || null,
-      trainer_name: training_session_employee?.full_name || null,
-    }));
-
     const totalCount = await prisma.hrms_d_training_session.count({
       where: filters,
     });
 
     return {
-      data,
+      data: datas,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
       totalCount,
     };
   } catch (error) {
-    console.error(error);
-    throw new CustomError("Error retrieving training sessions", 400);
+    throw new CustomError("Error retrieving training sessions", 503);
   }
 };
 
