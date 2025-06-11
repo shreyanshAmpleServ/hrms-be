@@ -45,6 +45,7 @@ model hrms_m_role {
   updatedby               Int?
   hrms_d_role_permissions hrms_d_role_permissions[]
   hrms_d_user_role        hrms_d_user_role[]
+  succession_role         hrms_d_succession_plan[]  @relation("SuccessionRole")
 }
 
 model hrms_m_user {
@@ -317,6 +318,7 @@ model hrms_d_employee {
   offered_employee                     hrms_d_offer_letter[]
   payslip_employee                     hrms_d_payslip[]
   probation_review_employee            hrms_d_probation_review[]
+  probation_employee                   hrms_d_probation_review[]           @relation("ProbationEmployee")
   recognition_award_employee           hrms_d_recognition_award[]          @relation("RecognitionAwardEmployee")
   recognition_award_nominated          hrms_d_recognition_award[]          @relation("RecognitionAwardNominated")
   relieving_letter_employee            hrms_d_relieving_letter[]
@@ -658,6 +660,16 @@ model hrms_d_probation_review {
   updatedby                 Int?
   log_inst                  Int?
   probation_review_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  reviewer_id               Int?
+  review_meeting_date       DateTime?        @db.Date
+  performance_rating        Int?
+  extension_required        String?          @db.VarChar(5)
+  extension_reason          String?          @db.NVarChar(1000)
+  extended_till_date        DateTime?        @db.Date
+  next_review_date          DateTime?        @db.Date
+  final_remarks             String?          @db.NVarChar(1000)
+  probation_employee        hrms_d_employee? @relation("ProbationEmployee", references: [id], onDelete: NoAction, onUpdate: NoAction, fields: [hrms_d_employeeId])
+  hrms_d_employeeId         Int?
 }
 
 model hrms_d_recognition_award {
@@ -743,6 +755,7 @@ model hrms_d_succession_plan {
   succession_potentialSuccessor hrms_d_employee? @relation("PotentialSuccessor", fields: [potential_successor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   succession_updateByHR         hrms_d_employee? @relation("UpdateByHR", fields: [last_updated_by_hr], references: [id], onDelete: NoAction, onUpdate: NoAction)
   succession_evaluatedBy        hrms_d_employee? @relation("EvaluatedBy", fields: [evaluated_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  succession_role               hrms_m_role?     @relation("SuccessionRole", fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_survey_response {
