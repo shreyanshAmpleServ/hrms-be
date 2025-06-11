@@ -58,6 +58,17 @@ const getUserWithRole = async (userId, is_password = false) => {
 const createUser = async (data) => {
   try {
     if (data.employee_id) {
+      const existingUser = await prisma.hrms_m_user.findFirst({
+        where: { employee_id: Number(data.employee_id) },
+      });
+      if (existingUser) {
+        return {
+          success: false,
+          message: "A user already exists for this employee.",
+          status: 400,
+        };
+      }
+
       const employee = await prisma.hrms_d_employee.findUnique({
         where: { id: Number(data.employee_id) },
         select: {

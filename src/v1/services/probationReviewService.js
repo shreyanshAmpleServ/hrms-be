@@ -23,7 +23,7 @@ const getAllProbationReview = async (
   startDate,
   endDate
 ) => {
-  return await probationReviewModel.getAllProbationReviews(
+  return await probationReviewModel.getAllProbationReview(
     search,
     page,
     size,

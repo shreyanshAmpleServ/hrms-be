@@ -319,6 +319,7 @@ model hrms_d_employee {
   payslip_employee                     hrms_d_payslip[]
   probation_review_employee            hrms_d_probation_review[]
   probation_employee                   hrms_d_probation_review[]           @relation("ProbationEmployee")
+  probation_reviewer                   hrms_d_probation_review[]           @relation("ProbationReviewer")
   recognition_award_employee           hrms_d_recognition_award[]          @relation("RecognitionAwardEmployee")
   recognition_award_nominated          hrms_d_recognition_award[]          @relation("RecognitionAwardNominated")
   relieving_letter_employee            hrms_d_relieving_letter[]
@@ -670,6 +671,7 @@ model hrms_d_probation_review {
   final_remarks             String?          @db.NVarChar(1000)
   probation_employee        hrms_d_employee? @relation("ProbationEmployee", references: [id], onDelete: NoAction, onUpdate: NoAction, fields: [hrms_d_employeeId])
   hrms_d_employeeId         Int?
+  probation_reviewer        hrms_d_employee? @relation("ProbationReviewer", fields: [reviewer_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_recognition_award {
