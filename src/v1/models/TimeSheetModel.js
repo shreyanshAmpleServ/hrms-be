@@ -3,17 +3,24 @@ const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const prisma = new PrismaClient();
 
-const serializeJobData = (data) => {
-  return {
-    work_date: data.work_date ? new Date(data.work_date) : new Date(),
-    project_name: data.project_name || "",
-    task_description: data.task_description || "",
-    hours_worked: data.hours_worked || 0,
-    // Add approved_on if present, else undefined so it doesn’t override
-    ...(data.approved_on ? { approved_on: new Date(data.approved_on) } : {}),
-    ...(data.approved_by ? { approved_by: data.approved_by } : {}),
-  };
-};
+const serializeTimeSheetData = (data) => ({
+  employee_id: data.employee_id ? Number(data.employee_id) : null,
+  work_date: data.work_date ? new Date(data.work_date) : null,
+  project_name: data.project_name || "",
+  task_description: data.task_description || "",
+  hours_worked: data.hours_worked ? Number(data.hours_worked) : null,
+  approved_by: data.approved_by ? Number(data.approved_by) : null,
+  approved_on: data.approved_on ? new Date(data.approved_on) : null,
+  project_id: Number(data.project_id),
+  remarks: data.remarks || "",
+  status: data.status || "Draft",
+  task_id: Number(data.task_id),
+  billable_flag: data.billable_flag || "",
+  work_location: data.work_location || "",
+  submission_date: data.submission_date ? new Date(data.submission_date) : null,
+  approval_status: data.approval_status || "",
+  timesheet_type: data.timesheet_type || "",
+});
 
 // Create a new time sheet
 const createTimeSheet = async (data) => {
@@ -22,17 +29,10 @@ const createTimeSheet = async (data) => {
 
     const reqData = await prisma.hrms_d_time_sheet.create({
       data: {
-        ...serializeJobData(data),
+        ...serializeTimeSheetData(data),
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
-
-        approved_on: data.approved_on ? new Date(data.approved_on) : new Date(),
-        approved_by: data.approved_by || data.createdby || 1, // <--- add this line
-
-        project_id: data.project_id,
-        task_id: data.task_id,
-        employee_id: data.employee_id,
       },
       include: {
         hrms_time_sheets_submitted: {
@@ -59,7 +59,7 @@ const findTimeSheetById = async (id) => {
       where: { id: parseInt(id) },
     });
     if (!reqData) {
-      throw new CustomError("time sheet not found", 404);
+      throw new CustomError("Time sheet not found", 404);
     }
     return reqData;
   } catch (error) {
@@ -73,22 +73,11 @@ const findTimeSheetById = async (id) => {
 // Update a time sheet
 const updateTimeSheet = async (id, data) => {
   try {
-    const existing = await prisma.hrms_d_time_sheet.findUnique({
+    const updatedEntry = await prisma.hrms_d_time_sheet.update({
       where: { id: parseInt(id) },
-    });
 
-    const employeeIdToCheck = data.employee_id || existing?.employee_id;
-
-    if (!employeeIdToCheck) {
-      throw new Error("Missing employee ID");
-    }
-
-    await errorNotExist("hrms_d_employee", employeeIdToCheck, "Employee");
-
-    const updatedTimeSheet = await prisma.hrms_d_time_sheet.update({
-      where: { id: parseInt(id) },
       data: {
-        ...serializeJobData(data),
+        ...serializeTimeSheetData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
@@ -104,12 +93,11 @@ const updateTimeSheet = async (id, data) => {
       },
     });
 
-    return updatedTimeSheet;
+    return updatedEntry;
   } catch (error) {
     throw new CustomError(`Error updating time sheet: ${error.message}`, 500);
   }
 };
-
 // Delete a time sheet
 const deleteTimeSheet = async (id) => {
   try {

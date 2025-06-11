@@ -48,7 +48,7 @@ const deleteDisciplinaryAction = async (req, res, next) => {
   try {
     const id = req.params.id;
     const result = await disciplinaryActionService.deleteDisciplinaryAction(id);
-    res.status(200).json(result);
+    res.status(200).success("Disciplinary Action deleted successfully", result);
   } catch (error) {
     next(new CustomError(error.message, 404));
   }

@@ -71,6 +71,12 @@ const createSuccessionPlan = async (data) => {
             full_name: true,
           },
         },
+        succession_role: {
+          select: {
+            id: true,
+            role_name: true,
+          },
+        },
       },
     });
     return reqData;
@@ -136,6 +142,12 @@ const updateSuccessionPlan = async (id, data) => {
           select: {
             id: true,
             full_name: true,
+          },
+        },
+        succession_role: {
+          select: {
+            id: true,
+            role_name: true,
           },
         },
       },
@@ -255,6 +267,12 @@ const getAllSuccessionPlans = async (
           select: {
             id: true,
             full_name: true,
+          },
+        },
+        succession_role: {
+          select: {
+            id: true,
+            role_name: true,
           },
         },
       },
