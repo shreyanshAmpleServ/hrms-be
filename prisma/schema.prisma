@@ -173,25 +173,26 @@ model hrms_d_competency {
 }
 
 model hrms_d_disciplinary_action {
-  id                   Int                          @id(map: "PK__hrms_d_d__3213E83F3B5CF98E") @default(autoincrement())
-  employee_id          Int
-  incident_date        DateTime?                    @db.Date
-  incident_description String?
-  action_taken         String?                      @db.NVarChar(255)
-  committee_notes      String?
-  penalty_type         Int?
-  effective_from       DateTime?                    @db.Date
-  status               String?                      @db.VarChar(50)
-  createdate           DateTime?                    @default(now(), map: "DF__hrms_d_di__creat__0D44F85C") @db.DateTime
-  createdby            Int
-  updatedate           DateTime?                    @db.DateTime
-  updatedby            Int?
-  log_inst             Int?
-  reviewed_by          Int?
-  review_date          DateTime?                    @db.Date
-  remarks              String?
-  employee             hrms_d_employee              @relation(fields: [employee_id], references: [id])
-  disciplinary_penalty hrms_m_disciplinary_penalty? @relation(fields: [penalty_type], references: [id])
+  id                       Int                          @id(map: "PK__hrms_d_d__3213E83F3B5CF98E") @default(autoincrement())
+  employee_id              Int
+  incident_date            DateTime?                    @db.Date
+  incident_description     String?
+  action_taken             String?                      @db.NVarChar(255)
+  committee_notes          String?
+  penalty_type             Int?
+  effective_from           DateTime?                    @db.Date
+  status                   String?                      @db.VarChar(50)
+  createdate               DateTime?                    @default(now(), map: "DF__hrms_d_di__creat__0D44F85C") @db.DateTime
+  createdby                Int
+  updatedate               DateTime?                    @db.DateTime
+  updatedby                Int?
+  log_inst                 Int?
+  reviewed_by              Int?
+  review_date              DateTime?                    @db.Date
+  remarks                  String?
+  employee                 hrms_d_employee              @relation(fields: [employee_id], references: [id])
+  disciplinary_penalty     hrms_m_disciplinary_penalty? @relation(fields: [penalty_type], references: [id])
+  disciplinary_reviewed_by hrms_d_employee?             @relation("ReviewedBy", fields: [reviewed_by], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_document_upload {
@@ -338,6 +339,7 @@ model hrms_d_employee {
   succession_evaluatedBy               hrms_d_succession_plan[]            @relation("EvaluatedBy")
   travel_expense_approver              hrms_d_travel_expense[]             @relation("TravelExpenseApprover")
   travel_expense_createdby             hrms_d_travel_expense[]             @relation("TravelExpenseCreatedBy")
+  disciplinary_reviewed_by             hrms_d_disciplinary_action[]        @relation("ReviewedBy")
 }
 
 model hrms_d_employee_address {
