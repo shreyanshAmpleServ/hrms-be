@@ -196,7 +196,6 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
       where: filters,
       _count: { status: true },
     });
-    // Fetch employee details
     const employees = await prisma.hrms_d_employee.findMany({
       select: {
         id: true,
@@ -260,7 +259,6 @@ const findAttendanceByEmployeeId = async (employeeId) => {
       },
     });
 
-    // Build summary object
     const summary = {
       present: 0,
       absent: 0,
@@ -281,12 +279,10 @@ const findAttendanceByEmployeeId = async (employeeId) => {
 
     return { employee, summary, attendanceList };
   } catch (error) {
-    return {
-      success: false,
-      data: null,
-      message: error.message || "Internal server error",
-      status: 500,
-    };
+    throw new CustomError(
+      `Error retriving attendance entry: ${error.message}`,
+      500
+    );
   }
 };
 
