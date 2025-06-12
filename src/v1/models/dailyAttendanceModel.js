@@ -124,6 +124,11 @@ const getAllDailyAttendance = async (
             full_name: { contains: search.toLowerCase() },
           },
         },
+        {
+          hrms_daily_attendance_employee: {
+            employee_code: { contains: search.toLowerCase() },
+          },
+        },
         { status: { contains: search.toLowerCase() } },
         { remarks: { contains: search.toLowerCase() } },
       ];
