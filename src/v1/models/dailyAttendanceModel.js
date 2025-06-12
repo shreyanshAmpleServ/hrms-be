@@ -181,10 +181,135 @@ const getAllDailyAttendance = async (
   }
 };
 
+const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
+  try {
+    const filters = {};
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.attendance_date = { gte: start, lte: end };
+      }
+    }
+    const summary = await prisma.hrms_d_daily_attendance_entry.groupBy({
+      by: ["employee_id", "status"],
+      where: filters,
+      _count: { status: true },
+    });
+    // Fetch employee details
+    const employees = await prisma.hrms_d_employee.findMany({
+      select: {
+        id: true,
+        employee_code: true,
+        full_name: true,
+        department_id: true,
+      },
+    });
+    // Map summary to employee
+    const result = employees.map((emp) => {
+      const empSummary = summary.filter((s) => s.employee_id === emp.id);
+      return {
+        ...emp,
+        present:
+          empSummary.find((s) => s.status === "present")?._count.status || 0,
+        absent:
+          empSummary.find((s) => s.status === "absent")?._count.status || 0,
+        leave: empSummary.find((s) => s.status === "leave")?._count.status || 0,
+      };
+    });
+    return result;
+  } catch (error) {
+    throw new CustomError("Error generating attendance summary", 503);
+  }
+};
+
+const findAttendanceByEmployeeId = async (employeeId) => {
+  try {
+    const employee = await prisma.hrms_d_employee.findUnique({
+      where: { id: Number(employeeId) },
+      select: {
+        id: true,
+        full_name: true,
+        employee_code: true,
+        department_id: true,
+      },
+    });
+
+    if (!employee) {
+      return {
+        success: false,
+        data: null,
+        message: `Employee with ID ${employeeId} not found`,
+        status: 404,
+      };
+    }
+
+    const attendanceSummary =
+      await prisma.hrms_d_daily_attendance_entry.groupBy({
+        by: ["status"],
+        where: { employee_id: Number(employeeId) },
+        _count: { status: true },
+      });
+
+    const attendanceList = await prisma.hrms_d_daily_attendance_entry.findMany({
+      where: { employee_id: Number(employeeId) },
+      orderBy: { attendance_date: "desc" },
+      select: {
+        id: true,
+        attendance_date: true,
+        status: true,
+        remarks: true,
+        check_in_time: true,
+        check_out_time: true,
+        working_hours: true,
+      },
+    });
+
+    // Build summary object
+    const summary = {
+      present: 0,
+      absent: 0,
+      leave: 0,
+      late: 0,
+      half_Day: 0,
+    };
+
+    attendanceSummary.forEach((entry) => {
+      const status = entry.status.toLowerCase();
+      if (status === "present") summary.present = entry._count.status;
+      if (status === "absent") summary.absent = entry._count.status;
+      if (status === "leave") summary.leave = entry._count.status;
+      if (status === "late") summary.late = entry._count.status;
+      if (status === "half day" || status === "half_day")
+        summary.half_Day = entry._count.status;
+    });
+
+    return {
+      success: true,
+      data: {
+        employee,
+        summary,
+        attendanceList,
+      },
+      message: "Attendance of employee retrieved successfully",
+      status: 200,
+    };
+  } catch (error) {
+    return {
+      success: false,
+      data: null,
+      message: error.message || "Internal server error",
+      status: 500,
+    };
+  }
+};
+
 module.exports = {
   createDailyAttendance,
   findDailyAttendanceById,
   updateDailyAttendance,
   deleteDailyAttendance,
   getAllDailyAttendance,
+  getAttendanceSummaryByEmployee,
+  findAttendanceByEmployeeId,
 };
