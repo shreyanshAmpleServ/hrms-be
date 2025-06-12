@@ -191,11 +191,15 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
         filters.attendance_date = { gte: start, lte: end };
       }
     }
+
+    // Grouped summary
     const summary = await prisma.hrms_d_daily_attendance_entry.groupBy({
       by: ["employee_id", "status"],
       where: filters,
       _count: { status: true },
     });
+
+    // Get employees
     const employees = await prisma.hrms_d_employee.findMany({
       select: {
         id: true,
@@ -204,18 +208,29 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
         department_id: true,
       },
     });
-    // Map summary to employee
+
+    const normalize = (status) => status.toLowerCase().replace(/ /g, "_");
+
     const result = employees.map((emp) => {
       const empSummary = summary.filter((s) => s.employee_id === emp.id);
+
       return {
         ...emp,
         present:
-          empSummary.find((s) => s.status === "present")?._count.status || 0,
+          empSummary.find((s) => normalize(s.status) === "present")?._count
+            .status || 0,
         absent:
-          empSummary.find((s) => s.status === "absent")?._count.status || 0,
-        leave: empSummary.find((s) => s.status === "leave")?._count.status || 0,
+          empSummary.find((s) => normalize(s.status) === "absent")?._count
+            .status || 0,
+        half_Day:
+          empSummary.find((s) => normalize(s.status) === "half_day")?._count
+            .status || 0,
+        late:
+          empSummary.find((s) => normalize(s.status) === "late")?._count
+            .status || 0,
       };
     });
+
     return result;
   } catch (error) {
     throw new CustomError("Error generating attendance summary", 503);
