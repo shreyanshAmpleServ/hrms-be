@@ -3,6 +3,12 @@ const CustomError = require("../../utils/CustomError");
 const { includes } = require("zod/v4");
 const prisma = new PrismaClient();
 
+const timeStringToDecimal = (timeStr) => {
+  if (!timeStr || typeof timeStr !== "string") return null;
+  const [hours, minutes, seconds] = timeStr.split(":").map(Number);
+  return parseFloat((hours + minutes / 60 + seconds / 3600).toFixed(2));
+};
+
 // Serialize attendance data
 const serializeAttendanceData = (data) => ({
   employee_id: Number(data.employee_id),
@@ -11,6 +17,9 @@ const serializeAttendanceData = (data) => ({
   check_out_time: data.check_out_time ? new Date(data.check_out_time) : null,
   status: data.status || "",
   remarks: data.remarks || "",
+  working_hours: data.working_hours
+    ? timeStringToDecimal(data.working_hours)
+    : null,
 });
 
 // Create a new attendance entry
@@ -145,7 +154,7 @@ const getAllDailyAttendance = async (
       where: filters,
       skip,
       take: size,
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      orderBy: [{ attendance_date: "desc" }],
       include: {
         hrms_daily_attendance_employee: {
           select: {
