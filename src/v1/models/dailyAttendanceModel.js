@@ -236,12 +236,7 @@ const findAttendanceByEmployeeId = async (employeeId) => {
     });
 
     if (!employee) {
-      return {
-        success: false,
-        data: null,
-        message: `Employee with ID ${employeeId} not found`,
-        status: 404,
-      };
+      throw new CustomError("Employee not found", 404);
     }
 
     const attendanceSummary =
@@ -284,16 +279,7 @@ const findAttendanceByEmployeeId = async (employeeId) => {
         summary.half_Day = entry._count.status;
     });
 
-    return {
-      success: true,
-      data: {
-        employee,
-        summary,
-        attendanceList,
-      },
-      message: "Attendance of employee retrieved successfully",
-      status: 200,
-    };
+    return { employee, summary, attendanceList };
   } catch (error) {
     return {
       success: false,
