@@ -32,10 +32,44 @@ const getAllDailyAttendance = async (
   );
 };
 
+const getAttendanceSummaryByEmployee = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
+  return await dailyAttendanceModel.getAttendanceSummaryByEmployee(
+    search,
+    page,
+    size,
+    startDate,
+    endDate
+  );
+};
+
+const findAttendanceByEmployeeId = async (
+  employeeId,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
+  return await dailyAttendanceModel.findAttendanceByEmployeeId(
+    employeeId,
+    page,
+    size,
+    startDate,
+    endDate
+  );
+};
+
 module.exports = {
   createDailyAttendance,
   findDailyAttendanceById,
   updateDailyAttendance,
   deleteDailyAttendance,
   getAllDailyAttendance,
+  getAttendanceSummaryByEmployee,
+  findAttendanceByEmployeeId,
 };

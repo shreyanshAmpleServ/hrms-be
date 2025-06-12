@@ -38,4 +38,15 @@ router.delete(
   dailyAttendanceController.deleteDailyAttendance
 );
 
+router.get(
+  "/daily-attendaceSummary",
+  authenticateToken,
+  dailyAttendanceController.getAttendanceSummaryByEmployee
+);
+
+router.get(
+  "/findAttendanceByEmployeeId/:id",
+  authenticateToken,
+  dailyAttendanceController.findAttendanceByEmployeeId
+);
 module.exports = router;

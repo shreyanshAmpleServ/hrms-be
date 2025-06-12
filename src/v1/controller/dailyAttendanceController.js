@@ -72,10 +72,50 @@ const getAllDailyAttendance = async (req, res, next) => {
   }
 };
 
+const getAttendanceSummaryByEmployee = async (req, res, next) => {
+  try {
+    const { page, size, search, startDate, endDate } = req.query;
+    const data = await dailyAttendanceService.getAttendanceSummaryByEmployee(
+      search,
+      Number(page),
+      Number(size),
+      startDate && moment(startDate),
+      endDate && moment(endDate)
+    );
+    res.status(200).success(null, data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+// Controller: dailyAttendanceController.js
+const findAttendanceByEmployeeId = async (req, res, next) => {
+  try {
+    const { page, size, startDate, endDate } = req.query;
+    const employeeId = req.params.id;
+
+    const result = await dailyAttendanceService.findAttendanceByEmployeeId(
+      employeeId,
+      Number(page),
+      Number(size),
+      startDate && moment(startDate),
+      endDate && moment(endDate)
+    );
+
+    res
+      .status(200)
+      .success("Attendance of employee retreivesd successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createDailyAttendance,
   findDailyAttendance,
   updateDailyAttendance,
   deleteDailyAttendance,
   getAllDailyAttendance,
+  getAttendanceSummaryByEmployee,
+  findAttendanceByEmployeeId,
 };
