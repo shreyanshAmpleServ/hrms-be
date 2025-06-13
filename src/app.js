@@ -20,20 +20,26 @@ app.use(express.json());
 
 app.use(express.urlencoded({ extended: true })); // Support URL-encoded bodies
 app.use(cookieParser());
+// app.use(
+//   cors({
+//     origin: [
+//       "http://localhost:3000",
+//       "http://localhost:3001",
+//       "http://192.168.29.90:3000",
+//       "http://192.168.29.74:3000",
+//       "http://10.160.5.101:3000",
+//       "http://10.160.5.101:3001",
+//     ], // Replace with your frontend URL
+//     credentials: true, // Allow cookies to be sent
+//   })
+// );
+
 app.use(
   cors({
-    origin: [
-      "http://localhost:3000",
-      "http://localhost:3001",
-      "http://192.168.29.90:3000",
-      "http://192.168.29.74:3000",
-      "http://10.160.5.101:3000",
-      "http://10.160.5.101:3001",
-    ], // Replace with your frontend URL
-    credentials: true, // Allow cookies to be sent
+    origin: true,
+    credentials: true,
   })
 );
-
 app.use(responseHandler);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", routes);

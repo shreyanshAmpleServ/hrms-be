@@ -57,3 +57,34 @@ const upload = multer({
 });
 
 module.exports = upload;
+
+// const multer = require("multer");
+
+// const fileFilter = (req, file, cb) => {
+//   const allowedTypes = [
+//     "image/jpeg",
+//     "image/png",
+//     "image/gif",
+//     "image/avif",
+//     "application/pdf",
+//     "application/msword",
+//   ];
+//   if (allowedTypes.includes(file.mimetype)) {
+//     cb(null, true);
+//   } else {
+//     cb(
+//       new multer.MulterError(
+//         "LIMIT_UNEXPECTED_FILE",
+//         "Invalid file type. Only JPEG, PNG, AVIF, and GIF are allowed."
+//       )
+//     );
+//   }
+// };
+
+// const upload = multer({
+//   storage: multer.memoryStorage(), // ✅ Use memory storage for buffer access
+//   fileFilter,
+//   limits: { fileSize: 1024 * 1024 * 3 },
+// });
+
+// module.exports = upload;
