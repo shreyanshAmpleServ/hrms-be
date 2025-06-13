@@ -19,7 +19,7 @@ const serializeLeaveApplicationData = (data) => ({
     : null,
   contact_details_during_leave: data.contact_details_during_leave || "",
   approver_id: data.approver_id ? Number(data.approver_id) : null,
-  approval_date: data.approval_date ? new Date(data.approval_date) : null,
+  approval_date: data.approval_date ? new Date(data.approval_date) : new Date(), // default to today if not provided
   document_attachment: data.document_attachment || "",
   rejection_reason: data.rejection_reason || "",
 });

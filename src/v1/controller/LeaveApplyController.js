@@ -12,14 +12,14 @@ const createLeaveApplication = async (req, res, next) => {
     let imageUrl = null;
 
     if (req.file) {
-      const fileBuffer = fs.readFileSync(req.file.path); // read file from disk
+      const fileBuffer = fs.readFileSync(req.file.path);
       imageUrl = await uploadToBackblaze(
         fileBuffer,
         req.file.originalname,
         req.file.mimetype,
         "document_attachment"
       );
-      fs.unlinkSync(req.file.path); // optional: delete file after upload
+      fs.unlinkSync(req.file.path);
     }
 
     const data = {
@@ -66,7 +66,7 @@ const updateLeaveApplication = async (req, res, next) => {
         req.file.mimetype,
         "document_attachment"
       );
-      fs.unlinkSync(req.file.path); // optional: remove file after upload
+      fs.unlinkSync(req.file.path);
 
       if (existingData.document_attachment) {
         await deleteFromBackblaze(existingData.document_attachment);
