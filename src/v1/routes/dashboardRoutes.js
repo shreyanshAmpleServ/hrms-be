@@ -8,4 +8,6 @@ router.get('/dashboard/:id', authenticateToken, dashboardController.getDealById)
 
 router.get('/dashboard', authenticateToken, dashboardController.getDashboardData);
 
+router.get(/dashboard/getAllEmployeeAttendance, authenticateToken, dashboardController.getAllEmployeeAttendance)
+
 module.exports = router;
