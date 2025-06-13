@@ -344,7 +344,6 @@ model hrms_d_employee {
   user_employee                          hrms_m_user[]
   leave_approver                         hrms_d_leave_application[]          @relation("LeaveAprrover")
   leave_backup_person_id                 hrms_d_leave_application[]          @relation("LeaveBackup")
-  
 }
 
 model hrms_d_employee_address {
@@ -1150,7 +1149,6 @@ model hrms_m_leave_type_master {
   log_inst               Int?
   leave_types            hrms_d_leave_application[]
   encashment_leave_types hrms_d_leave_encashment[]
-  leave_leave_type        hrms_d_leave_application[]
 }
 
 model hrms_m_letter_type {
