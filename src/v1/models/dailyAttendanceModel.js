@@ -234,7 +234,8 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
     throw new CustomError("Error generating attendance summary", 503);
   }
 };
-const findAttendanceByEmployeeId = async (employeeId) => {
+
+const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
   try {
     const empId = Number(employeeId);
 
@@ -250,8 +251,30 @@ const findAttendanceByEmployeeId = async (employeeId) => {
 
     if (!employee) throw new CustomError("Employee not found", 404);
 
+    // Determine date range (use last 30 days by default)
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    let start = startDate ? new Date(startDate) : new Date(today);
+    let end = endDate ? new Date(endDate) : new Date(today);
+
+    if (!startDate && !endDate) {
+      start.setDate(start.getDate() - 29); // default last 30 days
+    }
+
+    if (isNaN(start) || isNaN(end)) {
+      throw new CustomError("Invalid date range provided", 400);
+    }
+
+    // Fetch attendance entries within range
     const attendanceData = await prisma.hrms_d_daily_attendance_entry.findMany({
-      where: { employee_id: empId },
+      where: {
+        employee_id: empId,
+        attendance_date: {
+          gte: start,
+          lte: end,
+        },
+      },
       orderBy: { attendance_date: "asc" },
       select: {
         id: true,
@@ -264,7 +287,7 @@ const findAttendanceByEmployeeId = async (employeeId) => {
       },
     });
 
-    // Build attendance summary
+    // Build summary
     const summary = {
       present: 0,
       absent: 0,
@@ -283,33 +306,22 @@ const findAttendanceByEmployeeId = async (employeeId) => {
         summary.half_Day++;
     });
 
-    // Generate full date range
-    if (attendanceData.length === 0) {
-      return { employee, summary, attendanceList: [] };
-    }
-
-    const startDate = new Date(attendanceData[0].attendance_date);
-    const endDate = new Date(
-      attendanceData[attendanceData.length - 1].attendance_date
-    );
+    // Create list of all dates in the range (descending)
     const allDates = [];
-
-    for (
-      let d = new Date(endDate);
-      d >= startDate;
-      d.setDate(d.getDate() - 1)
-    ) {
+    for (let d = new Date(end); d >= start; d.setDate(d.getDate() - 1)) {
       allDates.push(new Date(d));
     }
 
+    // Map attendance data by date
     const attendanceMap = new Map();
     attendanceData.forEach((entry) => {
       const key = new Date(entry.attendance_date).toISOString().split("T")[0];
       if (!attendanceMap.has(key)) {
-        attendanceMap.set(key, entry); // keep only one per day
+        attendanceMap.set(key, entry);
       }
     });
 
+    // Build final list
     const attendanceList = allDates.map((date) => {
       const key = date.toISOString().split("T")[0];
       const entry = attendanceMap.get(key);
