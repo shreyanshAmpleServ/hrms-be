@@ -192,14 +192,12 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
       }
     }
 
-    // Grouped summary
     const summary = await prisma.hrms_d_daily_attendance_entry.groupBy({
       by: ["employee_id", "status"],
       where: filters,
       _count: { status: true },
     });
 
-    // Get employees
     const employees = await prisma.hrms_d_employee.findMany({
       select: {
         id: true,
@@ -236,11 +234,12 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
     throw new CustomError("Error generating attendance summary", 503);
   }
 };
-
 const findAttendanceByEmployeeId = async (employeeId) => {
   try {
+    const empId = Number(employeeId);
+
     const employee = await prisma.hrms_d_employee.findUnique({
-      where: { id: Number(employeeId) },
+      where: { id: empId },
       select: {
         id: true,
         full_name: true,
@@ -249,20 +248,11 @@ const findAttendanceByEmployeeId = async (employeeId) => {
       },
     });
 
-    if (!employee) {
-      throw new CustomError("Employee not found", 404);
-    }
+    if (!employee) throw new CustomError("Employee not found", 404);
 
-    const attendanceSummary =
-      await prisma.hrms_d_daily_attendance_entry.groupBy({
-        by: ["status"],
-        where: { employee_id: Number(employeeId) },
-        _count: { status: true },
-      });
-
-    const attendanceList = await prisma.hrms_d_daily_attendance_entry.findMany({
-      where: { employee_id: Number(employeeId) },
-      orderBy: { attendance_date: "desc" },
+    const attendanceData = await prisma.hrms_d_daily_attendance_entry.findMany({
+      where: { employee_id: empId },
+      orderBy: { attendance_date: "asc" },
       select: {
         id: true,
         attendance_date: true,
@@ -274,6 +264,7 @@ const findAttendanceByEmployeeId = async (employeeId) => {
       },
     });
 
+    // Build attendance summary
     const summary = {
       present: 0,
       absent: 0,
@@ -282,20 +273,61 @@ const findAttendanceByEmployeeId = async (employeeId) => {
       half_Day: 0,
     };
 
-    attendanceSummary.forEach((entry) => {
+    attendanceData.forEach((entry) => {
       const status = entry.status.toLowerCase();
-      if (status === "present") summary.present = entry._count.status;
-      if (status === "absent") summary.absent = entry._count.status;
-      if (status === "leave") summary.leave = entry._count.status;
-      if (status === "late") summary.late = entry._count.status;
-      if (status === "half day" || status === "half_day")
-        summary.half_Day = entry._count.status;
+      if (status === "present") summary.present++;
+      else if (status === "absent") summary.absent++;
+      else if (status === "leave") summary.leave++;
+      else if (status === "late") summary.late++;
+      else if (status === "half day" || status === "half_day")
+        summary.half_Day++;
+    });
+
+    // Generate full date range
+    if (attendanceData.length === 0) {
+      return { employee, summary, attendanceList: [] };
+    }
+
+    const startDate = new Date(attendanceData[0].attendance_date);
+    const endDate = new Date(
+      attendanceData[attendanceData.length - 1].attendance_date
+    );
+    const allDates = [];
+
+    for (
+      let d = new Date(endDate);
+      d >= startDate;
+      d.setDate(d.getDate() - 1)
+    ) {
+      allDates.push(new Date(d));
+    }
+
+    const attendanceMap = new Map();
+    attendanceData.forEach((entry) => {
+      const key = new Date(entry.attendance_date).toISOString().split("T")[0];
+      if (!attendanceMap.has(key)) {
+        attendanceMap.set(key, entry); // keep only one per day
+      }
+    });
+
+    const attendanceList = allDates.map((date) => {
+      const key = date.toISOString().split("T")[0];
+      const entry = attendanceMap.get(key);
+      return {
+        attendance_date: key,
+        id: entry?.id || null,
+        status: entry?.status || null,
+        remarks: entry?.remarks || null,
+        check_in_time: entry?.check_in_time || null,
+        check_out_time: entry?.check_out_time || null,
+        working_hours: entry?.working_hours || null,
+      };
     });
 
     return { employee, summary, attendanceList };
   } catch (error) {
     throw new CustomError(
-      `Error retriving attendance entry: ${error.message}`,
+      `Error retrieving attendance entry: ${error.message}`,
       500
     );
   }
