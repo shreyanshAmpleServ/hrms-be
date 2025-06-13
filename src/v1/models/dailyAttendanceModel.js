@@ -251,7 +251,6 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
 
     if (!employee) throw new CustomError("Employee not found", 404);
 
-    // Determine date range (use last 30 days by default)
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -259,7 +258,7 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
     let end = endDate ? new Date(endDate) : new Date(today);
 
     if (!startDate && !endDate) {
-      start.setDate(start.getDate() - 29); // default last 30 days
+      start.setDate(start.getDate() - 29);
     }
 
     if (isNaN(start) || isNaN(end)) {
@@ -287,7 +286,6 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
       },
     });
 
-    // Build summary
     const summary = {
       present: 0,
       absent: 0,
@@ -306,13 +304,11 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
         summary.half_Day++;
     });
 
-    // Create list of all dates in the range (descending)
     const allDates = [];
     for (let d = new Date(end); d >= start; d.setDate(d.getDate() - 1)) {
       allDates.push(new Date(d));
     }
 
-    // Map attendance data by date
     const attendanceMap = new Map();
     attendanceData.forEach((entry) => {
       const key = new Date(entry.attendance_date).toISOString().split("T")[0];
@@ -321,7 +317,6 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
       }
     });
 
-    // Build final list
     const attendanceList = allDates.map((date) => {
       const key = date.toISOString().split("T")[0];
       const entry = attendanceMap.get(key);
