@@ -5,42 +5,37 @@ const { authenticateToken } = require("../middlewares/authMiddleware");
 const router = express.Router();
 
 router.get(
-  "/dashboard/getAllEmployeeAttendance",
+  "/dashboard/employee-attendance",
   authenticateToken,
   dashboardController.getAllEmployeeAttendance
 );
 
 router.get(
-  "/dashboard/getUpcomingBirthdays",
+  "/dashboard/get-upcoming-birthdays",
   authenticateToken,
   dashboardController.getUpcomingBirthdays
 );
 
 router.get(
-  "/dashboard/getAllUpcomingBirthdays",
+  "/dashboard/get-all-upcoming-birthdays",
   authenticateToken,
   dashboardController.getAllUpcomingBirthdays
 );
 
 router.get(
-  "/dashboard/getDesignations",
+  "/dashboard/designations",
   authenticateToken,
   dashboardController.getDesignations
 );
 
 router.get(
-  "/dashboard/getDepartment",
+  "/dashboard/departments",
   authenticateToken,
   dashboardController.getDepartment
 );
-router.get(
-  "/dashboard/getAbsents",
-  authenticateToken,
-  dashboardController.getAllAbsents
-);
 
 router.get(
-  "/dashboard/getStatus",
+  "/dashboard/status",
   authenticateToken,
   dashboardController.getStatus
 );
