@@ -93,7 +93,7 @@ const findLeaveApplicationById = async (id) => {
   }
 };
 
-// Update leave application
+// Update leave applications
 const updateLeaveApplication = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_leave_application.update({
