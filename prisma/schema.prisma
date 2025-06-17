@@ -1042,6 +1042,7 @@ model hrms_m_department_master {
   hrms_employee_department      hrms_d_employee[]
   hrms_job_department           hrms_d_job_posting[]
   training_session_departmentID hrms_d_training_session[]
+  shift_department_id           hrms_m_shift_master[]
 }
 
 model hrms_m_designation_master {
@@ -1275,22 +1276,23 @@ model hrms_m_salary_structure {
 }
 
 model hrms_m_shift_master {
-  id                     Int       @id(map: "PK__hrms_m_s__3213E83F3E04C8DC") @default(autoincrement())
-  shift_name             String?   @db.NVarChar(100)
-  start_time             DateTime? @db.Time
-  end_time               DateTime? @db.Time
-  createdate             DateTime? @default(now(), map: "DF__hrms_m_sh__creat__25518C17") @db.DateTime
+  id                     Int                       @id(map: "PK__hrms_m_s__3213E83F3E04C8DC") @default(autoincrement())
+  shift_name             String?                   @db.NVarChar(100)
+  start_time             DateTime?                 @db.Time
+  end_time               DateTime?                 @db.Time
+  createdate             DateTime?                 @default(now(), map: "DF__hrms_m_sh__creat__25518C17") @db.DateTime
   createdby              Int
-  updatedate             DateTime? @db.DateTime
+  updatedate             DateTime?                 @db.DateTime
   updatedby              Int?
   log_inst               Int?
-  lunch_time             Int?      @db.SmallInt
-  daily_working_hours    Decimal?  @db.Decimal(19, 2)
+  lunch_time             Int?                      @db.SmallInt
+  daily_working_hours    Decimal?                  @db.Decimal(19, 2)
   department_id          Int?
-  number_of_working_days Decimal?  @db.Decimal(19, 2)
-  half_day_working       String?   @default("N", map: "DF__hrms_m_sh__half___0E8E2250") @db.Char(1)
-  half_day_on            Int?      @db.SmallInt
-  remarks                String?   @db.NVarChar(300)
+  number_of_working_days Decimal?                  @db.Decimal(19, 2)
+  half_day_working       String?                   @default("N", map: "DF__hrms_m_sh__half___0E8E2250") @db.Char(1)
+  half_day_on            Int?                      @db.SmallInt
+  remarks                String?                   @db.NVarChar(300)
+  shift_department_id    hrms_m_department_master? @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_m_statutory_rate {

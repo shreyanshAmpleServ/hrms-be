@@ -1,144 +1,219 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
+const { toLowerCase } = require("zod/v4");
 const prisma = new PrismaClient();
 
+// Serialize pay component data
+const serializePayComponentData = (data) => ({
+  component_name: data.component_name || "",
+  component_code: data.component_code || "",
+  component_type: data.component_type || "",
+  is_taxable: data.is_taxable || "Y",
+  is_statutory: data.is_statutory || "N",
+  is_active: data.is_active || "Y",
+  pay_or_deduct: data.pay_or_deduct || "P",
+  is_worklife_related: data.is_worklife_related || "N",
+  is_grossable: data.is_grossable || "N",
+  is_advance: data.is_advance || "N",
+  tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : null,
+  gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : null,
+  factor: data.factor ? Number(data.factor) : null,
+  payable_glaccount_id: data.payable_glaccount_id
+    ? Number(data.payable_glaccount_id)
+    : null,
+  project_id: data.project_id ? Number(data.project_id) : null,
+  cost_center1_id: data.cost_center1_id ? Number(data.cost_center1_id) : null,
+  cost_center2_id: data.cost_center2_id ? Number(data.cost_center2_id) : null,
+  cost_center3_id: data.cost_center3_id ? Number(data.cost_center3_id) : null,
+  cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
+  cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
+  column_order: data.column_order ? Number(data.column_order) : null,
+  auto_fill: data.auto_fill || "N",
+  unpaid_leave: data.unpaid_leave || "N",
+});
+
+// Create a new pay component
 const createPayComponent = async (data) => {
   try {
-    const payComponent = await prisma.hrms_m_pay_component.create({
+    const reqData = await prisma.hrms_m_pay_component.create({
       data: {
-        component_name: data.component_name,
-        component_code: data.component_code,
-        component_type: data.component_type,
-        is_taxable: data.is_taxable,
-        is_statutory: data.is_statutory,
-        is_active: data.is_active,
+        ...serializePayComponentData(data),
         createdby: data.createdby || 1,
+        createdate: new Date(),
         log_inst: data.log_inst || 1,
-        createdate:new Date(),
-        updatedate: new Date(),
-        updatedby:1,
       },
     });
-    return payComponent;
+    return reqData;
   } catch (error) {
-    console.log("Create pay component ",error)
-    throw new CustomError(`Error creating pay component: ${error.message}`, 500);
+    throw new CustomError(
+      `Error creating pay component: ${error.message}`,
+      500
+    );
   }
 };
 
+// Find pay component by ID
 const findPayComponentById = async (id) => {
   try {
-    const payComponent = await prisma.hrms_m_pay_component.findUnique({
+    const reqData = await prisma.hrms_m_pay_component.findUnique({
       where: { id: parseInt(id) },
     });
-    if (!payComponent) {
-      throw new CustomError('pay component not found', 404);
+    if (!reqData) {
+      throw new CustomError("Pay component not found", 404);
     }
-    return payComponent;
+    return reqData;
   } catch (error) {
-    console.log("pay component By Id  ",error)
-    throw new CustomError(`Error finding pay component by ID: ${error.message}`, 503);
+    throw new CustomError(
+      `Error finding pay component by ID: ${error.message}`,
+      503
+    );
   }
 };
 
+// Update pay component
 const updatePayComponent = async (id, data) => {
   try {
-    const updatedPayComponent = await prisma.hrms_m_pay_component.update({
+    const updatedEntry = await prisma.hrms_m_pay_component.update({
       where: { id: parseInt(id) },
       data: {
-        ...data,
+        ...serializePayComponentData(data),
+        updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
     });
-    return updatedPayComponent;
+    return updatedEntry;
   } catch (error) {
-    throw new CustomError(`Error updating pay component: ${error.message}`, 500);
+    throw new CustomError(
+      `Error updating pay component: ${error.message}`,
+      500
+    );
   }
 };
 
+// Delete pay component
 const deletePayComponent = async (id) => {
   try {
     await prisma.hrms_m_pay_component.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting pay component: ${error.message}`, 500);
+    throw new CustomError(
+      `Error deleting pay component: ${error.message}`,
+      500
+    );
   }
 };
 
-// Get all pay component
-const getAllPayComponent = async (  page,
-  size,
-  search,
-  startDate,
-  endDate) => {
+// Get all pay components with pagination and search
+// const getAllPayComponent = async (search, page, size, startDate, endDate) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         { component_name: { contains: search.toLowerCase() } },
+//         { component_code: { contains: search.toLowerCase() } },
+//         { component_type: { contains: search.toLowerCase() } },
+//       ];
+//     }
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = { gte: start, lte: end };
+//       }
+//     }
+
+//     const datas = await prisma.hrms_m_pay_component.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//     });
+//     const totalCount = await prisma.hrms_m_pay_component.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: datas,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError("Error retrieving pay components", 503);
+//   }
+// };
+const getAllPayComponent = async (page, size, search, startDate, endDate) => {
   try {
-      page = page || page == 0 ? 1 : page;
-      size = size || 10;
-      const skip = (page - 1) * size || 0;
-  
-      const filters = {};
-      // Handle search
-      // if (search) {
-      //   filters.OR = [
-      //     {
-      //       campaign_user: {
-      //         full_name: { contains: search.toLowerCase() },
-      //       }, // Include contact details
-      //     },
-      //     {
-      //       campaign_leads: {
-      //         title: { contains: search.toLowerCase() },
-      //       }, // Include contact details
-      //     },
-      //     {
-      //       name: { contains: search.toLowerCase() },
-      //     },
-      //     {
-      //       status: { contains: search.toLowerCase() },
-      //     },
-      //   ];
-      // }
-      // if (status) {
-      //   filters.is_active = { equals: status };
-      // }
-  
-      if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-  
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          filters.createdate = {
-            gte: start,
-            lte: end,
-          };
-        }
+    page = page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
+
+    const filters = {};
+    // Handle search
+    // if (search) {
+    //   filters.OR = [
+    //     {
+    //       campaign_user: {
+    //         full_name: { contains: search.toLowerCase() },
+    //       }, // Include contact details
+    //     },
+    //     {
+    //       campaign_leads: {
+    //         title: { contains: search.toLowerCase() },
+    //       }, // Include contact details
+    //     },
+    //     {
+    //       name: { contains: search.toLowerCase() },
+    //     },
+    //     {
+    //       status: { contains: search.toLowerCase() },
+    //     },
+    //   ];
+    // }
+    // if (status) {
+    //   filters.is_active = { equals: status };
+    // }
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = {
+          gte: start,
+          lte: end,
+        };
       }
-      const pays = await prisma.hrms_m_pay_component.findMany({
+    }
+    const pays = await prisma.hrms_m_pay_component.findMany({
       //   where: filters,
-        skip: skip,
-        take: size,
+      skip: skip,
+      take: size,
 
-        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      });
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+    });
 
-      const totalCount = await prisma.hrms_m_pay_component.count({
+    const totalCount = await prisma.hrms_m_pay_component.count({
       //   where: filters,
-      });
-      return {
-        data: pays,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount: totalCount,
-      };
-
+    });
+    return {
+      data: pays,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
-      console.log(error)
-      throw new CustomError('Error retrieving pay components', 503);
+    console.log(error);
+    throw new CustomError("Error retrieving pay components", 503);
   }
 };
-
 
 module.exports = {
   createPayComponent,
