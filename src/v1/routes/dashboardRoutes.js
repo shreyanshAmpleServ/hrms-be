@@ -41,6 +41,18 @@ router.get(
 );
 
 router.get(
+  "/dashboard/work-anniversary",
+  authenticateToken,
+  dashboardController.workAnniversary
+);
+
+router.get(
+  "/dashboard/attendance-overview",
+  authenticateToken,
+  dashboardController.attendanceOverview
+);
+
+router.get(
   "/dashboard",
   authenticateToken,
   dashboardController.getDashboardData

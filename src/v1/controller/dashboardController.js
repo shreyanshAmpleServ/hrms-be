@@ -42,7 +42,13 @@ const getAllEmployeeAttendance = async (req, res, next) => {
 
 const getUpcomingBirthdays = async (req, res, next) => {
   try {
-    const birthdayData = await dashboardService.getUpcomingBirthdays();
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 10;
+
+    const birthdayData = await dashboardService.getUpcomingBirthdays(
+      page,
+      size
+    );
 
     res.status(200).success("Birthday fetched successfully", birthdayData);
   } catch (error) {
@@ -53,7 +59,6 @@ const getUpcomingBirthdays = async (req, res, next) => {
 const getDesignations = async (req, res, next) => {
   try {
     const designationData = await dashboardService.getDesignations();
-
     res
       .status(200)
       .success("Designations fetched successfully", designationData);
@@ -101,6 +106,27 @@ const getStatus = async (req, res, next) => {
   }
 };
 
+const workAnniversary = async (req, res, next) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const size = parseInt(req.query.size) || 10;
+
+    const data = await dashboardService.workAnniversary(page, size);
+    res.status(200).success("Work anniversary fetched successfully", data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const attendanceOverview = async (req, res, next) => {
+  try {
+    const data = await dashboardService.attendanceOverview();
+    res.status(200).success("Attendance Overview fetched successfully", data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDealById,
   getDashboardData,
@@ -111,4 +137,6 @@ module.exports = {
   getAllAbsents,
   getDepartment,
   getStatus,
+  workAnniversary,
+  attendanceOverview,
 };
