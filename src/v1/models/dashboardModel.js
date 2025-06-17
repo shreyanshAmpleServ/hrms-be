@@ -292,7 +292,6 @@ const getUpcomingBirthdays = async (page = 1, size = 10) => {
 
   const paginated = all.slice(offset, offset + size);
 
-  // Check if there's any data on this page
   if (paginated.length === 0) {
     return {
       data: {},
@@ -303,7 +302,6 @@ const getUpcomingBirthdays = async (page = 1, size = 10) => {
     };
   }
 
-  // Group paginated data by label
   const grouped = {};
   paginated.forEach((item) => {
     const { birthday, label, ...rest } = item;
