@@ -95,17 +95,10 @@ const getAllLeaveType = async (search, page, size, startDate, endDate) => {
     const filters = {};
     if (search) {
       filters.OR = [
-        { leave_type: { contains: search, mode: "insensitive" } },
-        { leave_unit: { contains: search, mode: "insensitive" } },
-        { for_gender: { contains: search, mode: "insensitive" } },
+        { leave_type: { contains: search.toLowerCase() } },
+        { leave_unit: { contains: search.toLowerCase() } },
+        { for_gender: { contains: search.toLowerCase() } },
       ];
-    }
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = { gte: start, lte: end };
-      }
     }
 
     const datas = await prisma.hrms_m_leave_type_master.findMany({
