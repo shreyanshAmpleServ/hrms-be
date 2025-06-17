@@ -1159,7 +1159,6 @@ model hrms_m_kpi_master {
 }
 
 model hrms_m_leave_type_master {
-  employee_id            Int
   id                     Int                        @id(map: "PK__hrms_m_l__3213E83F7F49932B") @default(autoincrement())
   leave_type             String?                    @db.NVarChar(100)
   carry_forward          Boolean?
@@ -1748,8 +1747,8 @@ model hrms_d_employee_pay_component_assignment_line {
   column_order                                    Int?                                            @db.SmallInt
   createdate                                      DateTime?                                       @default(now(), map: "DF__hrms_d_em__creat__34B3CB38") @db.DateTime
   createdby                                       Int
+  log_inst                                        Int?
   updatedate                                      DateTime?                                       @db.DateTime
   updatedby                                       Int?
-  log_inst                                        Int?
   hrms_d_employee_pay_component_assignment_header hrms_d_employee_pay_component_assignment_header @relation(fields: [parent_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_em__paren__2EFAF1E2")
 }
