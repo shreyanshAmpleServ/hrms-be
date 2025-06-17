@@ -295,7 +295,7 @@ const getUpcomingBirthdays = async (page = 1, size = 10) => {
   // Check if there's any data on this page
   if (paginated.length === 0) {
     return {
-      data: [],
+      data: {},
       currentPage: page,
       size,
       totalPages,
@@ -314,7 +314,7 @@ const getUpcomingBirthdays = async (page = 1, size = 10) => {
   });
 
   return {
-    ...grouped,
+    data: grouped,
     currentPage: page,
     size,
     totalPages,
@@ -547,12 +547,10 @@ const workAnniversary = async (page = 1, size = 10) => {
       "YYYY-MM-DD"
     );
 
-    // If anniversary has passed this year, get next year's anniversary
     if (anniversaryThisYear.isBefore(today, "day")) {
       anniversaryThisYear.add(1, "year");
     }
 
-    // Calculate years of service
     const yearsOfService = anniversaryThisYear.year() - joinDate.year();
 
     const formattedLabel = anniversaryThisYear.isSame(today, "day")
@@ -610,7 +608,7 @@ const workAnniversary = async (page = 1, size = 10) => {
   });
 
   return {
-    ...grouped,
+    data: grouped,
     currentPage: page,
     size,
     totalPages,
@@ -686,15 +684,12 @@ const attendanceOverview = async (dateString) => {
         normalizedStatus === "half day" ||
         normalizedStatus === "halfday"
       ) {
-        statusCounts["Half Day"]++; // Fixed: Use correct key
+        statusCounts["Half Day"]++;
       }
-      // Removed WFH logic since you don't want it
     }
 
-    // Calculate absent employees
     statusCounts.Absent = totalEmployees - markedEmployees.size;
 
-    // Fixed: Only include the 4 statuses you want
     const labels = ["Present", "Absent", "Late", "Half Day"];
     const values = labels.map((label) => statusCounts[label]);
 
@@ -707,12 +702,6 @@ const attendanceOverview = async (dateString) => {
     throw new CustomError("Error retrieving attendance status count", 503);
   }
 };
-
-// Usage examples:
-// const todayCount = await getAttendanceStatusCount();
-// const specificDateCount = await getAttendanceStatusCount('2024-12-15');
-
-// Add this function to your existing module exports
 
 module.exports = {
   findDealById,
