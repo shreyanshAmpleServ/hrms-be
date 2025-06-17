@@ -3,7 +3,6 @@ const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const { id } = require("zod/v4/locales");
 const prisma = new PrismaClient();
-const { startOfDay, endOfDay } = require("date-fns");
 const { DateTime } = require("luxon");
 
 const parseTags = (deal) => {
@@ -218,7 +217,7 @@ const getAllEmployeeAttendance = async (dateString) => {
   };
 };
 
-const getUpcomingBirthdays = async () => {
+const getUpcomingBirthdays = async (page = 1, size = 10) => {
   const today = moment();
   const tomorrow = moment().add(1, "day");
 
@@ -229,6 +228,7 @@ const getUpcomingBirthdays = async () => {
       },
     },
     select: {
+      id: true,
       first_name: true,
       last_name: true,
       designation_id: true,
@@ -259,48 +259,66 @@ const getUpcomingBirthdays = async () => {
     }
 
     const formattedLabel = birthdayThisYear.isSame(today, "day")
-      ? "Today"
+      ? "today"
       : birthdayThisYear.isSame(tomorrow, "day")
-      ? "Tomorrow"
+      ? "tomorrow"
       : birthdayThisYear.format("DD MMM YYYY");
 
     const birthdayObj = {
+      id: emp.id,
       name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
       designation: emp.hrms_employee_designation?.designation_name || "",
       profile_pic: emp.profile_pic || "",
-      birthday: birthdayThisYear,
+      birthday: birthdayThisYear.toDate(),
       label: formattedLabel,
     };
 
-    if (formattedLabel === "Today") {
+    if (formattedLabel === "today") {
       todayList.push(birthdayObj);
-    } else if (formattedLabel === "Tomorrow") {
+    } else if (formattedLabel === "tomorrow") {
       tomorrowList.push(birthdayObj);
     } else {
       others.push(birthdayObj);
     }
   });
 
-  const formatList = (list) =>
-    list
-      .sort((a, b) => a.birthday - b.birthday)
-      .map(({ birthday, label, ...rest }) => rest);
+  const all = [...todayList, ...tomorrowList, ...others].sort(
+    (a, b) => a.birthday - b.birthday
+  );
 
-  const formatGrouped = (list) => {
-    const grouped = {};
-    list.forEach(({ birthday, label, ...rest }) => {
-      if (!grouped[label]) {
-        grouped[label] = [];
-      }
-      grouped[label].push(rest);
-    });
-    return grouped;
-  };
+  const totalCount = all.length;
+  const totalPages = Math.ceil(totalCount / size);
+  const offset = (page - 1) * size;
+
+  const paginated = all.slice(offset, offset + size);
+
+  // Check if there's any data on this page
+  if (paginated.length === 0) {
+    return {
+      data: [],
+      currentPage: page,
+      size,
+      totalPages,
+      totalCount,
+    };
+  }
+
+  // Group paginated data by label
+  const grouped = {};
+  paginated.forEach((item) => {
+    const { birthday, label, ...rest } = item;
+    if (!grouped[label]) {
+      grouped[label] = [];
+    }
+    grouped[label].push(rest);
+  });
 
   return {
-    ...(todayList.length > 0 && { today: formatList(todayList) }),
-    ...(tomorrowList.length > 0 && { tomorrow: formatList(tomorrowList) }),
-    ...formatGrouped(others),
+    ...grouped,
+    currentPage: page,
+    size,
+    totalPages,
+    totalCount,
   };
 };
 
@@ -405,46 +423,6 @@ const getDesignations = async () => {
   };
 };
 
-const getAllAbsents = async () => {
-  const today = new Date();
-
-  const absents = await prisma.hrms_d_daily_attendance_entry.findMany({
-    where: {
-      status: "Absent",
-      attendance_date: {
-        gte: startOfDay(today),
-        lte: endOfDay(today),
-      },
-    },
-    orderBy: {
-      attendance_date: "desc",
-    },
-    take: 10,
-    select: {
-      attendance_date: true,
-      remarks: true,
-      hrms_daily_attendance_employee: {
-        select: {
-          id: true,
-          first_name: true,
-          last_name: true,
-          employee_code: true,
-        },
-      },
-    },
-  });
-
-  return absents.map((entry) => ({
-    employee_id: entry.hrms_daily_attendance_employee.id,
-    employee_code: entry.hrms_daily_attendance_employee.employee_code,
-    name: `${entry.hrms_daily_attendance_employee.first_name ?? ""} ${
-      entry.hrms_daily_attendance_employee.last_name ?? ""
-    }`.trim(),
-    attendance_date: entry.attendance_date,
-    remarks: entry.remarks,
-  }));
-};
-
 const getDepartment = async () => {
   const departments = await prisma.hrms_d_employee.groupBy({
     by: ["department_id"],
@@ -532,6 +510,210 @@ const getStatus = async () => {
   };
 };
 
+const workAnniversary = async (page = 1, size = 10) => {
+  const today = moment();
+  const tomorrow = moment().add(1, "day");
+
+  const employees = await prisma.hrms_d_employee.findMany({
+    where: {
+      join_date: {
+        not: null,
+      },
+    },
+    select: {
+      id: true,
+      first_name: true,
+      last_name: true,
+      designation_id: true,
+      profile_pic: true,
+      join_date: true,
+      hrms_employee_designation: {
+        select: {
+          designation_name: true,
+        },
+      },
+    },
+  });
+
+  const todayList = [];
+  const tomorrowList = [];
+  const others = [];
+
+  employees.forEach((emp) => {
+    const joinDate = moment(emp.join_date);
+    const currentYear = today.year();
+    let anniversaryThisYear = moment(
+      `${currentYear}-${joinDate.format("MM-DD")}`,
+      "YYYY-MM-DD"
+    );
+
+    // If anniversary has passed this year, get next year's anniversary
+    if (anniversaryThisYear.isBefore(today, "day")) {
+      anniversaryThisYear.add(1, "year");
+    }
+
+    // Calculate years of service
+    const yearsOfService = anniversaryThisYear.year() - joinDate.year();
+
+    const formattedLabel = anniversaryThisYear.isSame(today, "day")
+      ? "today"
+      : anniversaryThisYear.isSame(tomorrow, "day")
+      ? "tomorrow"
+      : anniversaryThisYear.format("DD MMM YYYY");
+
+    const anniversaryObj = {
+      id: emp.id,
+      name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+      designation: emp.hrms_employee_designation?.designation_name || "",
+      profile_pic: emp.profile_pic || "",
+      anniversary: anniversaryThisYear.toDate(),
+      years_of_service: yearsOfService,
+      label: formattedLabel,
+    };
+
+    if (formattedLabel === "today") {
+      todayList.push(anniversaryObj);
+    } else if (formattedLabel === "tomorrow") {
+      tomorrowList.push(anniversaryObj);
+    } else {
+      others.push(anniversaryObj);
+    }
+  });
+
+  const all = [...todayList, ...tomorrowList, ...others].sort(
+    (a, b) => b.anniversary - a.anniversary
+  );
+
+  const totalCount = all.length;
+  const totalPages = Math.ceil(totalCount / size);
+  const offset = (page - 1) * size;
+
+  const paginated = all.slice(offset, offset + size);
+
+  if (paginated.length === 0) {
+    return {
+      data: [],
+      currentPage: page,
+      size,
+      totalPages,
+      totalCount,
+    };
+  }
+
+  const grouped = {};
+  paginated.forEach((item) => {
+    const { anniversary, label, ...rest } = item;
+    if (!grouped[label]) {
+      grouped[label] = [];
+    }
+    grouped[label].push(rest);
+  });
+
+  return {
+    ...grouped,
+    currentPage: page,
+    size,
+    totalPages,
+    totalCount,
+  };
+};
+
+const attendanceOverview = async (dateString) => {
+  try {
+    let today;
+
+    if (dateString) {
+      today = DateTime.fromISO(dateString, { zone: "Asia/Kolkata" }).startOf(
+        "day"
+      );
+    } else {
+      today = DateTime.now().setZone("Asia/Kolkata").startOf("day");
+    }
+
+    const endOfDay = today.endOf("day");
+
+    const employees = await prisma.hrms_d_employee.findMany({
+      where: { status: "active" },
+      select: { id: true },
+    });
+
+    const totalEmployees = employees.length;
+    const employeeIds = employees.map((e) => e.id);
+
+    const attendanceRecords =
+      await prisma.hrms_d_daily_attendance_entry.findMany({
+        where: {
+          attendance_date: {
+            gte: today.toJSDate(),
+            lte: endOfDay.toJSDate(),
+          },
+          employee_id: { in: employeeIds },
+        },
+        orderBy: {
+          check_in_time: "desc",
+        },
+        select: {
+          employee_id: true,
+          status: true,
+        },
+      });
+
+    const latestRecordMap = new Map();
+    for (const record of attendanceRecords) {
+      if (!latestRecordMap.has(record.employee_id)) {
+        latestRecordMap.set(record.employee_id, record.status);
+      }
+    }
+
+    const statusCounts = {
+      Present: 0,
+      Absent: 0,
+      Late: 0,
+      "Half Day": 0,
+    };
+
+    const markedEmployees = new Set();
+
+    for (const [empId, status] of latestRecordMap.entries()) {
+      markedEmployees.add(empId);
+      const normalizedStatus = status?.toLowerCase();
+
+      if (normalizedStatus === "present") {
+        statusCounts.Present++;
+      } else if (normalizedStatus === "late") {
+        statusCounts.Late++;
+      } else if (
+        normalizedStatus === "half day" ||
+        normalizedStatus === "halfday"
+      ) {
+        statusCounts["Half Day"]++; // Fixed: Use correct key
+      }
+      // Removed WFH logic since you don't want it
+    }
+
+    // Calculate absent employees
+    statusCounts.Absent = totalEmployees - markedEmployees.size;
+
+    // Fixed: Only include the 4 statuses you want
+    const labels = ["Present", "Absent", "Late", "Half Day"];
+    const values = labels.map((label) => statusCounts[label]);
+
+    return {
+      labels,
+      values,
+    };
+  } catch (error) {
+    console.log("Error getting attendance status count:", error);
+    throw new CustomError("Error retrieving attendance status count", 503);
+  }
+};
+
+// Usage examples:
+// const todayCount = await getAttendanceStatusCount();
+// const specificDateCount = await getAttendanceStatusCount('2024-12-15');
+
+// Add this function to your existing module exports
+
 module.exports = {
   findDealById,
   getDashboardData,
@@ -539,7 +721,8 @@ module.exports = {
   getUpcomingBirthdays,
   getAllUpcomingBirthdays,
   getDesignations,
-  getAllAbsents,
   getDepartment,
   getStatus,
+  workAnniversary,
+  attendanceOverview,
 };

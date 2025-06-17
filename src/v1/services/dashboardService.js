@@ -11,8 +11,8 @@ const getAllEmployeeAttendance = async (startDate, endDate) => {
   return await dashboardModel.getAllEmployeeAttendance(startDate, endDate);
 };
 
-const getUpcomingBirthdays = async () => {
-  return await dashboardModel.getUpcomingBirthdays();
+const getUpcomingBirthdays = async (page, limit) => {
+  return await dashboardModel.getUpcomingBirthdays(page, limit);
 };
 
 const getAllUpcomingBirthdays = async () => {
@@ -34,6 +34,15 @@ const getDepartment = async () => {
 const getStatus = async () => {
   return await dashboardModel.getStatus();
 };
+
+const workAnniversary = async (page, limit) => {
+  return await dashboardModel.workAnniversary(page, limit);
+};
+
+const attendanceOverview = async () => {
+  return await dashboardModel.attendanceOverview();
+};
+
 module.exports = {
   findDealById,
   getDashboardData,
@@ -44,4 +53,6 @@ module.exports = {
   getAllAbsents,
   getDepartment,
   getStatus,
+  workAnniversary,
+  attendanceOverview,
 };
