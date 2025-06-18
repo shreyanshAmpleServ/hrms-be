@@ -425,6 +425,7 @@ const findEmployeeById = async (id) => {
         },
         experiance_of_employee: true,
         eduction_of_employee: true,
+        document_upload_employee: true,
       },
     });
     return parseData(employee);
