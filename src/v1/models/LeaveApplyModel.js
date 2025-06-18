@@ -300,8 +300,20 @@ const updateLeaveStatus = async (id, data) => {
             id: true,
           },
         },
-
         leave_approver: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+        leave_types: {
+          select: {
+            leave_type: true,
+            id: true,
+          },
+        },
+        leave_backup_person_id: {
           select: {
             id: true,
             employee_code: true,
