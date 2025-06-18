@@ -311,7 +311,6 @@ model hrms_d_employee {
   hrms_d_hr_letter                                hrms_d_hr_letter[]
   kpi_progress_entry_employee                     hrms_d_kpi_progress_entry[]                       @relation("KpiEmployee")
   kpi_progress_entry_reviewedBy                   hrms_d_kpi_progress_entry[]                       @relation("KpiReviewedBy")
-  leave_approver                                  hrms_d_leave_application[]                        @relation("LeaveAprrover")
   leave_backup_person_id                          hrms_d_leave_application[]                        @relation("LeaveBackup")
   leave_employee                                  hrms_d_leave_application[]
   leave_encashment_employee                       hrms_d_leave_encashment[]
@@ -345,6 +344,7 @@ model hrms_d_employee {
   eduction_of_employee                            hrms_employee_d_educations[]
   experiance_of_employee                          hrms_employee_d_experiences[]
   user_employee                                   hrms_m_user[]
+  leave_approver                                  hrms_d_leave_application[]                        @relation("LeaveAprrover")
 }
 
 model hrms_d_employee_address {

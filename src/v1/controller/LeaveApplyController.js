@@ -117,9 +117,16 @@ const getAllLeaveApplication = async (req, res, next) => {
 
 const updateLeaveStatus = async (req, res, next) => {
   try {
+    console.log("Approver ID from token:", req.user.id);
+
+    const status = req.body.status;
+    const rejection_reason = req.body.rejection_reason || "";
+    console.log("User : ", req.user);
     const data = {
-      ...req.body,
-      updatedby: req.user.id,
+      status,
+      rejection_reason,
+      updatedby: req.user.employee_id,
+      approver_id: req.user.employee_id,
       updatedate: new Date(),
     };
 
