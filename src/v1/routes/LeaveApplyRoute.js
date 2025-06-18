@@ -32,4 +32,10 @@ router.get(
   LeaveApplyController.getAllLeaveApplication
 );
 
+router.patch(
+  "/leave-application/:id/status",
+  authenticateToken,
+  LeaveApplyController.updateLeaveStatus
+);
+
 module.exports = router;

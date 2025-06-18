@@ -21,7 +21,6 @@ const serializeLeaveApplicationData = (data) => ({
   approver_id: data.approver_id ? Number(data.approver_id) : null,
   approval_date: data.approval_date ? new Date(data.approval_date) : new Date(), // default to today if not provided
   document_attachment: data.document_attachment || "",
-  rejection_reason: data.rejection_reason || "",
 });
 
 // Create a new leave application
@@ -250,10 +249,44 @@ const getAllLeaveApplication = async (
   }
 };
 
+const updateLeaveStatus = async (id, data) => {
+  try {
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+
+    if (data.status === "Approved") {
+      updateData.approver_id = Number(data.approver_id) || null;
+      updateData.approval_date = new Date(); // current date
+      updateData.rejection_reason = "";
+    } else if (data.status === "Rejected") {
+      updateData.approver_id = Number(data.approver_id) || null;
+      updateData.approval_date = new Date();
+      updateData.rejection_reason = data.rejection_reason || "";
+    } else {
+      updateData.approver_id = null;
+      updateData.approval_date = null;
+      updateData.rejection_reason = "";
+    }
+
+    const updatedEntry = await prisma.hrms_d_leave_application.update({
+      where: { id: parseInt(id) },
+      data: updateData,
+    });
+
+    return updatedEntry;
+  } catch (error) {
+    throw new CustomError(`Error updating leave status: ${error.message}`, 500);
+  }
+};
+
 module.exports = {
   createLeaveApplication,
   findLeaveApplicationById,
   updateLeaveApplication,
   deleteLeaveApplication,
   getAllLeaveApplication,
+  updateLeaveStatus,
 };

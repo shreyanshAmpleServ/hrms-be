@@ -115,10 +115,29 @@ const getAllLeaveApplication = async (req, res, next) => {
   }
 };
 
+const updateLeaveStatus = async (req, res, next) => {
+  try {
+    const data = {
+      ...req.body,
+      updatedby: req.user.id,
+      updatedate: new Date(),
+    };
+
+    const reqData = await LeaveApplyService.updateLeaveStatus(
+      req.params.id,
+      data
+    );
+    res.status(200).success("Leave status updated successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createLeaveApplication,
   findLeaveApplicationById,
   updateLeaveApplication,
   deleteLeaveApplication,
   getAllLeaveApplication,
+  updateLeaveStatus,
 };
