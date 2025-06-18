@@ -113,7 +113,14 @@ const deleteDocumentUpload = async (id) => {
 };
 
 // Get all document uploads
-const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
+const getAllDocumentUpload = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  employeeId
+) => {
   try {
     page =
       !page || isNaN(parseInt(page)) || parseInt(page) <= 0
@@ -162,6 +169,10 @@ const getAllDocumentUpload = async (search, page, size, startDate, endDate) => {
 
     if (andConditions.length > 0) {
       filters.AND = andConditions;
+    }
+
+    if (employeeId) {
+      filters.document_owner_id = parseInt(employeeId);
     }
 
     const datas = await prisma.hrms_d_document_upload.findMany({
