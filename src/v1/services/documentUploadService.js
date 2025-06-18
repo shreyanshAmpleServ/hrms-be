@@ -16,13 +16,21 @@ const deleteDocument = async (id) => {
   return await documentUploadModel.deleteDocumentUpload(id);
 };
 
-const getAllDocuments = async (search, page, size, startDate, endDate) => {
+const getAllDocuments = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  employeeId
+) => {
   return await documentUploadModel.getAllDocumentUpload(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    employeeId
   );
 };
 

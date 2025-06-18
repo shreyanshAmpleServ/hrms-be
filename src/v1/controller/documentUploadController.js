@@ -107,13 +107,14 @@ const deleteDocument = async (req, res, next) => {
 
 const getAllDocuments = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, employeeId } = req.query;
     const docs = await documentUploadService.getAllDocuments(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      Number(employeeId)
     );
     res.status(200).success(null, docs);
   } catch (error) {
