@@ -251,6 +251,24 @@ const getAllLeaveApplication = async (
 
 const updateLeaveStatus = async (id, data) => {
   try {
+    const leaveId = parseInt(id);
+    if (isNaN(leaveId)) {
+      throw new CustomError("Invalid leave application ID", 400);
+    }
+
+    // Step 1: Check if the leave application exists
+    const existingLeave = await prisma.hrms_d_leave_application.findUnique({
+      where: { id: leaveId },
+    });
+
+    if (!existingLeave) {
+      throw new CustomError(
+        `Leave application with ID ${leaveId} not found`,
+        404
+      );
+    }
+
+    // Step 2: Prepare update data
     const updateData = {
       status: data.status,
       updatedby: data.updatedby || 1,
@@ -259,7 +277,7 @@ const updateLeaveStatus = async (id, data) => {
 
     if (data.status === "Approved") {
       updateData.approver_id = Number(data.approver_id) || null;
-      updateData.approval_date = new Date(); // current date
+      updateData.approval_date = new Date();
       updateData.rejection_reason = "";
     } else if (data.status === "Rejected") {
       updateData.approver_id = Number(data.approver_id) || null;
@@ -271,9 +289,26 @@ const updateLeaveStatus = async (id, data) => {
       updateData.rejection_reason = "";
     }
 
+    // Step 3: Update with relations
     const updatedEntry = await prisma.hrms_d_leave_application.update({
-      where: { id: parseInt(id) },
+      where: { id: leaveId },
       data: updateData,
+      include: {
+        leave_employee: {
+          select: {
+            full_name: true,
+            id: true,
+          },
+        },
+
+        leave_approver: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+      },
     });
 
     return updatedEntry;

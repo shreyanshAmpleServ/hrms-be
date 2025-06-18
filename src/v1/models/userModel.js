@@ -11,6 +11,7 @@ const getUserFields = (is_password = false) => ({
   full_name: true,
   phone: true,
   address: true,
+  employee_id: true,
   profile_img: true,
   is_active: true,
   createdate: true,

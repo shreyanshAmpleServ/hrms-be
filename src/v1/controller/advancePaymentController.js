@@ -6,7 +6,7 @@ const createAdvancePayment = async (req, res, next) => {
   try {
     const data = {
       ...req.body,
-      createdby: req.user.id,
+      createdby: req.user.employee_id,
       log_inst: req.user.log_inst,
     };
     const reqData = await advancePaymentService.createAdvancePayment(data);
