@@ -314,6 +314,7 @@ model hrms_d_employee {
   leave_approver                                  hrms_d_leave_application[]                        @relation("LeaveAprrover")
   leave_backup_person_id                          hrms_d_leave_application[]                        @relation("LeaveBackup")
   leave_employee                                  hrms_d_leave_application[]
+  leave_balance_employee                          hrms_d_leave_balance[]                            @relation("LeaveBalanceEmployee")
   leave_encashment_employee                       hrms_d_leave_encashment[]
   loan_req_employee                               hrms_d_loan_request[]
   hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")
@@ -345,7 +346,6 @@ model hrms_d_employee {
   eduction_of_employee                            hrms_employee_d_educations[]
   experiance_of_employee                          hrms_employee_d_experiences[]
   user_employee                                   hrms_m_user[]
-  leave_balance_employee                          hrms_d_leave_balance[]                            @relation("LeaveBalanceEmployee")
 }
 
 model hrms_d_employee_address {
@@ -554,8 +554,8 @@ model hrms_d_leave_balance {
   updatedate                   DateTime?                      @db.DateTime
   updatedby                    Int?
   log_inst                     Int?
+  leave_balance_employee       hrms_d_employee                @relation("LeaveBalanceEmployee", fields: [employee_id], references: [id], onUpdate: NoAction)
   leave_balance_details_parent hrms_d_leave_balance_details[] @relation("LeaveBalaceParent")
-  leave_balance_employee       hrms_d_employee?               @relation("LeaveBalanceEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_leave_encashment {
@@ -1191,8 +1191,8 @@ model hrms_m_leave_type_master {
   prorate_allowed                 String                         @default("Y", map: "DF__hrms_m_le__prora__0BB1B5A5") @db.Char(1)
   for_gender                      String                         @default("B", map: "DF__hrms_m_le__for_g__0CA5D9DE") @db.Char(1)
   leave_types                     hrms_d_leave_application[]
-  encashment_leave_types          hrms_d_leave_encashment[]
   leave_balance_details_LeaveType hrms_d_leave_balance_details[] @relation("LeaveBalaceType")
+  encashment_leave_types          hrms_d_leave_encashment[]
 }
 
 model hrms_m_letter_type {
@@ -1820,8 +1820,8 @@ model hrms_d_leave_balance_details {
   balance                         Int
   closed                          String?                  @db.NVarChar(1)
   unit                            String?                  @db.NVarChar(50)
-  leave_balance_details_parent    hrms_d_leave_balance?    @relation("LeaveBalaceParent", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  leave_balance_details_LeaveType hrms_m_leave_type_master @relation("LeaveBalaceType", fields: [leave_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  leave_balance_details_LeaveType hrms_m_leave_type_master @relation("LeaveBalaceType", fields: [leave_type_id], references: [id], onUpdate: NoAction)
+  leave_balance_details_parent    hrms_d_leave_balance     @relation("LeaveBalaceParent", fields: [parent_id], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_loan_emi_schedule {

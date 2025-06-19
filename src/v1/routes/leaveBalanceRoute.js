@@ -1,0 +1,31 @@
+const express = require("express");
+const router = express.Router();
+const { authenticateToken } = require("../middlewares/authMiddleware");
+const {
+  getLeaveBalanceController,
+  createLeaveBalanceController,
+  updateLeaveBalanceController,
+  deleteLeaveBalanceController,
+  getAllLeaveBalancesController,
+} = require("../controller/leaveBalanceController");
+
+router.post("/leave-balance", authenticateToken, createLeaveBalanceController);
+router.put(
+  "/leave-balance/:id",
+  authenticateToken,
+  updateLeaveBalanceController
+);
+router.delete(
+  "/leave-balance/:id",
+  authenticateToken,
+  deleteLeaveBalanceController
+);
+router.get("/leave-balance", authenticateToken, getAllLeaveBalancesController);
+
+router.get(
+  "/leave-balance-by-employee",
+  authenticateToken,
+  getLeaveBalanceController
+);
+
+module.exports = router;
