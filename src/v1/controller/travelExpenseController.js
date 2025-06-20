@@ -5,6 +5,8 @@ const { uploadToBackblaze } = require("../../utils/uploadBackblaze.js");
 const fs = require("fs");
 const createTravelExpense = async (req, res, next) => {
   try {
+    // console.log("User ID in req.user:", req.user.employee_id);
+
     console.log("Incoming request body:", req.body);
     if (!req.file) throw new CustomError("No file uploaded", 400);
 
@@ -19,7 +21,7 @@ const createTravelExpense = async (req, res, next) => {
     const travelData = {
       ...req.body,
       attachment_path: fileUrl,
-      created_by: req.user.id,
+      createdby: req.user.employee_id,
     };
 
     const reqData = await travelExpenseService.createTravelExpense(travelData);
