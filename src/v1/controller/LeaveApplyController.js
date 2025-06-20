@@ -117,7 +117,7 @@ const getAllLeaveApplication = async (req, res, next) => {
 
 const updateLeaveStatus = async (req, res, next) => {
   try {
-    console.log("Approver ID from token:", req.user.id);
+    console.log("Approver ID from token:", req.user.employee_id);
 
     const status = req.body.status;
     const rejection_reason = req.body.rejection_reason || "";

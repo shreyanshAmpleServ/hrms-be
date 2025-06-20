@@ -210,10 +210,54 @@ const getAllTrainingSessions = async (
   }
 };
 
+const updateTrainingSessionStatus = async (id, data) => {
+  try {
+    const trainingSessionId = parseInt(id);
+    if (isNaN(trainingSessionId)) {
+      throw new CustomError("Invalid Training session ID", 400);
+    }
+
+    const validStatuses = ["Planned", "Ongoing", "Completed", "Cancelled"];
+    if (!validStatuses.includes(data.status)) {
+      throw new CustomError("Invalid training status", 400);
+    }
+
+    const existingTrainingSession =
+      await prisma.hrms_d_training_session.findUnique({
+        where: { id: trainingSessionId },
+      });
+
+    if (!existingTrainingSession) {
+      throw new CustomError(
+        `Training session with ID ${trainingSessionId} not found`,
+        404
+      );
+    }
+
+    const updatedSession = await prisma.hrms_d_training_session.update({
+      where: { id: trainingSessionId },
+      data: {
+        training_status: data.status,
+        updatedby: data.updatedby || 1,
+        updatedate: new Date(),
+      },
+    });
+
+    return updatedSession;
+  } catch (error) {
+    console.error("Error updating training session status:", error);
+    throw new CustomError(
+      `Error updating training session status: ${error.message}`,
+      error.status || 500
+    );
+  }
+};
+
 module.exports = {
   createTrainingSession,
   findTrainingSessionById,
   updateTrainingSession,
   deleteTrainingSession,
   getAllTrainingSessions,
+  updateTrainingSessionStatus,
 };

@@ -33,4 +33,10 @@ router.get(
   trainingSessionController.getAllTrainingSession
 );
 
+router.patch(
+  "/training-session/:id/status",
+  authenticateToken,
+  trainingSessionController.updateTrainingSessionStatus
+);
+
 module.exports = router;

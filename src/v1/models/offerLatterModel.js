@@ -17,7 +17,7 @@ const serializeJobData = (data) => {
 // Create a new offer letter
 const createOfferLetter = async (data) => {
   try {
-   await errorNotExist('hrms_d_employee',data.employee_id ,"Employee" );
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const reqData = await prisma.hrms_d_offer_letter.create({
       data: {
         ...serializeJobData(data),
@@ -26,11 +26,11 @@ const createOfferLetter = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-                offered_employee:{
+        offered_employee: {
           select: {
             full_name: true,
-            id:true,
-          }
+            id: true,
+          },
         },
       },
     });
@@ -61,7 +61,7 @@ const findOfferLetterById = async (id) => {
 // Update a offer letter
 const updateOfferLetter = async (id, data) => {
   try {
-    await errorNotExist("hrms_d_employee",data.employee_id , "Employee");
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
     const updatedOfferLetter = await prisma.hrms_d_offer_letter.update({
       where: { id: parseInt(id) },
@@ -71,11 +71,11 @@ const updateOfferLetter = async (id, data) => {
         updatedate: new Date(),
       },
       include: {
-                offered_employee:{
+        offered_employee: {
           select: {
             full_name: true,
-            id:true,
-          }
+            id: true,
+          },
         },
       },
     });
@@ -97,9 +97,9 @@ const deleteOfferLetter = async (id) => {
 };
 
 // Get all offer letters
-const getAllOfferLetter = async (search,page,size ,startDate, endDate) => {
+const getAllOfferLetter = async (search, page, size, startDate, endDate) => {
   try {
-    page = (!page || page == 0) ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -137,18 +137,18 @@ const getAllOfferLetter = async (search,page,size ,startDate, endDate) => {
       skip: skip,
       take: size,
       include: {
-        offered_employee:{
+        offered_employee: {
           select: {
             full_name: true,
-            id:true,
-          }
+            id: true,
+          },
         },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     // const totalCount = await prisma.hrms_d_offer_letter.count();
     const totalCount = await prisma.hrms_d_offer_letter.count({
-        where: filters,
+      where: filters,
     });
 
     return {
@@ -163,10 +163,63 @@ const getAllOfferLetter = async (search,page,size ,startDate, endDate) => {
   }
 };
 
+const updateOfferLetterStatus = async (id, status, updatedby = 1) => {
+  try {
+    const offerLetterId = parseInt(id);
+    if (isNaN(leaveId)) {
+      throw new CustomError("Invalid Offer Letter ID", 400);
+    }
+
+    const existingOfferLetter =
+      await prisma.hrms_d_leave_application.findUnique({
+        where: { id: offerLetterId },
+      });
+
+    if (!existingOfferLetter) {
+      throw new CustomError(
+        `Offer letter with ID ${offerLetterId} not found`,
+        404
+      );
+    }
+
+    // const updatedOfferLetter = await prisma.hrms_d_offer_letter.update({
+    //   where: { id: offerLetterId },
+    //   data: {
+    //     status: status,
+    //     updatedby: updatedby,
+    //     updatedate: new Date(),
+    //   },
+    // });
+
+    // return updatedOfferLetter;
+
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+
+    if (data.status === "Approved") {
+      updateData.status = data.status;
+    } else if (data.status === "Rejected") {
+      updateData.status = data.status;
+    } else {
+      updateData.status = data.status;
+    }
+  } catch (error) {
+    console.error("Error updating offer letter status:", error);
+    throw new CustomError(
+      `Error updating offer letter status: ${error.message}`,
+      error.status || 500
+    );
+  }
+};
+
 module.exports = {
   createOfferLetter,
   findOfferLetterById,
   updateOfferLetter,
   deleteOfferLetter,
   getAllOfferLetter,
+  updateOfferLetterStatus,
 };
