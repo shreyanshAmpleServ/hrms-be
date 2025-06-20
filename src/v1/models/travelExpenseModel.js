@@ -31,7 +31,7 @@ const createTravelExpense = async (data) => {
     const reqData = await prisma.hrms_d_travel_expense.create({
       data: {
         ...serializeTravelExpenseData(data),
-        createdby: data.createdby ? Number(data.createdby) : 1,
+        createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
