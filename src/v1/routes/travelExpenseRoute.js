@@ -42,4 +42,10 @@ router.delete(
   travelExpenseController.deleteTravelExpense
 );
 
+router.patch(
+  "/travel-expense/:id/status",
+  authenticateToken,
+  travelExpenseController.updateTravelExpenseStatus
+);
+
 module.exports = router;
