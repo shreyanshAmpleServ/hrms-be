@@ -133,7 +133,7 @@ const updateLeaveBalance = async (id, data) => {
  */
 const findLeaveBalanceById = async (id) => {
   try {
-    const leaveBalance = await prisma.hrms_d_leave_balance_details.findUnique({
+    const leaveBalance = await prisma.hrms_d_leave_balance.findUnique({
       where: { id: Number(id) },
     });
     const data = await prisma.hrms_d_leave_balance_details.findMany({
