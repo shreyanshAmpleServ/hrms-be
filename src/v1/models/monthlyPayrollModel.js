@@ -20,7 +20,6 @@ const createMonthlyPayroll = async (data) => {
   try {
     const serializedData = serializePayrollData(data);
 
-    // Separate employee_id from other fields
     const { employee_id, ...payrollData } = serializedData;
 
     const reqData = await prisma.hrms_d_monthly_payroll_processing.create({
@@ -170,6 +169,8 @@ const getAllMonthlyPayroll = async (search, page, size, startDate, endDate) => {
       totalCount,
     };
   } catch (error) {
+    console.log("Payroll retreival error", error);
+
     throw new CustomError("Error retrieving payroll entries", 503);
   }
 };

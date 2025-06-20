@@ -232,10 +232,21 @@ const updateTravelExpenseStatus = async (id, data) => {
       updatedate: new Date(),
     };
 
-    if (data.status === "Approved" || data.status === "Rejected") {
-      updateData.approved_by = Number(data.approver_id) || null;
-      updateData.remarks =
-        data.status === "Rejected" ? data.rejection_reason || "" : "";
+    // if (data.status === "Approved" || data.status === "Rejected") {
+    //   updateData.approved_by = Number(data.approver_id) || null;
+    //   updateData.remarks =
+    //     data.status === "Rejected" ? data.rejection_reason || "" : "";
+    // } else {
+    //   updateData.approved_by = null;
+    //   updateData.remarks = "";
+    // }
+
+    if (data.status === "Approved") {
+      updateData.approved_by = Number(data.approved_by) || null;
+      updateData.remarks = "";
+    } else if (data.status === "Rejected") {
+      updateData.approved_by = Number(data.approved_by) || null;
+      updateData.remarks = data.rejection_reason || "";
     } else {
       updateData.approved_by = null;
       updateData.remarks = "";

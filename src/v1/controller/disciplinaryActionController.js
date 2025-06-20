@@ -71,10 +71,38 @@ const getAllDisciplinaryActions = async (req, res, next) => {
   }
 };
 
+const updateDisciplinaryActionStatus = async (req, res, next) => {
+  try {
+    console.log("Approver ID from token:", req.user.id);
+
+    const status = req.body.status;
+    const rejection_reason = req.body.rejection_reason || "";
+    console.log("User : ", req.user);
+    const data = {
+      status,
+      updatedby: req.user.employee_id,
+      reviewed_by: req.user.employee_id,
+      updatedate: new Date(),
+    };
+
+    const reqData =
+      await disciplinaryActionService.updateDisciplinaryActionStatus(
+        req.params.id,
+        data
+      );
+    res
+      .status(200)
+      .success("Disciplinary Action status updated successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createDisciplinaryAction,
   getDisciplinaryActionById,
   updateDisciplinaryAction,
   deleteDisciplinaryAction,
   getAllDisciplinaryActions,
+  updateDisciplinaryActionStatus,
 };

@@ -31,10 +31,14 @@ const getAllDisciplinaryActions = async (
   );
 };
 
+const updateDisciplinaryActionStatus = async (id, data) => {
+  return await disciplinaryActionModel.updateDisciplinaryActionStatus(id, data);
+};
 module.exports = {
   createDisciplinaryAction,
   getDisciplinaryActionById,
   updateDisciplinaryAction,
   deleteDisciplinaryAction,
   getAllDisciplinaryActions,
+  updateDisciplinaryActionStatus,
 };

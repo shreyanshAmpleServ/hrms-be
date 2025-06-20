@@ -39,4 +39,10 @@ router.delete(
   disciplinaryActionController.deleteDisciplinaryAction
 );
 
+router.patch(
+  "/disciplinary-action/:id/status",
+  authenticateToken,
+  disciplinaryActionController.updateDisciplinaryActionStatus
+);
+
 module.exports = router;
