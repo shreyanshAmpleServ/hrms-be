@@ -6,12 +6,12 @@ const createTrainingSession = async (data) => {
 };
 
 // Service to get a training session by ID
-const getTrainingSessionById= async (id) => {
+const getTrainingSessionById = async (id) => {
   return await trainingSessionModel.findTrainingSessionById(id);
 };
 
 // Service to update a training session
-const updateTrainingSession= async (id, data) => {
+const updateTrainingSession = async (id, data) => {
   return await trainingSessionModel.updateTrainingSession(id, data);
 };
 
@@ -21,14 +21,30 @@ const deleteTrainingSession = async (id) => {
 };
 
 // Service to get all training sessions
-const getAllTrainingSession = async (search, page, size, startDate, endDate) => {
-  return await trainingSessionModel.getAllTrainingSessions(search, page, size, startDate, endDate);
+const getAllTrainingSession = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
+  return await trainingSessionModel.getAllTrainingSessions(
+    search,
+    page,
+    size,
+    startDate,
+    endDate
+  );
 };
 
+const updateTrainingSessionStatus = async (id, data) => {
+  return await trainingSessionModel.updateTrainingSessionStatus(id, data);
+};
 module.exports = {
   createTrainingSession,
   getTrainingSessionById,
   updateTrainingSession,
   deleteTrainingSession,
   getAllTrainingSession,
+  updateTrainingSessionStatus,
 };

@@ -531,7 +531,6 @@ const updateLeaveStatus = async (id, data) => {
       );
     }
 
-    // Step 2: Prepare update data
     const updateData = {
       status: data.status,
       updatedby: data.updatedby || 1,
@@ -552,7 +551,6 @@ const updateLeaveStatus = async (id, data) => {
       updateData.rejection_reason = "";
     }
 
-    // Step 3: Update with relations
     const updatedEntry = await prisma.hrms_d_leave_application.update({
       where: { id: leaveId },
       data: updateData,

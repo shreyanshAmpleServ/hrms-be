@@ -4,6 +4,7 @@ const moment = require("moment");
 const fs = require("fs");
 const fsPromises = require("fs").promises;
 const { uploadToBackblaze } = require("../../utils/uploadBackblaze.js");
+const { log } = require("console");
 
 // Create
 const createTrainingSession = async (req, res, next) => {
@@ -113,10 +114,31 @@ const getAllTrainingSession = async (req, res, next) => {
   }
 };
 
+const updateTrainingSessionStatus = async (req, res, next) => {
+  try {
+    console.log("Approver ID from token:", req.user.employee_id);
+    const status = req.body.status;
+    const data = {
+      status,
+      updatedby: req.user.employee_id,
+      updatedate: new Date(),
+    };
+
+    const reqData = await trainingSessionService.updateTrainingSessionStatus(
+      req.params.id,
+      data
+    );
+    res.status(200).success("Leave status updated successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTrainingSession,
   findTrainingSessionById,
   updateTrainingSession,
   deleteTrainingSession,
   getAllTrainingSession,
+  updateTrainingSessionStatus,
 };
