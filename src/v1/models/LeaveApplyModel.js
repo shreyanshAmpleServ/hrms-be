@@ -520,7 +520,6 @@ const updateLeaveStatus = async (id, data) => {
       throw new CustomError("Invalid leave application ID", 400);
     }
 
-    // Step 1: Check if the leave application exists
     const existingLeave = await prisma.hrms_d_leave_application.findUnique({
       where: { id: leaveId },
     });

@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { parse } = require("dotenv");
 const prisma = new PrismaClient();
 
 // Serialize leave encashment data
@@ -203,10 +204,68 @@ const getAllLeaveEncashment = async (
   }
 };
 
+const updateLeaveEnchashmentStatus = async (id, data) => {
+  try {
+    const leaveEnchashmentId = parseInt(id);
+    if (isNaN(leaveEnchashmentId)) {
+      throw new CustomError("Invalid leave Enchashment ID", 400);
+    }
+
+    const existingLeaveEnchasment =
+      await prisma.hrms_d_leave_encashment.findUnique({
+        where: { id: leaveEnchashmentId },
+      });
+
+    if (!existingLeaveEnchasment) {
+      throw new CustomError(
+        `Leave encashment with ID ${leaveEnchashmentId} not found`,
+        404
+      );
+    }
+
+    // Build update data aligned to your schema
+    const updateData = {
+      approval_status: data.status,
+      updatedby: Number(data.updatedby) || 1,
+      updatedate: new Date(),
+      // remarks field removed because it doesn't exist
+    };
+
+    const updatedEntry = await prisma.hrms_d_leave_encashment.update({
+      where: { id: leaveEnchashmentId },
+      data: updateData,
+      include: {
+        leave_encashment_employee: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+        encashment_leave_types: {
+          select: {
+            id: true,
+          },
+        },
+      },
+    });
+
+    return updatedEntry;
+  } catch (error) {
+    console.log("Error updating leave Enchashment", error);
+
+    throw new CustomError(
+      `Error updating leave Enchashment: ${error.message}`,
+      500
+    );
+  }
+};
+
 module.exports = {
   createLeaveEncashment,
   findLeaveEncashmentById,
   updateLeaveEncashment,
   deleteLeaveEncashment,
   getAllLeaveEncashment,
+  updateLeaveEnchashmentStatus,
 };

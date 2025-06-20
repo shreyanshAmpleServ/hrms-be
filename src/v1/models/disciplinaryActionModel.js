@@ -236,10 +236,69 @@ const getAllDisciplinaryAction = async (
   }
 };
 
+const updateDisciplinaryActionStatus = async (id, data) => {
+  try {
+    const disciplinaryActionId = parseInt(id);
+    if (isNaN(disciplinaryActionId)) {
+      throw new CustomError("Invalid disciplinary action ID", 400);
+    }
+
+    const existingDisciplinaryAction =
+      await prisma.hrms_d_disciplinary_action.findUnique({
+        where: { id: disciplinaryActionId },
+      });
+
+    if (!existingDisciplinaryAction) {
+      throw new CustomError(
+        `Disciplinary action with ID ${disciplinaryActionId} not found`,
+        404
+      );
+    }
+
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+
+    if (data.status === "Resolved") {
+      updateData.reviewed_by = Number(data.reviewed_by) || null;
+      updateData.review_date = new Date();
+    } else if (data.status === "Closed") {
+      updateData.reviewed_by = Number(data.reviewed_by) || null;
+      updateData.review_date = new Date();
+    } else {
+      updateData.reviewed_by = null;
+      updateData.review_date = null;
+    }
+    const updatedEntry = await prisma.hrms_d_disciplinary_action.update({
+      where: { id: disciplinaryActionId },
+      data: updateData,
+      include: {
+        disciplinary_reviewed_by: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+      },
+    });
+    return updatedEntry;
+  } catch (error) {
+    console.log("Error updating disciplinary action", error);
+
+    throw new CustomError(
+      `Error updating disciplinary action: ${error.message}`,
+      500
+    );
+  }
+};
 module.exports = {
   createDisciplinaryAction,
   findDisciplinaryActionById,
   updateDisciplinaryAction,
   deleteDisciplinaryAction,
   getAllDisciplinaryAction,
+  updateDisciplinaryActionStatus,
 };

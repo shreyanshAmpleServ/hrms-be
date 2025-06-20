@@ -19,7 +19,7 @@ const createTravelExpense = async (req, res, next) => {
     const travelData = {
       ...req.body,
       attachment_path: fileUrl,
-      created_by: req.user.id,
+      createdby: req.user.employee_id,
     };
 
     const reqData = await travelExpenseService.createTravelExpense(travelData);
@@ -98,10 +98,36 @@ const getAllTravelExpenses = async (req, res, next) => {
   }
 };
 
+const updateTravelExpenseStatus = async (req, res, next) => {
+  try {
+    console.log("Approver ID from token:", req.user.id);
+
+    const status = req.body.status;
+    const rejection_reason = req.body.rejection_reason || "";
+    console.log("User : ", req.user);
+    const data = {
+      status,
+      rejection_reason,
+      updatedby: req.user.employee_id,
+      approver_id: req.user.employee_id,
+      updatedate: new Date(),
+    };
+
+    const reqData = await travelExpenseService.updateTravelExpenseStatus(
+      req.params.id,
+      data
+    );
+    res.status(200).success("Leave status updated successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTravelExpense,
   findTravelExpense,
   updateTravelExpense,
   deleteTravelExpense,
   getAllTravelExpenses,
+  updateTravelExpenseStatus,
 };

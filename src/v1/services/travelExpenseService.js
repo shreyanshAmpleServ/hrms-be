@@ -25,10 +25,15 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
   );
 };
 
+const updateTravelExpenseStatus = async (id, data) => {
+  return await travelExpenseModel.updateTravelExpenseStatus(id, data);
+};
+
 module.exports = {
   createTravelExpense,
   findTravelExpenseById,
   updateTravelExpense,
   deleteTravelExpense,
   getAllTravelExpense,
+  updateTravelExpenseStatus,
 };

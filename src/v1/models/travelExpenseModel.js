@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { toLowerCase } = require("zod/v4");
+const { toLowerCase, int } = require("zod/v4");
+const { parse } = require("dotenv");
+const { updateLeaveApplication } = require("./LeaveApplyModel");
 const prisma = new PrismaClient();
 
 // Serialize travel expense data
@@ -11,8 +13,8 @@ const serializeTravelExpenseData = (data) => ({
   end_date: data.end_date ? new Date(data.end_date) : null,
   destination: data.destination || "",
   total_amount: data.total_amount ? Number(data.total_amount) : null,
-  approved_by: data.approved_by ? Number(data.approved_by) : null,
-  approval_status: data.approval_status || "",
+  // approved_by: data.approved_by ? Number(data.approved_by) : null,
+  // approval_status: data.approval_status || "",
   travel_mode: data.travel_mode || "",
   advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
   expense_breakdown: data.expense_breakdown || "",
@@ -31,7 +33,7 @@ const createTravelExpense = async (data) => {
     const reqData = await prisma.hrms_d_travel_expense.create({
       data: {
         ...serializeTravelExpenseData(data),
-        createdby: data.createdby ? Number(data.createdby) : 1,
+        createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
@@ -203,10 +205,95 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
   }
 };
 
+const updateTravelExpenseStatus = async (id, data) => {
+  try {
+    const travelExpenseId = parseInt(id);
+    if (isNaN(travelExpenseId)) {
+      throw new CustomError("Invalid travel expense ID", 400);
+    }
+
+    const existingTravelExpense = await prisma.hrms_d_travel_expense.findUnique(
+      {
+        where: { id: travelExpenseId },
+      }
+    );
+
+    if (!existingTravelExpense) {
+      throw new CustomError(
+        `Travel Expense with ID ${travelExpenseId} not found`,
+        404
+      );
+    }
+
+    // Build update data aligned to your schema
+    const updateData = {
+      approval_status: data.status,
+      updatedby: Number(data.updatedby) || 1,
+      updatedate: new Date(),
+    };
+
+    // if (data.status === "Approved" || data.status === "Rejected") {
+    //   updateData.approved_by = Number(data.approver_id) || null;
+    //   updateData.remarks =
+    //     data.status === "Rejected" ? data.rejection_reason || "" : "";
+    // } else {
+    //   updateData.approved_by = null;
+    //   updateData.remarks = "";
+    // }
+
+    if (data.status === "Approved") {
+      updateData.approved_by = Number(data.approved_by) || null;
+      updateData.remarks = "";
+    } else if (data.status === "Rejected") {
+      updateData.approved_by = Number(data.approved_by) || null;
+      updateData.remarks = data.rejection_reason || "";
+    } else {
+      updateData.approved_by = null;
+      updateData.remarks = "";
+    }
+
+    const updatedEntry = await prisma.hrms_d_travel_expense.update({
+      where: { id: travelExpenseId },
+      data: updateData,
+      include: {
+        travel_expense_approver: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+        travel_expense_createdby: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+        travel_expense_employee: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+      },
+    });
+
+    return updatedEntry;
+  } catch (error) {
+    throw new CustomError(
+      `Error updating travel expense: ${error.message}`,
+      500
+    );
+  }
+};
+
 module.exports = {
   createTravelExpense,
   findTravelExpenseById,
   updateTravelExpense,
   deleteTravelExpense,
   getAllTravelExpense,
+  updateTravelExpenseStatus,
 };
