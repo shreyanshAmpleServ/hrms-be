@@ -15,18 +15,22 @@ const prisma = new PrismaClient();
  */
 const createLeaveBalance = async (data) => {
   try {
+    const leaveBalances = data?.leave_balances;
     const reqData = await prisma.hrms_d_leave_balance.create({
       data: {
         employee_id: data.employee_id,
-        leave_type_id: data.leave_type_id,
-        leave_balance: data.leave_balance,
-        leave_balance_date: new Date(data.leave_balance_date),
+        employee_code: data.employee_code,
+        first_name: data.first_name,
+        last_name: data.last_name,
+        status: data.status,
+        start_date: data.start_date,
+        end_date: data.end_date,
         createdby: Number(data.createdby) || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
       include: {
-        employee: {
+        leave_balance_employee: {
           select: {
             id: true,
             full_name: true,
@@ -34,10 +38,88 @@ const createLeaveBalance = async (data) => {
         },
       },
     });
+
+    await prisma.hrms_d_leave_balance_details.deleteMany({
+      where: { parent_id: Number(reqData.id) },
+    });
+
+    await prisma.hrms_d_leave_balance_details.createMany({
+      data: leaveBalances.map((item) => ({
+        ...item,
+        parent_id: Number(reqData.id),
+        carried_forward: item.carried_forward || 0,
+        encashed: item.encashed || 0,
+        expired: item.expired || 0,
+        unit: item.unit || "",
+        closed: item.closed || "",
+      })),
+    });
+
     return reqData;
   } catch (error) {
     throw new CustomError(
       `Error creating leave balance: ${error.message}`,
+      500
+    );
+  }
+};
+
+/**
+ * Updates a leave balance
+ * @param {number|string} id - Leave balance ID to update
+ * @param {Object} data - Updated leave balance data
+ * @returns {Promise<Object>} Updated leave balance
+ * @throws {CustomError} If database error occurs
+ */
+const updateLeaveBalance = async (id, data) => {
+  const leaveBalances = data?.leave_balances;
+  try {
+    const payload = {
+      employee_id: data.employee_id,
+      employee_code: data.employee_code,
+      first_name: data.first_name,
+      last_name: data.last_name,
+      status: data.status,
+      start_date: data.start_date,
+      end_date: data.end_date,
+      createdby: Number(data.createdby) || 1,
+      createdate: new Date(),
+      log_inst: data.log_inst || 1,
+    };
+
+    const updatedLeaveBalance = await prisma.hrms_d_leave_balance.update({
+      where: { id: parseInt(id) },
+      data: payload,
+      include: {
+        leave_balance_employee: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+      },
+    });
+
+    await prisma.hrms_d_leave_balance_details.deleteMany({
+      where: { parent_id: Number(id) },
+    });
+
+    await prisma.hrms_d_leave_balance_details.createMany({
+      data: leaveBalances.map((item) => ({
+        ...item,
+        parent_id: Number(id),
+        carried_forward: item.carried_forward || 0,
+        encashed: item.encashed || 0,
+        expired: item.expired || 0,
+        unit: item.unit || "",
+        closed: item.closed || "",
+      })),
+    });
+
+    return updatedLeaveBalance;
+  } catch (error) {
+    throw new CustomError(
+      `Error updating leave balance: ${error.message}`,
       500
     );
   }
@@ -51,57 +133,20 @@ const createLeaveBalance = async (data) => {
  */
 const findLeaveBalanceById = async (id) => {
   try {
-    const reqData = await prisma.hrms_d_leave_balance.findUnique({
-      where: { id: parseInt(id) },
+    const leaveBalance = await prisma.hrms_d_leave_balance_details.findUnique({
+      where: { id: Number(id) },
     });
-    if (!reqData) {
+    const data = await prisma.hrms_d_leave_balance_details.findMany({
+      where: { parent_id: Number(id) },
+    });
+    if (!data) {
       throw new CustomError("Leave balance not found", 404);
     }
-    return reqData;
+    return { ...leaveBalance, leaveBalances: data };
   } catch (error) {
     throw new CustomError(
       `Error finding leave balance by ID: ${error.message}`,
       503
-    );
-  }
-};
-
-/**
- * Updates a leave balance
- * @param {number|string} id - Leave balance ID to update
- * @param {Object} data - Updated leave balance data
- * @returns {Promise<Object>} Updated leave balance
- * @throws {CustomError} If database error occurs
- */
-const updateLeaveBalance = async (id, data) => {
-  try {
-    const payload = {
-      employee_id: data.employee_id,
-      leave_type_id: data.leave_type_id,
-      leave_balance: data.leave_balance,
-      leave_balance_date: new Date(data.leave_balance_date),
-      updatedby: Number(data.updatedby) || 1,
-      updatedate: new Date(),
-      log_inst: data.log_inst || 1,
-    };
-
-    const updatedLeaveBalance = await prisma.hrms_d_leave_balance.update({
-      where: { id: parseInt(id) },
-      data: payload,
-      include: {
-        employee: {
-          select: {
-            id: true,
-            full_name: true,
-          },
-        },
-      },
-    });
-    return updatedLeaveBalance;
-  } catch (error) {
-    throw new CustomError(
-      `Error updating leave balance: ${error.message}`,
-      500
     );
   }
 };
@@ -142,9 +187,9 @@ const getAllLeaveBalances = async (search, page, size) => {
 
     if (search) {
       where.OR = [
-        { employee_code: { contains: search } },
-        { first_name: { contains: search } },
-        { last_name: { contains: search } },
+        { employee_code: { contains: search.toLowerCase() } },
+        { first_name: { contains: search.toLowerCase() } },
+        { last_name: { contains: search.toLowerCase() } },
       ];
     }
 
@@ -152,6 +197,7 @@ const getAllLeaveBalances = async (search, page, size) => {
       where,
       skip,
       take: size,
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
     const totalCount = await prisma.hrms_d_leave_balance.count({

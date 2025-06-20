@@ -7,6 +7,7 @@ const {
   updateLeaveBalanceController,
   deleteLeaveBalanceController,
   getAllLeaveBalancesController,
+  findLeaveBalanceByIdController,
 } = require("../controller/leaveBalanceController");
 
 router.post("/leave-balance", authenticateToken, createLeaveBalanceController);
@@ -21,6 +22,11 @@ router.delete(
   deleteLeaveBalanceController
 );
 router.get("/leave-balance", authenticateToken, getAllLeaveBalancesController);
+router.get(
+  "/leave-balance/:id",
+  authenticateToken,
+  findLeaveBalanceByIdController
+);
 
 router.get(
   "/leave-balance-by-employee",

@@ -4,6 +4,7 @@ const {
   deleteLeaveBalance,
   getAllLeaveBalances,
   createLeaveBalance,
+  findLeaveBalanceById,
 } = require("../models/leaveBalanceModel");
 const CustomError = require("../../utils/CustomError");
 
@@ -16,17 +17,13 @@ const CustomError = require("../../utils/CustomError");
  */
 const createLeaveBalanceController = async (req, res, next) => {
   try {
-    const { employee_id, employee_code, first_name, last_name } = req.body;
-    if (!employee_id || !employee_code || !first_name || !last_name) {
-      throw new CustomError("All fields are required", 400);
-    }
-    const result = await createLeaveBalance(
-      employee_id,
-      employee_code,
-      first_name,
-      last_name
-    );
-    res.status(200).success("Leave balance created successfully", result.data);
+    const data = {
+      ...req.body,
+      createdby: req.user.employee_id,
+      log_inst: req.user.log_inst,
+    };
+    const result = await createLeaveBalance(data);
+    res.status(200).success("Leave balance created successfully", result);
   } catch (error) {
     next(error);
   }
@@ -41,19 +38,12 @@ const createLeaveBalanceController = async (req, res, next) => {
  */
 const updateLeaveBalanceController = async (req, res, next) => {
   try {
-    const { id } = req.query;
-    const { employeeId, leaveTypeId, leaveBalance, leaveBalanceDate } =
-      req.body;
-    if (!id) {
-      throw new CustomError("ID is required", 400);
-    }
-    const result = await updateLeaveBalance(
-      id,
-      employeeId,
-      leaveTypeId,
-      leaveBalance,
-      leaveBalanceDate
-    );
+    const data = {
+      ...req.body,
+      createdby: req.user.employee_id,
+      log_inst: req.user.log_inst,
+    };
+    const result = await updateLeaveBalance(req.params.id, data);
     res.status(200).success("Leave balance updated successfully", result.data);
   } catch (error) {
     next(error);
@@ -69,11 +59,7 @@ const updateLeaveBalanceController = async (req, res, next) => {
  */
 const deleteLeaveBalanceController = async (req, res, next) => {
   try {
-    const { id } = req.params;
-    if (!id) {
-      throw new CustomError("ID is required", 400);
-    }
-    await deleteLeaveBalance(id);
+    await deleteLeaveBalance(req.params.id);
     res.status(200).success("Leave balance deleted successfully", null);
   } catch (error) {
     next(error);
@@ -91,9 +77,24 @@ const getAllLeaveBalancesController = async (req, res, next) => {
   try {
     const { page, size, search } = req.query;
     const result = await getAllLeaveBalances(search, page, size);
-    res
-      .status(200)
-      .success("Leave balances retrieved successfully", result.data);
+    res.status(200).success(null, result);
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * Controller for getting all leave balances
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {Promise<void>}
+ */
+const findLeaveBalanceByIdController = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const result = await findLeaveBalanceById(id);
+    res.status(200).success("Leave balances retrieved successfully", result);
   } catch (error) {
     next(error);
   }
@@ -113,9 +114,7 @@ const getLeaveBalanceController = async (req, res, next) => {
       throw new CustomError("Employee ID is required", 400);
     }
     const result = await getLeaveBalanceByEmployee(employeeId, leaveTypeId);
-    res
-      .status(200)
-      .success("Leave balance retrieved successfully", result.data);
+    res.status(200).success("Leave balance retrieved successfully", result);
   } catch (error) {
     next(error);
   }
@@ -127,4 +126,5 @@ module.exports = {
   deleteLeaveBalanceController,
   getAllLeaveBalancesController,
   getLeaveBalanceController,
+  findLeaveBalanceByIdController,
 };

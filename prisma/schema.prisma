@@ -542,7 +542,7 @@ model hrms_d_leave_application {
 
 model hrms_d_leave_balance {
   id                           Int                            @id @default(autoincrement())
-  employee_id                  Int
+  employee_id                  Int?
   employee_code                String                         @db.VarChar(20)
   first_name                   String?                        @db.NVarChar(100)
   last_name                    String?                        @db.NVarChar(100)
@@ -554,7 +554,7 @@ model hrms_d_leave_balance {
   updatedate                   DateTime?                      @db.DateTime
   updatedby                    Int?
   log_inst                     Int?
-  leave_balance_employee       hrms_d_employee                @relation("LeaveBalanceEmployee", fields: [employee_id], references: [id], onUpdate: NoAction)
+  leave_balance_employee       hrms_d_employee?               @relation("LeaveBalanceEmployee", fields: [employee_id], references: [id], onUpdate: NoAction)
   leave_balance_details_parent hrms_d_leave_balance_details[] @relation("LeaveBalaceParent")
 }
 
