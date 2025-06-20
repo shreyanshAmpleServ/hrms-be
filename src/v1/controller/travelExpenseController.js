@@ -5,8 +5,6 @@ const { uploadToBackblaze } = require("../../utils/uploadBackblaze.js");
 const fs = require("fs");
 const createTravelExpense = async (req, res, next) => {
   try {
-    // console.log("User ID in req.user:", req.user.employee_id);
-
     console.log("Incoming request body:", req.body);
     if (!req.file) throw new CustomError("No file uploaded", 400);
 
@@ -100,10 +98,36 @@ const getAllTravelExpenses = async (req, res, next) => {
   }
 };
 
+const updateTravelExpenseStatus = async (req, res, next) => {
+  try {
+    console.log("Approver ID from token:", req.user.id);
+
+    const status = req.body.status;
+    const rejection_reason = req.body.rejection_reason || "";
+    console.log("User : ", req.user);
+    const data = {
+      status,
+      rejection_reason,
+      updatedby: req.user.employee_id,
+      approver_id: req.user.employee_id,
+      updatedate: new Date(),
+    };
+
+    const reqData = await travelExpenseService.updateTravelExpenseStatus(
+      req.params.id,
+      data
+    );
+    res.status(200).success("Leave status updated successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createTravelExpense,
   findTravelExpense,
   updateTravelExpense,
   deleteTravelExpense,
   getAllTravelExpenses,
+  updateTravelExpenseStatus,
 };
