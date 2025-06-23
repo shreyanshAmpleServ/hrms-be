@@ -49,12 +49,26 @@ const basePayload = (data) => ({
  */
 const createLeaveBalance = async (data) => {
   const isExist = await prisma.hrms_d_leave_balance.findFirst({
-    where: { employee_id: Number(data.employee_id) },
+    where: {
+      employee_id: Number(data.employee_id),
+      AND: [
+        {
+          start_date: {
+            lte: new Date(data.end_date),
+          },
+        },
+        {
+          end_date: {
+            gte: new Date(data.start_date),
+          },
+        },
+      ],
+    },
   });
 
   if (isExist) {
     throw new CustomError(
-      "Leave balance for this employee already exists",
+      "Leave balance already exists for this employee within the selected date range.",
       400
     );
   }
@@ -184,6 +198,11 @@ const getAllLeaveBalances = async (search, page = 1, size = 10) => {
         skip,
         take: size,
         orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+        include: {
+          leave_balance_employee: {
+            select: { id: true, full_name: true },
+          },
+        },
       }),
       prisma.hrms_d_leave_balance.count({ where }),
     ]);
