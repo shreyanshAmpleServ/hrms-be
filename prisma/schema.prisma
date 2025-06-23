@@ -2010,15 +2010,17 @@ model hrms_m_pay_component_formula {
 }
 
 model hrms_d_candidate_master {
-  id                            Int                        @id(map: "PK__hrms_d_c__3213E83F52C48510") @default(autoincrement())
-  candidate_code                String                     @unique(map: "UQ__hrms_d_c__FA965E6259D1F830") @db.VarChar(20)
-  full_name                     String                     @db.NVarChar(200)
-  email                         String?                    @db.NVarChar(150)
-  phone                         String?                    @db.NVarChar(20)
-  date_of_birth                 DateTime?                  @db.Date
-  gender                        String?                    @db.Char(1)
-  nationality                   String?                    @db.NVarChar(100)
-  resume_path                   String?                    @db.NVarChar(255)
+  id             Int       @id(map: "PK__hrms_d_c__3213E83F52C48510") @default(autoincrement())
+  candidate_code String    @unique(map: "UQ__hrms_d_c__FA965E6259D1F830") @db.VarChar(20)
+  full_name      String    @db.NVarChar(200)
+  email          String?   @db.NVarChar(150)
+  phone          String?   @db.NVarChar(20)
+  date_of_birth  DateTime? @db.Date
+  gender         String?   @db.Char(1)
+  nationality    String?   @db.NVarChar(100)
+  resume_path    String?   @db.NVarChar(255)
+  job_posting    Int?
+
   applied_position_id           Int?
   application_source            String?                    @db.NVarChar(100)
   status                        String?                    @db.NVarChar(50)
@@ -2038,7 +2040,6 @@ model hrms_d_candidate_master {
   no_show_flag                  String?                    @default("N", map: "DF__hrms_d_ca__no_sh__384F51F2") @db.Char(1)
   no_show_remarks               String?                    @db.NVarChar(255)
   no_show_marked_date           DateTime?                  @db.Date
-  job_posting                   Int?
   candidate_applied_position_id hrms_m_designation_master? @relation(fields: [applied_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_job_posting         hrms_d_job_posting?        @relation(fields: [job_posting], references: [id], onDelete: NoAction)
 }
