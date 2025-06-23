@@ -240,7 +240,7 @@ router.use("/v1", warningLetterRoute);
 router.use("/v1", timeSheetTaskRoute);
 router.use("/v1", leaveBalanceRoute);
 // router.use("/v1", candidateMasterRoute);
-router.use("v1", candidateMasterRoute);
+router.use("/v1", candidateMasterRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
