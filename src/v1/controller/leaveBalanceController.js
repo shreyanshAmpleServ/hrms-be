@@ -44,7 +44,7 @@ const updateLeaveBalanceController = async (req, res, next) => {
       log_inst: req.user.log_inst,
     };
     const result = await updateLeaveBalance(req.params.id, data);
-    res.status(200).success("Leave balance updated successfully", result.data);
+    res.status(200).success("Leave balance updated successfully", result);
   } catch (error) {
     next(error);
   }
