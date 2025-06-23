@@ -18,6 +18,7 @@ const serializeLeaveApplicationData = (data) => ({
     ? Number(data.backup_person_id)
     : null,
   contact_details_during_leave: data.contact_details_during_leave || "",
+
   document_attachment: data.document_attachment || "",
 });
 

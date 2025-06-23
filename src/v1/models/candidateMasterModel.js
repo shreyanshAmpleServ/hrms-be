@@ -15,6 +15,8 @@ const serializeCandidateMasterData = (data) => ({
   applied_position_id: data.applied_position_id
     ? Number(data.applied_position_id)
     : null,
+  status: data.status || "Pending",
+
   interview1_remarks: data.interview1_remarks || "",
   interview2_remarks: data.interview2_remarks || "",
   interview3_remarks: data.interview3_remarks || "",
@@ -229,13 +231,13 @@ const updateCandidateMasterStatus = async (id, data) => {
       updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
-
-    if (data.status === "Approved" || data.status === "Rejected") {
+    if (data.status === "Approved") {
+      updateData.status_remarks = data.status_remarks || "";
+    } else if (data.status === "Rejected") {
       updateData.status_remarks = data.status_remarks || "";
     } else {
       updateData.status_remarks = "";
     }
-
     const updatedEntry = await prisma.hrms_d_candidate_master.update({
       where: { id: candidateMasterId },
       data: updateData,
