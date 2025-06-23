@@ -15,9 +15,6 @@ const serializeCandidateMasterData = (data) => ({
   applied_position_id: data.applied_position_id
     ? Number(data.applied_position_id)
     : null,
-  application_source: data.application_source || "",
-  //   status: data.status || "",
-  //   status_remarks: data.status_remarks || "",
   interview1_remarks: data.interview1_remarks || "",
   interview2_remarks: data.interview2_remarks || "",
   interview3_remarks: data.interview3_remarks || "",
@@ -25,6 +22,7 @@ const serializeCandidateMasterData = (data) => ({
   expected_joining_date: data.expected_joining_date
     ? new Date(data.expected_joining_date)
     : null,
+  job_posting: data.job_posting ? Number(data.job_posting) : null,
   actual_joining_date: data.actual_joining_date
     ? new Date(data.actual_joining_date)
     : null,
@@ -233,10 +231,8 @@ const updateCandidateMasterStatus = async (id, data) => {
     };
 
     if (data.status === "Approved" || data.status === "Rejected") {
-      // updateData.approver_by = Number(data.approver_by) || null;
       updateData.status_remarks = data.status_remarks || "";
     } else {
-      // updateData.approver_by = null;
       updateData.status_remarks = "";
     }
 
