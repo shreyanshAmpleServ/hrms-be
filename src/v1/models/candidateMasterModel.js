@@ -56,8 +56,10 @@ const createCandidateMaster = async (data) => {
           },
         },
         candidate_job_posting: {
-          id: true,
-          job_title: true,
+          select: {
+            id: true,
+            job_title: true,
+          },
         },
       },
     });
@@ -101,8 +103,10 @@ const updateCandidateMaster = async (id, data) => {
           },
         },
         candidate_job_posting: {
-          id: true,
-          job_title: true,
+          select: {
+            id: true,
+            job_title: true,
+          },
         },
       },
 
@@ -179,8 +183,10 @@ const getAllCandidateMasters = async (
           },
         },
         candidate_job_posting: {
-          id: true,
-          job_title: true,
+          select: {
+            id: true,
+            job_title: true,
+          },
         },
       },
     });
