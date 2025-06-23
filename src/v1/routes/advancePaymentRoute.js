@@ -38,4 +38,10 @@ router.delete(
   advancePayment.deleteAdvancePayment
 );
 
+router.patch(
+  "/advance-payment/:idstatus",
+  authenticateToken,
+  advancePayment.updateAdvancePaymentStatus
+);
+
 module.exports = router;

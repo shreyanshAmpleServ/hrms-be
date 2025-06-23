@@ -163,17 +163,16 @@ const getAllOfferLetter = async (search, page, size, startDate, endDate) => {
   }
 };
 
-const updateOfferLetterStatus = async (id, status, updatedby = 1) => {
+const updateOfferLetterStatus = async (id, data) => {
   try {
     const offerLetterId = parseInt(id);
     if (isNaN(leaveId)) {
       throw new CustomError("Invalid Offer Letter ID", 400);
     }
 
-    const existingOfferLetter =
-      await prisma.hrms_d_leave_application.findUnique({
-        where: { id: offerLetterId },
-      });
+    const existingOfferLetter = await prisma.hrms_d_offer_letter.findUnique({
+      where: { id: offerLetterId },
+    });
 
     if (!existingOfferLetter) {
       throw new CustomError(
@@ -181,17 +180,6 @@ const updateOfferLetterStatus = async (id, status, updatedby = 1) => {
         404
       );
     }
-
-    // const updatedOfferLetter = await prisma.hrms_d_offer_letter.update({
-    //   where: { id: offerLetterId },
-    //   data: {
-    //     status: status,
-    //     updatedby: updatedby,
-    //     updatedate: new Date(),
-    //   },
-    // });
-
-    // return updatedOfferLetter;
 
     const updateData = {
       status: data.status,
@@ -206,6 +194,11 @@ const updateOfferLetterStatus = async (id, status, updatedby = 1) => {
     } else {
       updateData.status = data.status;
     }
+    const updatedEntry = await prisma.hrms_d_offer_letter.update({
+      where: { id: offerLetterId },
+      data: updateData,
+    });
+    return updatedEntry;
   } catch (error) {
     console.error("Error updating offer letter status:", error);
     throw new CustomError(

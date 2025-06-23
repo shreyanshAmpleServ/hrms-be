@@ -189,10 +189,55 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
   }
 };
 
+const updateLoanReqStatus = async (id, data) => {
+  try {
+    console.log("Loan Request ID: ", id);
+    const loanReqId = parseInt(id);
+
+    if (isNaN(loanReqId)) {
+      throw new CustomError("Invalid loan req id", 400);
+    }
+
+    const existingLoanReq = await prisma.hrms_d_loan_request.findUnique({
+      where: { id: loanReqId },
+    });
+    if (!existingLoanReq) {
+      throw new CustomError(
+        `Loan Request application with ID ${loanReqId} not found`,
+        404
+      );
+    }
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+    if (data.status === "Approved") {
+      updateData.status = data.status;
+    } else if (data.status === "Rejected") {
+      updateData.status = data.status;
+    } else {
+      updateData.status = data.status;
+    }
+    const updatedEntry = await prisma.hrms_d_goal_sheet_assignment.update({
+      where: { id: goalSheetId },
+      data: updateData,
+    });
+    return updatedEntry;
+  } catch (error) {
+    console.error("Error updating loan request status:", error);
+    throw new CustomError(
+      `Error updating loan request status: ${error.message}`,
+      error.status || 500
+    );
+  }
+};
+
 module.exports = {
   createLoanRequest,
   findLoanRequestById,
   updateLoanRequest,
   deleteLoanRequest,
   getAllLoanRequest,
+  updateLoanReqStatus,
 };

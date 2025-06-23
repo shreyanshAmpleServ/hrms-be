@@ -70,10 +70,35 @@ const getAllAdvancePayments = async (req, res, next) => {
   }
 };
 
+const updateAdvancePaymentStatus = async (req, res, next) => {
+  try {
+    console.log("Approver ID from token:", req.user.employee_id);
+
+    const status = req.body.status;
+    const reason = req.body.reason || "";
+    const data = {
+      status,
+      reason,
+      updatedby: req.user.employee_id,
+      approver_by: req.user.employee_id,
+      updatedate: new Date(),
+    };
+
+    const reqData = await advancePaymentService.updateAdvancePaymentStatus(
+      req.params.id,
+      data
+    );
+    res.status(200).success("Leave status updated successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createAdvancePayment,
   findAdvancePayment,
   updateAdvancePayment,
   deleteAdvancePayment,
   getAllAdvancePayments,
+  updateAdvancePaymentStatus,
 };

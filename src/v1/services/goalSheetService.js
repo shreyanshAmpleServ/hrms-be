@@ -26,10 +26,14 @@ const getAllGoalSheet = async (search, page, size, startDate, endDate) => {
   );
 };
 
+const updateGoalSheetStatus = async (id, data) => {
+  return await goalSheetModel.updateGoalSheetStatus(id, data);
+};
 module.exports = {
   createGoalSheet,
   findGoalSheetById,
   updateGoalSheet,
   deleteGoalSheet,
   getAllGoalSheet,
+  updateGoalSheetStatus,
 };

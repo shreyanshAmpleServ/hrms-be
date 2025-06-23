@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { parse } = require("dotenv");
 const prisma = new PrismaClient();
 
 // Serialize goal sheet assignment data
@@ -205,10 +206,56 @@ const getAllGoalSheet = async (search, page, size, startDate, endDate) => {
   }
 };
 
+const updateGoalSheetStatus = async (id, data) => {
+  try {
+    console.log("Goal sheet id :", id);
+    const goalSheetId = parseInt(id);
+    if (isNaN(goalSheetId)) {
+      throw new CustomError("Invalid goal sheet id", 400);
+    }
+    const existingGoalSheet =
+      await prisma.hrms_d_goal_sheet_assignment.findUnique({
+        where: { id: goalSheetId },
+      });
+
+    if (!existingGoalSheet) {
+      throw new CustomError(
+        `Goal Sheet application with ID ${goalSheetId} not found`,
+        404
+      );
+    }
+
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+    if (data.status === "Approved") {
+      updateData.status = data.status;
+    } else if (data.status === "Rejected") {
+      updateData.status = data.status;
+    } else {
+      updateData.status = data.status;
+    }
+    const updatedEntry = await prisma.hrms_d_goal_sheet_assignment.update({
+      where: { id: goalSheetId },
+      data: updateData,
+    });
+    return updatedEntry;
+  } catch (error) {
+    console.error("Error updating goal sheet status:", error);
+    throw new CustomError(
+      `Error updating goal sheet status: ${error.message}`,
+      error.status || 500
+    );
+  }
+};
+
 module.exports = {
   createGoalSheet,
   findGoalSheetById,
   updateGoalSheet,
   deleteGoalSheet,
   getAllGoalSheet,
+  updateGoalSheetStatus,
 };
