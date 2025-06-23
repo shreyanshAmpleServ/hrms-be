@@ -303,7 +303,7 @@ model hrms_d_employee {
   exit_clearance_by_user                          hrms_d_exit_clearance[]                           @relation("UserCleared")
   exit_clearance_employee                         hrms_d_exit_clearance[]
   exit_interview_employee                         hrms_d_exit_interview[]
-  hrms_d_finalsettlement_processing               hrms_d_finalsettlement_processing[]
+  hrms_d_finalsettlement_processing               hrms_d_finalsettlement_processing[]               @ignore
   goal_sheet_assignment_employee                  hrms_d_goal_sheet_assignment[]
   grievance_assigned_to                           hrms_d_grievance[]                                @relation("GrievanceAssignedTo")
   grievance_employee                              hrms_d_grievance[]                                @relation("GrievanceSubmittedBy")
@@ -318,8 +318,8 @@ model hrms_d_employee {
   leave_balance_employee                          hrms_d_leave_balance[]                            @relation("LeaveBalanceEmployee")
   leave_encashment_employee                       hrms_d_leave_encashment[]
   loan_req_employee                               hrms_d_loan_request[]
-  hrms_d_midmonth_payroll_processing              hrms_d_midmonth_payroll_processing[]
-  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")
+  hrms_d_midmonth_payroll_processing              hrms_d_midmonth_payroll_processing[]              @ignore
+  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation") @ignore
   notification_log_employee                       hrms_d_notification_log[]
   offered_employee                                hrms_d_offer_letter[]
   hrms_d_overtime_payroll_processing              hrms_d_overtime_payroll_processing[]
@@ -1068,17 +1068,18 @@ model hrms_m_department_master {
 }
 
 model hrms_m_designation_master {
-  id                        Int                         @id(map: "PK__hrms_m_d__3213E83FB3D16212") @default(autoincrement())
-  designation_name          String?                     @db.NVarChar(255)
-  createdate                DateTime?                   @default(now(), map: "DF__hrms_m_de__creat__1CBC4616") @db.DateTime
-  createdby                 Int
-  updatedate                DateTime?                   @db.DateTime
-  updatedby                 Int?
-  log_inst                  Int?
-  is_active                 String?                     @default("Y") @db.Char(1)
-  appointment_designation   hrms_d_appointment_letter[]
-  hrms_employee_designation hrms_d_employee[]
-  hrms_job_designation      hrms_d_job_posting[]
+  id                            Int                         @id(map: "PK__hrms_m_d__3213E83FB3D16212") @default(autoincrement())
+  designation_name              String?                     @db.NVarChar(255)
+  createdate                    DateTime?                   @default(now(), map: "DF__hrms_m_de__creat__1CBC4616") @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?                   @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  is_active                     String?                     @default("Y") @db.Char(1)
+  appointment_designation       hrms_d_appointment_letter[]
+  hrms_employee_designation     hrms_d_employee[]
+  hrms_job_designation          hrms_d_job_posting[]
+  candidate_applied_position_id hrms_d_candidate_master[]
 }
 
 model hrms_m_disciplinary_penalty {
@@ -1261,8 +1262,8 @@ model hrms_m_pay_component {
   formula_editable                   String                               @default("Y", map: "DF__hrms_m_pa__formu__2EC5E7B8") @db.Char(1)
   visible_in_payslip                 String                               @default("Y", map: "DF__hrms_m_pa__visib__2FBA0BF1") @db.Char(1)
   execution_order                    Int?
-  hrms_d_finalsettlement_processing  hrms_d_finalsettlement_processing[]
-  hrms_d_midmonth_payroll_processing hrms_d_midmonth_payroll_processing[]
+  hrms_d_finalsettlement_processing  hrms_d_finalsettlement_processing[]  @ignore
+  hrms_d_midmonth_payroll_processing hrms_d_midmonth_payroll_processing[] @ignore
   hrms_d_overtime_payroll_processing hrms_d_overtime_payroll_processing[]
   hrms_m_pay_component_formula       hrms_m_pay_component_formula[]
 }
@@ -2008,28 +2009,33 @@ model hrms_m_pay_component_formula {
 }
 
 model hrms_d_candidate_master {
-  id                    Int       @id(map: "PK__hrms_d_c__3213E83F52C48510") @default(autoincrement())
-  candidate_code        String    @unique(map: "UQ__hrms_d_c__FA965E6259D1F830") @db.VarChar(20)
-  full_name             String    @db.NVarChar(200)
-  email                 String?   @db.NVarChar(150)
-  phone                 String?   @db.NVarChar(20)
-  date_of_birth         DateTime? @db.Date
-  gender                String?   @db.Char(1)
-  nationality           String?   @db.NVarChar(100)
-  resume_path           String?   @db.NVarChar(255)
-  applied_position_id   Int?
-  application_source    String?   @db.NVarChar(100)
-  status                String?   @db.NVarChar(50)
-  status_remarks        String?   @db.NText
-  interview1_remarks    String?   @db.NText
-  interview2_remarks    String?   @db.NText
-  interview3_remarks    String?   @db.NText
-  interview_stage       String?   @db.NVarChar(100)
-  expected_joining_date DateTime? @db.Date
-  actual_joining_date   DateTime? @db.Date
-  createdate            DateTime? @default(now(), map: "DF__hrms_d_ca__creat__375B2DB9") @db.DateTime
-  createdby             Int
-  updatedate            DateTime? @db.DateTime
-  updatedby             Int?
-  log_inst              Int?
+  id                            Int                        @id(map: "PK__hrms_d_c__3213E83F52C48510") @default(autoincrement())
+  candidate_code                String                     @unique(map: "UQ__hrms_d_c__FA965E6259D1F830") @db.VarChar(20)
+  full_name                     String                     @db.NVarChar(200)
+  email                         String?                    @db.NVarChar(150)
+  phone                         String?                    @db.NVarChar(20)
+  date_of_birth                 DateTime?                  @db.Date
+  gender                        String?                    @db.Char(1)
+  nationality                   String?                    @db.NVarChar(100)
+  resume_path                   String?                    @db.NVarChar(255)
+  applied_position_id           Int?
+  application_source            String?                    @db.NVarChar(100)
+  status                        String?                    @db.NVarChar(50)
+  status_remarks                String?                    @db.NText
+  interview1_remarks            String?                    @db.NText
+  interview2_remarks            String?                    @db.NText
+  interview3_remarks            String?                    @db.NText
+  interview_stage               String?                    @db.NVarChar(100)
+  expected_joining_date         DateTime?                  @db.Date
+  actual_joining_date           DateTime?                  @db.Date
+  createdate                    DateTime?                  @default(now(), map: "DF__hrms_d_ca__creat__375B2DB9") @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?                  @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  offer_accepted_date           DateTime?                  @db.Date
+  no_show_flag                  String?                    @default("N", map: "DF__hrms_d_ca__no_sh__384F51F2") @db.Char(1)
+  no_show_remarks               String?                    @db.NVarChar(255)
+  no_show_marked_date           DateTime?                  @db.Date
+  candidate_applied_position_id hrms_m_designation_master? @relation(fields: [applied_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

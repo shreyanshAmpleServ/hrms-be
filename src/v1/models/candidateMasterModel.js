@@ -1,0 +1,219 @@
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
+const prisma = new PrismaClient();
+
+// Serialize candidate master data
+const serializeCandidateMasterData = (data) => ({
+  candidate_code: data.candidate_code || "",
+  full_name: data.full_name || "",
+  email: data.email || "",
+  phone: data.phone || "",
+  date_of_birth: data.date_of_birth ? new Date(data.date_of_birth) : null,
+  gender: data.gender || "",
+  nationality: data.nationality || "",
+  resume_path: data.resume_path || "",
+  applied_position_id: data.applied_position_id
+    ? Number(data.applied_position_id)
+    : null,
+  application_source: data.application_source || "",
+  //   status: data.status || "",
+  //   status_remarks: data.status_remarks || "",
+  interview1_remarks: data.interview1_remarks || "",
+  interview2_remarks: data.interview2_remarks || "",
+  interview3_remarks: data.interview3_remarks || "",
+  interview_stage: data.interview_stage || "",
+  expected_joining_date: data.expected_joining_date
+    ? new Date(data.expected_joining_date)
+    : null,
+  actual_joining_date: data.actual_joining_date
+    ? new Date(data.actual_joining_date)
+    : null,
+  offer_accepted_date: data.offer_accepted_date
+    ? new Date(data.offer_accepted_date)
+    : null,
+  no_show_flag: data.no_show_flag || "N",
+  no_show_remarks: data.no_show_remarks || "",
+  no_show_marked_date: data.no_show_marked_date
+    ? new Date(data.no_show_marked_date)
+    : null,
+});
+
+// Create a new candidate master
+const createCandidateMaster = async (data) => {
+  try {
+    const reqData = await prisma.hrms_d_candidate_master.create({
+      data: {
+        ...serializeCandidateMasterData(data),
+        createdby: data.createdby || 1,
+        createdate: new Date(),
+        log_inst: data.log_inst || 1,
+      },
+    });
+    return reqData;
+  } catch (error) {
+    throw new CustomError(
+      `Error creating candidate master: ${error.message}`,
+      500
+    );
+  }
+};
+
+// Find candidate master by ID
+const findCandidateMasterById = async (id) => {
+  try {
+    const reqData = await prisma.hrms_d_candidate_master.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!reqData) {
+      throw new CustomError("Candidate not found", 404);
+    }
+    return reqData;
+  } catch (error) {
+    throw new CustomError(
+      `Error finding candidate by ID: ${error.message}`,
+      503
+    );
+  }
+};
+
+// Update candidate master
+const updateCandidateMaster = async (id, data) => {
+  try {
+    const updatedEntry = await prisma.hrms_d_candidate_master.update({
+      where: { id: parseInt(id) },
+      data: {
+        ...serializeCandidateMasterData(data),
+        updatedby: data.updatedby || 1,
+        updatedate: new Date(),
+      },
+    });
+    return updatedEntry;
+  } catch (error) {
+    throw new CustomError(
+      `Error updating candidate master: ${error.message}`,
+      500
+    );
+  }
+};
+
+// Delete candidate master
+const deleteCandidateMaster = async (id) => {
+  try {
+    await prisma.hrms_d_candidate_master.delete({
+      where: { id: parseInt(id) },
+    });
+  } catch (error) {
+    throw new CustomError(
+      `Error deleting candidate master: ${error.message}`,
+      500
+    );
+  }
+};
+
+// Get all candidate masters with pagination and search
+const getAllCandidateMasters = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
+  try {
+    page = !page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
+
+    const filters = {};
+    if (search) {
+      filters.OR = [
+        { full_name: { contains: search.toLowerCase() } },
+        { email: { contains: search.toLowerCase() } },
+        { phone: { contains: search.toLowerCase() } },
+        { status: { contains: search.toLowerCase() } },
+        { candidate_code: { contains: search.toLowerCase() } },
+      ];
+    }
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = { gte: start, lte: end };
+      }
+    }
+
+    const datas = await prisma.hrms_d_candidate_master.findMany({
+      where: filters,
+      skip,
+      take: size,
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+    });
+    const totalCount = await prisma.hrms_d_candidate_master.count({
+      where: filters,
+    });
+
+    return {
+      data: datas,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount,
+    };
+  } catch (error) {
+    throw new CustomError("Error retrieving candidates", 503);
+  }
+};
+const updateCandidateMasterStatus = async (id, data) => {
+  try {
+    const candidateMasterId = parseInt(id);
+    if (isNaN(candidateMasterId)) {
+      throw new CustomError("Invalid candidate master ID", 400);
+    }
+
+    const existingCandidateMaster =
+      await prisma.hrms_d_candidate_master.findUnique({
+        where: { id: candidateMasterId },
+      });
+
+    if (!existingCandidateMaster) {
+      throw new CustomError(
+        `Candidate Master with ID ${candidateMasterId} not found`,
+        404
+      );
+    }
+
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+
+    if (data.status === "Approved") {
+      updateData.approver_by = Number(data.approver_by) || null;
+      updateData.status_remarks = "";
+    } else if (data.status === "Rejected") {
+      updateData.approver_by = Number(data.approver_by) || null;
+      updateData.status_remarks = "";
+    } else {
+      updateData.approver_by = null;
+      updateData.status_remarks = "";
+    }
+
+    const updatedEntry = await prisma.hrms_d_candidate_master.update({
+      where: { id: candidateMasterId },
+      data: updateData,
+    });
+
+    return updatedEntry;
+  } catch (error) {
+    throw new CustomError(`Error updating leave status: ${error.message}`, 500);
+  }
+};
+
+module.exports = {
+  createCandidateMaster,
+  findCandidateMasterById,
+  updateCandidateMaster,
+  deleteCandidateMaster,
+  getAllCandidateMasters,
+  updateCandidateMasterStatus,
+};

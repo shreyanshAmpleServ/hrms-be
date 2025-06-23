@@ -117,6 +117,7 @@ const kpiProgressRoute = require("../v1/routes/kpiProgressRoute.js");
 const warningLetterRoute = require("../v1/routes/warningLetterRoute.js");
 const timeSheetTaskRoute = require("../v1/routes/timeSheetTaskRoute.js");
 const leaveBalanceRoute = require("../v1/routes/leaveBalanceRoute.js");
+const candidateMasterRoute = require("../v1/routes/candidateMasterRoute.js");
 
 const router = express.Router();
 
@@ -238,6 +239,8 @@ router.use("/v1", kpiProgressRoute);
 router.use("/v1", warningLetterRoute);
 router.use("/v1", timeSheetTaskRoute);
 router.use("/v1", leaveBalanceRoute);
+// router.use("/v1", candidateMasterRoute);
+router.use("v1", candidateMasterRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
