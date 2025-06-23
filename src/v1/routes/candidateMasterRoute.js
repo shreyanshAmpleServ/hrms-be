@@ -32,7 +32,7 @@ router.delete(
 );
 
 router.get(
-  "/canddidate-master",
+  "/candidate-master",
   authenticateToken,
   candidateMasterController.getAllCandidateMaster
 );
