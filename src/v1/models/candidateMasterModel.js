@@ -48,6 +48,14 @@ const createCandidateMaster = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+      include: {
+        candidate_applied_position_id: {
+          select: {
+            id: true,
+            designation_name: true,
+          },
+        },
+      },
     });
     return reqData;
   } catch (error) {
@@ -81,6 +89,15 @@ const updateCandidateMaster = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_candidate_master.update({
       where: { id: parseInt(id) },
+      include: {
+        candidate_applied_position_id: {
+          select: {
+            id: true,
+            designation_name: true,
+          },
+        },
+      },
+
       data: {
         ...serializeCandidateMasterData(data),
         updatedby: data.updatedby || 1,
@@ -146,6 +163,14 @@ const getAllCandidateMasters = async (
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      include: {
+        candidate_applied_position_id: {
+          select: {
+            id: true,
+            designation_name: true,
+          },
+        },
+      },
     });
     const totalCount = await prisma.hrms_d_candidate_master.count({
       where: filters,
@@ -165,6 +190,8 @@ const getAllCandidateMasters = async (
 const updateCandidateMasterStatus = async (id, data) => {
   try {
     const candidateMasterId = parseInt(id);
+    console.log("Candidate Id : ", candidateMasterId);
+
     if (isNaN(candidateMasterId)) {
       throw new CustomError("Invalid candidate master ID", 400);
     }
@@ -187,14 +214,11 @@ const updateCandidateMasterStatus = async (id, data) => {
       updatedate: new Date(),
     };
 
-    if (data.status === "Approved") {
-      updateData.approver_by = Number(data.approver_by) || null;
-      updateData.status_remarks = "";
-    } else if (data.status === "Rejected") {
-      updateData.approver_by = Number(data.approver_by) || null;
-      updateData.status_remarks = "";
+    if (data.status === "Approved" || data.status === "Rejected") {
+      // updateData.approver_by = Number(data.approver_by) || null;
+      updateData.status_remarks = data.status_remarks || "";
     } else {
-      updateData.approver_by = null;
+      // updateData.approver_by = null;
       updateData.status_remarks = "";
     }
 
@@ -205,7 +229,10 @@ const updateCandidateMasterStatus = async (id, data) => {
 
     return updatedEntry;
   } catch (error) {
-    throw new CustomError(`Error updating leave status: ${error.message}`, 500);
+    throw new CustomError(
+      `Error updating candidate master status: ${error.message}`,
+      500
+    );
   }
 };
 

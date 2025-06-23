@@ -5,7 +5,7 @@ const fs = require("fs");
 const { uploadToBackblaze } = require("../../utils/uploadBackblaze.js");
 
 //Create
-const createCandidateMaster = async (req, res) => {
+const createCandidateMaster = async (req, res, next) => {
   try {
     if (!req.file) throw new CustomError("No file uploaded", 400);
     const fileBuffer = await fs.promises.readFile(req.file.path);
@@ -18,7 +18,7 @@ const createCandidateMaster = async (req, res) => {
 
     const candidateData = {
       ...req.body,
-      resume_url: fileUrl,
+      resume_path: fileUrl,
       createdby: req.user.id,
     };
 
@@ -42,7 +42,7 @@ const findCandidateMasterById = async (req, res, next) => {
   }
 };
 
-const updateCandidateMaster = async (req, res) => {
+const updateCandidateMaster = async (req, res, next) => {
   try {
     const existingCandidateMaster =
       await candidateMasterService.getCandidateMasterById(req.params.id);
@@ -114,7 +114,7 @@ const updateCandidateMasterStatus = async (req, res, next) => {
     console.log("Approver ID from token:", req.user.employee_id);
 
     const status = req.body.status;
-    const status_remarks = req.body.rejection_reason || "";
+    const status_remarks = req.body.status_remarks || "";
     const data = {
       status,
       status_remarks,
