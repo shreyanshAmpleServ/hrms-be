@@ -25,9 +25,31 @@ const serializeLeaveApplicationData = (data) => ({
 
 // Create a new leave application
 const createLeaveApplication = async (data) => {
-  try {
-    console.log("Saving document_attachment:", data.document_attachment);
+  const leaveApplication = await prisma.hrms_d_leave_application.findFirst({
+    where: {
+      employee_id: Number(data.employee_id),
+      AND: [
+        {
+          start_date: {
+            lte: new Date(data.end_date),
+          },
+        },
+        {
+          end_date: {
+            gte: new Date(data.start_date),
+          },
+        },
+      ],
+    },
+  });
 
+  if (leaveApplication) {
+    throw new CustomError(
+      "Leave application already exists for this employee within the selected date range.",
+      400
+    );
+  }
+  try {
     const reqData = await prisma.hrms_d_leave_application.create({
       data: {
         ...serializeLeaveApplicationData(data),
