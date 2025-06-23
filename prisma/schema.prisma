@@ -488,22 +488,23 @@ model hrms_d_hr_letter {
 }
 
 model hrms_d_job_posting {
-  id                   Int                        @id(map: "PK__hrms_d_j__3213E83FF15AFFB9") @default(autoincrement())
-  department_id        Int?
-  designation_id       Int?
-  job_title            String?                    @db.NVarChar(255)
-  description          String?
-  required_experience  String?                    @db.NVarChar(100)
-  posting_date         DateTime?                  @db.Date
-  closing_date         DateTime?                  @db.Date
-  is_internal          Boolean?
-  createdate           DateTime?                  @default(now(), map: "DF__hrms_d_jo__creat__12FDD1B2") @db.DateTime
-  createdby            Int
-  updatedate           DateTime?                  @db.DateTime
-  updatedby            Int?
-  log_inst             Int?
-  hrms_job_department  hrms_m_department_master?  @relation(fields: [department_id], references: [id], onUpdate: NoAction)
-  hrms_job_designation hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
+  id                    Int                        @id(map: "PK__hrms_d_j__3213E83FF15AFFB9") @default(autoincrement())
+  department_id         Int?
+  designation_id        Int?
+  job_title             String?                    @db.NVarChar(255)
+  description           String?
+  required_experience   String?                    @db.NVarChar(100)
+  posting_date          DateTime?                  @db.Date
+  closing_date          DateTime?                  @db.Date
+  is_internal           Boolean?
+  createdate            DateTime?                  @default(now(), map: "DF__hrms_d_jo__creat__12FDD1B2") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?                  @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  candidate_job_posting hrms_d_candidate_master[]
+  hrms_job_department   hrms_m_department_master?  @relation(fields: [department_id], references: [id], onUpdate: NoAction)
+  hrms_job_designation  hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_leave_application {
@@ -1077,9 +1078,9 @@ model hrms_m_designation_master {
   log_inst                      Int?
   is_active                     String?                     @default("Y") @db.Char(1)
   appointment_designation       hrms_d_appointment_letter[]
+  candidate_applied_position_id hrms_d_candidate_master[]
   hrms_employee_designation     hrms_d_employee[]
   hrms_job_designation          hrms_d_job_posting[]
-  candidate_applied_position_id hrms_d_candidate_master[]
 }
 
 model hrms_m_disciplinary_penalty {
@@ -1638,7 +1639,7 @@ model hrms_d_monthly_payroll_processing {
   updatedate                    DateTime?       @db.DateTime
   updatedby                     Int?
   log_inst                      Int?
-  hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0")
+  hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0") @ignore
 
   @@ignore
 }
@@ -2037,5 +2038,7 @@ model hrms_d_candidate_master {
   no_show_flag                  String?                    @default("N", map: "DF__hrms_d_ca__no_sh__384F51F2") @db.Char(1)
   no_show_remarks               String?                    @db.NVarChar(255)
   no_show_marked_date           DateTime?                  @db.Date
+  job_posting                   Int?
   candidate_applied_position_id hrms_m_designation_master? @relation(fields: [applied_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  candidate_job_posting         hrms_d_job_posting?        @relation(fields: [job_posting], references: [id], onDelete: NoAction)
 }
