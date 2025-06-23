@@ -39,4 +39,9 @@ router.delete(
   goalSheetController.deleteGoalSheet
 );
 
+router.patch(
+  "/goal-sheet/:id/status",
+  authenticateToken,
+  goalSheetController.updateGoalSheetStatus
+);
 module.exports = router;

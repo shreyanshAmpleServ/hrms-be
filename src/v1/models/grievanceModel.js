@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
+const { parse } = require("dotenv");
 const prisma = new PrismaClient();
 
 const serializeData = (data) => {
@@ -228,10 +229,53 @@ const getAllGrievanceSubmission = async (
   }
 };
 
+const updateGrievanceSubmissionStatus = async (id, data) => {
+  try {
+    const grievanceSubmissionId = parseInt(id);
+    if (isNaN(grievanceSubmissionId)) {
+      throw new CustomError("Invalid grievance submission id", 400);
+    }
+    const existingGrievanceSubmission = await prisma.hrms_d_grievance.update({
+      where: { id: grievanceSubmissionId },
+    });
+
+    if (!existingGrievanceSubmission) {
+      throw new CustomError(
+        `Grieb=vance Submission application with ID ${grievanceSubmissionId} not found`,
+        404
+      );
+    }
+
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+    if (data.status === "Approved") {
+      updateData.status = data.status;
+    } else if (data.status === "Rejected") {
+      updateData.status = data.status;
+    } else {
+      updateData.status = data.status;
+    }
+    const updatedEntry = await prisma.hrms_d_grievance.update({
+      where: { id: grievanceSubmissionId },
+      data: updateData,
+    });
+    return updatedEntry;
+  } catch (error) {
+    console.log("Error updating grievance submission status:", error);
+    throw new CustomError(
+      `Error updating Grievance submission status: ${error.message}`,
+      error.status || 500
+    );
+  }
+};
 module.exports = {
   createGrievanceSubmission,
   findGrievanceSubmissionById,
   updateGrievanceSubmission,
   deleteGrievanceSubmission,
   getAllGrievanceSubmission,
+  updateGrievanceSubmissionStatus,
 };

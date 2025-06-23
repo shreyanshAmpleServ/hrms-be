@@ -32,10 +32,15 @@ const getAllAdvancePayments = async (
   );
 };
 
+const updateAdvancePaymentStatus = async (id, data) => {
+  return await advancePaymentModel.updateAdvancePaymentStatus(id, data);
+};
+
 module.exports = {
   createAdvancePayment,
   findAdvancePaymentById,
   updateAdvancePayment,
   deleteAdvancePayment,
   getAllAdvancePayments,
+  updateAdvancePaymentStatus,
 };

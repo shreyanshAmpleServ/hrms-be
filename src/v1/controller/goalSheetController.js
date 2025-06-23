@@ -67,10 +67,31 @@ const getAllGoalSheet = async (req, res, next) => {
   }
 };
 
+const updateGoalSheetStatus = async (req, res, next) => {
+  try {
+    console.log("Approver ID from token:", req.user.employee_id);
+    const status = req.body.status;
+
+    const data = {
+      status,
+      updatedby: req.user.employee_id,
+      updatedate: new Date(),
+    };
+
+    const reqData = await goalSheetService.updateGoalSheetStatus(
+      req.params.id,
+      data
+    );
+    res.status(200).success("Goal sheet status updated successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   createGoalSheet,
   findGoalSheet,
   updateGoalSheet,
   deleteGoalSheet,
   getAllGoalSheet,
+  updateGoalSheetStatus,
 };

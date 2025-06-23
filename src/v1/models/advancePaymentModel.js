@@ -227,6 +227,55 @@ const getAllAdvancePayments = async (
   }
 };
 
+const updateAdvancePaymentStatus = async (id, data) => {
+  try {
+    const advancePayment = parseInt(id);
+    if (isNaN(advancePayment)) {
+      throw new CustomError("Invalid advance payement ID", 400);
+    }
+
+    const existingAdvancePayement =
+      await prisma.hrms_d_leave_application.findUnique({
+        where: { id: leaveId },
+      });
+
+    if (!existingAdvancePayement) {
+      throw new CustomError("Advance payement not found", 404);
+    }
+
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+
+    if (data.status === "Approved") {
+      updateData.approver_by = Number(data.approver_by) || null;
+      updateData.approval_date = new Date();
+      updateData.reason = "";
+    } else if (data.status === "Rejected") {
+      updateData.approver_by = Number(data.approver_by) || null;
+      updateData.approval_date = new Date();
+      updateData.reason = reason || "";
+    } else {
+      updateData.approver_by = null;
+      updateData.approval_date = null;
+      updateData.reason = "";
+    }
+    const updatedEntry = await prisma.hrms_d_advance_payment_entry.update({
+      where: { id: advancePayment },
+      data: updateData,
+    });
+    return updatedEntry;
+  } catch (error) {
+    console.error("Error updating advance payement status:", error);
+    throw new CustomError(
+      `Error updating advance payement status: ${error.message}`,
+      error.status || 500
+    );
+  }
+};
+
 module.exports = {
   createAdvancePayment,
   findAdvancePaymentById,
