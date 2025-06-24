@@ -11,31 +11,30 @@ const createMedicalRecord = async (req, res, next) => {
   try {
     let documentUrl = null;
     let prescriptionUrl = null;
-
+    console.log("file", req.files.buffer);
     if (req.files?.document_path) {
       const file = req.files.document_path[0];
-      const buffer = fs.readFileSync(file.path);
+      const buffer = file.buffer;
       documentUrl = await uploadToBackblaze(
         buffer,
         file.originalname,
         file.mimetype,
         "document_path"
       );
-      fs.unlinkSync(file.path);
+      // fs.unlinkSync(file.path);
     }
 
     if (req.files?.prescription_path) {
       const file = req.files.prescription_path[0];
-      const buffer = fs.readFileSync(file.path);
+      const buffer = file.buffer;
       prescriptionUrl = await uploadToBackblaze(
         buffer,
         file.originalname,
         file.mimetype,
         "prescription_path"
       );
-      fs.unlinkSync(file.path);
     }
-
+    console.log("doc url", documentUrl, prescriptionUrl);
     const data = {
       ...req.body,
       createdby: req.user.id,
@@ -63,7 +62,6 @@ const findMedicalRecord = async (req, res, next) => {
 
 const updateMedicalRecord = async (req, res, next) => {
   try {
-    // Fetch existing data to handle deletion of old files
     const existingData = await medicalRecordService.findMedicalRecord(
       req.params.id
     );
@@ -72,51 +70,47 @@ const updateMedicalRecord = async (req, res, next) => {
     let documentUrl = existingData.document_path;
     let prescriptionUrl = existingData.prescription_path;
 
-    // Handle updated document_path file
     if (req.files?.document_path) {
       const file = req.files.document_path[0];
-      const buffer = fs.readFileSync(file.path);
+      const buffer = file.buffer;
       documentUrl = await uploadToBackblaze(
         buffer,
         file.originalname,
         file.mimetype,
         "document_path"
       );
-      fs.unlinkSync(file.path);
+      // fs.unlinkSync(file.path);
 
-      // Delete old document if it existed
       if (existingData.document_path) {
         await deleteFromBackblaze(existingData.document_path);
       }
     }
 
-    // Handle updated prescription_path file
     if (req.files?.prescription_path) {
       const file = req.files.prescription_path[0];
-      const buffer = fs.readFileSync(file.path);
+      const buffer = file.buffer;
       prescriptionUrl = await uploadToBackblaze(
         buffer,
         file.originalname,
         file.mimetype,
         "prescription_path"
       );
-      fs.unlinkSync(file.path);
+      // fs.unlinkSync(file.path);
 
-      // Delete old prescription if it existed
       if (existingData.prescription_path) {
         await deleteFromBackblaze(existingData.prescription_path);
       }
     }
 
-    // Prepare update payload
     const data = {
       ...req.body,
+      employee_id: Number(req.body.employee_id),
       document_path: documentUrl,
       prescription_path: prescriptionUrl,
-      updatedby: req.user.id,
-      log_inst: req.user.log_inst,
+      updatedby: Number(req.user.employee_id),
+      log_inst: req.user.log_inst || Number(req.user.employee_id),
     };
-
+    console.log("data ; ", req.params);
     const updated = await medicalRecordService.updateMedicalRecord(
       req.params.id,
       data
