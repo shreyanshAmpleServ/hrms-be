@@ -8,8 +8,8 @@ const findMedicalRecord = async (data) => {
   return await medicalRecordModel.findMedicalRecord(data);
 };
 
-const updateMedicalRecord = async (data) => {
-  return await medicalRecordModel.updateMedicalRecord(data);
+const updateMedicalRecord = async (id, data) => {
+  return await medicalRecordModel.updateMedicalRecord(id, data);
 };
 
 const deleteMedicalRecord = async (data) => {

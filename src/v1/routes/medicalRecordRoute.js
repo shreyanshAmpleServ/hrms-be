@@ -2,7 +2,7 @@ const express = require("express");
 const router = express.Router();
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 const medicalRecordController = require("../controller/medicalRecordController.js");
-const upload = require("../middlewares/uploadMiddleware.js");
+const upload = require("../middlewares/UploadFileMiddleware.js");
 
 router.post(
   "/medical-record",
