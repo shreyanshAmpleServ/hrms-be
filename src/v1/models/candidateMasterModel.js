@@ -16,11 +16,12 @@ const serializeCandidateMasterData = (data) => ({
     ? Number(data.applied_position_id)
     : null,
   status: data.status || "Pending",
+  application_source: Number(data.application_source),
 
   interview1_remarks: data.interview1_remarks || "",
   interview2_remarks: data.interview2_remarks || "",
   interview3_remarks: data.interview3_remarks || "",
-  interview_stage: data.interview_stage || "",
+  interview_stage: Number(data.interview_stage) || "",
   expected_joining_date: data.expected_joining_date
     ? new Date(data.expected_joining_date)
     : null,
@@ -49,16 +50,28 @@ const createCandidateMaster = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        candidate_applied_position_id: {
-          select: {
-            id: true,
-            designation_name: true,
-          },
-        },
+        // candidate_applied_position_id: {
+        //   select: {
+        //     id: true,
+        //     designation_name: true,
+        //   },
+        // },
         candidate_job_posting: {
           select: {
             id: true,
             job_title: true,
+          },
+        },
+        candidate_application_source: {
+          select: {
+            id: true,
+            source_name: true,
+          },
+        },
+        candidate_interview_stage: {
+          select: {
+            id: true,
+            stage_name: true,
           },
         },
       },
@@ -106,6 +119,18 @@ const updateCandidateMaster = async (id, data) => {
           select: {
             id: true,
             job_title: true,
+          },
+        },
+        candidate_application_source: {
+          select: {
+            id: true,
+            source_name: true,
+          },
+        },
+        candidate_interview_stage: {
+          select: {
+            id: true,
+            stage_name: true,
           },
         },
       },
@@ -186,6 +211,18 @@ const getAllCandidateMasters = async (
           select: {
             id: true,
             job_title: true,
+          },
+        },
+        candidate_application_source: {
+          select: {
+            id: true,
+            source_name: true,
+          },
+        },
+        candidate_interview_stage: {
+          select: {
+            id: true,
+            stage_name: true,
           },
         },
       },
