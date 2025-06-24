@@ -6,8 +6,10 @@ const upload = require("../middlewares/uploadMiddleware.js");
 
 router.post(
   "/medical-record",
-  upload.single("document_path"),
-  upload.single("prescription_path"),
+  upload.fields([
+    { name: "document_path", maxCount: 1 },
+    { name: "prescription_path", maxCount: 1 },
+  ]),
   authenticateToken,
   medicalRecordController.createMedicalRecord
 );
@@ -20,8 +22,10 @@ router.get(
 
 router.put(
   "/medical-record/:id",
-  upload.single("document_path"),
-  upload.single("prescription_path"),
+  upload.fields([
+    { name: "document_path", maxCount: 1 },
+    { name: "prescription_path", maxCount: 1 },
+  ]),
   authenticateToken,
   medicalRecordController.updateMedicalRecord
 );

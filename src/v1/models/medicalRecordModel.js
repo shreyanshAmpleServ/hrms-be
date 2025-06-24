@@ -29,6 +29,15 @@ const createMedicalRecord = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+      include: {
+        medical_employee_id: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+      },
     });
     return reqData;
   } catch (error) {
@@ -67,6 +76,15 @@ const updateMedicalRecord = async (id, data) => {
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
+      include: {
+        medical_employee_id: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+      },
     });
     return updated;
   } catch (error) {
@@ -102,6 +120,11 @@ const getAllMedicalRecord = async (search, page, size, startDate, endDate) => {
 
     if (search) {
       filters.OR = [
+        {
+          medical_employee_id: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
         { record_type: { contains: search.toLowerCase() } },
         { doctor_name: { contains: search.toLowerCase() } },
         { hospital_name: { contains: search.toLowerCase() } },
@@ -126,6 +149,15 @@ const getAllMedicalRecord = async (search, page, size, startDate, endDate) => {
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      include: {
+        medical_employee_id: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
+      },
     });
 
     const totalCount = await prisma.hrms_d_medical_record.count({
