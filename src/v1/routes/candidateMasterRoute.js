@@ -42,4 +42,5 @@ router.patch(
   authenticateToken,
   candidateMasterController.updateCandidateMasterStatus
 );
+
 module.exports = router;
