@@ -303,7 +303,7 @@ model hrms_d_employee {
   exit_clearance_by_user                          hrms_d_exit_clearance[]                           @relation("UserCleared")
   exit_clearance_employee                         hrms_d_exit_clearance[]
   exit_interview_employee                         hrms_d_exit_interview[]
-  hrms_d_finalsettlement_processing               hrms_d_finalsettlement_processing[]                @ignore          
+  hrms_d_finalsettlement_processing               hrms_d_finalsettlement_processing[]               @ignore
   goal_sheet_assignment_employee                  hrms_d_goal_sheet_assignment[]
   grievance_assigned_to                           hrms_d_grievance[]                                @relation("GrievanceAssignedTo")
   grievance_employee                              hrms_d_grievance[]                                @relation("GrievanceSubmittedBy")
@@ -318,8 +318,8 @@ model hrms_d_employee {
   leave_balance_employee                          hrms_d_leave_balance[]                            @relation("LeaveBalanceEmployee")
   leave_encashment_employee                       hrms_d_leave_encashment[]
   loan_req_employee                               hrms_d_loan_request[]
-  hrms_d_midmonth_payroll_processing              hrms_d_midmonth_payroll_processing[]   @ignore
-  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")  @ignore
+  hrms_d_midmonth_payroll_processing              hrms_d_midmonth_payroll_processing[]              @ignore
+  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation") @ignore
   notification_log_employee                       hrms_d_notification_log[]
   offered_employee                                hrms_d_offer_letter[]
   hrms_d_overtime_payroll_processing              hrms_d_overtime_payroll_processing[]
@@ -1253,8 +1253,8 @@ model hrms_m_pay_component {
   formula_editable                   String                               @default("Y", map: "DF__hrms_m_pa__formu__2EC5E7B8") @db.Char(1)
   visible_in_payslip                 String                               @default("Y", map: "DF__hrms_m_pa__visib__2FBA0BF1") @db.Char(1)
   execution_order                    Int?
-  hrms_d_finalsettlement_processing  hrms_d_finalsettlement_processing[]   @ignore
-  hrms_d_midmonth_payroll_processing hrms_d_midmonth_payroll_processing[]    @ignore
+  hrms_d_finalsettlement_processing  hrms_d_finalsettlement_processing[]  @ignore
+  hrms_d_midmonth_payroll_processing hrms_d_midmonth_payroll_processing[] @ignore
   hrms_d_overtime_payroll_processing hrms_d_overtime_payroll_processing[]
   hrms_m_pay_component_formula       hrms_m_pay_component_formula[]
 }
@@ -1306,8 +1306,8 @@ model hrms_m_salary_structure {
 model hrms_m_shift_master {
   id                     Int                       @id(map: "PK__hrms_m_s__3213E83F3E04C8DC") @default(autoincrement())
   shift_name             String?                   @db.NVarChar(100)
-  start_time             DateTime?                 @db.Time
-  end_time               DateTime?                 @db.Time
+  start_time             String?                   @db.VarChar(50)
+  end_time               String?                   @db.VarChar(50)
   createdate             DateTime?                 @default(now(), map: "DF__hrms_m_sh__creat__25518C17") @db.DateTime
   createdby              Int
   updatedate             DateTime?                 @db.DateTime

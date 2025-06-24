@@ -7,8 +7,8 @@ const prisma = new PrismaClient();
 // Serialize shift master data
 const serializeShiftMasterData = (data) => ({
   shift_name: data.shift_name || "",
-  start_time: data.start_time ? new Date(data.start_time) : null,
-  end_time: data.end_time ? new Date(data.end_time) : null,
+  start_time: data.start_time || null,
+  end_time: data.end_time || null,
   lunch_time: data.lunch_time ? Number(data.lunch_time) : null,
   daily_working_hours: data.daily_working_hours
     ? Number(data.daily_working_hours)
