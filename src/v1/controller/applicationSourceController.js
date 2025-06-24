@@ -15,7 +15,7 @@ const createApplicationSource = async (req, res, next) => {
     const reqData = await applicationSourceService.createApplicationSource(
       data
     );
-    res.status(201).success("Probation review created successfully", reqData);
+    res.status(201).success("Application Source created successfully", reqData);
   } catch (error) {
     next(error);
   }
@@ -41,7 +41,7 @@ const updateApplicationSource = async (req, res, next) => {
       updatedby: req.user.id,
       log_inst: req.user.log_inst,
     };
-    const reqData = await applicationSourceService.updateApplicationSourceById(
+    const reqData = await applicationSourceService.updateApplicationSource(
       req.params.id,
       data
     );
@@ -53,7 +53,7 @@ const updateApplicationSource = async (req, res, next) => {
 
 const deleteApplicationSource = async (req, res, next) => {
   try {
-    const reqData = await applicationSourceService.deleteApplicationSourceById(
+    const reqData = await applicationSourceService.deleteApplicationSource(
       req.params.id
     );
     res.status(200).success("Application Source deleted successfully", reqData);

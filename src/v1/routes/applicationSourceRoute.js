@@ -23,7 +23,7 @@ router.put(
 );
 
 router.delete(
-  "/application-source",
+  "/application-source/:id",
   authenticateToken,
   applicationSourceController.deleteApplicationSource
 );
