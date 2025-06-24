@@ -103,7 +103,7 @@ const getAllCandidateMaster = async (req, res, next) => {
       startDate && moment(startDate),
       endDate && moment(endDate)
     );
-    res.status(200).json({ success: true, ...data });
+    res.status(200).success(null, data);
   } catch (error) {
     next(new CustomError(error.message, 400));
   }

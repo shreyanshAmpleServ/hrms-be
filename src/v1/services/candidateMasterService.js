@@ -25,7 +25,7 @@ const getAllCandidateMaster = async (
   startDate,
   endDate
 ) => {
-  return await candidateMasterModel.getAllCandidateMasters(
+  return await candidateMasterModel.getAllCandidateMaster(
     search,
     page,
     size,
