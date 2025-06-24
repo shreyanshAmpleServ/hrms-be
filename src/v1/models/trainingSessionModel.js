@@ -17,8 +17,15 @@ const serializeTrainingSessionData = (data) => ({
     : null,
   duration_hours: data.duration_hours ? Number(data.duration_hours) : null,
   training_material_path: data.training_material_path || "",
-  evaluation_required: data.evaluation_required || "",
-  feedback_required: data.feedback_required || "",
+  evaluation_required:
+    typeof data.evaluation_required === "boolean"
+      ? data.evaluation_required
+      : data.evaluation_required === "true",
+  feedback_required:
+    typeof data.feedback_required === "boolean"
+      ? data.feedback_required
+      : data.feedback_required === "true",
+
   training_status: data.training_status || "",
 });
 
