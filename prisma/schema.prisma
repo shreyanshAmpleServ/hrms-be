@@ -349,6 +349,7 @@ model hrms_d_employee {
   eduction_of_employee                            hrms_employee_d_educations[]
   experiance_of_employee                          hrms_employee_d_experiences[]
   user_employee                                   hrms_m_user[]
+  medical_employee_id                             hrms_d_medical_record[]
 }
 
 model hrms_d_employee_address {
@@ -596,23 +597,24 @@ model hrms_d_loan_request {
 }
 
 model hrms_d_medical_record {
-  id                Int       @id(map: "PK__hrms_d_m__3213E83FCD103BA4") @default(autoincrement())
-  employee_id       Int?
-  record_type       String?   @db.NVarChar(100)
-  description       String?
-  record_date       DateTime? @db.Date
-  document_path     String?   @db.NVarChar(255)
-  createdate        DateTime? @default(now(), map: "DF__hrms_d_me__creat__18B6AB08") @db.DateTime
-  createdby         Int
-  updatedate        DateTime? @db.DateTime
-  updatedby         Int?
-  log_inst          Int?
-  doctor_name       String?   @db.NVarChar(255)
-  hospital_name     String?   @db.NVarChar(255)
-  diagnosis         String?
-  treatment         String?
-  next_review_date  DateTime? @db.Date
-  prescription_path String?   @db.NVarChar(255)
+  id                  Int              @id(map: "PK__hrms_d_m__3213E83FCD103BA4") @default(autoincrement())
+  employee_id         Int?
+  record_type         String?          @db.NVarChar(100)
+  description         String?
+  record_date         DateTime?        @db.Date
+  document_path       String?          @db.NVarChar(255)
+  createdate          DateTime?        @default(now(), map: "DF__hrms_d_me__creat__18B6AB08") @db.DateTime
+  createdby           Int
+  updatedate          DateTime?        @db.DateTime
+  updatedby           Int?
+  log_inst            Int?
+  doctor_name         String?          @db.NVarChar(255)
+  hospital_name       String?          @db.NVarChar(255)
+  diagnosis           String?
+  treatment           String?
+  next_review_date    DateTime?        @db.Date
+  prescription_path   String?          @db.NVarChar(255)
+  medical_employee_id hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_notification_log {
