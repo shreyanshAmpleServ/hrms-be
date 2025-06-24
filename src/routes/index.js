@@ -119,6 +119,7 @@ const timeSheetTaskRoute = require("../v1/routes/timeSheetTaskRoute.js");
 const leaveBalanceRoute = require("../v1/routes/leaveBalanceRoute.js");
 const candidateMasterRoute = require("../v1/routes/candidateMasterRoute.js");
 const applicationSourceRoute = require("../v1/routes/applicationSourceRoute.js");
+const medicalRecordRoute = require("../v1/routes/medicalRecordRoute.js");
 const router = express.Router();
 
 // Version 1 API
@@ -241,6 +242,7 @@ router.use("/v1", timeSheetTaskRoute);
 router.use("/v1", leaveBalanceRoute);
 router.use("/v1", candidateMasterRoute);
 router.use("/v1", applicationSourceRoute);
+router.use("/v1", medicalRecordRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
