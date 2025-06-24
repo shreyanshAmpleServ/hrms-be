@@ -902,13 +902,14 @@ model hrms_d_travel_expense {
   advance_amount           Decimal?         @db.Decimal(10, 2)
   expense_breakdown        String?          @db.NVarChar(2000)
   attachment_path          String?
-  currency                 String?          @db.NVarChar(10)
+  currency                 Int?         
   exchange_rate            Decimal?         @db.Decimal(10, 4)
   final_approved_amount    Decimal?         @db.Decimal(10, 2)
   remarks                  String?
   travel_expense_approver  hrms_d_employee? @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   travel_expense_createdby hrms_d_employee  @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onUpdate: NoAction)
   travel_expense_employee  hrms_d_employee? @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_currency  hrms_m_currency_master? @relation( fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_work_life_event {
@@ -1044,6 +1045,7 @@ model hrms_m_currency_master {
   updatedby     Int?
   log_inst      Int?
   is_active     String?   @default("Y") @db.Char(1)
+  travel_expense_currency                             hrms_d_travel_expense[]
 }
 
 model hrms_m_department_master {

@@ -19,7 +19,7 @@ const serializeTravelExpenseData = (data) => ({
   advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
   expense_breakdown: data.expense_breakdown || "",
   attachment_path: data.attachment_path || "",
-  currency: data.currency || "",
+  currency: data.currency ? Number(data.currency) : 1,
   exchange_rate: data.exchange_rate ? Number(data.exchange_rate) : null,
   final_approved_amount: data.final_approved_amount
     ? Number(data.final_approved_amount)
@@ -29,6 +29,7 @@ const serializeTravelExpenseData = (data) => ({
 
 // Create a new travel expense
 const createTravelExpense = async (data) => {
+  console.log(data);
   try {
     const reqData = await prisma.hrms_d_travel_expense.create({
       data: {
@@ -47,10 +48,14 @@ const createTravelExpense = async (data) => {
         travel_expense_employee: {
           select: { id: true, employee_code: true, full_name: true },
         },
+        travel_expense_currency: {
+          select: { id: true, currency_code: true, currency_name: true },
+        },
       },
     });
     return reqData;
   } catch (error) {
+    console.log(error);
     throw new CustomError(
       `Error creating travel expense: ${error.message}`,
       500
@@ -72,6 +77,9 @@ const findTravelExpenseById = async (id) => {
         },
         travel_expense_employee: {
           select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_currency: {
+          select: { id: true, currency_code: true, currency_name: true },
         },
       },
     });
@@ -102,6 +110,9 @@ const updateTravelExpense = async (id, data) => {
         travel_expense_employee: {
           select: { id: true, employee_code: true, full_name: true },
         },
+        travel_expense_currency: {
+          select: { id: true, currency_code: true, currency_name: true },
+        },
       },
       data: {
         ...serializeTravelExpenseData(data),
@@ -117,6 +128,9 @@ const updateTravelExpense = async (id, data) => {
         },
         travel_expense_employee: {
           select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_currency: {
+          select: { id: true, currency_code: true, currency_name: true },
         },
       },
     });
@@ -188,6 +202,20 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      include: {
+        travel_expense_currency: {
+          select: { id: true, currency_code: true, currency_name: true },
+        },
+        travel_expense_approver: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_createdby: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        travel_expense_employee: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+      },
     });
     const totalCount = await prisma.hrms_d_travel_expense.count({
       where: filters,
@@ -201,6 +229,7 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
       totalCount,
     };
   } catch (error) {
+    console.log(error);
     throw new CustomError("Error retrieving travel expenses", 503);
   }
 };
@@ -276,6 +305,9 @@ const updateTravelExpenseStatus = async (id, data) => {
             employee_code: true,
             full_name: true,
           },
+        },
+        travel_expense_currency: {
+          select: { id: true, currency_code: true, currency_name: true },
         },
       },
     });
