@@ -2043,3 +2043,7 @@ model hrms_d_candidate_master {
   candidate_applied_position_id hrms_m_designation_master? @relation(fields: [applied_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_job_posting         hrms_d_job_posting?        @relation(fields: [job_posting], references: [id], onDelete: NoAction)
 }
+
+
+model hrms_d_application_source {
+}
