@@ -165,7 +165,7 @@ const deleteCandidateMaster = async (id) => {
 };
 
 // Get all candidate masters with pagination and search
-const getAllCandidateMasters = async (
+const getAllCandidateMaster = async (
   search,
   page,
   size,
@@ -201,12 +201,6 @@ const getAllCandidateMasters = async (
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
-        candidate_applied_position_id: {
-          select: {
-            id: true,
-            designation_name: true,
-          },
-        },
         candidate_job_posting: {
           select: {
             id: true,
@@ -239,9 +233,12 @@ const getAllCandidateMasters = async (
       totalCount,
     };
   } catch (error) {
+    console.error("getAllCandidateMaster ERROR:", error); // <- This is crucial
+
     throw new CustomError("Error retrieving candidates", 503);
   }
 };
+
 const updateCandidateMasterStatus = async (id, data) => {
   try {
     const candidateMasterId = parseInt(id);
@@ -294,6 +291,6 @@ module.exports = {
   findCandidateMasterById,
   updateCandidateMaster,
   deleteCandidateMaster,
-  getAllCandidateMasters,
+  getAllCandidateMaster,
   updateCandidateMasterStatus,
 };
