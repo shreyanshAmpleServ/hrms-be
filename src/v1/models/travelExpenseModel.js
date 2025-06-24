@@ -49,10 +49,15 @@ const createTravelExpense = async (data) => {
           select: { id: true, employee_code: true, full_name: true },
         },
         travel_expense_currency: {
-          select: { id: true, currency_code: true, currency_name: true },
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
         },
       },
     });
+
     return reqData;
   } catch (error) {
     console.log(error);

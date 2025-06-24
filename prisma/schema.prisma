@@ -884,32 +884,32 @@ model hrms_d_training_session {
 }
 
 model hrms_d_travel_expense {
-  id                       Int              @id(map: "PK__hrms_d_t__3213E83F0E6C7ED4") @default(autoincrement())
+  id                       Int                     @id(map: "PK__hrms_d_t__3213E83F0E6C7ED4") @default(autoincrement())
   employee_id              Int?
-  travel_purpose           String?          @db.NVarChar(255)
-  start_date               DateTime?        @db.Date
-  end_date                 DateTime?        @db.Date
-  destination              String?          @db.NVarChar(255)
-  total_amount             Decimal?         @db.Decimal(10, 2)
+  travel_purpose           String?                 @db.NVarChar(255)
+  start_date               DateTime?               @db.Date
+  end_date                 DateTime?               @db.Date
+  destination              String?                 @db.NVarChar(255)
+  total_amount             Decimal?                @db.Decimal(10, 2)
   approved_by              Int?
-  approval_status          String?          @db.VarChar(50)
-  createdate               DateTime?        @default(now(), map: "DF__hrms_d_tr__creat__1B9317B3") @db.DateTime
+  approval_status          String?                 @db.VarChar(50)
+  createdate               DateTime?               @default(now(), map: "DF__hrms_d_tr__creat__1B9317B3") @db.DateTime
   createdby                Int
-  updatedate               DateTime?        @db.DateTime
+  updatedate               DateTime?               @db.DateTime
   updatedby                Int?
   log_inst                 Int?
-  travel_mode              String?          @db.NVarChar(100)
-  advance_amount           Decimal?         @db.Decimal(10, 2)
-  expense_breakdown        String?          @db.NVarChar(2000)
+  travel_mode              String?                 @db.NVarChar(100)
+  advance_amount           Decimal?                @db.Decimal(10, 2)
+  expense_breakdown        String?                 @db.NVarChar(2000)
   attachment_path          String?
-  currency                 Int?         
-  exchange_rate            Decimal?         @db.Decimal(10, 4)
-  final_approved_amount    Decimal?         @db.Decimal(10, 2)
+  currency                 Int?
+  exchange_rate            Decimal?                @db.Decimal(10, 4)
+  final_approved_amount    Decimal?                @db.Decimal(10, 2)
   remarks                  String?
-  travel_expense_approver  hrms_d_employee? @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  travel_expense_createdby hrms_d_employee  @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onUpdate: NoAction)
-  travel_expense_employee  hrms_d_employee? @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  travel_expense_currency  hrms_m_currency_master? @relation( fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_approver  hrms_d_employee?        @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_createdby hrms_d_employee         @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onUpdate: NoAction)
+  travel_expense_employee  hrms_d_employee?        @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_currency  hrms_m_currency_master? @relation(fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_work_life_event {
@@ -1036,16 +1036,16 @@ model hrms_m_company_master {
 }
 
 model hrms_m_currency_master {
-  id            Int       @id(map: "PK__hrms_m_c__3213E83F74D02FD5") @default(autoincrement())
-  currency_code String?   @db.VarChar(5)
-  currency_name String?   @db.NVarChar(100)
-  createdate    DateTime? @default(now(), map: "DF__hrms_m_cu__creat__339FAB6E") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
-  is_active     String?   @default("Y") @db.Char(1)
-  travel_expense_currency                             hrms_d_travel_expense[]
+  id                      Int                     @id(map: "PK__hrms_m_c__3213E83F74D02FD5") @default(autoincrement())
+  currency_code           String?                 @db.VarChar(5)
+  currency_name           String?                 @db.NVarChar(100)
+  createdate              DateTime?               @default(now(), map: "DF__hrms_m_cu__creat__339FAB6E") @db.DateTime
+  createdby               Int
+  updatedate              DateTime?               @db.DateTime
+  updatedby               Int?
+  log_inst                Int?
+  is_active               String?                 @default("Y") @db.Char(1)
+  travel_expense_currency hrms_d_travel_expense[]
 }
 
 model hrms_m_department_master {
