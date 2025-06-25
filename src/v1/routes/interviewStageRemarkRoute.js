@@ -34,4 +34,10 @@ router.get(
   interviewStageRemarkController.getAllInterviewStageRemark
 );
 
+router.patch(
+  "/interview-stage-remark/:id/status",
+  authenticateToken,
+  interviewStageRemarkController.updateInterviewStageRemarkStatus
+);
+
 module.exports = router;
