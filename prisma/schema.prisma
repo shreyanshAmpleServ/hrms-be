@@ -2008,6 +2008,8 @@ model hrms_d_candidate_master {
   candidate_code               String                          @unique(map: "UQ__hrms_d_c__FA965E6259D1F830") @db.VarChar(20)
   full_name                    String                          @db.NVarChar(200)
   email                        String?                         @db.NVarChar(150)
+  profile_pic                  String?
+  date_of_application          DateTime?                       @db.Date
   phone                        String?                         @db.NVarChar(20)
   date_of_birth                DateTime?                       @db.Date
   gender                       String?                         @db.Char(1)
