@@ -2083,7 +2083,7 @@ model hrms_m_interview_stage_remark {
   interview_stage_stage_id    hrms_m_interview_stage  @relation(fields: [stage_id], references: [id], onUpdate: NoAction)
   interview_stage_employee_id hrms_d_employee?        @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
-model hrms_m_roject {
+model hrms_m_project {
   id               Int                 @id @default(autoincrement())
   name             String              @db.NVarChar(255)
   code             String
