@@ -40,22 +40,98 @@ const serializeCandidateMasterData = (data) => ({
 });
 
 // Create a new candidate master
+// const createCandidateMaster = async (data) => {
+//   try {
+//     const reqData = await prisma.hrms_d_candidate_master.create({
+//       data: {
+//         ...serializeCandidateMasterData(data),
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst || 1,
+//       },
+//       include: {
+//         // candidate_applied_position_id: {
+//         //   select: {
+//         //     id: true,
+//         //     designation_name: true,
+//         //   },
+//         // },
+//         candidate_job_posting: {
+//           select: {
+//             id: true,
+//             job_title: true,
+//           },
+//         },
+//         candidate_application_source: {
+//           select: {
+//             id: true,
+//             source_name: true,
+//           },
+//         },
+//         candidate_interview_stage: {
+//           select: {
+//             id: true,
+//             stage_name: true,
+//           },
+//         },
+//       },
+//     });
+//     return reqData;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error creating candidate master: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const createCandidateMaster = async (data) => {
   try {
+    const fullName = data.full_name?.trim();
+    if (!fullName || fullName.split(" ").length < 2) {
+      throw new CustomError(
+        "Full name must include at least first and last name",
+        400
+      );
+    }
+
+    const [firstName, lastName] = fullName.split(" ");
+    const initials = `${firstName[0]}${lastName[0]}`.toUpperCase();
+
+    // Get the latest candidate code regardless of initials
+    const lastCandidate = await prisma.hrms_d_candidate_master.findFirst({
+      orderBy: {
+        createdate: "desc",
+      },
+      select: {
+        candidate_code: true,
+      },
+    });
+
+    let nextNumber = 1;
+
+    if (lastCandidate?.candidate_code) {
+      const numPart = lastCandidate.candidate_code.slice(2); // get last 3 digits
+      const parsedNum = parseInt(numPart);
+      if (!isNaN(parsedNum)) {
+        nextNumber = parsedNum + 1;
+      }
+    }
+
+    const newCandidateCode = `${initials}${String(nextNumber).padStart(
+      3,
+      "0"
+    )}`;
+
     const reqData = await prisma.hrms_d_candidate_master.create({
       data: {
         ...serializeCandidateMasterData(data),
+        candidate_code: newCandidateCode,
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
       include: {
-        // candidate_applied_position_id: {
-        //   select: {
-        //     id: true,
-        //     designation_name: true,
-        //   },
-        // },
         candidate_job_posting: {
           select: {
             id: true,
@@ -76,6 +152,7 @@ const createCandidateMaster = async (data) => {
         },
       },
     });
+
     return reqData;
   } catch (error) {
     throw new CustomError(
