@@ -98,7 +98,6 @@ const createCandidateMaster = async (data) => {
     const [firstName, lastName] = fullName.split(" ");
     const initials = `${firstName[0]}${lastName[0]}`.toUpperCase();
 
-    // Get the latest candidate code regardless of initials
     const lastCandidate = await prisma.hrms_d_candidate_master.findFirst({
       orderBy: {
         createdate: "desc",
@@ -111,7 +110,7 @@ const createCandidateMaster = async (data) => {
     let nextNumber = 1;
 
     if (lastCandidate?.candidate_code) {
-      const numPart = lastCandidate.candidate_code.slice(2); // get last 3 digits
+      const numPart = lastCandidate.candidate_code.slice(2);
       const parsedNum = parseInt(numPart);
       if (!isNaN(parsedNum)) {
         nextNumber = parsedNum + 1;
