@@ -82,7 +82,7 @@ model hrms_m_module {
 
 model hrms_d_appointment_letter {
   id                       Int                        @id(map: "PK__hrms_d_a__3213E83F95843842") @default(autoincrement())
-  employee_id              Int?
+  candidate_id             Int?
   issue_date               DateTime?                  @db.Date
   terms_summary            String?                    @db.NVarChar(500)
   createdate               DateTime?                  @default(now(), map: "DF__hrms_d_ap__creat__681373AD") @db.DateTime
@@ -112,7 +112,7 @@ model hrms_d_appointment_letter {
 
 model hrms_d_appraisal {
   id                              Int                            @id(map: "PK__hrms_d_a__3213E83F2F13CC8B") @default(autoincrement())
-  candidate_id                     Int?
+  employee_id                     Int?
   review_period                   String?                        @db.VarChar(50)
   rating                          Int?
   reviewer_comments               String?                        @db.NVarChar(500)
@@ -383,19 +383,21 @@ model hrms_d_employee_suggestion {
 }
 
 model hrms_d_employment_contract {
-  id                  Int              @id(map: "PK__hrms_d_e__3213E83F506FAF63") @default(autoincrement())
-  employee_id         Int?
-  contract_start_date DateTime?        @db.Date
-  contract_end_date   DateTime?        @db.Date
-  contract_type       String?          @db.VarChar(50)
-  document_path       String?          @db.NVarChar(255)
-  createdate          DateTime?        @default(now(), map: "DF__hrms_d_em__creat__6AEFE058") @db.DateTime
-  createdby           Int
-  updatedate          DateTime?        @db.DateTime
-  updatedby           Int?
-  log_inst            Int?
-  description         String?
-  contracted_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                   Int                      @id(map: "PK__hrms_d_e__3213E83F506FAF63") @default(autoincrement())
+  candidate_id         Int?
+  contract_start_date  DateTime?                @db.Date
+  contract_end_date    DateTime?                @db.Date
+  contract_type        String?                  @db.VarChar(50)
+  document_path        String?                  @db.NVarChar(255)
+  createdate           DateTime?                @default(now(), map: "DF__hrms_d_em__creat__6AEFE058") @db.DateTime
+  createdby            Int
+  updatedate           DateTime?                @db.DateTime
+  updatedby            Int?
+  log_inst             Int?
+  description          String?
+  contracted_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hrms_d_employee      hrms_d_employee?         @relation(fields: [hrms_d_employeeId], references: [id])
+  hrms_d_employeeId    Int?
 }
 
 model hrms_d_exit_clearance {
@@ -632,18 +634,18 @@ model hrms_d_notification_log {
 }
 
 model hrms_d_offer_letter {
-  id               Int              @id(map: "PK__hrms_d_o__3213E83F3C2A08B8") @default(autoincrement())
+  id                Int                      @id(map: "PK__hrms_d_o__3213E83F3C2A08B8") @default(autoincrement())
   candidate_id      Int?
-  offer_date       DateTime?        @db.Date
-  position         String?          @db.NVarChar(100)
-  offered_salary   Decimal?         @db.Decimal(10, 2)
-  valid_until      DateTime?        @db.Date
-  status           String?          @db.VarChar(20)
-  createdate       DateTime?        @default(now(), map: "DF__hrms_d_of__creat__65370702") @db.DateTime
-  createdby        Int
-  updatedate       DateTime?        @db.DateTime
-  updatedby        Int?
-  log_inst         Int?
+  offer_date        DateTime?                @db.Date
+  position          String?                  @db.NVarChar(100)
+  offered_salary    Decimal?                 @db.Decimal(10, 2)
+  valid_until       DateTime?                @db.Date
+  status            String?                  @db.VarChar(20)
+  createdate        DateTime?                @default(now(), map: "DF__hrms_d_of__creat__65370702") @db.DateTime
+  createdby         Int
+  updatedate        DateTime?                @db.DateTime
+  updatedby         Int?
+  log_inst          Int?
   offered_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
 }
 
@@ -753,17 +755,18 @@ model hrms_d_remote_work_log {
 }
 
 model hrms_d_resume {
-  id              Int              @id(map: "PK__hrms_d_r__3213E83FBE64C057") @default(autoincrement())
+  id               Int                      @id(map: "PK__hrms_d_r__3213E83FBE64C057") @default(autoincrement())
   candidate_id     Int?
-  resume_path     String?          @db.NVarChar(255)
-  uploaded_on     DateTime?        @db.DateTime
-  createdate      DateTime?        @default(now(), map: "DF__hrms_d_re__creat__73852659") @db.DateTime
-  createdby       Int
-  updatedate      DateTime?        @db.DateTime
-  updatedby       Int?
-  log_inst        Int?
+  resume_path      String?                  @db.NVarChar(255)
+  uploaded_on      DateTime?                @db.DateTime
+  createdate       DateTime?                @default(now(), map: "DF__hrms_d_re__creat__73852659") @db.DateTime
+  createdby        Int
+  updatedate       DateTime?                @db.DateTime
+  updatedby        Int?
+  log_inst         Int?
   resume_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
+
 model hrms_d_succession_plan {
   id                            Int              @id(map: "PK__hrms_d_s__3213E83F2189BE23") @default(autoincrement())
   critical_position             String?          @db.NVarChar(100)
@@ -2037,6 +2040,7 @@ model hrms_d_candidate_master {
   offered_candidate            hrms_d_offer_letter[]
   appointment_candidate        hrms_d_appointment_letter[]
   resume_candidate             hrms_d_resume[]
+  contracted_candidate         hrms_d_employment_contract[]
 }
 
 model hrms_m_application_source {
@@ -2084,18 +2088,19 @@ model hrms_m_interview_stage_remark {
   interview_stage_stage_id    hrms_m_interview_stage  @relation(fields: [stage_id], references: [id], onUpdate: NoAction)
   interview_stage_employee_id hrms_d_employee?        @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
+
 model hrms_m_project {
-  id               Int                 @id @default(autoincrement())
-  name             String              @db.NVarChar(255)
-  code             String
-  projectTiming    String              @db.NVarChar(255)
-  startDate        DateTime
-  dueDate          DateTime?
-  description      String?             @db.NVarChar(Max)
-  is_active        String              @default("Y") @db.Char(1)
-  log_inst         Int                 @default(1)
-  createdDate      DateTime            @default(now())
-  updatedDate      DateTime?           @updatedAt
-  createdBy        Int                 @default(1)
-  updatedBy        Int?
+  id            Int       @id @default(autoincrement())
+  name          String    @db.NVarChar(255)
+  code          String
+  projectTiming String    @db.NVarChar(255)
+  startDate     DateTime
+  dueDate       DateTime?
+  description   String?   @db.NVarChar(Max)
+  is_active     String    @default("Y") @db.Char(1)
+  log_inst      Int       @default(1)
+  createdDate   DateTime  @default(now())
+  updatedDate   DateTime? @updatedAt
+  createdBy     Int       @default(1)
+  updatedBy     Int?
 }

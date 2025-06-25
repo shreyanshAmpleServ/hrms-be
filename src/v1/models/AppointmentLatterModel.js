@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {
-    employee_id: Number(data.employee_id) || null,
+    candidate_id: Number(data.candidate_id) || null,
     issue_date: data.issue_date || new Date(),
     designation_id: Number(data.designation_id) || null,
     terms_summary: data.terms_summary || "",
@@ -14,13 +14,11 @@ const serializeJobData = (data) => {
 // Create a new appointment latter
 const createAppointmentLatter = async (data) => {
   try {
-        const employeeExists = await prisma.hrms_d_employee.findUnique({
-      where: { id:Number( data.employee_id )},
-    });
-
-    if (!employeeExists) {
-      throw new Error("Employee ID does not exist");
-    }
+    await errorNotExist(
+      "hrms_d_candidate_master",
+      data.candidate_id,
+      "Candidate"
+    );
     const reqData = await prisma.hrms_d_appointment_letter.create({
       data: {
         ...serializeJobData(data),
@@ -29,11 +27,11 @@ const createAppointmentLatter = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        appointment_employee:{
+        appointment_candidate: {
           select: {
             full_name: true,
-            id:true,
-          }
+            id: true,
+          },
         },
         appointment_designation: {
           select: {
@@ -45,7 +43,10 @@ const createAppointmentLatter = async (data) => {
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(`Error creating appointment latter: ${error.message}`, 500);
+    throw new CustomError(
+      `Error creating appointment latter: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -70,38 +71,40 @@ const findAppointmentLatterById = async (id) => {
 // Update a appointment latter
 const updateAppointmentLatter = async (id, data) => {
   try {
-            const employeeExists = await prisma.hrms_d_employee.findUnique({
-      where: { id:Number( data.employee_id )},
-    });
-
-    if (!employeeExists) {
-      throw new Error("Employee ID does not exist");
-    }
-    const updatedAppointmentLatter = await prisma.hrms_d_appointment_letter.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...serializeJobData(data),
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
-      },
-      include: {
-        appointment_employee:{
-          select: {
-            full_name: true,
-            id:true,
-          }
+    await errorNotExist(
+      "hrms_d_candidate_master",
+      data.candidate_id,
+      "Candidate"
+    );
+    const updatedAppointmentLatter =
+      await prisma.hrms_d_appointment_letter.update({
+        where: { id: parseInt(id) },
+        data: {
+          ...serializeJobData(data),
+          updatedby: data.updatedby || 1,
+          updatedate: new Date(),
         },
-        appointment_designation: {
-          select: {
-            designation_name: true,
-            id: true,
+        include: {
+          appointment_candidate: {
+            select: {
+              full_name: true,
+              id: true,
+            },
+          },
+          appointment_designation: {
+            select: {
+              designation_name: true,
+              id: true,
+            },
           },
         },
-      },
-    });
+      });
     return updatedAppointmentLatter;
   } catch (error) {
-    throw new CustomError(`Error updating appointment latter: ${error.message}`, 500);
+    throw new CustomError(
+      `Error updating appointment latter: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -112,14 +115,23 @@ const deleteAppointmentLatter = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting appointment latter: ${error.message}`, 500);
+    throw new CustomError(
+      `Error deleting appointment latter: ${error.message}`,
+      500
+    );
   }
 };
 
 // Get all appointment latters
-const getAllAppointmentLatter = async (search,page,size ,startDate, endDate) => {
+const getAllAppointmentLatter = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
   try {
-    page = (!page || page == 0) ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -133,7 +145,7 @@ const getAllAppointmentLatter = async (search,page,size ,startDate, endDate) => 
           },
         },
         {
-          appointment_employee: {
+          appointment_candidate: {
             full_name: { contains: search.toLowerCase() },
           },
         },
@@ -159,11 +171,11 @@ const getAllAppointmentLatter = async (search,page,size ,startDate, endDate) => 
       skip: skip,
       take: size,
       include: {
-        appointment_employee:{
+        appointment_candidate: {
           select: {
             full_name: true,
-            id:true,
-          }
+            id: true,
+          },
         },
         appointment_designation: {
           select: {
@@ -176,7 +188,7 @@ const getAllAppointmentLatter = async (search,page,size ,startDate, endDate) => 
     });
     // const totalCount = await prisma.hrms_d_appointment_letter.count();
     const totalCount = await prisma.hrms_d_appointment_letter.count({
-        where: filters,
+      where: filters,
     });
 
     return {

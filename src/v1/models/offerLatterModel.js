@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {
-    employee_id: Number(data.employee_id) || null,
+    candidate_id: Number(data.candidate_id) || null,
     offer_date: data.offer_date || new Date(),
     position: data.position || "",
     offered_salary: Number(data.offered_salary) || 0,
@@ -17,7 +17,11 @@ const serializeJobData = (data) => {
 // Create a new offer letter
 const createOfferLetter = async (data) => {
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    await errorNotExist(
+      "hrms_d_candidate_master",
+      data.candidate_id,
+      "Candidate"
+    );
     const reqData = await prisma.hrms_d_offer_letter.create({
       data: {
         ...serializeJobData(data),
@@ -26,7 +30,7 @@ const createOfferLetter = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        offered_employee: {
+        offered_candidate: {
           select: {
             full_name: true,
             id: true,
@@ -61,7 +65,11 @@ const findOfferLetterById = async (id) => {
 // Update a offer letter
 const updateOfferLetter = async (id, data) => {
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    await errorNotExist(
+      "hrms_d_candidate_master",
+      data.candidate_id,
+      "Candidate"
+    );
 
     const updatedOfferLetter = await prisma.hrms_d_offer_letter.update({
       where: { id: parseInt(id) },
@@ -71,7 +79,7 @@ const updateOfferLetter = async (id, data) => {
         updatedate: new Date(),
       },
       include: {
-        offered_employee: {
+        offered_candidate: {
           select: {
             full_name: true,
             id: true,
@@ -108,7 +116,7 @@ const getAllOfferLetter = async (search, page, size, startDate, endDate) => {
     if (search) {
       filters.OR = [
         {
-          offered_employee: {
+          offered_candidate: {
             full_name: { contains: search.toLowerCase() },
           },
         },
@@ -137,7 +145,7 @@ const getAllOfferLetter = async (search, page, size, startDate, endDate) => {
       skip: skip,
       take: size,
       include: {
-        offered_employee: {
+        offered_candidate: {
           select: {
             full_name: true,
             id: true,
