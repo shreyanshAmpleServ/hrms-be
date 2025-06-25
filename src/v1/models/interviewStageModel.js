@@ -97,7 +97,7 @@ const getAllInterviewStage = async (search, page, size) => {
       where: filters,
       skip,
       take: size,
-      orderBy: [{ sort_order: "asc" }, { createdate: "desc" }],
+      orderBy: [{ sort_order: "asc" }],
     });
 
     const totalCount = await prisma.hrms_m_interview_stage.count({
