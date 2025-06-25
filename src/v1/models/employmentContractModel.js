@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {
-    employee_id: Number(data.employee_id) || null,
+    candidate_id: Number(data.candidate_id) || null,
     contract_start_date: data.contract_start_date || new Date(),
     contract_end_date: data.contract_end_date || new Date(),
     contract_type: data.contract_type || "",
@@ -17,7 +17,11 @@ const serializeJobData = (data) => {
 // Create a new employment contract
 const createEmploymentContract = async (data) => {
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    await errorNotExist(
+      "hrms_d_candidate_master",
+      data.candidate_id,
+      "Candidate"
+    );
     const reqData = await prisma.hrms_d_employment_contract.create({
       data: {
         ...serializeJobData(data),
@@ -26,7 +30,7 @@ const createEmploymentContract = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        contracted_employee: {
+        contracted_candidate: {
           select: {
             full_name: true,
             id: true,
@@ -36,7 +40,10 @@ const createEmploymentContract = async (data) => {
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(`Error creating employment contract: ${error.message}`, 500);
+    throw new CustomError(
+      `Error creating employment contract: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -61,27 +68,35 @@ const findEmploymentContractById = async (id) => {
 // Update a employment contract
 const updateEmploymentContract = async (id, data) => {
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    await errorNotExist(
+      "hrms_d_candidate_master",
+      data.candidate_id,
+      "Candidate"
+    );
 
-    const updatedEmploymentContract = await prisma.hrms_d_employment_contract.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...serializeJobData(data),
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
-      },
-      include: {
-        contracted_employee: {
-          select: {
-            full_name: true,
-            id: true,
+    const updatedEmploymentContract =
+      await prisma.hrms_d_employment_contract.update({
+        where: { id: parseInt(id) },
+        data: {
+          ...serializeJobData(data),
+          updatedby: data.updatedby || 1,
+          updatedate: new Date(),
+        },
+        include: {
+          contracted_candidate: {
+            select: {
+              full_name: true,
+              id: true,
+            },
           },
         },
-      },
-    });
+      });
     return updatedEmploymentContract;
   } catch (error) {
-    throw new CustomError(`Error updating employment contract: ${error.message}`, 500);
+    throw new CustomError(
+      `Error updating employment contract: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -92,12 +107,21 @@ const deleteEmploymentContract = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting employment contract: ${error.message}`, 500);
+    throw new CustomError(
+      `Error deleting employment contract: ${error.message}`,
+      500
+    );
   }
 };
 
 // Get all employment contracts
-const getAllEmploymentContract = async (search, page, size, startDate, endDate) => {
+const getAllEmploymentContract = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -108,13 +132,13 @@ const getAllEmploymentContract = async (search, page, size, startDate, endDate) 
     if (search) {
       filters.OR = [
         {
-          contracted_employee: {
+          contracted_candidate: {
             full_name: { contains: search.toLowerCase() },
           },
         },
         {
           contract_type: { contains: search.toLowerCase() },
-        }
+        },
       ];
     }
 
@@ -134,7 +158,7 @@ const getAllEmploymentContract = async (search, page, size, startDate, endDate) 
       skip: skip,
       take: size,
       include: {
-        contracted_employee: {
+        contracted_candidate: {
           select: {
             full_name: true,
             id: true,
