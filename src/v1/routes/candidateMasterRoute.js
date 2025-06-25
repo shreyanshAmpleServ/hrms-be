@@ -1,14 +1,17 @@
 const express = require("express");
 const candidateMasterController = require("../controller/candidateMasterController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
-const upload = require("../middlewares/uploadMiddleware.js");
+const upload = require("../middlewares/UploadFileMiddleware.js");
 
 const router = express.Router();
 
 router.post(
   "/candidate-master",
   authenticateToken,
-  upload.single("resume_path"),
+  upload.fields([
+    { name: "profile_pic", maxCount: 1 },
+    { name: "resume_path", maxCount: 1 },
+  ]),
   candidateMasterController.createCandidateMaster
 );
 
@@ -21,7 +24,10 @@ router.get(
 router.put(
   "/candidate-master/:id",
   authenticateToken,
-  upload.single("resume_path"),
+  upload.fields([
+    { name: "profile_pic", maxCount: 1 },
+    { name: "resume_path", maxCount: 1 },
+  ]),
   candidateMasterController.updateCandidateMaster
 );
 

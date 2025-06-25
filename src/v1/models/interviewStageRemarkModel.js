@@ -63,7 +63,6 @@ const createInterviewStageRemark = async (data) => {
   }
 };
 
-//  Read by ID
 const findInterviewStageRemarkById = async (id) => {
   try {
     const remark = await prisma.hrms_m_interview_stage_remark.findUnique({

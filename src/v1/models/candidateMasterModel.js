@@ -10,7 +10,11 @@ const serializeCandidateMasterData = (data) => ({
   phone: data.phone || "",
   date_of_birth: data.date_of_birth ? new Date(data.date_of_birth) : null,
   gender: data.gender || "",
+  date_of_application: data.date_of_application
+    ? new Date(data.date_of_application)
+    : null,
   nationality: data.nationality || "",
+  profile_pic: data.profile_pic || "",
   resume_path: data.resume_path || "",
   applied_position_id: data.applied_position_id
     ? Number(data.applied_position_id)
@@ -87,6 +91,8 @@ const serializeCandidateMasterData = (data) => ({
 
 const createCandidateMaster = async (data) => {
   try {
+    console.log("Result: ", data);
+
     const fullName = data.full_name?.trim();
     if (!fullName || fullName.split(" ").length < 2) {
       throw new CustomError(
