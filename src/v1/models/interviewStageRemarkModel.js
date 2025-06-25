@@ -45,7 +45,7 @@ const createInterviewStageRemark = async (data) => {
     });
     if (data.stage_id) {
       await prisma.hrms_d_candidate_master.update({
-        where: { id: result.candidate_id + 1 },
+        where: { id: result.candidate_id },
         data: {
           interview_stage: data.stage_id,
           updatedby: data.updatedby || 1,
@@ -63,7 +63,6 @@ const createInterviewStageRemark = async (data) => {
   }
 };
 
-//  Read by ID
 const findInterviewStageRemarkById = async (id) => {
   try {
     const remark = await prisma.hrms_m_interview_stage_remark.findUnique({
