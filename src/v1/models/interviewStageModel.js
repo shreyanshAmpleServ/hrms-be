@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 // Serializer
 const serializeInterviewStage = (data) => ({
   stage_name: data.stage_name,
+  description: data.description,
   sort_order: data.sort_order ? Number(data.sort_order) : 0,
 });
 
@@ -17,14 +18,6 @@ const createInterviewStage = async (data) => {
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
-      },
-      include: {
-        candidate_interview_stage: {
-          select: { id: true, full_name: true },
-        },
-        interview_stage_stage_id: {
-          select: { id: true, remark: true },
-        },
       },
     });
     return result;
@@ -64,14 +57,6 @@ const updateInterviewStage = async (id, data) => {
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
-      include: {
-        candidate_interview_stage: {
-          select: { id: true, full_name: true },
-        },
-        interview_stage_stage_id: {
-          select: { id: true, remark: true },
-        },
-      },
     });
     return updated;
   } catch (error) {
@@ -105,7 +90,7 @@ const getAllInterviewStage = async (search, page, size) => {
 
     const filters = {};
     if (search) {
-      filters.stage_name = { contains: search, mode: "insensitive" };
+      filters.stage_name = { contains: search.toLowerCase() };
     }
 
     const data = await prisma.hrms_m_interview_stage.findMany({
@@ -113,14 +98,6 @@ const getAllInterviewStage = async (search, page, size) => {
       skip,
       take: size,
       orderBy: [{ sort_order: "asc" }, { createdate: "desc" }],
-      include: {
-        candidate_interview_stage: {
-          select: { id: true, full_name: true },
-        },
-        interview_stage_stage_id: {
-          select: { id: true, remark: true },
-        },
-      },
     });
 
     const totalCount = await prisma.hrms_m_interview_stage.count({

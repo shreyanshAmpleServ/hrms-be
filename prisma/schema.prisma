@@ -82,7 +82,6 @@ model hrms_m_module {
 
 model hrms_d_appointment_letter {
   id                       Int                        @id(map: "PK__hrms_d_a__3213E83F95843842") @default(autoincrement())
-  candidate_id             Int?
   issue_date               DateTime?                  @db.Date
   terms_summary            String?                    @db.NVarChar(500)
   createdate               DateTime?                  @default(now(), map: "DF__hrms_d_ap__creat__681373AD") @db.DateTime
@@ -106,8 +105,9 @@ model hrms_d_appointment_letter {
   signed_date              DateTime?                  @db.Date
   status                   String?                    @default("Draft", map: "DF__hrms_d_ap__statu__4EA8A765") @db.NVarChar(50)
   remarks                  String?                    @db.NVarChar(500)
-  appointment_designation  hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  candidate_id             Int?
   appointment_candidate    hrms_d_candidate_master?   @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  appointment_designation  hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_appraisal {
@@ -317,6 +317,7 @@ model hrms_d_employee {
   leave_balance_employee                          hrms_d_leave_balance[]                            @relation("LeaveBalanceEmployee")
   leave_encashment_employee                       hrms_d_leave_encashment[]
   loan_req_employee                               hrms_d_loan_request[]
+  medical_employee_id                             hrms_d_medical_record[]
   hrms_d_midmonth_payroll_processing              hrms_d_midmonth_payroll_processing[]              @ignore
   hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation") @ignore
   notification_log_employee                       hrms_d_notification_log[]
@@ -345,9 +346,8 @@ model hrms_d_employee {
   work_life_event_employee                        hrms_d_work_life_event[]
   eduction_of_employee                            hrms_employee_d_educations[]
   experiance_of_employee                          hrms_employee_d_experiences[]
-  user_employee                                   hrms_m_user[]
-  medical_employee_id                             hrms_d_medical_record[]
   interview_stage_employee_id                     hrms_m_interview_stage_remark[]
+  user_employee                                   hrms_m_user[]
 }
 
 model hrms_d_employee_address {
@@ -384,7 +384,6 @@ model hrms_d_employee_suggestion {
 
 model hrms_d_employment_contract {
   id                   Int                      @id(map: "PK__hrms_d_e__3213E83F506FAF63") @default(autoincrement())
-  candidate_id         Int?
   contract_start_date  DateTime?                @db.Date
   contract_end_date    DateTime?                @db.Date
   contract_type        String?                  @db.VarChar(50)
@@ -395,9 +394,10 @@ model hrms_d_employment_contract {
   updatedby            Int?
   log_inst             Int?
   description          String?
+  candidate_id         Int?
+  hrms_d_employeeId    Int?
   contracted_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_d_employee      hrms_d_employee?         @relation(fields: [hrms_d_employeeId], references: [id])
-  hrms_d_employeeId    Int?
 }
 
 model hrms_d_exit_clearance {
@@ -635,7 +635,6 @@ model hrms_d_notification_log {
 
 model hrms_d_offer_letter {
   id                Int                      @id(map: "PK__hrms_d_o__3213E83F3C2A08B8") @default(autoincrement())
-  candidate_id      Int?
   offer_date        DateTime?                @db.Date
   position          String?                  @db.NVarChar(100)
   offered_salary    Decimal?                 @db.Decimal(10, 2)
@@ -646,6 +645,7 @@ model hrms_d_offer_letter {
   updatedate        DateTime?                @db.DateTime
   updatedby         Int?
   log_inst          Int?
+  candidate_id      Int?
   offered_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
 }
 
@@ -756,7 +756,6 @@ model hrms_d_remote_work_log {
 
 model hrms_d_resume {
   id               Int                      @id(map: "PK__hrms_d_r__3213E83FBE64C057") @default(autoincrement())
-  candidate_id     Int?
   resume_path      String?                  @db.NVarChar(255)
   uploaded_on      DateTime?                @db.DateTime
   createdate       DateTime?                @default(now(), map: "DF__hrms_d_re__creat__73852659") @db.DateTime
@@ -764,6 +763,7 @@ model hrms_d_resume {
   updatedate       DateTime?                @db.DateTime
   updatedby        Int?
   log_inst         Int?
+  candidate_id     Int?
   resume_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -908,8 +908,8 @@ model hrms_d_travel_expense {
   remarks                  String?
   travel_expense_approver  hrms_d_employee?        @relation("TravelExpenseApprover", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
   travel_expense_createdby hrms_d_employee         @relation("TravelExpenseCreatedBy", fields: [createdby], references: [id], onUpdate: NoAction)
-  travel_expense_employee  hrms_d_employee?        @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   travel_expense_currency  hrms_m_currency_master? @relation(fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  travel_expense_employee  hrms_d_employee?        @relation("TravelExpenseEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_work_life_event {
@@ -2033,14 +2033,14 @@ model hrms_d_candidate_master {
   no_show_remarks              String?                         @db.NVarChar(255)
   no_show_marked_date          DateTime?                       @db.Date
   job_posting                  Int?
+  appointment_candidate        hrms_d_appointment_letter[]
   candidate_application_source hrms_m_application_source?      @relation(fields: [application_source], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_interview_stage    hrms_m_interview_stage?         @relation("CandidateInterviewStage", fields: [interview_stage], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_job_posting        hrms_d_job_posting?             @relation(fields: [job_posting], references: [id], onDelete: NoAction)
-  interview_stage_candidate    hrms_m_interview_stage_remark[]
-  offered_candidate            hrms_d_offer_letter[]
-  appointment_candidate        hrms_d_appointment_letter[]
-  resume_candidate             hrms_d_resume[]
   contracted_candidate         hrms_d_employment_contract[]
+  offered_candidate            hrms_d_offer_letter[]
+  resume_candidate             hrms_d_resume[]
+  interview_stage_candidate    hrms_m_interview_stage_remark[]
 }
 
 model hrms_m_application_source {
@@ -2055,8 +2055,10 @@ model hrms_m_application_source {
 }
 
 model hrms_m_interview_stage {
-  id                        Int                             @id @default(autoincrement())
-  stage_name                String                          @unique @db.NVarChar(100)
+  id          Int     @id @default(autoincrement())
+  stage_name  String  @unique @db.NVarChar(100)
+  description String? @db.NVarChar(Max)
+
   createdate                DateTime?                       @default(now(), map: "DF__interview_stage__createdate") @db.DateTime
   createdby                 Int
   updatedate                DateTime?                       @db.DateTime
@@ -2072,21 +2074,21 @@ model hrms_m_interview_stage_remark {
   candidate_id                Int
   stage_id                    Int
   stage_name                  String?                 @db.VarChar(50)
-  employee_id                 Int?
-  status                      String?                 @db.NVarChar(50)
-  description                 String?                 @db.NVarChar(255)
   remark                      String?                 @db.NText
   rating                      Int?
-  interview_date              DateTime?
   createdate                  DateTime?               @default(now(), map: "DF__stage_remark__createdate") @db.DateTime
   createdby                   Int
   updatedate                  DateTime?
   updatedby                   Int?
   log_inst                    Int?
   is_completed                Boolean?
+  status                      String?                 @db.NVarChar(50)
+  description                 String?                 @db.NVarChar(255)
+  employee_id                 Int?
+  interview_date              DateTime?
   interview_stage_candidate   hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
+  interview_stage_employee_id hrms_d_employee?        @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   interview_stage_stage_id    hrms_m_interview_stage  @relation(fields: [stage_id], references: [id], onUpdate: NoAction)
-  interview_stage_employee_id hrms_d_employee?        @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_m_project {
