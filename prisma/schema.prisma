@@ -2083,7 +2083,6 @@ model hrms_m_interview_stage_remark {
   log_inst                    Int?
   is_completed                Boolean?
   status                      String?                 @db.NVarChar(50)
-  description                 String?                 @db.NVarChar(255)
   employee_id                 Int?
   interview_date              DateTime?
   interview_stage_candidate   hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)

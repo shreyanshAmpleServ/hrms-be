@@ -7,7 +7,7 @@ const serializeRemarkData = (data) => ({
   candidate_id: data.candidate_id ? Number(data.candidate_id) : null,
   stage_id: Number(data.stage_id),
   stage_name: data.stage_name || null,
-  description: data.description,
+  // description: data.description,
   interview_date: new Date(data.interview_date),
   status: data.status || "Pending",
   employee_id: data.employee_id ? Number(data.employee_id) : null,
