@@ -73,11 +73,12 @@ const deleteInterviewStageRemark = async (req, res, next) => {
 
 const getAllInterviewStageRemark = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, candidateId } = req.query;
     const data = await interviewStageRemarkService.getAllInterviewStageRemark(
       search,
       Number(page),
       Number(size),
+      candidateId,
       startDate && moment(startDate),
       endDate && moment(endDate)
     );

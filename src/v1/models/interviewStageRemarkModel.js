@@ -8,6 +8,7 @@ const serializeRemarkData = (data) => ({
   stage_id: Number(data.stage_id),
   stage_name: data.stage_name || null,
   description: data.description,
+  interview_date: new Date(data.interview_date),
   status: data.status || "Pending",
   employee_id: data.employee_id ? Number(data.employee_id) : null,
   remark: data.remark || null,
@@ -120,28 +121,98 @@ const deleteInterviewStageRemark = async (id) => {
 };
 
 //  Get All
-const getAllInterviewStageRemark = async (search, page, size) => {
+// const getAllInterviewStageRemark = async (search, page, size) => {
+//   try {
+//     page = page && page > 0 ? page : 1;
+//     size = size || 10;
+//     const skip = (page - 1) * size;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         { stage_name: { contains: search.toLowerCase() } },
+//         { remark: { contains: search.toLowerCase() } },
+//         {
+//           interview_stage_candidate: {
+//             full_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         {
+//           interview_stage_stage_id: {
+//             stage_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//       ];
+//     }
+
+//     const data = await prisma.hrms_m_interview_stage_remark.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//       include: {
+//         interview_stage_candidate: {
+//           select: { id: true, full_name: true, candidate_code: true },
+//         },
+//         interview_stage_stage_id: {
+//           select: { id: true, stage_name: true },
+//         },
+//         interview_stage_employee_id: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//             employee_code: true,
+//             profile_pic: true,
+//           },
+//         },
+//       },
+//     });
+
+//     const totalCount = await prisma.hrms_m_interview_stage_remark.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError(`Error fetching remarks: ${error.message}`, 503);
+//   }
+// };
+
+const getAllInterviewStageRemark = async (search, page, size, candidateId) => {
   try {
     page = page && page > 0 ? page : 1;
     size = size || 10;
     const skip = (page - 1) * size;
 
-    const filters = {};
+    const filters = { AND: [] };
+
+    if (candidateId) {
+      filters.AND.push({ candidate_id: Number(candidateId) });
+    }
+
     if (search) {
-      filters.OR = [
-        { stage_name: { contains: search.toLowerCase() } },
-        { remark: { contains: search.toLowerCase() } },
-        {
-          interview_stage_candidate: {
-            full_name: { contains: search.toLowerCase() },
+      filters.AND.push({
+        OR: [
+          { stage_name: { contains: search.toLowerCase() } },
+          { remark: { contains: search.toLowerCase() } },
+          {
+            interview_stage_candidate: {
+              full_name: { contains: search.toLowerCase() },
+            },
           },
-        },
-        {
-          interview_stage_stage_id: {
-            stage_name: { contains: search.toLowerCase() },
+          {
+            interview_stage_stage_id: {
+              stage_name: { contains: search.toLowerCase() },
+            },
           },
-        },
-      ];
+        ],
+      });
     }
 
     const data = await prisma.hrms_m_interview_stage_remark.findMany({
