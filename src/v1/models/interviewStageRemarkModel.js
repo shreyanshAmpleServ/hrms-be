@@ -7,6 +7,9 @@ const serializeRemarkData = (data) => ({
   candidate_id: data.candidate_id ? Number(data.candidate_id) : null,
   stage_id: Number(data.stage_id),
   stage_name: data.stage_name || null,
+  description: data.description,
+  status: data.status || "Pending",
+  employee_id: data.employee_id ? Number(data.employee_id) : null,
   remark: data.remark || null,
   rating: data.rating ? Number(data.rating) : null,
   is_completed: data.is_completed ?? false,
@@ -28,6 +31,14 @@ const createInterviewStageRemark = async (data) => {
         },
         interview_stage_stage_id: {
           select: { id: true, stage_name: true },
+        },
+        interview_stage_employee_id: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            profile_pic: true,
+          },
         },
       },
     });
@@ -77,6 +88,14 @@ const updateInterviewStageRemark = async (id, data) => {
         },
         interview_stage_stage_id: {
           select: { id: true, stage_name: true },
+        },
+        interview_stage_employee_id: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            profile_pic: true,
+          },
         },
       },
     });
@@ -137,6 +156,14 @@ const getAllInterviewStageRemark = async (search, page, size) => {
         interview_stage_stage_id: {
           select: { id: true, stage_name: true },
         },
+        interview_stage_employee_id: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            profile_pic: true,
+          },
+        },
       },
     });
 
@@ -156,10 +183,54 @@ const getAllInterviewStageRemark = async (search, page, size) => {
   }
 };
 
+const updateInterviewStageRemarkStatus = async (id, data) => {
+  try {
+    const interviewStageRemarkId = parseInt(id);
+    if (isNaN(interviewStageRemarkId)) {
+      throw new CustomError("Invalid interview stage reamark ID", 400);
+    }
+
+    const existingInterviewStageRemark =
+      await prisma.hrms_m_interview_stage_remark.findUnique({
+        where: { id: interviewStageRemarkId },
+      });
+
+    if (!existingInterviewStageRemark) {
+      throw new CustomError(
+        `Leave application with ID ${interviewStageRemarkId} not found`,
+        404
+      );
+    }
+
+    const updateData = {
+      status: data.status,
+      updatedby: data.updatedby || 1,
+      updatedate: new Date(),
+    };
+
+    if (data.status === "Approved") {
+      updateData.status = data.status || "";
+    } else if (data.status === "Rejected") {
+      updateData.status = data.status || "";
+    } else {
+      updateData.status = data.status || "";
+    }
+
+    const updatedEntry = await prisma.hrms_m_interview_stage_remark.update({
+      where: { id: interviewStageRemarkId },
+      data: updateData,
+    });
+
+    return updatedEntry;
+  } catch (error) {
+    throw new CustomError(`Error updating leave status: ${error.message}`, 500);
+  }
+};
 module.exports = {
   createInterviewStageRemark,
   findInterviewStageRemarkById,
   updateInterviewStageRemark,
   deleteInterviewStageRemark,
   getAllInterviewStageRemark,
+  updateInterviewStageRemarkStatus,
 };

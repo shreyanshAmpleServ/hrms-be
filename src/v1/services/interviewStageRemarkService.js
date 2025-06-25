@@ -32,10 +32,17 @@ const getAllInterviewStageRemark = async (
   );
 };
 
+const updateInterviewStageRemarkStatus = async (id, data) => {
+  return await interviewStageRemarkModel.updateInterviewStageRemarkStatus(
+    id,
+    data
+  );
+};
 module.exports = {
   createInterviewStageRemark,
   findInterviewStageRemarkById,
   updateInterviewStageRemark,
   deleteInterviewStageRemark,
   getAllInterviewStageRemark,
+  updateInterviewStageRemarkStatus,
 };
