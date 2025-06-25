@@ -2074,6 +2074,7 @@ model hrms_m_interview_stage_remark {
   description                 String?                 @db.NVarChar(255)
   remark                      String?                 @db.NText
   rating                      Int?
+  interview_date              DateTime?
   createdate                  DateTime?               @default(now(), map: "DF__stage_remark__createdate") @db.DateTime
   createdby                   Int
   updatedate                  DateTime?
