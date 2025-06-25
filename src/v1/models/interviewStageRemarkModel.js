@@ -43,6 +43,17 @@ const createInterviewStageRemark = async (data) => {
         },
       },
     });
+    if (data.stage_id) {
+      await prisma.hrms_d_candidate_master.update({
+        where: { id: result.candidate_id },
+        data: {
+          interview_stage: data.stage_id,
+          updatedby: data.updatedby || 1,
+          updatedate: new Date(),
+        },
+      });
+    }
+
     return result;
   } catch (error) {
     throw new CustomError(
