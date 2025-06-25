@@ -5,7 +5,7 @@ const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {
-    employee_id: Number(data.employee_id) || null,
+    candidate_id: Number(data.candidate_id) || null,
     resume_path: data.resume_path || "",
     uploaded_on: data.uploaded_on || new Date(),
   };
@@ -14,7 +14,11 @@ const serializeJobData = (data) => {
 // Create a new resume
 const createResumeUpload = async (data) => {
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    await errorNotExist(
+      "hrms_d_candidate_master",
+      data.candidate_id,
+      "Candidate"
+    );
     const reqData = await prisma.hrms_d_resume.create({
       data: {
         ...serializeJobData(data),
@@ -23,7 +27,7 @@ const createResumeUpload = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        resume_employee: {
+        resume_candidate: {
           select: {
             full_name: true,
             id: true,
@@ -48,17 +52,18 @@ const findResumeUploadById = async (id) => {
     }
     return reqData;
   } catch (error) {
-    throw new CustomError(
-      `Error finding resume by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(`Error finding resume by ID: ${error.message}`, 503);
   }
 };
 
 // Update a resume
 const updateResumeUpload = async (id, data) => {
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    await errorNotExist(
+      "hrms_d_candidate_master",
+      data.candidate_id,
+      "Candidate"
+    );
 
     const updatedResumeUpload = await prisma.hrms_d_resume.update({
       where: { id: parseInt(id) },
@@ -68,7 +73,7 @@ const updateResumeUpload = async (id, data) => {
         updatedate: new Date(),
       },
       include: {
-        resume_employee: {
+        resume_candidate: {
           select: {
             full_name: true,
             id: true,
@@ -106,7 +111,7 @@ const getAllResumeUpload = async (search, page, size, startDate, endDate) => {
     if (search) {
       filters.OR = [
         {
-          resume_employee: {
+          resume_candidate: {
             full_name: { contains: search.toLowerCase() },
           },
         },
@@ -129,7 +134,7 @@ const getAllResumeUpload = async (search, page, size, startDate, endDate) => {
       skip: skip,
       take: size,
       include: {
-        resume_employee: {
+        resume_candidate: {
           select: {
             full_name: true,
             id: true,
