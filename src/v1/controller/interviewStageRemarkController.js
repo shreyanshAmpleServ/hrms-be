@@ -93,11 +93,9 @@ const updateInterviewStageRemarkStatus = async (req, res, next) => {
     console.log("Approver ID from token:", req.user.employee_id);
 
     const status = req.body.status;
-    const rejection_reason = req.body.rejection_reason || "";
     console.log("User : ", req.user);
     const data = {
       status,
-      rejection_reason,
       updatedby: req.user.employee_id,
       approver_id: req.user.employee_id,
       updatedate: new Date(),
