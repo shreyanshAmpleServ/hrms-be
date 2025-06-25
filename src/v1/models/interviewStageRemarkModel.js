@@ -45,7 +45,7 @@ const createInterviewStageRemark = async (data) => {
     });
     if (data.stage_id) {
       await prisma.hrms_d_candidate_master.update({
-        where: { id: result.candidate_id },
+        where: { id: result.candidate_id + 1 },
         data: {
           interview_stage: data.stage_id,
           updatedby: data.updatedby || 1,
