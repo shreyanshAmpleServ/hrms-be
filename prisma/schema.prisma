@@ -350,6 +350,7 @@ model hrms_d_employee {
   experiance_of_employee                          hrms_employee_d_experiences[]
   user_employee                                   hrms_m_user[]
   medical_employee_id                             hrms_d_medical_record[]
+  interview_stage_employee_id                     hrms_m_interview_stage_remark[]
 }
 
 model hrms_d_employee_address {
@@ -2064,18 +2065,22 @@ model hrms_m_interview_stage {
 }
 
 model hrms_m_interview_stage_remark {
-  id                        Int                     @id @default(autoincrement())
-  candidate_id              Int
-  stage_id                  Int
-  stage_name                String?                 @db.VarChar(50)
-  remark                    String?                 @db.NText
-  rating                    Int?
-  createdate                DateTime?               @default(now(), map: "DF__stage_remark__createdate") @db.DateTime
-  createdby                 Int
-  updatedate                DateTime?
-  updatedby                 Int?
-  log_inst                  Int?
-  is_completed              Boolean?
-  interview_stage_candidate hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
-  interview_stage_stage_id  hrms_m_interview_stage  @relation(fields: [stage_id], references: [id], onUpdate: NoAction)
+  id                          Int                     @id @default(autoincrement())
+  candidate_id                Int
+  stage_id                    Int
+  stage_name                  String?                 @db.VarChar(50)
+  employee_id                 Int?
+  status                      String?                 @db.NVarChar(50)
+  description                 String?                 @db.NVarChar(255)
+  remark                      String?                 @db.NText
+  rating                      Int?
+  createdate                  DateTime?               @default(now(), map: "DF__stage_remark__createdate") @db.DateTime
+  createdby                   Int
+  updatedate                  DateTime?
+  updatedby                   Int?
+  log_inst                    Int?
+  is_completed                Boolean?
+  interview_stage_candidate   hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
+  interview_stage_stage_id    hrms_m_interview_stage  @relation(fields: [stage_id], references: [id], onUpdate: NoAction)
+  interview_stage_employee_id hrms_d_employee?        @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
