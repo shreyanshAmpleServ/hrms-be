@@ -21,14 +21,16 @@ const getAllInterviewStageRemark = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  candidateId
 ) => {
   return await interviewStageRemarkModel.getAllInterviewStageRemark(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    candidateId
   );
 };
 
