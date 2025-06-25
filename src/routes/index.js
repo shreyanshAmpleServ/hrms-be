@@ -121,6 +121,7 @@ const candidateMasterRoute = require("../v1/routes/candidateMasterRoute.js");
 const applicationSourceRoute = require("../v1/routes/applicationSourceRoute.js");
 const medicalRecordRoute = require("../v1/routes/medicalRecordRoute.js");
 const interviewStageRoute = require("../v1/routes/interviewStageRoute");
+const interviewStageRemarkRoute = require("../v1/routes/interviewStageRemarkRoute");
 const router = express.Router();
 
 // Version 1 API
@@ -245,6 +246,7 @@ router.use("/v1", candidateMasterRoute);
 router.use("/v1", applicationSourceRoute);
 router.use("/v1", medicalRecordRoute);
 router.use("/v1", interviewStageRoute);
+router.use("/v1", interviewStageRemarkRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
