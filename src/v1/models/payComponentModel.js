@@ -35,6 +35,20 @@ const serializePayComponentData = (data) => ({
 // Create a new pay component
 const createPayComponent = async (data) => {
   try {
+    const totalCount = await prisma.hrms_m_pay_component.count({
+      where: {
+        OR: [
+          { component_name: toLowerCase(data.component_name) },
+          { component_code: toLowerCase(data.component_code) },
+        ],
+      },
+    });
+    if (totalCount > 0) {
+      throw new CustomError(
+        "Pay component with the same name or code already exists",
+        400
+      );
+    }
     const reqData = await prisma.hrms_m_pay_component.create({
       data: {
         ...serializePayComponentData(data),
@@ -73,6 +87,20 @@ const findPayComponentById = async (id) => {
 // Update pay component
 const updatePayComponent = async (id, data) => {
   try {
+    const totalCount = await prisma.hrms_m_pay_component.count({
+      where: {
+        OR: [
+          { component_name: toLowerCase(data.component_name) },
+          { component_code: toLowerCase(data.component_code) },
+        ],
+      },
+    });
+    if (totalCount > 0) {
+      throw new CustomError(
+        "Pay component with the same name or code already exists",
+        400
+      );
+    }
     const updatedEntry = await prisma.hrms_m_pay_component.update({
       where: { id: parseInt(id) },
       data: {
@@ -155,30 +183,29 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    // Handle search
-    // if (search) {
-    //   filters.OR = [
-    //     {
-    //       campaign_user: {
-    //         full_name: { contains: search.toLowerCase() },
-    //       }, // Include contact details
-    //     },
-    //     {
-    //       campaign_leads: {
-    //         title: { contains: search.toLowerCase() },
-    //       }, // Include contact details
-    //     },
-    //     {
-    //       name: { contains: search.toLowerCase() },
-    //     },
-    //     {
-    //       status: { contains: search.toLowerCase() },
-    //     },
-    //   ];
-    // }
-    // if (status) {
-    //   filters.is_active = { equals: status };
-    // }
+    if (search) {
+      filters.OR = [
+        // {
+        //   campaign_user: {
+        //     full_name: { contains: search.toLowerCase() },
+        //   }, // Include contact details
+        // },
+        // {
+        //   campaign_leads: {
+        //     title: { contains: search.toLowerCase() },
+        //   }, // Include contact details
+        // },
+        {
+          component_name: { contains: search.toLowerCase() },
+        },
+        {
+          component_code: { contains: search.toLowerCase() },
+        },
+        {
+          component_type: { contains: search.toLowerCase() },
+        },
+      ];
+    }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -192,7 +219,7 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
       }
     }
     const pays = await prisma.hrms_m_pay_component.findMany({
-      //   where: filters,
+      where: filters,
       skip: skip,
       take: size,
 
@@ -200,7 +227,7 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
     });
 
     const totalCount = await prisma.hrms_m_pay_component.count({
-      //   where: filters,
+      where: filters,
     });
     return {
       data: pays,
