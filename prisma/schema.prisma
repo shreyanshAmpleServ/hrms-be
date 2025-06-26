@@ -471,21 +471,22 @@ model hrms_d_helpdesk_ticket {
 }
 
 model hrms_d_hr_letter {
-  id              Int              @id(map: "PK__hrms_d_h__3213E83FF90997EE") @default(autoincrement())
-  employee_id     Int?
-  letter_type     String?          @db.NVarChar(100)
-  request_date    DateTime?        @db.Date
-  issue_date      DateTime?        @db.Date
-  document_path   String?          @db.NVarChar(255)
-  createdate      DateTime?        @default(now(), map: "DF__hrms_d_hr__creat__1E6F845E") @db.DateTime
-  createdby       Int
-  updatedate      DateTime?        @db.DateTime
-  updatedby       Int?
-  log_inst        Int?
-  letter_subject  String?          @db.NVarChar(255)
-  letter_content  String?          @db.NVarChar(Max)
-  status          String?          @default("Draft", map: "DF__hrms_d_hr__statu__51851410") @db.NVarChar(50)
-  hrms_d_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
+  id                    Int                 @id(map: "PK__hrms_d_h__3213E83FF90997EE") @default(autoincrement())
+  employee_id           Int?
+  letter_type           Int?
+  request_date          DateTime?           @db.Date
+  issue_date            DateTime?           @db.Date
+  document_path         String?             @db.NVarChar(255)
+  createdate            DateTime?           @default(now(), map: "DF__hrms_d_hr__creat__1E6F845E") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?           @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  letter_subject        String?             @db.NVarChar(255)
+  letter_content        String?             @db.NVarChar(Max)
+  status                String?             @default("Draft", map: "DF__hrms_d_hr__statu__51851410") @db.NVarChar(50)
+  hrms_d_employee       hrms_d_employee?    @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
+  hr_letter_letter_type hrms_m_letter_type? @relation(fields: [letter_type], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_job_posting {
@@ -1196,15 +1197,16 @@ model hrms_m_leave_type_master {
 }
 
 model hrms_m_letter_type {
-  id                  Int                      @id(map: "PK__hrms_m_l__3213E83F746BC6B8") @default(autoincrement())
-  letter_name         String?                  @db.NVarChar(100)
-  template_path       String?                  @db.NVarChar(255)
-  createdate          DateTime?                @default(now(), map: "DF__hrms_m_le__creat__3DE82FB7") @db.DateTime
-  createdby           Int
-  updatedate          DateTime?                @db.DateTime
-  updatedby           Int?
-  log_inst            Int?
-  warning_letter_type hrms_d_warning_letters[]
+  id                    Int                      @id(map: "PK__hrms_m_l__3213E83F746BC6B8") @default(autoincrement())
+  letter_name           String?                  @db.NVarChar(100)
+  template_path         String?                  @db.NVarChar(255)
+  createdate            DateTime?                @default(now(), map: "DF__hrms_m_le__creat__3DE82FB7") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?                @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  warning_letter_type   hrms_d_warning_letters[]
+  hr_letter_letter_type hrms_d_hr_letter[]
 }
 
 model hrms_m_loan_type {
