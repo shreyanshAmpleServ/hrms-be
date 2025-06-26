@@ -76,7 +76,7 @@ const getAllProjects = async (search, page, size, startDate, endDate) => {
     });
 
     const totalCount = await prisma.hrms_m_projects.count({ where: filters });
-
+    //co
     return {
       data: data,
       currentPage: page,
