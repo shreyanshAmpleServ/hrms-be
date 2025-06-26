@@ -54,13 +54,14 @@ const deleteOfferLetter = async (req, res, next) => {
 
 const getAllOfferLetter = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, candidate_id } = req.query;
     const data = await offerLatterService.getAllOfferLetter(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      candidate_id
     );
     res.status(200).success(null, data);
   } catch (error) {

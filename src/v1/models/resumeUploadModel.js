@@ -100,7 +100,14 @@ const deleteResumeUpload = async (id) => {
 };
 
 // Get all resumes
-const getAllResumeUpload = async (search, page, size, startDate, endDate) => {
+const getAllResumeUpload = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  candidate_id
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -129,6 +136,9 @@ const getAllResumeUpload = async (search, page, size, startDate, endDate) => {
         };
       }
     }
+    if (candidate_id) {
+      filters.candidate_id = parseInt(candidate_id);
+    }
     const datas = await prisma.hrms_d_resume.findMany({
       where: filters,
       skip: skip,
@@ -143,7 +153,6 @@ const getAllResumeUpload = async (search, page, size, startDate, endDate) => {
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_resume.count();
     const totalCount = await prisma.hrms_d_resume.count({
       where: filters,
     });

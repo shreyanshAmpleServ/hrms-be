@@ -1,29 +1,43 @@
 const EmploymentContractModel = require("../models/employmentContractModel");
 
 const createEmploymentContract = async (data) => {
-    return await EmploymentContractModel.createEmploymentContract(data);
+  return await EmploymentContractModel.createEmploymentContract(data);
 };
 
 const findEmploymentContractById = async (id) => {
-    return await EmploymentContractModel.findEmploymentContractById(id);
+  return await EmploymentContractModel.findEmploymentContractById(id);
 };
 
 const updateEmploymentContract = async (id, data) => {
-    return await EmploymentContractModel.updateEmploymentContract(id, data);
+  return await EmploymentContractModel.updateEmploymentContract(id, data);
 };
 
 const deleteEmploymentContract = async (id) => {
-    return await EmploymentContractModel.deleteEmploymentContract(id);
+  return await EmploymentContractModel.deleteEmploymentContract(id);
 };
 
-const getAllEmploymentContract = async (search,page,size ,startDate, endDate) => {
-    return await EmploymentContractModel.getAllEmploymentContract(search,page,size ,startDate, endDate);
+const getAllEmploymentContract = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  candidate_id
+) => {
+  return await EmploymentContractModel.getAllEmploymentContract(
+    search,
+    page,
+    size,
+    startDate,
+    endDate,
+    candidate_id
+  );
 };
 
 module.exports = {
-    createEmploymentContract,
-    findEmploymentContractById,
-    updateEmploymentContract,
-    deleteEmploymentContract,
-    getAllEmploymentContract,
+  createEmploymentContract,
+  findEmploymentContractById,
+  updateEmploymentContract,
+  deleteEmploymentContract,
+  getAllEmploymentContract,
 };

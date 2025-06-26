@@ -16,13 +16,21 @@ const deleteOfferLetter = async (id) => {
   return await offerLatterModel.deleteOfferLetter(id);
 };
 
-const getAllOfferLetter = async (search, page, size, startDate, endDate) => {
+const getAllOfferLetter = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  candidate_id
+) => {
   return await offerLatterModel.getAllOfferLetter(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    candidate_id
   );
 };
 

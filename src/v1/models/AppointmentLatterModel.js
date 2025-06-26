@@ -130,7 +130,8 @@ const getAllAppointmentLatter = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  candidate_id
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -167,6 +168,9 @@ const getAllAppointmentLatter = async (
           lte: end,
         };
       }
+    }
+    if (candidate_id) {
+      filters.candidate_id = parseInt(candidate_id);
     }
     const datas = await prisma.hrms_d_appointment_letter.findMany({
       where: filters,

@@ -105,7 +105,14 @@ const deleteOfferLetter = async (id) => {
 };
 
 // Get all offer letters
-const getAllOfferLetter = async (search, page, size, startDate, endDate) => {
+const getAllOfferLetter = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  candidate_id
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -140,6 +147,11 @@ const getAllOfferLetter = async (search, page, size, startDate, endDate) => {
         };
       }
     }
+
+    if (candidate_id) {
+      filters.candidate_id = parseInt(candidate_id);
+    }
+
     const datas = await prisma.hrms_d_offer_letter.findMany({
       where: filters,
       skip: skip,
@@ -154,7 +166,6 @@ const getAllOfferLetter = async (search, page, size, startDate, endDate) => {
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_offer_letter.count();
     const totalCount = await prisma.hrms_d_offer_letter.count({
       where: filters,
     });

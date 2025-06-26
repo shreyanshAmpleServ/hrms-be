@@ -43,12 +43,19 @@ const findResumeUploadById = async (req, res, next) => {
 
 const updateResumeUpload = async (req, res, next) => {
   try {
-    const existingData = await ResumeUploadService.findResumeUploadById(req.params.id);
+    const existingData = await ResumeUploadService.findResumeUploadById(
+      req.params.id
+    );
     if (!existingData) throw new CustomError("Resume not found", 404);
-    let imageUrl = existingData.resume_path;  
+    let imageUrl = existingData.resume_path;
 
     // Upload the file to Backblaze
-  if (req.file && req.file.buffer && req.file.originalname && req.file.mimetype) {
+    if (
+      req.file &&
+      req.file.buffer &&
+      req.file.originalname &&
+      req.file.mimetype
+    ) {
       imageUrl = await uploadToBackblaze(
         req.file.buffer,
         req.file.originalname,
@@ -80,7 +87,9 @@ const updateResumeUpload = async (req, res, next) => {
 
 const deleteResumeUpload = async (req, res, next) => {
   try {
-    const existingData = await ResumeUploadService.findResumeUploadById(req.params.id);
+    const existingData = await ResumeUploadService.findResumeUploadById(
+      req.params.id
+    );
 
     await ResumeUploadService.deleteResumeUpload(req.params.id);
     res.status(200).success("Resume deleted successfully", null);
@@ -94,13 +103,14 @@ const deleteResumeUpload = async (req, res, next) => {
 
 const getAllResumeUpload = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, candidate_id } = req.query;
     const data = await ResumeUploadService.getAllResumeUpload(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      candidate_id ? parseInt(candidate_id) : null
     );
     res.status(200).success(null, data);
   } catch (error) {
