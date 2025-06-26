@@ -264,6 +264,7 @@ const updateCandidateMaster = async (id, data) => {
     });
     return updatedEntry;
   } catch (error) {
+    console.error("Error updating candidate master:", error);
     throw new CustomError(
       `Error updating candidate master: ${error.message}`,
       500

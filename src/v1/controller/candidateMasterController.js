@@ -151,6 +151,7 @@ const {
   uploadToBackblaze,
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
+const e = require("express");
 
 //Create
 const createCandidateMaster = async (req, res, next) => {
@@ -166,7 +167,7 @@ const createCandidateMaster = async (req, res, next) => {
         buffer,
         file.originalname,
         file.mimetype,
-        "profile_pic"
+        "Candidate"
       );
       // fs.unlinkSync(file.path);
     }
@@ -178,7 +179,7 @@ const createCandidateMaster = async (req, res, next) => {
         buffer,
         file.originalname,
         file.mimetype,
-        "resume_path"
+        "Candidate"
       );
     }
     const data = {
@@ -219,11 +220,7 @@ const updateCandidateMaster = async (req, res, next) => {
     let profilePicUrl = existingCandidateMaster.profile_pic;
     let resumePathUrl = existingCandidateMaster.resume_path;
 
-    const extractB2Key = (url) => {
-      if (!url) return null;
-      return url.includes(".com/") ? url.split(".com/")[1] : url;
-    };
-
+    console.log("req.files", req.files);
     if (req.files?.profile_pic) {
       const file = req.files.profile_pic[0];
       const buffer = file.buffer;
@@ -232,19 +229,8 @@ const updateCandidateMaster = async (req, res, next) => {
         buffer,
         file.originalname,
         file.mimetype,
-        "profile_pic"
+        "Candidate"
       );
-
-      const oldProfileKey = extractB2Key(existingCandidateMaster.profile_pic);
-      if (oldProfileKey) {
-        console.log("Deleting old profile pic:", oldProfileKey);
-        await deleteFromBackblaze(oldProfileKey);
-      } else {
-        console.warn(
-          "Could not extract key from profile_pic URL:",
-          existingCandidateMaster.profile_pic
-        );
-      }
     }
 
     if (req.files?.resume_path) {
@@ -255,19 +241,8 @@ const updateCandidateMaster = async (req, res, next) => {
         buffer,
         file.originalname,
         file.mimetype,
-        "resume_path"
+        "Candidate"
       );
-
-      const oldResumeKey = extractB2Key(existingCandidateMaster.resume_path);
-      if (oldResumeKey) {
-        console.log("Deleting old resume:", oldResumeKey);
-        await deleteFromBackblaze(oldResumeKey);
-      } else {
-        console.warn(
-          "Could not extract key from resume_path URL:",
-          existingCandidateMaster.resume_path
-        );
-      }
     }
 
     const candidateData = {
@@ -277,14 +252,19 @@ const updateCandidateMaster = async (req, res, next) => {
       updatedby: req.user.id,
     };
 
-    console.log("data ; ", req.params);
-
     const result = await candidateMasterService.updateCandidateMaster(
       req.params.id,
       candidateData
     );
 
     res.status(200).success("Candidate master updated Successfully", result);
+
+    if (existingCandidateMaster.profile_pic && req.files?.profile_pic) {
+      await deleteFromBackblaze(existingCandidateMaster.profile_pic);
+    }
+    if (existingCandidateMaster.resume_path && req.files?.resume_path) {
+      await deleteFromBackblaze(existingCandidateMaster.resume_path);
+    }
   } catch (error) {
     next(new CustomError(error.message, 400));
   }
@@ -293,11 +273,22 @@ const updateCandidateMaster = async (req, res, next) => {
 // Delete
 const deleteCandidateMaster = async (req, res, next) => {
   try {
+    const existingCandidateMaster =
+      await candidateMasterService.getCandidateMasterById(req.params.id);
+    if (!existingCandidateMaster) {
+      throw new CustomError("Candidate Master not found", 404);
+    }
     await candidateMasterService.deleteCandidateMaster(req.params.id);
     res.status(200).json({
       success: true,
       message: "Candidate master deleted successfully",
     });
+    if (existingCandidateMaster.profile_pic && req.files?.profile_pic) {
+      await deleteFromBackblaze(existingCandidateMaster.profile_pic);
+    }
+    if (existingCandidateMaster.resume_path && req.files?.resume_path) {
+      await deleteFromBackblaze(existingCandidateMaster.resume_path);
+    }
   } catch (error) {
     next(new CustomError(error.message, 400));
   }
