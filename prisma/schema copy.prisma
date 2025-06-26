@@ -2110,8 +2110,6 @@ model hrms_m_costcenters {
   updatedby     Int?
   log_inst      Int?
   external_code String?   @db.NVarChar(200)
-  ValidFrom     DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_co__Valid__6F9F86DC")
-  ValidTo       DateTime  @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_co__Valid__7093AB15")
 }
 
 model hrms_m_projects {
