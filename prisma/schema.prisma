@@ -348,6 +348,7 @@ model hrms_d_employee {
   experiance_of_employee                          hrms_employee_d_experiences[]
   interview_stage_employee_id                     hrms_m_interview_stage_remark[]
   user_employee                                   hrms_m_user[]
+  projects_employee_detail                        hrms_m_projects[]
 }
 
 model hrms_d_employee_address {
@@ -2114,19 +2115,20 @@ model hrms_m_costcenters {
 }
 
 model hrms_m_projects {
-  id          Int       @id(map: "PK__m_projec__3213E83F47788695") @default(autoincrement())
-  code        String    @unique(map: "UQ__m_projec__357D4CF92EB107C2") @db.VarChar(50)
-  name        String?   @db.VarChar(200)
-  locked      String    @default("N", map: "DF__hrms_m_projects__locke__3A8CA01F") @db.Char(1)
-  valid_from  DateTime? @db.Date
-  valid_to    DateTime? @db.Date
-  employee_id Int?
-  createdate  DateTime? @default(now(), map: "DF__hrms_m_projects__creat__3B80C458") @db.DateTime
-  updatedate  DateTime? @db.DateTime
-  createdby   Int
-  updatedby   Int?
-  log_inst    Int?
-  ValidFrom   DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_pr__Valid__670A40DB")
-  ValidTo     DateTime  @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_pr__Valid__67FE6514")
-  is_active   String?   @default("Y", map: "DF__hrms_m_pr__is_ac__69E6AD86") @db.Char(1)
+  id                       Int              @id(map: "PK__m_projec__3213E83F47788695") @default(autoincrement())
+  code                     String           @unique(map: "UQ__m_projec__357D4CF92EB107C2") @db.VarChar(50)
+  name                     String?          @db.VarChar(200)
+  locked                   String           @default("N", map: "DF__hrms_m_projects__locke__3A8CA01F") @db.Char(1)
+  valid_from               DateTime?        @db.Date
+  valid_to                 DateTime?        @db.Date
+  employee_id              Int?
+  createdate               DateTime?        @default(now(), map: "DF__hrms_m_projects__creat__3B80C458") @db.DateTime
+  updatedate               DateTime?        @db.DateTime
+  createdby                Int
+  updatedby                Int?
+  log_inst                 Int?
+  ValidFrom                DateTime         @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_pr__Valid__670A40DB")
+  ValidTo                  DateTime         @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_pr__Valid__67FE6514")
+  is_active                String?          @default("Y", map: "DF__hrms_m_pr__is_ac__69E6AD86") @db.Char(1)
+  projects_employee_detail hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
