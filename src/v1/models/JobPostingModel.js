@@ -9,8 +9,9 @@ const serializeJobData = (data) => {
     job_title: data.job_title || "",
     description: data.description || "",
     required_experience: data.required_experience || "",
-    posting_date: data.posting_date || new Date(),
-    closing_date: data.closing_date || null,
+    posting_date: data.posting_date ? new Date(data.posting_date) : null,
+    closing_date: data.closing_date ? new Date(data.closing_date) : null,
+
     is_internal:
       typeof data.is_internal === "boolean"
         ? data.is_internal
@@ -21,11 +22,81 @@ const serializeJobData = (data) => {
 };
 
 // Create a new job posting
+// const createJobPosting = async (data) => {
+//   try {
+//     const reqData = await prisma.hrms_d_job_posting.create({
+//       data: {
+//         ...serializeJobData(data),
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst || 1,
+//       },
+//       include: {
+//         hrms_job_department: {
+//           select: {
+//             department_name: true,
+//             id: true,
+//           },
+//         },
+//         hrms_job_designation: {
+//           select: {
+//             designation_name: true,
+//             id: true,
+//           },
+//         },
+//       },
+//     });
+//     return reqData;
+//   } catch (error) {
+//     throw new CustomError(`Error creating job posting: ${error.message}`, 500);
+//   }
+// };
+
 const createJobPosting = async (data) => {
   try {
+    // Fetch department, designation, and job title first
+    const department = await prisma.hrms_m_department_master.findUnique({
+      where: { id: data.department_id },
+    });
+
+    const designation = await prisma.hrms_m_designation_master.findUnique({
+      where: { id: data.designation_id },
+    });
+
+    const jobTitle = data.job_title || "";
+
+    if (!department || !designation || !jobTitle) {
+      throw new CustomError(
+        "Invalid department, designation, or job title",
+        400
+      );
+    }
+
+    // Build initials (e.g., SDJ)
+    const prefix =
+      `${department.department_name[0]}${designation.designation_name[0]}${jobTitle[0]}`.toUpperCase();
+
+    // Get latest job code regardless of prefix
+    const lastJob = await prisma.hrms_d_job_posting.findFirst({
+      orderBy: { createdate: "desc" },
+      select: { job_code: true },
+    });
+
+    let nextNumber = 1;
+    if (lastJob?.job_code) {
+      const numberPart = lastJob.job_code.slice(-3);
+      const parsed = parseInt(numberPart);
+      if (!isNaN(parsed)) {
+        nextNumber = parsed + 1;
+      }
+    }
+
+    const newJobCode = `${prefix}${String(nextNumber).padStart(3, "0")}`;
+
     const reqData = await prisma.hrms_d_job_posting.create({
       data: {
         ...serializeJobData(data),
+        job_code: newJobCode,
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
@@ -45,6 +116,7 @@ const createJobPosting = async (data) => {
         },
       },
     });
+
     return reqData;
   } catch (error) {
     throw new CustomError(`Error creating job posting: ${error.message}`, 500);
