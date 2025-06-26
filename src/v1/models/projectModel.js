@@ -53,8 +53,13 @@ const getAllProjects = async (search, page, size, startDate, endDate) => {
     }
     if (startDate && endDate) {
       const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
       const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        end.setHours(23, 59, 59, 999);
         filters.createdate = { gte: start, lte: end };
       }
     }
@@ -77,6 +82,7 @@ const getAllProjects = async (search, page, size, startDate, endDate) => {
 
     const totalCount = await prisma.hrms_m_projects.count({ where: filters });
     //co
+
     return {
       data: data,
       currentPage: page,
