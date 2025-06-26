@@ -219,33 +219,34 @@ const updateCandidateMaster = async (req, res, next) => {
     let profilePicUrl = existingCandidateMaster.profile_pic;
     let resumePathUrl = existingCandidateMaster.resume_path;
 
+    const extractB2Key = (url) => {
+      if (!url) return null;
+      return url.includes(".com/") ? url.split(".com/")[1] : url;
+    };
+
     if (req.files?.profile_pic) {
       const file = req.files.profile_pic[0];
       const buffer = file.buffer;
+
       profilePicUrl = await uploadToBackblaze(
         buffer,
         file.originalname,
         file.mimetype,
         "profile_pic"
       );
-      // fs.unlinkSync(file.path);
 
-      if (
-        existingCandidateMaster.profile_pic &&
-        existingCandidateMaster.profile_pic.includes(".com/")
-      ) {
-        const key = existingCandidateMaster.profile_pic.split(".com/")[1]; // gets just 'profile_pic/uuid.jpg'
-        if (key) {
-          console.log("Deleting old profile pic:", key);
-          await deleteFromBackblaze(key); // ✅ Pass only key, not full URL
-        } else {
-          console.warn(
-            "⚠️ Could not extract key from profile_pic URL:",
-            existingCandidateMaster.profile_pic
-          );
-        }
+      const oldProfileKey = extractB2Key(existingCandidateMaster.profile_pic);
+      if (oldProfileKey) {
+        console.log("Deleting old profile pic:", oldProfileKey);
+        await deleteFromBackblaze(oldProfileKey);
+      } else {
+        console.warn(
+          "Could not extract key from profile_pic URL:",
+          existingCandidateMaster.profile_pic
+        );
       }
     }
+
     if (req.files?.resume_path) {
       const file = req.files.resume_path[0];
       const buffer = file.buffer;
@@ -256,24 +257,19 @@ const updateCandidateMaster = async (req, res, next) => {
         file.mimetype,
         "resume_path"
       );
-      // fs.unlinkSync(file.path);
 
-      if (
-        existingCandidateMaster.resume_path &&
-        existingCandidateMaster.resume_path.includes(".com/")
-      ) {
-        const key = existingCandidateMaster.resume_path.split(".com/")[1];
-        if (key) {
-          console.log("Deleting old resume:", key);
-          await deleteFromBackblaze(key);
-        } else {
-          console.warn(
-            "⚠️ Could not extract key from resume_path URL:",
-            existingCandidateMaster.resume_path
-          );
-        }
+      const oldResumeKey = extractB2Key(existingCandidateMaster.resume_path);
+      if (oldResumeKey) {
+        console.log("Deleting old resume:", oldResumeKey);
+        await deleteFromBackblaze(oldResumeKey);
+      } else {
+        console.warn(
+          "Could not extract key from resume_path URL:",
+          existingCandidateMaster.resume_path
+        );
       }
     }
+
     const candidateData = {
       ...req.body,
       resume_path: resumePathUrl,
@@ -287,6 +283,7 @@ const updateCandidateMaster = async (req, res, next) => {
       req.params.id,
       candidateData
     );
+
     res.status(200).success("Candidate master updated Successfully", result);
   } catch (error) {
     next(new CustomError(error.message, 400));
