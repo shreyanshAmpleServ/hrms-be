@@ -348,6 +348,7 @@ model hrms_d_employee {
   experiance_of_employee                          hrms_employee_d_experiences[]
   interview_stage_employee_id                     hrms_m_interview_stage_remark[]
   user_employee                                   hrms_m_user[]
+  projects_employee_detail                        hrms_m_projects[]
 }
 
 model hrms_d_employee_address {
@@ -486,13 +487,13 @@ model hrms_d_hr_letter {
   letter_content        String?             @db.NVarChar(Max)
   status                String?             @default("Draft", map: "DF__hrms_d_hr__statu__51851410") @db.NVarChar(50)
   hrms_d_employee       hrms_d_employee?    @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
-  hr_letter_letter_type hrms_m_letter_type? @relation(fields: [letter_type], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  hr_letter_letter_type hrms_m_letter_type? @relation(fields: [letter_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_job_posting {
   id                    Int                        @id(map: "PK__hrms_d_j__3213E83FF15AFFB9") @default(autoincrement())
+  job_code              String                     @db.VarChar(20)
   department_id         Int?
-  job_code              String                     @unique(map: "UQ__hrms_d_c__FA965E6259D1F830") @db.VarChar(20)
   designation_id        Int?
   job_title             String?                    @db.NVarChar(255)
   description           String?
@@ -506,8 +507,8 @@ model hrms_d_job_posting {
   updatedby             Int?
   log_inst              Int?
   candidate_job_posting hrms_d_candidate_master[]
-  hrms_job_department   hrms_m_department_master?  @relation(fields: [department_id], references: [id], onUpdate: NoAction)
-  hrms_job_designation  hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
+  hrms_job_department   hrms_m_department_master?  @relation(fields: [department_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  hrms_job_designation  hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_leave_application {
@@ -1075,9 +1076,9 @@ model hrms_m_designation_master {
   log_inst                          Int?
   is_active                         String?                     @default("Y") @db.Char(1)
   appointment_designation           hrms_d_appointment_letter[]
+  candidate_master_applied_position hrms_d_candidate_master[]
   hrms_employee_designation         hrms_d_employee[]
   hrms_job_designation              hrms_d_job_posting[]
-  candidate_master_applied_position hrms_d_candidate_master[]
 }
 
 model hrms_m_disciplinary_penalty {
@@ -1206,8 +1207,8 @@ model hrms_m_letter_type {
   updatedate            DateTime?                @db.DateTime
   updatedby             Int?
   log_inst              Int?
-  warning_letter_type   hrms_d_warning_letters[]
   hr_letter_letter_type hrms_d_hr_letter[]
+  warning_letter_type   hrms_d_warning_letters[]
 }
 
 model hrms_m_loan_type {
@@ -2012,8 +2013,6 @@ model hrms_d_candidate_master {
   candidate_code                    String                          @unique(map: "UQ__hrms_d_c__FA965E6259D1F830") @db.VarChar(20)
   full_name                         String                          @db.NVarChar(200)
   email                             String?                         @db.NVarChar(150)
-  profile_pic                       String?
-  date_of_application               DateTime?                       @db.Date
   phone                             String?                         @db.NVarChar(20)
   date_of_birth                     DateTime?                       @db.Date
   gender                            String?                         @db.Char(1)
@@ -2039,15 +2038,17 @@ model hrms_d_candidate_master {
   no_show_remarks                   String?                         @db.NVarChar(255)
   no_show_marked_date               DateTime?                       @db.Date
   job_posting                       Int?
+  profile_pic                       String?
+  date_of_application               DateTime?                       @db.Date
   appointment_candidate             hrms_d_appointment_letter[]
   candidate_application_source      hrms_m_application_source?      @relation(fields: [application_source], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  candidate_master_applied_position hrms_m_designation_master?      @relation(fields: [applied_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_interview_stage         hrms_m_interview_stage?         @relation("CandidateInterviewStage", fields: [interview_stage], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_job_posting             hrms_d_job_posting?             @relation(fields: [job_posting], references: [id], onDelete: NoAction)
   contracted_candidate              hrms_d_employment_contract[]
   offered_candidate                 hrms_d_offer_letter[]
   resume_candidate                  hrms_d_resume[]
   interview_stage_candidate         hrms_m_interview_stage_remark[]
-  candidate_master_applied_position hrms_m_designation_master?      @relation(fields: [applied_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_m_application_source {
@@ -2062,16 +2063,15 @@ model hrms_m_application_source {
 }
 
 model hrms_m_interview_stage {
-  id          Int     @id @default(autoincrement())
-  stage_name  String  @unique @db.NVarChar(100)
-  description String? @db.NVarChar(Max)
-
+  id                        Int                             @id @default(autoincrement())
+  stage_name                String                          @unique @db.NVarChar(100)
   createdate                DateTime?                       @default(now(), map: "DF__interview_stage__createdate") @db.DateTime
   createdby                 Int
   updatedate                DateTime?                       @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
   sort_order                Int
+  description               String?                         @db.NVarChar(Max)
   candidate_interview_stage hrms_d_candidate_master[]       @relation("CandidateInterviewStage")
   interview_stage_stage_id  hrms_m_interview_stage_remark[]
 }
@@ -2097,18 +2097,38 @@ model hrms_m_interview_stage_remark {
   interview_stage_stage_id    hrms_m_interview_stage  @relation(fields: [stage_id], references: [id], onUpdate: NoAction)
 }
 
-model hrms_m_project {
-  id            Int       @id @default(autoincrement())
-  name          String    @db.NVarChar(255)
-  code          String
-  projectTiming String    @db.NVarChar(255)
-  startDate     DateTime
-  dueDate       DateTime?
-  description   String?   @db.NVarChar(Max)
-  is_active     String    @default("Y") @db.Char(1)
-  log_inst      Int       @default(1)
-  createdDate   DateTime  @default(now())
-  updatedDate   DateTime? @updatedAt
-  createdBy     Int       @default(1)
-  updatedBy     Int?
+model hrms_m_costcenters {
+  id            Int       @id(map: "PK__m_costce__3213E83FEA0D7E3A") @default(autoincrement())
+  name          String?   @db.VarChar(200)
+  dimension_id  Int?
+  is_active     String    @default("Y", map: "DF__m_costcen__is_ac__6576FE24") @db.Char(1)
+  valid_from    DateTime? @db.Date
+  valid_to      DateTime? @db.Date
+  createdate    DateTime? @default(now(), map: "DF__m_costcen__creat__666B225D") @db.DateTime
+  updatedate    DateTime? @db.DateTime
+  createdby     Int
+  updatedby     Int?
+  log_inst      Int?
+  external_code String?   @db.NVarChar(200)
+  ValidFrom     DateTime  @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_co__Valid__6F9F86DC")
+  ValidTo       DateTime  @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_co__Valid__7093AB15")
+}
+
+model hrms_m_projects {
+  id                       Int              @id(map: "PK__m_projec__3213E83F47788695") @default(autoincrement())
+  code                     String           @unique(map: "UQ__m_projec__357D4CF92EB107C2") @db.VarChar(50)
+  name                     String?          @db.VarChar(200)
+  locked                   String           @default("N", map: "DF__hrms_m_projects__locke__3A8CA01F") @db.Char(1)
+  valid_from               DateTime?        @db.Date
+  valid_to                 DateTime?        @db.Date
+  employee_id              Int?
+  createdate               DateTime?        @default(now(), map: "DF__hrms_m_projects__creat__3B80C458") @db.DateTime
+  updatedate               DateTime?        @db.DateTime
+  createdby                Int
+  updatedby                Int?
+  log_inst                 Int?
+  ValidFrom                DateTime         @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_pr__Valid__670A40DB")
+  ValidTo                  DateTime         @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_pr__Valid__67FE6514")
+  is_active                String?          @default("Y", map: "DF__hrms_m_pr__is_ac__69E6AD86") @db.Char(1)
+  projects_employee_detail hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
