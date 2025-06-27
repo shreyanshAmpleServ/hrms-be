@@ -563,13 +563,11 @@ const getAllEmployee = async (
             designation_name: { contains: search.toLowerCase() },
           },
         },
-        {
-          hrms_emp_experience: {
-            experiance_of_employee: {
-              experience_title: { contains: search.toLowerCase() },
-            },
-          },
-        },
+        // {
+        //   experiance_of_employee: {
+        //     company_name: { contains: search.toLowerCase() },
+        //   },
+        // },
         {
           hrms_employee_department: {
             department_name: { contains: search.toLowerCase() },
