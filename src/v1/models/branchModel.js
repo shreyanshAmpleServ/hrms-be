@@ -93,12 +93,15 @@ const deleteBranch = async (id) => {
 };
 
 // Get all branchs
-const getAllBranch = async (page, size, search) => {
+const getAllBranch = async (page, size, search, is_active) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
+
     let filters = {};
+
+    // ✅ Build search filter
     if (search) {
       filters.OR = [
         {
@@ -107,6 +110,7 @@ const getAllBranch = async (page, size, search) => {
         {
           location: { contains: search.toLowerCase() },
         },
+        // ✅ Correct way to search related table field
         {
           branch_company: {
             company_name: { contains: search.toLowerCase() },
@@ -115,9 +119,18 @@ const getAllBranch = async (page, size, search) => {
       ];
     }
 
+    // ✅ is_active filter
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
+
+    // ✅ Fetch branches
     const branches = await prisma.hrms_m_branch_master.findMany({
       where: filters,
-      skip: skip,
+      skip,
       take: size,
       include: {
         branch_company: {
@@ -131,9 +144,11 @@ const getAllBranch = async (page, size, search) => {
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
+    // ✅ Count total
     const totalCount = await prisma.hrms_m_branch_master.count({
       where: filters,
     });
+
     return {
       data: branches,
       currentPage: page,
@@ -142,7 +157,7 @@ const getAllBranch = async (page, size, search) => {
       totalCount: totalCount,
     };
   } catch (error) {
-    console.log(error);
+    console.error("Error retrieving branches:", error);
     throw new CustomError("Error retrieving branches", 503);
   }
 };
