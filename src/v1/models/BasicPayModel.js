@@ -3,7 +3,17 @@ const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 const moment = require("moment");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-
+const requiredFields = {
+  line_num: "Line Number is required",
+  pay_component_id: "Pay Component is required",
+  amount: "Amount is required",
+  type_value: "Type Value is required",
+  is_taxable: "Is Taxable is required",
+  is_recurring: "Is Recurring is required",
+  is_worklife_related: "Is Worklife Related is required",
+  is_grossable: "Is Grossable is required",
+  component_type: "Component Type is required",
+};
 // Serialize  before saving it
 const serializeHeaders = (data) => {
   const serialized = {};
@@ -111,19 +121,18 @@ const createBasicPay = async (data) => {
   const { payLineData, ...headerDatas } = data; // Separate `contactIds` from other deal data
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
-    console.log("Employee Data: ", headerDatas);
-    // if (!data.phone_number) {
-    //   throw new CustomError(`Phone Number is required`, 400);
-    // }
-    // if (!data.email) {
-    //   throw new CustomError(`Email is required`, 400);
-    // }
-    // if (!data.employment_type) {
-    //   throw new CustomError(`Employment Type is required`, 400);
-    // }
-    // if (!data.employee_code) {
-    //   throw new CustomError(`Employee Code is required`, 400);
-    // }
+    if (!data.employee_id) {
+      throw new CustomError(`Employee is required`, 400);
+    }
+    if (!data.effective_from) {
+      throw new CustomError(`Effective from  is required`, 400);
+    }
+    if (!data.status) {
+      throw new CustomError(`Status Type is required`, 400);
+    }
+    if (!data.line_num) {
+      throw new CustomError(`Employee Code is required`, 400);
+    }
     // if (!data.gender) {
     //   throw new CustomError(`Gender is required`, 400);
     // }
@@ -160,6 +169,14 @@ const createBasicPay = async (data) => {
         createdate: new Date(),
         createdby: headerDatas.createdby || 1,
       }));
+      for (const addr of payLineData) {
+        for (const [field, message] of Object.entries(requiredFields)) {
+          if (!addr[field]) {
+            throw new CustomError(message, 400);
+          }
+        }
+      }
+
       await prisma.hrms_d_employee_pay_component_assignment_line.createMany({
         data: lineDatas,
       });
@@ -285,7 +302,7 @@ const updateBasicPay = async (id, data) => {
     const newSerialized =
       newAddresses?.map((addr) => ({
         ...serializePayLine(addr),
-        employee_id: parseInt(id),
+        parent_id: parseInt(id),
       })) || [];
 
     // Use transaction for atomicity
@@ -311,6 +328,7 @@ const updateBasicPay = async (id, data) => {
       //   where: { employee_id: parseInt(id) },
       //   select: { id: true },
       // });
+
       if (Array.isArray(payLineData) && payLineData.length > 0) {
         const dbIds =
           employee?.hrms_d_employee_pay_component_assignment_line?.map(
@@ -318,6 +336,13 @@ const updateBasicPay = async (id, data) => {
           );
         const requestIds = existingAddresses?.map((a) => a.id);
 
+        for (const addr of payLineData) {
+          for (const [field, message] of Object.entries(requiredFields)) {
+            if (!addr[field]) {
+              throw new CustomError(message, 400);
+            }
+          }
+        }
         // 3. Delete removed addresses (if any)
         const toDeleteIds = payLineData
           ? dbIds.filter((id) => !requestIds.includes(id))
@@ -451,9 +476,9 @@ const updateBasicPay = async (id, data) => {
 
     return parseData(result);
   } catch (error) {
-    console.log("Updating error in employee", error);
+    console.log("Updating error in basic pay", error);
     throw new CustomError(
-      `Error updating employee: ${error.message}`,
+      `Error updating basic pay: ${error.message}`,
       error.status || 500
     );
   }
@@ -552,7 +577,7 @@ const findBasicPayById = async (id) => {
       });
     return parseData(employee);
   } catch (error) {
-    throw new CustomError("Error finding employee by ID", error.status || 503);
+    throw new CustomError("Error finding basic pay by ID", error.status || 503);
   }
 };
 
@@ -707,8 +732,8 @@ const getAllBasicPay = async (
       totalCount: totalCount,
     };
   } catch (error) {
-    console.log("Error employee get : ", error);
-    throw new CustomError("Error retrieving employees", error.status || 503);
+    console.log("Error basic pay get : ", error);
+    throw new CustomError("Error retrieving basic pays", error.status || 503);
   }
 };
 
@@ -717,7 +742,7 @@ const deleteBasicPay = async (id) => {
     const result = await prisma.$transaction(async (prisma) => {
       // Step 1: Delete related data from DealContacts
       await prisma.hrms_d_employee_pay_component_assignment_header.deleteMany({
-        where: { employee_id: parseInt(id) },
+        where: { parent_id: parseInt(id) },
       });
 
       // Step 2: Delete the deal
@@ -726,9 +751,9 @@ const deleteBasicPay = async (id) => {
       });
     });
   } catch (error) {
-    console.log("Error to delete employee : ", error);
+    console.log("Error to delete Basic pay : ", error);
     throw new CustomError(
-      `Error deleting employee: ${error.message}`,
+      `Error deleting Basic pay: ${error.message}`,
       error.status || 500
     );
   }
