@@ -28,6 +28,15 @@ const serializePayComponentData = (data) => ({
   cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
   cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
   column_order: data.column_order ? Number(data.column_order) : null,
+  execution_order: data.execution_order ? Number(data.execution_order) : null,
+  visible_in_payslip: data.visible_in_payslip || "",
+  default_formula: data.default_formula || "",
+  formula_editable: data.formula_editable || "",
+  is_recurring: data.is_recurring || "",
+  component_subtype: data.component_subtype || "",
+  is_overtime_related: data.is_overtime_related || "N",
+  contributes_to_paye: data.contributes_to_paye || "N",
+  contributes_to_nssf: data.contributes_to_nssf || "N",
   auto_fill: data.auto_fill || "N",
   unpaid_leave: data.unpaid_leave || "N",
 });
@@ -287,16 +296,6 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
     const filters = {};
     if (search) {
       filters.OR = [
-        // {
-        //   campaign_user: {
-        //     full_name: { contains: search.toLowerCase() },
-        //   }, // Include contact details
-        // },
-        // {
-        //   campaign_leads: {
-        //     title: { contains: search.toLowerCase() },
-        //   }, // Include contact details
-        // },
         {
           component_name: { contains: search.toLowerCase() },
         },
@@ -309,17 +308,6 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
       ];
     }
 
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = {
-          gte: start,
-          lte: end,
-        };
-      }
-    }
     const pays = await prisma.hrms_m_pay_component.findMany({
       where: filters,
       skip: skip,
