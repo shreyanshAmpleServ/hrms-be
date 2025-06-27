@@ -1016,6 +1016,7 @@ model hrms_m_branch_master {
   log_inst       Int?
   is_active      String?               @default("Y") @db.Char(1)
   branch_company hrms_m_company_master @relation(fields: [company_id], references: [id], onUpdate: NoAction)
+  branch_pay_component_header hrms_d_employee_pay_component_assignment_header[]
 }
 
 model hrms_m_company_master {
@@ -1786,6 +1787,7 @@ model hrms_d_employee_pay_component_assignment_header {
   log_inst                                      Int?
   hrms_d_employee                               hrms_d_employee                                 @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_em__emplo__2A363CC5")
   work_life_entry_pay_header                    hrms_d_work_life_event?                         @relation(fields: [work_life_entry], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  branch_pay_component_header                   hrms_m_branch_master?                         @relation(fields: [branch_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   hrms_d_employee_pay_component_assignment_line hrms_d_employee_pay_component_assignment_line[]
 }
 

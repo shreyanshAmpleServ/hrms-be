@@ -36,7 +36,7 @@ const serializeHeaders = (data) => {
   return serialized;
 };
 
-const serializeAddress = (data) => {
+const serializePayLine = (data) => {
   return {
     line_num: Number(data?.line_num) || 0,
     pay_component_id: Number(data?.pay_component_id),
@@ -148,17 +148,19 @@ const createBasicPay = async (data) => {
             log_inst: data.log_inst || 1,
           },
         });
-      // const serializedAddres = serializeAddress(payLineData);
+      // const serializedAddres = serializePayLine(payLineData);
       // // Map contacts to the employee
       // const addressDatas = {
       //   ...serializedAddres,
       //   employee_id: employee.id,
       // };
       const lineDatas = payLineData.map((addr) => ({
-        ...serializeAddress(addr),
+        ...serializePayLine(addr),
         parent_id: payHeader.id,
+        createdate: new Date(),
+        createdby: headerDatas.createdby || 1,
       }));
-      await prisma.hrms_d_employee_pay_component_assignment_header.createMany({
+      await prisma.hrms_d_employee_pay_component_assignment_line.createMany({
         data: lineDatas,
       });
 
@@ -279,7 +281,7 @@ const updateBasicPay = async (id, data) => {
     // Prepare address data
     const newSerialized =
       newAddresses?.map((addr) => ({
-        ...serializeAddress(addr),
+        ...serializePayLine(addr),
         employee_id: parseInt(id),
       })) || [];
 
@@ -293,7 +295,7 @@ const updateBasicPay = async (id, data) => {
             ...serializedData,
           },
           select: {
-            hrms_employee_address: {
+            hrms_d_employee_pay_component_assignment_line: {
               select: {
                 id: true,
               },
@@ -307,7 +309,10 @@ const updateBasicPay = async (id, data) => {
       //   select: { id: true },
       // });
       if (Array.isArray(payLineData) && payLineData.length > 0) {
-        const dbIds = employee?.hrms_employee_address?.map((a) => a.id);
+        const dbIds =
+          employee?.hrms_d_employee_pay_component_assignment_line?.map(
+            (a) => a.id
+          );
         const requestIds = existingAddresses?.map((a) => a.id);
 
         // 3. Delete removed addresses (if any)
@@ -315,7 +320,7 @@ const updateBasicPay = async (id, data) => {
           ? dbIds.filter((id) => !requestIds.includes(id))
           : [];
         if (toDeleteIds.length > 0) {
-          await prisma.hrms_d_employee_pay_component_assignment_header.deleteMany(
+          await prisma.hrms_d_employee_pay_component_assignment_line.deleteMany(
             {
               where: { id: { in: toDeleteIds } },
             }
@@ -324,9 +329,9 @@ const updateBasicPay = async (id, data) => {
 
         // 4. Update existing addresses
         for (const addr of existingAddresses) {
-          await prisma.hrms_d_employee_pay_component_assignment_header.update({
+          await prisma.hrms_d_employee_pay_component_assignment_line.update({
             where: { id: addr.id },
-            data: serializeAddress(addr),
+            data: serializePayLine(addr),
           });
         }
 
@@ -339,7 +344,7 @@ const updateBasicPay = async (id, data) => {
           );
         }
       }
-      //  const serializedAddres = serializeAddress(payLineData);
+      //  const serializedAddres = serializePayLine(payLineData);
       // // Map contacts to the employee
       // const addressDatas = {
       //   ...serializedAddres,
