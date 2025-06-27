@@ -289,33 +289,103 @@ const deleteUser = async (id) => {
 };
 
 // Get all users and include their roles
-const getAllUsers = async (search, page, size, startDate, endDate) => {
+// const getAllUsers = async (search, page, size, startDate, endDate, is_active) => {
+//   try {
+//     page = page || 1;
+//     size = size || 10;
+//     const skip = (page - 1) * size;
+//     const filters = {};
+
+//     // 🔍 Search filtering
+//     if (search) {
+//       filters.OR = [
+//         { username: { contains: search.toLowerCase() } },
+//         { email: { contains: search.toLowerCase() } },
+//         { full_name: { contains: search.toLowerCase() } },
+//         { phone: { contains: search.toLowerCase() } },
+//         { address: { contains: search.toLowerCase() } },
+//       ];
+//     }
+
+//     // 📅 Date filtering
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = {
+//           gte: start,
+//           lte: end,
+//         };
+//       }
+//     }
+
+//     // ✅ is_active filtering
+//     if (typeof is_active === "boolean") {
+//       filters.is_active = is_active ? "Y" : "N";
+//     } else if (typeof is_active === "string") {
+//       if (is_active.toLowerCase() === "true") {
+//         filters.is_active = "Y";
+//       } else if (is_active.toLowerCase() === "false") {
+//         filters.is_active = "N";
+//       }
+//     }
+
+//     // 🔄 Fetch users
+//     const usersList = await prisma.hrms_m_user.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//       select: {
+//         ...getUserFields(),
+//         hrms_d_user_role: {
+//           select: {
+//             hrms_m_role: { select: { role_name: true, id: true } },
+//           },
+//         },
+//       },
+//     });
+
+//     // 📊 Count
+//     const totalCount = await prisma.hrms_m_user.count({ where: filters });
+
+//     return {
+//       data: usersList,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError("Error retrieving users", 503);
+//   }
+// };
+
+const getAllUsers = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;
     const filters = {};
-    // Handle search
+
     if (search) {
       filters.OR = [
-        {
-          username: { contains: search.toLowerCase() },
-        },
-        {
-          email: { contains: search.toLowerCase() },
-        },
-        {
-          full_name: { contains: search.toLowerCase() },
-        },
-        {
-          phone: { contains: search.toLowerCase() },
-        },
-        {
-          address: { contains: search.toLowerCase() },
-        },
+        { username: { contains: search.toLowerCase() } },
+        { email: { contains: search.toLowerCase() } },
+        { full_name: { contains: search.toLowerCase() } },
+        { phone: { contains: search.toLowerCase() } },
+        { address: { contains: search.toLowerCase() } },
       ];
     }
-    // Handle date filtering
+
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -327,7 +397,17 @@ const getAllUsers = async (search, page, size, startDate, endDate) => {
         };
       }
     }
-    // const users = await prisma.hrms_m_user.findMany({
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") {
+        filters.is_active = "Y";
+      } else if (is_active.toLowerCase() === "false") {
+        filters.is_active = "N";
+      }
+    }
+
     const usersList = await prisma.hrms_m_user.findMany({
       where: filters,
       skip,
@@ -336,23 +416,22 @@ const getAllUsers = async (search, page, size, startDate, endDate) => {
       select: {
         ...getUserFields(),
         hrms_d_user_role: {
-          select: { hrms_m_role: { select: { role_name: true, id: true } } },
+          select: {
+            hrms_m_role: { select: { role_name: true, id: true } },
+          },
         },
       },
     });
-    const totalCount = await prisma.hrms_m_user.count({
-      where: filters,
-    });
+
+    const totalCount = await prisma.hrms_m_user.count({ where: filters });
 
     return {
       data: usersList,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount: totalCount,
+      totalCount,
     };
-    // Fetch roles for each user
-    // return await Promise.all(users.map((user) => getUserWithRole(user.id)));
   } catch (error) {
     throw new CustomError("Error retrieving users", 503);
   }

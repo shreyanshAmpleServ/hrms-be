@@ -38,19 +38,29 @@ const createProject = async (data) => {
 };
 
 // Get all
-const getAllProjects = async (search, page, size, startDate, endDate) => {
+const getAllProjects = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
     const filters = {};
 
+    // Search filter
     if (search) {
       filters.OR = [
         { code: { contains: search.toLowerCase() } },
         { name: { contains: search.toLowerCase() } },
       ];
     }
+
+    // Date range filter
     if (startDate && endDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
@@ -59,9 +69,15 @@ const getAllProjects = async (search, page, size, startDate, endDate) => {
       end.setHours(23, 59, 59, 999);
 
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        end.setHours(23, 59, 59, 999);
         filters.createdate = { gte: start, lte: end };
       }
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const data = await prisma.hrms_m_projects.findMany({
@@ -80,11 +96,12 @@ const getAllProjects = async (search, page, size, startDate, endDate) => {
       },
     });
 
-    const totalCount = await prisma.hrms_m_projects.count({ where: filters });
-    //co
+    const totalCount = await prisma.hrms_m_projects.count({
+      where: filters,
+    });
 
     return {
-      data: data,
+      data,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
@@ -92,7 +109,6 @@ const getAllProjects = async (search, page, size, startDate, endDate) => {
     };
   } catch (error) {
     console.log("Error ", error);
-
     throw new CustomError("Error retrieving projects", 503);
   }
 };

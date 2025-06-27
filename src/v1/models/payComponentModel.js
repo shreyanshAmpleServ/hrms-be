@@ -56,6 +56,71 @@ const createPayComponent = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+      include: {
+        pay_component_tax: {
+          select: {
+            id: true,
+            pay_component_id: true,
+            rule: true,
+          },
+        },
+        pay_component_tax: {
+          select: {
+            id: true,
+            pay_component_id: true,
+            rule: true,
+          },
+        },
+        pay_component_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        pay_component_cost_center1: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center2: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center3: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center4: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center5: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        hrms_m_pay_component: {
+          select: {
+            id: true,
+            component_id: true,
+            formula: true,
+          },
+        },
+      },
     });
     return reqData;
   } catch (error) {
@@ -93,6 +158,71 @@ const updatePayComponent = async (id, data) => {
           { component_name: toLowerCase(data.component_name) },
           { component_code: toLowerCase(data.component_code) },
         ],
+      },
+      include: {
+        pay_component_tax: {
+          select: {
+            id: true,
+            pay_component_id: true,
+            rule: true,
+          },
+        },
+        pay_component_tax: {
+          select: {
+            id: true,
+            pay_component_id: true,
+            rule: true,
+          },
+        },
+        pay_component_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        pay_component_cost_center1: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center2: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center3: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center4: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center5: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        hrms_m_pay_component: {
+          select: {
+            id: true,
+            component_id: true,
+            formula: true,
+          },
+        },
       },
     });
     if (totalCount > 0) {
@@ -224,6 +354,71 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
       take: size,
 
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      include: {
+        pay_component_tax: {
+          select: {
+            id: true,
+            pay_component_id: true,
+            rule: true,
+          },
+        },
+        pay_component_tax: {
+          select: {
+            id: true,
+            pay_component_id: true,
+            rule: true,
+          },
+        },
+        pay_component_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        pay_component_cost_center1: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center2: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center3: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center4: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center5: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        hrms_m_pay_component: {
+          select: {
+            id: true,
+            component_id: true,
+            formula: true,
+          },
+        },
+      },
     });
 
     const totalCount = await prisma.hrms_m_pay_component.count({

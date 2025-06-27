@@ -1,4 +1,4 @@
-const projectModel = require('../models/projectModel');
+const projectModel = require("../models/projectModel");
 
 const createProject = async (data) => {
   return await projectModel.createProject(data);
@@ -16,8 +16,22 @@ const deleteProject = async (id) => {
   return await projectModel.deleteProject(id);
 };
 
-const getAllProjects = async (search ,page , size ,startDate,endDate) => {
-  return await projectModel.getAllProjects(search ,page , size ,startDate,endDate);
+const getAllProjects = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await projectModel.getAllProjects(
+    search,
+    page,
+    size,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

@@ -122,13 +122,14 @@ const deleteUser = async (req, res, next) => {
 
 const getAllUsers = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, is_active } = req.query;
     const users = await userService.getAllUsers(
       search,
       Number(page),
       Number(size),
       moment(startDate),
-      moment(endDate)
+      moment(endDate),
+      is_active
     );
     res.status(200).success(null, users);
   } catch (error) {
