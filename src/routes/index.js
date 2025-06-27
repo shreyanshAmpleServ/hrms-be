@@ -125,6 +125,7 @@ const interviewStageRemarkRoute = require("../v1/routes/interviewStageRemarkRout
 const taxSlabRoute = require("../v1/routes/taxSlabRoute");
 const hrLetterRoute = require("../v1/routes/hrLetterRoute.js");
 const costCenterRoute = require("../v1/routes/costCenterRoute.js");
+const BasicPayRoute = require("../v1/routes/BasicPayRoutes");
 const router = express.Router();
 
 // Version 1 API
@@ -254,6 +255,7 @@ router.use("/v1", taxSlabRoute);
 router.use("/v1", hrLetterRoute);
 router.use("v1", projectRoutes);
 router.use("/v1", costCenterRoute);
+router.use("/v1", BasicPayRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
