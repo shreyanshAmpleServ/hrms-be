@@ -158,9 +158,9 @@ const createBasicPay = async (data) => {
         ...serializeAddress(addr),
         parent_id: payHeader.id,
       }));
-      await prisma.hrms_d_employee_pay_component_assignment_header_address.createMany(
-        { data: lineDatas }
-      );
+      await prisma.hrms_d_employee_pay_component_assignment_header.createMany({
+        data: lineDatas,
+      });
 
       return payHeader?.id;
       // return fullData;
@@ -302,7 +302,7 @@ const updateBasicPay = async (id, data) => {
         });
 
       // 2. Fetch current DB address IDs
-      // const dbAddresses = await prisma.hrms_d_employee_pay_component_assignment_header_address.findMany({
+      // const dbAddresses = await prisma.hrms_d_employee_pay_component_assignment_header.findMany({
       //   where: { employee_id: parseInt(id) },
       //   select: { id: true },
       // });
@@ -315,7 +315,7 @@ const updateBasicPay = async (id, data) => {
           ? dbIds.filter((id) => !requestIds.includes(id))
           : [];
         if (toDeleteIds.length > 0) {
-          await prisma.hrms_d_employee_pay_component_assignment_header_address.deleteMany(
+          await prisma.hrms_d_employee_pay_component_assignment_header.deleteMany(
             {
               where: { id: { in: toDeleteIds } },
             }
@@ -324,17 +324,15 @@ const updateBasicPay = async (id, data) => {
 
         // 4. Update existing addresses
         for (const addr of existingAddresses) {
-          await prisma.hrms_d_employee_pay_component_assignment_header_address.update(
-            {
-              where: { id: addr.id },
-              data: serializeAddress(addr),
-            }
-          );
+          await prisma.hrms_d_employee_pay_component_assignment_header.update({
+            where: { id: addr.id },
+            data: serializeAddress(addr),
+          });
         }
 
         // 5. Create new addresses in bulk
         if (newSerialized.length > 0) {
-          await prisma.hrms_d_employee_pay_component_assignment_header_address.createMany(
+          await prisma.hrms_d_employee_pay_component_assignment_header.createMany(
             {
               data: newSerialized,
             }
@@ -347,8 +345,8 @@ const updateBasicPay = async (id, data) => {
       //   ...serializedAddres,
       //   employee_id: employee.id,
       // };
-      // await prisma.hrms_d_employee_pay_component_assignment_header_address.update({ data: addressDatas });
-      // Retrieve the updated employee with hrms_d_employee_pay_component_assignment_header_address and employeeHistory included
+      // await prisma.hrms_d_employee_pay_component_assignment_header.update({ data: addressDatas });
+      // Retrieve the updated employee with hrms_d_employee_pay_component_assignment_header and employeeHistory included
       const updatedEmp =
         await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
           {
@@ -701,11 +699,9 @@ const deleteBasicPay = async (id) => {
   try {
     const result = await prisma.$transaction(async (prisma) => {
       // Step 1: Delete related data from DealContacts
-      await prisma.hrms_d_employee_pay_component_assignment_header_address.deleteMany(
-        {
-          where: { employee_id: parseInt(id) },
-        }
-      );
+      await prisma.hrms_d_employee_pay_component_assignment_header.deleteMany({
+        where: { employee_id: parseInt(id) },
+      });
 
       // Step 2: Delete the deal
       await prisma.hrms_d_employee_pay_component_assignment_header.delete({
