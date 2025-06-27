@@ -61,14 +61,7 @@ const createPayComponent = async (data) => {
           select: {
             id: true,
             pay_component_id: true,
-            rule: true,
-          },
-        },
-        pay_component_tax: {
-          select: {
-            id: true,
-            pay_component_id: true,
-            rule: true,
+            rule_type: true,
           },
         },
         pay_component_project: {
@@ -111,13 +104,6 @@ const createPayComponent = async (data) => {
             id: true,
             name: true,
             dimension_id: true,
-          },
-        },
-        hrms_m_pay_component: {
-          select: {
-            id: true,
-            component_id: true,
-            formula: true,
           },
         },
       },
@@ -164,14 +150,7 @@ const updatePayComponent = async (id, data) => {
           select: {
             id: true,
             pay_component_id: true,
-            rule: true,
-          },
-        },
-        pay_component_tax: {
-          select: {
-            id: true,
-            pay_component_id: true,
-            rule: true,
+            rule_type: true,
           },
         },
         pay_component_project: {
@@ -214,13 +193,6 @@ const updatePayComponent = async (id, data) => {
             id: true,
             name: true,
             dimension_id: true,
-          },
-        },
-        hrms_m_pay_component: {
-          select: {
-            id: true,
-            component_id: true,
-            formula: true,
           },
         },
       },
@@ -359,14 +331,7 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
           select: {
             id: true,
             pay_component_id: true,
-            rule: true,
-          },
-        },
-        pay_component_tax: {
-          select: {
-            id: true,
-            pay_component_id: true,
-            rule: true,
+            rule_type: true,
           },
         },
         pay_component_project: {
@@ -409,13 +374,6 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
             id: true,
             name: true,
             dimension_id: true,
-          },
-        },
-        hrms_m_pay_component: {
-          select: {
-            id: true,
-            component_id: true,
-            formula: true,
           },
         },
       },
