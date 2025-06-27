@@ -17,13 +17,21 @@ const deleteCostCenter = async (id) => {
   await costCenterModel.deleteCostCenter(id);
 };
 
-const getAllCostCenter = async (search, page, size, startDate, endDate) => {
+const getAllCostCenter = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
   return await costCenterModel.getAllCostCenter(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    is_active
   );
 };
 
