@@ -130,18 +130,6 @@ const createBasicPay = async (data) => {
     if (!data.status) {
       throw new CustomError(`Status Type is required`, 400);
     }
-    if (!data.line_num) {
-      throw new CustomError(`Employee Code is required`, 400);
-    }
-    // if (!data.gender) {
-    //   throw new CustomError(`Gender is required`, 400);
-    // }
-    // if (!data.designation_id) {
-    //   throw new CustomError(`Designation is required`, 400);
-    // }
-    // if (!data.department_id) {
-    //   throw new CustomError(`Department is required`, 400);
-    // }
 
     const serializedData = serializeHeaders(headerDatas);
     // Use transaction for atomicity
@@ -251,8 +239,8 @@ const createBasicPay = async (data) => {
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
           },
-          branch_pay_component_header: {
-            select: { id: true, branch_name: true },
+          pay_component_for_line: {
+            select: { id: true, component_name: true },
           },
           hrms_d_employee: {
             include: {
@@ -448,6 +436,12 @@ const updateBasicPay = async (id, data) => {
               work_life_entry_pay_header: {
                 select: { id: true, event_type: true },
               },
+              pay_component_for_line: {
+                select: { id: true, event_type: true },
+              },
+              pay_component_for_line: {
+                select: { id: true, component_name: true },
+              },
               branch_pay_component_header: {
                 select: { id: true, branch_name: true },
               },
@@ -553,6 +547,9 @@ const findBasicPayById = async (id) => {
           },
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
+          },
+          pay_component_for_line: {
+            select: { id: true, component_name: true },
           },
           branch_pay_component_header: {
             select: { id: true, branch_name: true },
@@ -692,6 +689,9 @@ const getAllBasicPay = async (
           },
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
+          },
+          pay_component_for_line: {
+            select: { id: true, component_name: true },
           },
           branch_pay_component_header: {
             select: { id: true, branch_name: true },
