@@ -1,10 +1,6 @@
 const BasicPayService = require("../services/BasicPayService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const {
-  deleteFromBackblaze,
-  uploadToBackblaze,
-} = require("../../utils/uploadBackblaze");
 
 const createBasicPay = async (req, res, next) => {
   try {
@@ -13,7 +9,6 @@ const createBasicPay = async (req, res, next) => {
       createdby: req.user.id,
       log_inst: req.user.log_inst,
       payLineData: JSON.parse(req.body?.payLineData),
-      profile_pic: imageUrl,
     };
 
     const deal = await BasicPayService.createBasicPay(reqData);
