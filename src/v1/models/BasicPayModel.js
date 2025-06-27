@@ -340,7 +340,7 @@ const updateBasicPay = async (id, data) => {
 
         // 5. Create new addresses in bulk
         if (newSerialized.length > 0) {
-          await prisma.hrms_d_employee_pay_component_assignment_header.createMany(
+          await prisma.hrms_d_employee_pay_component_assignment_line.createMany(
             {
               data: newSerialized,
             }
