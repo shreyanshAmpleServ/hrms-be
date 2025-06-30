@@ -11,6 +11,7 @@ const serializeLeaveTypeMasterData = (data) => ({
   leave_unit: data.leave_unit || "D",
   prorate_allowed: data.prorate_allowed || "Y",
   for_gender: data.for_gender || "B",
+  is_active: data.is_active || "Y",
 });
 
 // Create a new leave type master
@@ -86,7 +87,14 @@ const deleteLeaveType = async (id) => {
 };
 
 // Get all leave type masters with pagination and search
-const getAllLeaveType = async (search, page, size, startDate, endDate) => {
+const getAllLeaveType = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -100,7 +108,12 @@ const getAllLeaveType = async (search, page, size, startDate, endDate) => {
         { for_gender: { contains: search.toLowerCase() } },
       ];
     }
-
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
     const datas = await prisma.hrms_m_leave_type_master.findMany({
       where: filters,
       skip,

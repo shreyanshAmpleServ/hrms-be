@@ -75,8 +75,8 @@ const deleteLeaveBalanceController = async (req, res, next) => {
  */
 const getAllLeaveBalancesController = async (req, res, next) => {
   try {
-    const { page, size, search } = req.query;
-    const result = await getAllLeaveBalances(search, page, size);
+    const { page, size, search, is_active } = req.query;
+    const result = await getAllLeaveBalances(search, page, size, is_active);
     res.status(200).success(null, result);
   } catch (error) {
     next(error);
