@@ -116,7 +116,6 @@ const getAllBranch = async (
         {
           location: { contains: search.toLowerCase() },
         },
-        // ✅ Correct way to search related table field
         {
           branch_company: {
             company_name: { contains: search.toLowerCase() },
@@ -143,7 +142,6 @@ const getAllBranch = async (
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
-    // ✅ Fetch branches
     const branches = await prisma.hrms_m_branch_master.findMany({
       where: filters,
       skip,
