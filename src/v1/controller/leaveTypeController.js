@@ -45,13 +45,14 @@ const deleteLeaveType = async (req, res, next) => {
 
 const getAllLeaveType = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, is_active } = req.query;
     const data = await leaveTypeService.getAllLeaveType(
       Number(page),
       Number(size),
       search,
       moment(startDate),
-      moment(endDate)
+      moment(endDate),
+      is_active
     );
     res.status(200).success(null, data);
   } catch (error) {

@@ -20,6 +20,7 @@ const serializeShiftMasterData = (data) => ({
   half_day_working: data.half_day_working || "N",
   half_day_on: data.half_day_on ? Number(data.half_day_on) : null,
   remarks: data.remarks || "",
+  is_active: data.is_active || "Y",
 });
 
 // Create a new shift master
@@ -100,7 +101,14 @@ const deleteShift = async (id) => {
 };
 
 // Get all shift masters with pagination and search
-const getAllShift = async (page, size, search, startDate, endDate) => {
+const getAllShift = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -121,6 +129,12 @@ const getAllShift = async (page, size, search, startDate, endDate) => {
           shift_name: { contains: search.toLowerCase() },
         },
       ];
+    }
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
     // if (search) {
     //   filters.shift_name = { contains: search };

@@ -1,4 +1,4 @@
-const shiftModel = require('../models/shiftModel');
+const shiftModel = require("../models/shiftModel");
 
 const createShift = async (data) => {
   return await shiftModel.createShift(data);
@@ -16,8 +16,22 @@ const deleteShift = async (id) => {
   return await shiftModel.deleteShift(id);
 };
 
-const getAllShift = async (page, size, search,  startDate,endDate) => {
-  return await shiftModel.getAllShift(page, size, search,  startDate,endDate);
+const getAllShift = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await shiftModel.getAllShift(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

@@ -37,6 +37,8 @@ const basePayload = (data) => ({
   status: data.status,
   start_date: data.start_date,
   end_date: data.end_date,
+  is_active: data.is_active || "Y",
+
   createdby: Number(data.createdby) || 1,
   createdate: new Date(),
   log_inst: data.log_inst || 1,
@@ -179,7 +181,7 @@ const deleteLeaveBalance = async (id) => {
  * @param {number} [size=10] - Records per page.
  * @returns {Promise<Object>} Paginated leave balances with meta.
  */
-const getAllLeaveBalances = async (search, page = 1, size = 10) => {
+const getAllLeaveBalances = async (search, page = 1, size = 10, is_active) => {
   try {
     const skip = (page - 1) * size;
     const where = search
@@ -191,7 +193,12 @@ const getAllLeaveBalances = async (search, page = 1, size = 10) => {
           ],
         }
       : {};
-
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
     const [data, totalCount] = await Promise.all([
       prisma.hrms_d_leave_balance.findMany({
         where,

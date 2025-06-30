@@ -1,4 +1,4 @@
-const countryModel = require('../models/countryModel');
+const countryModel = require("../models/countryModel");
 
 const createCountryService = async (data) => {
   return await countryModel.createCountry(data);
@@ -16,8 +16,8 @@ const deleteCountryService = async (id) => {
   return await countryModel.deleteCountry(id);
 };
 
-const getAllCountriesService = async () => {
-  return await countryModel.getAllCountries();
+const getAllCountriesService = async (is_active) => {
+  return await countryModel.getAllCountries(is_active);
 };
 
 module.exports = {

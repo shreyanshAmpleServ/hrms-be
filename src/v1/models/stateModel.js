@@ -8,7 +8,7 @@ const createState = async (data) => {
     const state = await prisma.crms_m_states.create({
       data: {
         ...data,
-        country_code:Number(data.country_code) || null,
+        country_code: Number(data.country_code) || null,
         is_active: data.is_active || "Y",
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
@@ -69,7 +69,7 @@ const updateState = async (id, data) => {
       },
       data: {
         ...data,
-        country_code:Number(data.country_code) || null,
+        country_code: Number(data.country_code) || null,
         updatedate: new Date(),
       },
     });
@@ -91,21 +91,33 @@ const deleteState = async (id) => {
 };
 
 // Get all states
-const getAllStates = async (search,page,size,country_id) => {
+const getAllStates = async (search, page, size, country_id, is_active) => {
   try {
-    page = (!page || (page == 0)) ?  1 : page ;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
     const filters = {};
     if (search) {
-      filters.name = { contains: search.toLowerCase() }
+      filters.name = { contains: search.toLowerCase() };
     }
     if (country_id) {
-      filters.country_code = { equals: country_id}
+      filters.country_code = { equals: country_id };
+    }
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
     const states = await prisma.crms_m_states.findMany({
-      where:filters,
+      where: filters,
       skip: skip,
       take: size,
       include: {
@@ -125,15 +137,15 @@ const getAllStates = async (search,page,size,country_id) => {
     });
     const totalCount = await prisma.crms_m_states.count({
       where: filters,
-  });
+    });
 
     return {
-        data: states,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount : totalCount  ,
-      };
+      data: states,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
     console.log(error);
     throw new CustomError("Error retrieving states", 503);

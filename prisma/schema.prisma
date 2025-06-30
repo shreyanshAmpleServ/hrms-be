@@ -544,8 +544,10 @@ model hrms_d_leave_application {
 }
 
 model hrms_d_leave_balance {
-  id                           Int                            @id @default(autoincrement())
-  employee_id                  Int
+  id          Int     @id @default(autoincrement())
+  employee_id Int
+  is_active   String? @default("Y") @db.Char(1)
+
   employee_code                String                         @db.VarChar(20)
   first_name                   String?                        @db.NVarChar(100)
   last_name                    String?                        @db.NVarChar(100)
@@ -1173,12 +1175,14 @@ model hrms_m_holiday_calendar {
   id           Int       @id(map: "PK__hrms_m_h__3213E83F4175E2D3") @default(autoincrement())
   holiday_name String?   @db.NVarChar(100)
   holiday_date DateTime? @db.Date
-  location     String?   @db.NVarChar(100)
-  createdate   DateTime? @default(now(), map: "DF__hrms_m_ho__creat__2B0A656D") @db.DateTime
-  createdby    Int
-  updatedate   DateTime? @db.DateTime
-  updatedby    Int?
-  log_inst     Int?
+  is_active    String?   @default("Y") @db.Char(1)
+
+  location   String?   @db.NVarChar(100)
+  createdate DateTime? @default(now(), map: "DF__hrms_m_ho__creat__2B0A656D") @db.DateTime
+  createdby  Int
+  updatedate DateTime? @db.DateTime
+  updatedby  Int?
+  log_inst   Int?
 }
 
 model hrms_m_job_category {
@@ -1209,6 +1213,7 @@ model hrms_m_kpi_master {
 model hrms_m_leave_type_master {
   id                              Int                            @id(map: "PK__hrms_m_l__3213E83F7F49932B") @default(autoincrement())
   leave_type                      String?                        @db.NVarChar(100)
+  is_active                       String?                        @default("Y") @db.Char(1)
   carry_forward                   Boolean?
   createdate                      DateTime?                      @default(now(), map: "DF__hrms_m_le__creat__282DF8C2") @db.DateTime
   createdby                       Int
@@ -1356,10 +1361,12 @@ model hrms_m_salary_structure {
 }
 
 model hrms_m_shift_master {
-  id                     Int                       @id(map: "PK__hrms_m_s__3213E83F3E04C8DC") @default(autoincrement())
-  shift_name             String?                   @db.NVarChar(100)
-  start_time             String?                   @db.VarChar(50)
-  end_time               String?                   @db.VarChar(50)
+  id         Int     @id(map: "PK__hrms_m_s__3213E83F3E04C8DC") @default(autoincrement())
+  shift_name String? @db.NVarChar(100)
+  start_time String? @db.VarChar(50)
+  end_time   String? @db.VarChar(50)
+  is_active  String? @default("Y") @db.Char(1)
+
   createdate             DateTime?                 @default(now(), map: "DF__hrms_m_sh__creat__25518C17") @db.DateTime
   createdby              Int
   updatedate             DateTime?                 @db.DateTime
@@ -1392,19 +1399,18 @@ model hrms_m_statutory_rate {
 }
 
 model hrms_m_survey_master {
-  id           Int     @id(map: "PK__hrms_m_s__3213E83FA2306E59") @default(autoincrement())
-  survey_title String? @db.NVarChar(255)
-  description  String? @db.NVarChar(500)
-  is_active    String? @default("Y") @db.Char(1)
-
-  launch_date DateTime?                @db.Date
-  close_date  DateTime?                @db.Date
-  createdate  DateTime?                @default(now(), map: "DF__hrms_m_su__creat__3B0BC30C") @db.DateTime
-  createdby   Int
-  updatedate  DateTime?                @db.DateTime
-  updatedby   Int?
-  log_inst    Int?
-  survey_type hrms_d_survey_response[]
+  id           Int                      @id(map: "PK__hrms_m_s__3213E83FA2306E59") @default(autoincrement())
+  survey_title String?                  @db.NVarChar(255)
+  description  String?                  @db.NVarChar(500)
+  is_active    String?                  @default("Y") @db.Char(1)
+  launch_date  DateTime?                @db.Date
+  close_date   DateTime?                @db.Date
+  createdate   DateTime?                @default(now(), map: "DF__hrms_m_su__creat__3B0BC30C") @db.DateTime
+  createdby    Int
+  updatedate   DateTime?                @db.DateTime
+  updatedby    Int?
+  log_inst     Int?
+  survey_type  hrms_d_survey_response[]
 }
 
 model hrms_m_tax_regime {
@@ -1446,14 +1452,16 @@ model hrms_m_work_life_event_type {
 }
 
 model hrms_m_work_schedule_template {
-  id            Int       @id(map: "PK__hrms_m_w__3213E83F9426192B") @default(autoincrement())
-  template_name String?   @db.NVarChar(100)
-  description   String?   @db.NVarChar(255)
-  createdate    DateTime? @default(now(), map: "DF__hrms_m_wo__creat__3F115E1A") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id            Int     @id(map: "PK__hrms_m_w__3213E83F9426192B") @default(autoincrement())
+  template_name String? @db.NVarChar(100)
+  description   String? @db.NVarChar(255)
+  is_active     String? @default("Y") @db.Char(1)
+
+  createdate DateTime? @default(now(), map: "DF__hrms_m_wo__creat__3F115E1A") @db.DateTime
+  createdby  Int
+  updatedate DateTime? @db.DateTime
+  updatedby  Int?
+  log_inst   Int?
 }
 
 model hrms_m_country_master {

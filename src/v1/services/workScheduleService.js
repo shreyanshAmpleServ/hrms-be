@@ -1,4 +1,4 @@
-const workScheduleModel = require('../models/workScheduleModel');
+const workScheduleModel = require("../models/workScheduleModel");
 
 const createWorkSchedule = async (data) => {
   return await workScheduleModel.createWorkSchedule(data);
@@ -16,8 +16,22 @@ const deleteWorkSchedule = async (id) => {
   return await workScheduleModel.deleteWorkSchedule(id);
 };
 
-const getAllWorkSchedule = async (page, size, search,  startDate,endDate) => {
-  return await workScheduleModel.getAllWorkSchedule(page, size, search,  startDate,endDate);
+const getAllWorkSchedule = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await workScheduleModel.getAllWorkSchedule(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

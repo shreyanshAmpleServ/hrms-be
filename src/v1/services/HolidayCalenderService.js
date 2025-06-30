@@ -1,4 +1,4 @@
-const HolidayCalenderModel = require('../models/HolidayCalenderModel');
+const HolidayCalenderModel = require("../models/HolidayCalenderModel");
 
 const createHoliday = async (data) => {
   return await HolidayCalenderModel.createHoliday(data);
@@ -16,8 +16,22 @@ const deleteHoliday = async (id) => {
   return await HolidayCalenderModel.deleteHoliday(id);
 };
 
-const getAllHoliday = async (page, size, search,  startDate,endDate) => {
-  return await HolidayCalenderModel.getAllHoliday(page, size, search,  startDate,endDate);
+const getAllHoliday = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await HolidayCalenderModel.getAllHoliday(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {
