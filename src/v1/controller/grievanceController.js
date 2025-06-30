@@ -60,13 +60,14 @@ const deleteGrievanceSubmission = async (req, res, next) => {
 
 const getAllGrievanceSubmission = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, is_active } = req.query;
     const data = await grievanceService.getAllGrievanceSubmission(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      is_active
     );
     res.status(200).success(null, data);
   } catch (error) {

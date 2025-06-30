@@ -1,4 +1,4 @@
-const ratingScaleModel = require('../models/ratingScaleModel');
+const ratingScaleModel = require("../models/ratingScaleModel");
 
 const createRatingScale = async (data) => {
   return await ratingScaleModel.createRatingScale(data);
@@ -16,8 +16,22 @@ const deleteRatingScale = async (id) => {
   return await ratingScaleModel.deleteRatingScale(id);
 };
 
-const getAllRatingScale = async (page, size, search,  startDate,endDate) => {
-  return await ratingScaleModel.getAllRatingScale(page, size, search,  startDate,endDate);
+const getAllRatingScale = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await ratingScaleModel.getAllRatingScale(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

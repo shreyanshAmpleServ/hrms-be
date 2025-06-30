@@ -21,14 +21,16 @@ const getAllGrievanceSubmission = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  is_active
 ) => {
   return await grievanceModel.getAllGrievanceSubmission(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    is_active
   );
 };
 

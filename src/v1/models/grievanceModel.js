@@ -15,6 +15,8 @@ const serializeData = (data) => {
     assigned_to: Number(data.assigned_to) || null,
     resolution_notes: data.resolution_notes || 0,
     resolved_on: data.resolved_on || null,
+    is_active: data.is_active || "Y",
+
     // grievance_employee: {
     //   connect: { id: Number(data?.employee_id) || null },
     // },
@@ -143,7 +145,8 @@ const getAllGrievanceSubmission = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  is_active
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -185,6 +188,13 @@ const getAllGrievanceSubmission = async (
           lte: end,
         };
       }
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
     const datas = await prisma.hrms_d_grievance.findMany({
       where: filters,

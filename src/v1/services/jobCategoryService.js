@@ -1,4 +1,4 @@
-const jobCategoryModel = require('../models/jobCategoryModel');
+const jobCategoryModel = require("../models/jobCategoryModel");
 
 const createJobCategory = async (data) => {
   return await jobCategoryModel.createJobCategory(data);
@@ -16,8 +16,22 @@ const deleteJobCategory = async (id) => {
   return await jobCategoryModel.deleteJobCategory(id);
 };
 
-const getAllJobCategory = async (page, size, search,  startDate,endDate) => {
-  return await jobCategoryModel.getAllJobCategory(page, size, search,  startDate,endDate);
+const getAllJobCategory = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await jobCategoryModel.getAllJobCategory(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {
