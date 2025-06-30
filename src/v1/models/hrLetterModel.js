@@ -12,6 +12,7 @@ const serializeHRLetter = (data) => ({
   letter_subject: data.letter_subject || null,
   letter_content: data.letter_content || null,
   status: data.status || "Pending",
+  is_active: data.is_active || "Y",
 });
 
 //  Create HR Letter
@@ -113,7 +114,14 @@ const deletehrLetter = async (id) => {
 };
 
 //Get All HR Letters
-const getAllhrLetter = async (search, page, size, startDate, endDate) => {
+const getAllhrLetter = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = !page || page <= 0 ? 1 : page;
     size = size || 10;
@@ -143,7 +151,12 @@ const getAllhrLetter = async (search, page, size, startDate, endDate) => {
       const end = new Date(endDate);
       filters.request_date = { gte: start, lte: end };
     }
-
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
     const results = await prisma.hrms_d_hr_letter.findMany({
       where: filters,
       skip,

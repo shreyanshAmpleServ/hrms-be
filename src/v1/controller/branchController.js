@@ -41,6 +41,8 @@ const deleteBranch = async (req, res, next) => {
 
 const getAllBranch = async (req, res, next) => {
   try {
+    console.log("Query received:", req.query); // 👈 add this
+
     const { page, size, search, startDate, endDate, is_active } = req.query;
     const branchs = await branchService.getAllBranch(
       Number(page),

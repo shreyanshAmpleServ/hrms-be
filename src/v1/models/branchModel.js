@@ -93,7 +93,14 @@ const deleteBranch = async (id) => {
 };
 
 // Get all branchs
-const getAllBranch = async (page, size, search, is_active) => {
+const getAllBranch = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -101,7 +108,6 @@ const getAllBranch = async (page, size, search, is_active) => {
 
     let filters = {};
 
-    // ✅ Build search filter
     if (search) {
       filters.OR = [
         {
@@ -119,7 +125,17 @@ const getAllBranch = async (page, size, search, is_active) => {
       ];
     }
 
-    // ✅ is_active filter
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = {
+          gte: start,
+          lte: end,
+        };
+      }
+    }
+
     if (typeof is_active === "boolean") {
       filters.is_active = is_active ? "Y" : "N";
     } else if (typeof is_active === "string") {
