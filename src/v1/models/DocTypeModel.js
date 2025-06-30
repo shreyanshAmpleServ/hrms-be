@@ -11,6 +11,8 @@ const createDocType = async (data) => {
         log_inst: data.log_inst || 1,
         createdate: new Date(),
         updatedate: new Date(),
+        is_active: data.is_active || "Y",
+
         updatedby: 1,
       },
     });
@@ -74,7 +76,14 @@ const deleteDocType = async (id) => {
 };
 
 // Get all document type
-const getAllDocType = async (page, size, search) => {
+const getAllDocType = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -88,6 +97,12 @@ const getAllDocType = async (page, size, search) => {
           doc_type: { contains: search.toLowerCase() },
         },
       ];
+    }
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const data = await prisma.hrms_m_document_type.findMany({

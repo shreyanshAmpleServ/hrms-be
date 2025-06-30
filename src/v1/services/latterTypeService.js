@@ -1,5 +1,4 @@
-
-const latterTypeModel = require('../models/latterTypeModel');
+const latterTypeModel = require("../models/latterTypeModel");
 
 const createLatterType = async (data) => {
   return await latterTypeModel.createLatterType(data);
@@ -17,8 +16,22 @@ const deleteLatterType = async (id) => {
   return await latterTypeModel.deleteLatterType(id);
 };
 
-const getAllLatterType = async (page, size, search,  startDate,endDate) => {
-  return await latterTypeModel.getAllLatterType(page, size, search,  startDate,endDate);
+const getAllLatterType = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await latterTypeModel.getAllLatterType(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

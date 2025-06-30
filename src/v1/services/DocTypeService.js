@@ -1,5 +1,4 @@
-
-const DocTypeModel = require('../models/DocTypeModel');
+const DocTypeModel = require("../models/DocTypeModel");
 
 const createDocType = async (data) => {
   return await DocTypeModel.createDocType(data);
@@ -17,8 +16,22 @@ const deleteDocType = async (id) => {
   return await DocTypeModel.deleteDocType(id);
 };
 
-const getAllDocType = async (page, size, search,  startDate,endDate) => {
-  return await DocTypeModel.getAllDocType(page, size, search,  startDate,endDate);
+const getAllDocType = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await DocTypeModel.getAllDocType(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

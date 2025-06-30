@@ -1,5 +1,4 @@
-
-const assetsTypeModel = require('../models/assetsTypeModel');
+const assetsTypeModel = require("../models/assetsTypeModel");
 
 const createAssetsType = async (data) => {
   return await assetsTypeModel.createAssetsType(data);
@@ -17,8 +16,22 @@ const deleteAssetsType = async (id) => {
   return await assetsTypeModel.deleteAssetsType(id);
 };
 
-const getAllAssetsType = async (page, size, search,  startDate,endDate) => {
-  return await assetsTypeModel.getAllAssetsType(page, size, search,  startDate,endDate);
+const getAllAssetsType = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await assetsTypeModel.getAllAssetsType(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {
