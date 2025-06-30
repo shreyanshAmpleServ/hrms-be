@@ -9,6 +9,8 @@ const createSurvey = async (data) => {
         survey_title: data.survey_title || "",
         description: data.description || "",
         launch_date: data.launch_date || new Date(),
+        is_active: data.is_active || "Y",
+
         close_date: data.close_date || null,
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
@@ -64,7 +66,14 @@ const deleteSurvey = async (id) => {
   }
 };
 
-const getAllSurvey = async (page, size, search) => {
+const getAllSurvey = async (
+  page,
+  size,
+  search,
+  searchDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -77,6 +86,13 @@ const getAllSurvey = async (page, size, search) => {
           survey_title: { contains: search.toLowerCase() },
         },
       ];
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const data = await prisma.hrms_m_survey_master.findMany({
