@@ -1,5 +1,4 @@
-
-const workEventTypeModel = require('../models/eventTypeModel');
+const workEventTypeModel = require("../models/eventTypeModel");
 
 const createWorkEventType = async (data) => {
   return await workEventTypeModel.createWorkEventType(data);
@@ -17,8 +16,22 @@ const deleteWorkEventType = async (id) => {
   return await workEventTypeModel.deleteWorkEventType(id);
 };
 
-const getAllWorkEventType = async (page, size, search,  startDate,endDate) => {
-  return await workEventTypeModel.getAllWorkEventType(page, size, search,  startDate,endDate);
+const getAllWorkEventType = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await workEventTypeModel.getAllWorkEventType(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

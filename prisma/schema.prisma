@@ -1441,8 +1441,10 @@ model hrms_m_tax_relief {
 }
 
 model hrms_m_work_life_event_type {
-  id                   Int                      @id(map: "PK__hrms_m_w__3213E83FCFB88DCB") @default(autoincrement())
-  event_type_name      String?                  @db.NVarChar(100)
+  id              Int     @id(map: "PK__hrms_m_w__3213E83FCFB88DCB") @default(autoincrement())
+  event_type_name String? @db.NVarChar(100)
+  is_active       String? @default("Y") @db.Char(1)
+
   createdate           DateTime?                @default(now(), map: "DF__hrms_m_wo__creat__32767D0B") @db.DateTime
   createdby            Int
   updatedate           DateTime?                @db.DateTime
