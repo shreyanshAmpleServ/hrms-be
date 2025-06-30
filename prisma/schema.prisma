@@ -321,7 +321,7 @@ model hrms_d_employee {
   midmonth_payroll_processing_employee            hrms_d_midmonth_payroll_processing[]
   hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")
   notification_log_employee                       hrms_d_notification_log[]
-  overtime_payroll_processing_employee              hrms_d_overtime_payroll_processing[]
+  overtime_payroll_processing_employee            hrms_d_overtime_payroll_processing[]
   payslip_employee                                hrms_d_payslip[]
   probation_review_employee                       hrms_d_probation_review[]
   probation_employee                              hrms_d_probation_review[]                         @relation("ProbationEmployee")
@@ -1266,9 +1266,9 @@ model hrms_m_pay_component {
   visible_in_payslip                    String                                          @default("Y", map: "DF__hrms_m_pa__visib__2FBA0BF1") @db.Char(1)
   execution_order                       Int?
   finalsettlement_component             hrms_d_finalsettlement_processing[]
-  overtime_payroll_processing_component    hrms_d_overtime_payroll_processing[]
+  overtime_payroll_processing_component hrms_d_overtime_payroll_processing[]
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
-  pay_component_for_line             hrms_d_employee_pay_component_assignment_line[]
+  pay_component_for_line                hrms_d_employee_pay_component_assignment_line[]
   pay_component_cost_center1            hrms_m_costcenters?                             @relation("CostCenter1", fields: [cost_center1_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   pay_component_cost_center2            hrms_m_costcenters?                             @relation("CostCenter2", fields: [cost_center2_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   pay_component_cost_center3            hrms_m_costcenters?                             @relation("CostCenter3", fields: [cost_center3_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
@@ -1276,7 +1276,7 @@ model hrms_m_pay_component {
   pay_component_cost_center5            hrms_m_costcenters?                             @relation("CostCenter5", fields: [cost_center5_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   pay_component_project                 hrms_m_projects?                                @relation(fields: [project_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   pay_component_tax                     hrms_m_tax_slab_rule?                           @relation(fields: [tax_code_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_component hrms_d_midmonth_payroll_processing[] @relation("MidMonthPayrollProcessingComponent")
+  midmonth_payroll_processing_component hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProcessingComponent")
 }
 
 model hrms_m_provident_fund {
@@ -1981,41 +1981,41 @@ model hrms_d_midmonth_payroll_processing {
 }
 
 model hrms_d_overtime_payroll_processing {
-  id                       Int                  @id(map: "PK__hrms_d_o__3213E83FD60C6CB6") @default(autoincrement())
-  employee_id              Int
-  payroll_month            Int                  @db.SmallInt
-  payroll_year             Int                  @db.SmallInt
-  overtime_date            DateTime             @db.Date
-  pay_currency             String               @db.NVarChar(3)
-  component_id             Int
-  start_time               DateTime             @db.Time
-  end_time                 DateTime             @db.Time
-  overtime_hours           Decimal              @db.Decimal(18, 2)
-  overtime_formula         String?              @db.NVarChar(Max)
-  overtime_type            String?              @db.NVarChar(50)
-  overtime_category        String?              @db.NVarChar(50)
-  overtime_rate_multiplier Decimal?             @db.Decimal(5, 2)
-  calculation_basis        String?              @db.NVarChar(50)
-  payroll_cycle_id         Int?
-  linked_payslip_id        Int?
-  source_doc               String?              @db.NVarChar(100)
-  overtime_pay             Decimal              @db.Decimal(18, 2)
-  status                   String               @db.NVarChar(20)
-  execution_date           DateTime?            @db.Date
-  pay_date                 DateTime?            @db.DateTime
-  pay_id                   Int?
-  processed                String               @default("N", map: "DF__hrms_d_ov__proce__290D0E62") @db.Char(1)
-  approved1                String               @default("N", map: "DF__hrms_d_ov__appro__2A01329B") @db.Char(1)
-  approver1_id             Int?
-  employee_email           String?              @db.NVarChar(100)
-  remarks                  String?              @db.NVarChar(250)
-  createdate               DateTime             @db.DateTime
-  createdby                Int
-  updatedate               DateTime?            @db.DateTime
-  updatedby                Int?
-  log_inst                 Int?
-  overtime_payroll_processing_component     hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, onDelete:NoAction)
-  overtime_payroll_processing_employee          hrms_d_employee      @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_ov__emplo__2724C5F0")
+  id                                    Int                  @id(map: "PK__hrms_d_o__3213E83FD60C6CB6") @default(autoincrement())
+  employee_id                           Int
+  payroll_month                         Int                  @db.SmallInt
+  payroll_year                          Int                  @db.SmallInt
+  overtime_date                         DateTime             @db.Date
+  pay_currency                          String               @db.NVarChar(3)
+  component_id                          Int
+  start_time                            DateTime             @db.Time
+  end_time                              DateTime             @db.Time
+  overtime_hours                        Decimal              @db.Decimal(18, 2)
+  overtime_formula                      String?              @db.NVarChar(Max)
+  overtime_type                         String?              @db.NVarChar(50)
+  overtime_category                     String?              @db.NVarChar(50)
+  overtime_rate_multiplier              Decimal?             @db.Decimal(5, 2)
+  calculation_basis                     String?              @db.NVarChar(50)
+  payroll_cycle_id                      Int?
+  linked_payslip_id                     Int?
+  source_doc                            String?              @db.NVarChar(100)
+  overtime_pay                          Decimal              @db.Decimal(18, 2)
+  status                                String               @db.NVarChar(20)
+  execution_date                        DateTime?            @db.Date
+  pay_date                              DateTime?            @db.DateTime
+  pay_id                                Int?
+  processed                             String               @default("N", map: "DF__hrms_d_ov__proce__290D0E62") @db.Char(1)
+  approved1                             String               @default("N", map: "DF__hrms_d_ov__appro__2A01329B") @db.Char(1)
+  approver1_id                          Int?
+  employee_email                        String?              @db.NVarChar(100)
+  remarks                               String?              @db.NVarChar(250)
+  createdate                            DateTime             @db.DateTime
+  createdby                             Int
+  updatedate                            DateTime?            @db.DateTime
+  updatedby                             Int?
+  log_inst                              Int?
+  overtime_payroll_processing_component hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  overtime_payroll_processing_employee  hrms_d_employee      @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_ov__emplo__2724C5F0")
 }
 
 model hrms_m_pay_component_formula {
@@ -2119,55 +2119,53 @@ model hrms_m_interview_stage_remark {
 }
 
 model hrms_m_costcenters {
-  id                              Int                                             @id(map: "PK__m_costce__3213E83FEA0D7E3A") @default(autoincrement())
-  name                            String?                                         @db.VarChar(200)
-  dimension_id                    Int?
-  is_active                       String                                          @default("Y", map: "DF__m_costcen__is_ac__6576FE24") @db.Char(1)
-  valid_from                      DateTime?                                       @db.Date
-  valid_to                        DateTime?                                       @db.Date
-  createdate                      DateTime?                                       @default(now(), map: "DF__m_costcen__creat__666B225D") @db.DateTime
-  updatedate                      DateTime?                                       @db.DateTime
-  createdby                       Int
-  updatedby                       Int?
-  log_inst                        Int?
-  external_code                   String?                                         @db.NVarChar(200)
-  pay_component_cost_center1      hrms_m_pay_component[]                          @relation("CostCenter1")
-  pay_component_cost_center2      hrms_m_pay_component[]                          @relation("CostCenter2")
-  pay_component_cost_center3      hrms_m_pay_component[]                          @relation("CostCenter3")
-  pay_component_cost_center4      hrms_m_pay_component[]                          @relation("CostCenter4")
-  pay_component_cost_center5      hrms_m_pay_component[]                          @relation("CostCenter5")
-  pay_component_line_cost_center1 hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter1")
-  pay_component_line_cost_center2 hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter2")
-  pay_component_line_cost_center3 hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter3")
-  pay_component_line_cost_center4 hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter4")
-  pay_component_line_cost_center5 hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter5")
-  midmonth_payroll_processing_center1 hrms_d_midmonth_payroll_processing[] @relation("MidMonthCostCenter1")
-  midmonth_payroll_processing_center2 hrms_d_midmonth_payroll_processing[] @relation("MidMonthCostCenter2")
-  midmonth_payroll_processing_center3 hrms_d_midmonth_payroll_processing[] @relation("MidMonthCostCenter3")
-  midmonth_payroll_processing_center4 hrms_d_midmonth_payroll_processing[] @relation("MidMonthCostCenter4")
-  midmonth_payroll_processing_center5 hrms_d_midmonth_payroll_processing[] @relation("MidMonthCostCenter5")
-
+  id                                  Int                                             @id(map: "PK__m_costce__3213E83FEA0D7E3A") @default(autoincrement())
+  name                                String?                                         @db.VarChar(200)
+  dimension_id                        Int?
+  is_active                           String                                          @default("Y", map: "DF__m_costcen__is_ac__6576FE24") @db.Char(1)
+  valid_from                          DateTime?                                       @db.Date
+  valid_to                            DateTime?                                       @db.Date
+  createdate                          DateTime?                                       @default(now(), map: "DF__m_costcen__creat__666B225D") @db.DateTime
+  updatedate                          DateTime?                                       @db.DateTime
+  createdby                           Int
+  updatedby                           Int?
+  log_inst                            Int?
+  external_code                       String?                                         @db.NVarChar(200)
+  pay_component_cost_center1          hrms_m_pay_component[]                          @relation("CostCenter1")
+  pay_component_cost_center2          hrms_m_pay_component[]                          @relation("CostCenter2")
+  pay_component_cost_center3          hrms_m_pay_component[]                          @relation("CostCenter3")
+  pay_component_cost_center4          hrms_m_pay_component[]                          @relation("CostCenter4")
+  pay_component_cost_center5          hrms_m_pay_component[]                          @relation("CostCenter5")
+  pay_component_line_cost_center1     hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter1")
+  pay_component_line_cost_center2     hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter2")
+  pay_component_line_cost_center3     hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter3")
+  pay_component_line_cost_center4     hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter4")
+  pay_component_line_cost_center5     hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter5")
+  midmonth_payroll_processing_center1 hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCostCenter1")
+  midmonth_payroll_processing_center2 hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCostCenter2")
+  midmonth_payroll_processing_center3 hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCostCenter3")
+  midmonth_payroll_processing_center4 hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCostCenter4")
+  midmonth_payroll_processing_center5 hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCostCenter5")
 }
 
 model hrms_m_projects {
-  id                         Int                                             @id(map: "PK__m_projec__3213E83F47788695") @default(autoincrement())
-  code                       String                                          @unique(map: "UQ__m_projec__357D4CF92EB107C2") @db.VarChar(50)
-  name                       String?                                         @db.VarChar(200)
-  locked                     String                                          @default("N", map: "DF__hrms_m_projects__locke__3A8CA01F") @db.Char(1)
-  valid_from                 DateTime?                                       @db.Date
-  valid_to                   DateTime?                                       @db.Date
-  employee_id                Int?
-  createdate                 DateTime?                                       @default(now(), map: "DF__hrms_m_projects__creat__3B80C458") @db.DateTime
-  updatedate                 DateTime?                                       @db.DateTime
-  createdby                  Int
-  updatedby                  Int?
-  log_inst                   Int?
-  ValidFrom                  DateTime                                        @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_pr__Valid__670A40DB")
-  ValidTo                    DateTime                                        @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_pr__Valid__67FE6514")
-  is_active                  String?                                         @default("Y", map: "DF__hrms_m_pr__is_ac__69E6AD86") @db.Char(1)
-  projects_employee_detail   hrms_d_employee?                                @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  pay_component_project      hrms_m_pay_component[]
-  pay_component_line_project hrms_d_employee_pay_component_assignment_line[]
-    midmonth_payroll_processing_project hrms_d_midmonth_payroll_processing[] @relation("MidMonthPayrollProject")
-
+  id                                  Int                                             @id(map: "PK__m_projec__3213E83F47788695") @default(autoincrement())
+  code                                String                                          @unique(map: "UQ__m_projec__357D4CF92EB107C2") @db.VarChar(50)
+  name                                String?                                         @db.VarChar(200)
+  locked                              String                                          @default("N", map: "DF__hrms_m_projects__locke__3A8CA01F") @db.Char(1)
+  valid_from                          DateTime?                                       @db.Date
+  valid_to                            DateTime?                                       @db.Date
+  employee_id                         Int?
+  createdate                          DateTime?                                       @default(now(), map: "DF__hrms_m_projects__creat__3B80C458") @db.DateTime
+  updatedate                          DateTime?                                       @db.DateTime
+  createdby                           Int
+  updatedby                           Int?
+  log_inst                            Int?
+  ValidFrom                           DateTime                                        @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_pr__Valid__670A40DB")
+  ValidTo                             DateTime                                        @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_pr__Valid__67FE6514")
+  is_active                           String?                                         @default("Y", map: "DF__hrms_m_pr__is_ac__69E6AD86") @db.Char(1)
+  projects_employee_detail            hrms_d_employee?                                @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pay_component_project               hrms_m_pay_component[]
+  pay_component_line_project          hrms_d_employee_pay_component_assignment_line[]
+  midmonth_payroll_processing_project hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProject")
 }
