@@ -40,8 +40,25 @@ const findLatterTypeById = async (id) => {
   }
 };
 
+// const updateLatterType = async (id, data) => {
+//   try {
+//     const updatedData = await prisma.hrms_m_letter_type.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         ...data,
+//         updatedate: new Date(),
+//       },
+//     });
+//     return updatedData;
+//   } catch (error) {
+//     throw new CustomError(`Error updating latter type: ${error.message}`, 500);
+//   }
+// };
+
 const updateLatterType = async (id, data) => {
   try {
+    if ("id" in data) delete data.id;
+
     const updatedData = await prisma.hrms_m_letter_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -49,6 +66,7 @@ const updateLatterType = async (id, data) => {
         updatedate: new Date(),
       },
     });
+
     return updatedData;
   } catch (error) {
     throw new CustomError(`Error updating latter type: ${error.message}`, 500);

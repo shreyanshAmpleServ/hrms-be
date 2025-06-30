@@ -71,11 +71,11 @@ const updateLatterType = async (req, res, next) => {
       );
     }
 
-    const latterTypeData = await latterTypeService.findLatterTypeById({
+    const latterTypeData = {
       ...req.body,
       template_path: fileUrl,
       updatedby: req.user.id,
-    });
+    };
 
     const latter = await latterTypeService.updateLatterType(
       req.params.id,
