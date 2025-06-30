@@ -54,9 +54,9 @@ const deletePayComponent = async (req, res, next) => {
   }
 };
 
-const getAllPayComponent = async (req, res, next, is_active) => {
+const getAllPayComponent = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, is_active } = req.query;
     const departments = await payComponentService.getAllPayComponent(
       Number(page),
       Number(size),
