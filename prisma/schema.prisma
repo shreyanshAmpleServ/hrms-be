@@ -1039,6 +1039,7 @@ model hrms_m_company_master {
   log_inst             Int?
   is_active            String?                @default("Y") @db.Char(1)
   branch_company       hrms_m_branch_master[]
+  company_country      hrms_m_country_master? @relation(fields: [country_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_m_currency_master {
@@ -1216,15 +1217,17 @@ model hrms_m_letter_type {
 }
 
 model hrms_m_loan_type {
-  id            Int                   @id(map: "PK__hrms_m_l__3213E83F83117D15") @default(autoincrement())
-  loan_name     String?               @db.NVarChar(100)
-  interest_rate Decimal?              @db.Decimal(5, 2)
-  createdate    DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
-  createdby     Int
-  updatedate    DateTime?             @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
-  loan_types    hrms_d_loan_request[]
+  id            Int      @id(map: "PK__hrms_m_l__3213E83F83117D15") @default(autoincrement())
+  loan_name     String?  @db.NVarChar(100)
+  interest_rate Decimal? @db.Decimal(5, 2)
+  is_active     String?  @default("Y") @db.Char(1)
+
+  createdate DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
+  createdby  Int
+  updatedate DateTime?             @db.DateTime
+  updatedby  Int?
+  log_inst   Int?
+  loan_types hrms_d_loan_request[]
 }
 
 model hrms_m_pay_component {
@@ -1285,6 +1288,7 @@ model hrms_m_provident_fund {
   pf_name               String?   @db.NVarChar(100)
   employer_contribution Decimal?  @db.Decimal(5, 2)
   employee_contribution Decimal?  @db.Decimal(5, 2)
+  is_active             String?   @default("Y") @db.Char(1)
   createdate            DateTime? @default(now(), map: "DF__hrms_m_pr__creat__503BEA1C") @db.DateTime
   createdby             Int
   updatedate            DateTime? @db.DateTime
@@ -1317,6 +1321,7 @@ model hrms_m_review_template {
 model hrms_m_salary_structure {
   id             Int       @id(map: "PK__hrms_m_s__3213E83F5C9225CE") @default(autoincrement())
   structure_name String?   @db.NVarChar(100)
+  is_active      String?   @default("Y") @db.Char(1)
   createdate     DateTime? @default(now(), map: "DF__hrms_m_sa__creat__30C33EC3") @db.DateTime
   createdby      Int
   updatedate     DateTime? @db.DateTime
@@ -1375,9 +1380,11 @@ model hrms_m_survey_master {
 }
 
 model hrms_m_tax_regime {
-  id             Int                    @id(map: "PK__hrms_m_t__3213E83F93DEC7A5") @default(autoincrement())
-  regime_name    String?                @db.NVarChar(100)
-  country_code   Int?
+  id           Int     @id(map: "PK__hrms_m_t__3213E83F93DEC7A5") @default(autoincrement())
+  regime_name  String? @db.NVarChar(100)
+  country_code Int?
+  is_active    String? @default("Y") @db.Char(1)
+
   createdate     DateTime?              @default(now(), map: "DF__hrms_m_ta__creat__47A6A41B") @db.DateTime
   createdby      Int
   updatedate     DateTime?              @db.DateTime
@@ -1387,14 +1394,16 @@ model hrms_m_tax_regime {
 }
 
 model hrms_m_tax_relief {
-  id          Int       @id(map: "PK__hrms_m_t__3213E83F90669121") @default(autoincrement())
-  relief_name String?   @db.NVarChar(100)
-  amount      Decimal?  @db.Decimal(10, 2)
-  createdate  DateTime? @default(now(), map: "DF__hrms_m_ta__creat__531856C7") @db.DateTime
-  createdby   Int
-  updatedate  DateTime? @db.DateTime
-  updatedby   Int?
-  log_inst    Int?
+  id          Int      @id(map: "PK__hrms_m_t__3213E83F90669121") @default(autoincrement())
+  relief_name String?  @db.NVarChar(100)
+  amount      Decimal? @db.Decimal(10, 2)
+  is_active   String?  @default("Y") @db.Char(1)
+
+  createdate DateTime? @default(now(), map: "DF__hrms_m_ta__creat__531856C7") @db.DateTime
+  createdby  Int
+  updatedate DateTime? @db.DateTime
+  updatedby  Int?
+  log_inst   Int?
 }
 
 model hrms_m_work_life_event_type {
@@ -1432,6 +1441,7 @@ model hrms_m_country_master {
   country_details  crms_m_states[]
   employee_country hrms_d_employee_address[]
   regime_country   hrms_m_tax_regime[]
+  company_country  hrms_m_company_master[]
 }
 
 model hrms_m_country_tax_rule_template {
@@ -1458,6 +1468,7 @@ model hrms_m_country_tax_rule_template {
 model hrms_m_tax_slab_rule {
   id                          Int                                             @id(map: "PK__hrms_m_t__3213E83F87085EAE") @default(autoincrement())
   pay_component_id            Int
+ 
   rule_type                   String?                                         @db.VarChar(20)
   slab_min                    Decimal?                                        @db.Decimal(12, 2)
   slab_max                    Decimal?                                        @db.Decimal(12, 2)

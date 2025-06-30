@@ -1,4 +1,4 @@
-const salaryStructureModel = require('../models/salaryStructureModel');
+const salaryStructureModel = require("../models/salaryStructureModel");
 
 const createSalaryStructure = async (data) => {
   return await salaryStructureModel.createSalaryStructure(data);
@@ -16,8 +16,22 @@ const deleteSalaryStructure = async (id) => {
   return await salaryStructureModel.deleteSalaryStructure(id);
 };
 
-const getAllSalaryStructure = async (page, size, search,  startDate,endDate) => {
-  return await salaryStructureModel.getAllSalaryStructure(page, size, search,  startDate,endDate);
+const getAllSalaryStructure = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await salaryStructureModel.getAllSalaryStructure(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

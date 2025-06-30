@@ -1,4 +1,4 @@
-const taxRegimModel = require('../models/taxRegimModel');
+const taxRegimModel = require("../models/taxRegimModel");
 
 const createTaxRegime = async (data) => {
   return await taxRegimModel.createTaxRegime(data);
@@ -16,8 +16,22 @@ const deleteTaxRegime = async (id) => {
   return await taxRegimModel.deleteTaxRegime(id);
 };
 
-const getAllTaxRegime = async (page, size, search,  startDate,endDate) => {
-  return await taxRegimModel.getAllTaxRegime(page, size, search,  startDate,endDate);
+const getAllTaxRegime = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await taxRegimModel.getAllTaxRegime(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

@@ -154,7 +154,6 @@ const updatePayComponent = async (id, data) => {
           { component_code: toLowerCase(data.component_code) },
         ],
       },
-
     });
     if (totalCount > 0) {
       throw new CustomError(
@@ -288,7 +287,14 @@ const deletePayComponent = async (id) => {
 //     throw new CustomError("Error retrieving pay components", 503);
 //   }
 // };
-const getAllPayComponent = async (page, size, search, startDate, endDate) => {
+const getAllPayComponent = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -307,6 +313,13 @@ const getAllPayComponent = async (page, size, search, startDate, endDate) => {
           component_type: { contains: search.toLowerCase() },
         },
       ];
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const pays = await prisma.hrms_m_pay_component.findMany({

@@ -16,6 +16,7 @@ const createTaxRegime = async (data) => {
         ...serializeTaxRegime(data),
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
+        is_active: data.is_active || "Y",
         createdate: new Date(),
         updatedate: new Date(),
         updatedby: 1,
@@ -97,7 +98,14 @@ const deleteTaxRegime = async (id) => {
 };
 
 // Get all tax regime
-const getAllTaxRegime = async (page, size, search) => {
+const getAllTaxRegime = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -111,6 +119,13 @@ const getAllTaxRegime = async (page, size, search) => {
           regime_name: { contains: search.toLowerCase() },
         },
       ];
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const taxes = await prisma.hrms_m_tax_regime.findMany({

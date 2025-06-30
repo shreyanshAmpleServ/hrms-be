@@ -1,4 +1,4 @@
-const taxReliefModel = require('../models/taxReliefModel');
+const taxReliefModel = require("../models/taxReliefModel");
 
 const createTaxRelief = async (data) => {
   return await taxReliefModel.createTaxRelief(data);
@@ -16,8 +16,22 @@ const deleteTaxRelief = async (id) => {
   return await taxReliefModel.deleteTaxRelief(id);
 };
 
-const getAllTaxRelief = async (page, size, search,  startDate,endDate) => {
-  return await taxReliefModel.getAllTaxRelief(page, size, search,  startDate,endDate);
+const getAllTaxRelief = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await taxReliefModel.getAllTaxRelief(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

@@ -1,4 +1,4 @@
-const designationModel = require('../models/designationModel');
+const designationModel = require("../models/designationModel");
 
 const createDesignation = async (data) => {
   return await designationModel.createDesignation(data);
@@ -16,8 +16,22 @@ const deleteDesignation = async (id) => {
   return await designationModel.deleteDesignation(id);
 };
 
-const getAllDesignation = async (page, size, search,  startDate,endDate) => {
-  return await designationModel.getAllDesignation(page, size, search,  startDate,endDate);
+const getAllDesignation = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await designationModel.getAllDesignation(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

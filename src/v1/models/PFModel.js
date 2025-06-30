@@ -9,8 +9,11 @@ const createPF = async (data) => {
         pf_name: data.pf_name,
         employer_contribution: data.employer_contribution,
         employee_contribution: data.employee_contribution,
+        is_active: data.is_active || "Y",
+
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
+
         createdate: new Date(),
         updatedate: new Date(),
         updatedby: 1,
@@ -64,7 +67,7 @@ const deletePF = async (id) => {
 };
 
 // Get all PF
-const getAllPF = async (page, size, search) => {
+const getAllPF = async (page, size, search, startDate, endDate, is_active) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -79,6 +82,12 @@ const getAllPF = async (page, size, search) => {
       ];
     }
 
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
     const data = await prisma.hrms_m_provident_fund.findMany({
       where: filters,
       skip: skip,
