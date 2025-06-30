@@ -5,6 +5,8 @@ const prisma = new PrismaClient();
 const serializeTaxRegime = (taxRegime) => {
   return {
     regime_name: taxRegime.regime_name || "",
+    is_active:
+      taxRegime.is_active?.toString().toUpperCase() === "N" ? "N" : "Y",
     country_code: Number(taxRegime.country_code) || null,
   };
 };
@@ -16,7 +18,7 @@ const createTaxRegime = async (data) => {
         ...serializeTaxRegime(data),
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
-        is_active: data.is_active || "Y",
+
         createdate: new Date(),
         updatedate: new Date(),
         updatedby: 1,

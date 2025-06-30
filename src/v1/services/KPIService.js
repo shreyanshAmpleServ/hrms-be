@@ -16,8 +16,15 @@ const deleteKPI = async (id) => {
   return await KPIModel.deleteKPI(id);
 };
 
-const getAllKPI = async (page, size, search, startDate, endDate) => {
-  return await KPIModel.getAllKPI(page, size, search, startDate, endDate);
+const getAllKPI = async (page, size, search, startDate, endDate, is_active) => {
+  return await KPIModel.getAllKPI(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

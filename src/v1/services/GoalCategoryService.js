@@ -1,4 +1,4 @@
-const GoalCategoryModel = require('../models/GoalCategoryModel');
+const GoalCategoryModel = require("../models/GoalCategoryModel");
 
 const createGoalCategory = async (data) => {
   return await GoalCategoryModel.createGoalCategory(data);
@@ -16,8 +16,22 @@ const deleteGoalCategory = async (id) => {
   return await GoalCategoryModel.deleteGoalCategory(id);
 };
 
-const getAllGoalCategory = async (page, size, search,  startDate,endDate) => {
-  return await GoalCategoryModel.getAllGoalCategory(page, size, search,  startDate,endDate);
+const getAllGoalCategory = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await GoalCategoryModel.getAllGoalCategory(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

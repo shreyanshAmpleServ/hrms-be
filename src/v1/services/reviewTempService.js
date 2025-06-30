@@ -1,4 +1,4 @@
-const reviewTempModel = require('../models/reviewTempModel');
+const reviewTempModel = require("../models/reviewTempModel");
 
 const createReviewTemp = async (data) => {
   return await reviewTempModel.createReviewTemp(data);
@@ -16,8 +16,22 @@ const deleteReviewTemp = async (id) => {
   return await reviewTempModel.deleteReviewTemp(id);
 };
 
-const getAllReviewTemp = async (page, size, search,  startDate,endDate) => {
-  return await reviewTempModel.getAllReviewTemp(page, size, search,  startDate,endDate);
+const getAllReviewTemp = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await reviewTempModel.getAllReviewTemp(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {
