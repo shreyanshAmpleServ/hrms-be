@@ -60,7 +60,6 @@ const getAllProjects = async (
       ];
     }
 
-    // Date range filter
     if (startDate && endDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);

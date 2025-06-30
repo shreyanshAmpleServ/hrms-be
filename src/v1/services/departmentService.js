@@ -1,4 +1,4 @@
-const departmentModel = require('../models/departmentModel');
+const departmentModel = require("../models/departmentModel");
 
 const createDepartment = async (data) => {
   return await departmentModel.createDepartment(data);
@@ -16,8 +16,22 @@ const deleteDepartment = async (id) => {
   return await departmentModel.deleteDepartment(id);
 };
 
-const getAllDepartments = async (page, size, search,  startDate,endDate) => {
-  return await departmentModel.getAllDepartments(page, size, search,  startDate,endDate);
+const getAllDepartments = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await departmentModel.getAllDepartments(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

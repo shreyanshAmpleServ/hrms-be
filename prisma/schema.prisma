@@ -481,6 +481,7 @@ model hrms_d_hr_letter {
   createdate            DateTime?           @default(now(), map: "DF__hrms_d_hr__creat__1E6F845E") @db.DateTime
   createdby             Int
   updatedate            DateTime?           @db.DateTime
+  is_active             String?             @default("Y") @db.Char(1)
   updatedby             Int?
   log_inst              Int?
   letter_subject        String?             @db.NVarChar(255)

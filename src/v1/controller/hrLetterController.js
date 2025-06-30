@@ -119,13 +119,14 @@ const deletehrLetter = async (req, res, next) => {
 
 const getAllhrLetter = async (req, res, next) => {
   try {
-    const { search, page, size, startDate, endDate } = req.query;
+    const { search, page, size, startDate, endDate, is_active } = req.query;
     const data = await hrLetterService.getAllhrLetter(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      is_active
     );
     res.status(200).success(null, data);
   } catch (error) {

@@ -20,13 +20,21 @@ const updatehrLetterStatus = async (id, data) => {
   return await hrLetterModel.updatehrLetterStatus(id, data);
 };
 
-const getAllhrLetter = async (search, page, size, startDate, endDate) => {
+const getAllhrLetter = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
   return await hrLetterModel.getAllhrLetter(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    is_active
   );
 };
 

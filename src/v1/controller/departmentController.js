@@ -1,7 +1,7 @@
-const departmentService = require('../services/departmentService');
-const CustomError = require('../../utils/CustomError');
-const { generateFullUrl } = require('../../utils/helper');
-const moment = require("moment")
+const departmentService = require("../services/departmentService");
+const CustomError = require("../../utils/CustomError");
+const { generateFullUrl } = require("../../utils/helper");
+const moment = require("moment");
 
 // const sanitizedepartmentData = (data) => {
 //     return {
@@ -16,65 +16,77 @@ const moment = require("moment")
 // };
 
 const createDepartment = async (req, res, next) => {
-    try {
-        console.log("daata : ",req.body)
-        let departmentData = { ...req.body };
-        const department = await departmentService.createDepartment(departmentData);
-        res.status(201).success('Department created successfully', department);
-    } catch (error) {
-        next(error);
-    }
+  try {
+    console.log("daata : ", req.body);
+    let departmentData = { ...req.body };
+    const department = await departmentService.createDepartment(departmentData);
+    res.status(201).success("Department created successfully", department);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const findDepartmentById = async (req, res, next) => {
-    try {
-        const department = await departmentService.findDepartmentById(req.params.id);
-        if (!department) throw new CustomError('Department not found', 404);
+  try {
+    const department = await departmentService.findDepartmentById(
+      req.params.id
+    );
+    if (!department) throw new CustomError("Department not found", 404);
 
-        res.status(200).success(null, department);
-    } catch (error) {
-        next(error);
-    }
+    res.status(200).success(null, department);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const updateDepartment = async (req, res, next) => {
-    try {
-        // const attachmentPath = req.file ? req.file.path : null;
-        let departmentData = { ...req.body };
-        // if (attachmentPath) departmentData.attachment = generateFullUrl(req, attachmentPath);
+  try {
+    // const attachmentPath = req.file ? req.file.path : null;
+    let departmentData = { ...req.body };
+    // if (attachmentPath) departmentData.attachment = generateFullUrl(req, attachmentPath);
 
-        // departmentData = sanitizedepartmentData(departmentData);
+    // departmentData = sanitizedepartmentData(departmentData);
 
-        const department = await departmentService.updateDepartment(req.params.id, departmentData);
-        res.status(200).success('Department updated successfully', department);
-    } catch (error) {
-        next(error);
-    }
+    const department = await departmentService.updateDepartment(
+      req.params.id,
+      departmentData
+    );
+    res.status(200).success("Department updated successfully", department);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const deleteDepartment = async (req, res, next) => {
-    try {
-        await departmentService.deleteDepartment(req.params.id);
-        res.status(200).success('Department deleted successfully', null);
-    } catch (error) {
-        next(error);
-    }
+  try {
+    await departmentService.deleteDepartment(req.params.id);
+    res.status(200).success("Department deleted successfully", null);
+  } catch (error) {
+    next(error);
+  }
 };
 
 const getAllDepartments = async (req, res, next) => {
-    try {
-        const { page , size , search ,startDate,endDate   } = req.query;
-        const departments = await departmentService.getAllDepartments(Number(page), Number(size) ,search ,moment(startDate), moment(endDate));
-        res.status(200).success(null, departments);
-    } catch (error) {
-        next(error);
-    }
+  try {
+    const { page, size, search, startDate, endDate, is_active } = req.query;
+    const departments = await departmentService.getAllDepartments(
+      Number(page),
+      Number(size),
+      search,
+      moment(startDate),
+      moment(endDate),
+      is_active
+    );
+    res.status(200).success(null, departments);
+  } catch (error) {
+    next(error);
+  }
 };
 
 module.exports = {
-    createDepartment,
-    findDepartmentById,
-    updateDepartment,
-    deleteDepartment,
-    getAllDepartments,
+  createDepartment,
+  findDepartmentById,
+  updateDepartment,
+  deleteDepartment,
+  getAllDepartments,
 };

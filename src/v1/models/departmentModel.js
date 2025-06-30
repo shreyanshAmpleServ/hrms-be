@@ -66,7 +66,14 @@ const deleteDepartment = async (id) => {
 };
 
 // Get all department
-const getAllDepartments = async (page, size, search, startDate, endDate) => {
+const getAllDepartments = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -79,6 +86,13 @@ const getAllDepartments = async (page, size, search, startDate, endDate) => {
           department_name: { contains: search.toLowerCase() },
         },
       ];
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const departments = await prisma.hrms_m_department_master.findMany({
