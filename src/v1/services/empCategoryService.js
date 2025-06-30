@@ -1,4 +1,4 @@
-const empCategoryModel = require('../models/empCategoryModel');
+const empCategoryModel = require("../models/empCategoryModel");
 
 const createEmpCategory = async (data) => {
   return await empCategoryModel.createEmpCategory(data);
@@ -16,14 +16,28 @@ const deleteEmpCategory = async (id) => {
   return await empCategoryModel.deleteEmpCategory(id);
 };
 
-const getAllEmpCategory = async (page, size, search,  startDate,endDate) => {
-  return await empCategoryModel.getAllEmpCategory(page, size, search,  startDate,endDate);
+const getAllEmpCategory = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await empCategoryModel.getAllEmpCategory(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {
-    createEmpCategory,
-    findEmpCategoryById,
-    updateEmpCategory,
-    deleteEmpCategory,
-    getAllEmpCategory,
+  createEmpCategory,
+  findEmpCategoryById,
+  updateEmpCategory,
+  deleteEmpCategory,
+  getAllEmpCategory,
 };

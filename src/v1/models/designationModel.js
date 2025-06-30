@@ -64,41 +64,109 @@ const deleteDesignation = async (id) => {
 };
 
 // Get all designation
-const getAllDesignation = async (page, size, search) => {
+// const getAllDesignation = async (page, size, search, is_active) => {
+//   try {
+//     page = page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+
+//     let filters = {};
+
+//     if (search) {
+//       filters.OR = [
+//         {
+//           designation_name: { contains: search.toLowerCase() },
+//         },
+//       ];
+//     }
+
+//     if (typeof is_active === "boolean") {
+//       filters.is_active = is_active ? "Y" : "N";
+//     } else if (typeof is_active === "string") {
+//       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+//       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+//     }
+
+//     const designations = await prisma.hrms_m_designation_master.findMany({
+//       where: filters,
+//       skip: skip,
+//       take: size,
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//     });
+
+//     const totalCount = await prisma.hrms_m_designation_master.count({
+//       where: filters,
+//     });
+//     return {
+//       data: designations,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount: totalCount,
+//     };
+//   } catch (error) {
+//     console.log(error);
+//     throw new CustomError("Error retrieving designations", 503);
+//   }
+// };
+
+const getAllDesignation = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    // ✅ Set default values for pagination
+    page = !page || page <= 0 ? 1 : page;
     size = size || 10;
-    const skip = (page - 1) * size || 0;
+    const skip = (page - 1) * size;
 
     let filters = {};
 
     if (search) {
       filters.OR = [
         {
-          designation_name: { contains: search.toLowerCase() },
+          designation_name: {
+            contains: search.toLowerCase(),
+          },
         },
       ];
     }
 
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      const val = is_active.toLowerCase();
+      if (val === "true") filters.is_active = "Y";
+      else if (val === "false") filters.is_active = "N";
+    }
+
+    console.log("Filters applied:", filters);
+
     const designations = await prisma.hrms_m_designation_master.findMany({
       where: filters,
-      skip: skip,
+      skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
+    // ✅ Get total count for pagination
     const totalCount = await prisma.hrms_m_designation_master.count({
       where: filters,
     });
+
     return {
       data: designations,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount: totalCount,
+      totalCount,
     };
   } catch (error) {
-    console.log(error);
+    console.error("Error retrieving designations:", error);
     throw new CustomError("Error retrieving designations", 503);
   }
 };

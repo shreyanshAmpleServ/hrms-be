@@ -1,4 +1,4 @@
-const empTypeModel = require('../models/empTypeModel');
+const empTypeModel = require("../models/empTypeModel");
 
 const createEmpType = async (data) => {
   return await empTypeModel.createEmpType(data);
@@ -16,8 +16,22 @@ const deleteEmpType = async (id) => {
   return await empTypeModel.deleteEmpType(id);
 };
 
-const getAllEmpType = async (page, size, search,  startDate,endDate) => {
-  return await empTypeModel.getAllEmpType(page, size, search,  startDate,endDate);
+const getAllEmpType = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await empTypeModel.getAllEmpType(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

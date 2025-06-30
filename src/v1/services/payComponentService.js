@@ -1,4 +1,4 @@
-const payComponentModel = require('../models/payComponentModel');
+const payComponentModel = require("../models/payComponentModel");
 
 const createPayComponent = async (data) => {
   return await payComponentModel.createPayComponent(data);
@@ -16,8 +16,22 @@ const deletePayComponent = async (id) => {
   return await payComponentModel.deletePayComponent(id);
 };
 
-const getAllPayComponent = async (page, size, search,  startDate,endDate) => {
-  return await payComponentModel.getAllPayComponent(page, size, search,  startDate,endDate);
+const getAllPayComponent = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await payComponentModel.getAllPayComponent(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

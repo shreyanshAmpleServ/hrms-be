@@ -42,7 +42,16 @@ const deleteTaxSlab = async (req, res, next) => {
 
 const getAllTaxSlab = async (req, res, next) => {
   try {
-    const taxs = await taxSlabService.getAllTaxSlab();
+    const { search, page, size, startDate, endDate, is_active } = req.query;
+
+    const taxs = await taxSlabService.getAllTaxSlab(
+      search,
+      Number(page),
+      Number(size),
+      startDate && moment(startDate),
+      endDate && moment(endDate),
+      is_active
+    );
     res.status(200).success(null, taxs);
   } catch (error) {
     next(error);

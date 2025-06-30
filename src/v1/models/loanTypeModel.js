@@ -6,6 +6,7 @@ const serializeData = (data) => {
   return {
     loan_name: data.loan_name || "",
     interest_rate: Number(data.interest_rate) || 0,
+    is_active: data.is_active || "Y",
   };
 };
 
@@ -74,7 +75,14 @@ const deleteLoanType = async (id) => {
 };
 
 // Get all loan types
-const getAllLoanType = async (search, page, size) => {
+const getAllLoanType = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -87,6 +95,13 @@ const getAllLoanType = async (search, page, size) => {
           loan_name: { contains: search.toLowerCase() },
         },
       ];
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const datas = await prisma.hrms_m_loan_type.findMany({

@@ -61,7 +61,14 @@ const deleteCurrency = async (id) => {
   }
 };
 
-const getAllCurrency = async (page, size, search) => {
+const getAllCurrency = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -76,6 +83,12 @@ const getAllCurrency = async (page, size, search) => {
       ];
     }
 
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
     const Currencies = await prisma.hrms_m_currency_master.findMany({
       where: filters,
       skip: skip,

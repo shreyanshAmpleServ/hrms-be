@@ -16,8 +16,22 @@ const deleteTaxSlab = async (id) => {
   return await taxSlabModal.deleteTaxSlab(id);
 };
 
-const getAllTaxSlab = async () => {
-  return await taxSlabModal.getAllTaxSlab();
+const getAllTaxSlab = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await taxSlabModal.getAllTaxSlab(
+    search,
+    page,
+    size,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

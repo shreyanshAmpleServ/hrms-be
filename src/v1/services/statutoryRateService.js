@@ -1,4 +1,4 @@
-const statutoryRateModel = require('../models/statutoryRateModel');
+const statutoryRateModel = require("../models/statutoryRateModel");
 
 const createStatutoryRate = async (data) => {
   return await statutoryRateModel.createStatutoryRate(data);
@@ -16,8 +16,22 @@ const deleteStatutoryRate = async (id) => {
   return await statutoryRateModel.deleteStatutoryRate(id);
 };
 
-const getAllStatutoryRate = async (page, size, search,  startDate,endDate) => {
-  return await statutoryRateModel.getAllStatutoryRate(page, size, search,  startDate,endDate);
+const getAllStatutoryRate = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await statutoryRateModel.getAllStatutoryRate(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

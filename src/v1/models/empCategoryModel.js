@@ -75,7 +75,14 @@ const deleteEmpCategory = async (id) => {
 };
 
 // Get all employee category
-const getAllEmpCategory = async (page, size, search) => {
+const getAllEmpCategory = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -89,6 +96,13 @@ const getAllEmpCategory = async (page, size, search) => {
           category_name: { contains: search.toLowerCase() },
         },
       ];
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const empCategories = await prisma.hrms_m_employee_category.findMany({

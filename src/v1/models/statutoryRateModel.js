@@ -1,5 +1,5 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 const createStatutoryRate = async (data) => {
@@ -15,15 +15,18 @@ const createStatutoryRate = async (data) => {
         is_active: data.is_active || "Y",
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
-        createdate:new Date(),
+        createdate: new Date(),
         updatedate: new Date(),
-        updatedby:1,
+        updatedby: 1,
       },
     });
     return salaryStructure;
   } catch (error) {
-    console.log("Create statutory rate ",error)
-    throw new CustomError(`Error creating statutory rate: ${error.message}`, 500);
+    console.log("Create statutory rate ", error);
+    throw new CustomError(
+      `Error creating statutory rate: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -33,12 +36,15 @@ const findStatutoryRateById = async (id) => {
       where: { id: parseInt(id) },
     });
     if (!salaryStructure) {
-      throw new CustomError('statutory rate not found', 404);
+      throw new CustomError("statutory rate not found", 404);
     }
     return salaryStructure;
   } catch (error) {
-    console.log("statutory rate By Id  ",error)
-    throw new CustomError(`Error finding statutory rate by ID: ${error.message}`, 503);
+    console.log("statutory rate By Id  ", error);
+    throw new CustomError(
+      `Error finding statutory rate by ID: ${error.message}`,
+      503
+    );
   }
 };
 
@@ -53,8 +59,11 @@ const updateStatutoryRate = async (id, data) => {
     });
     return updatedSalaryStructure;
   } catch (error) {
-    console.log("Error in updating Statutory : ", error)
-    throw new CustomError(`Error updating statutory rate: ${error.message}`, 500);
+    console.log("Error in updating Statutory : ", error);
+    throw new CustomError(
+      `Error updating statutory rate: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -64,83 +73,69 @@ const deleteStatutoryRate = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting statutory rate: ${error.message}`, 500);
+    throw new CustomError(
+      `Error deleting statutory rate: ${error.message}`,
+      500
+    );
   }
 };
 
 // Get all statutory rate
-const getAllStatutoryRate = async (  page,
+const getAllStatutoryRate = async (
+  page,
   size,
   search,
   startDate,
-  endDate) => {
+  endDate,
+  is_active
+) => {
   try {
-      page = page || page == 0 ? 1 : page;
-      size = size || 10;
-      const skip = (page - 1) * size || 0;
-  
-      const filters = {};
-      // Handle search
-      // if (search) {
-      //   filters.OR = [
-      //     {
-      //       campaign_user: {
-      //         full_name: { contains: search.toLowerCase() },
-      //       }, // Include contact details
-      //     },
-      //     {
-      //       campaign_leads: {
-      //         title: { contains: search.toLowerCase() },
-      //       }, // Include contact details
-      //     },
-      //     {
-      //       name: { contains: search.toLowerCase() },
-      //     },
-      //     {
-      //       status: { contains: search.toLowerCase() },
-      //     },
-      //   ];
-      // }
-      // if (status) {
-      //   filters.is_active = { equals: status };
-      // }
-  
-      if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-  
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          filters.createdate = {
-            gte: start,
-            lte: end,
-          };
-        }
+    page = page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
+
+    const filters = {};
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = { gte: start, lte: end };
       }
-      const salary = await prisma.hrms_m_statutory_rate.findMany({
-      //   where: filters,
-        skip: skip,
-        take: size,
+    }
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
+    const salary = await prisma.hrms_m_statutory_rate.findMany({
+      where: filters,
+      skip,
+      take: size,
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+    });
 
-        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      });
+    const totalCount = await prisma.hrms_m_statutory_rate.count({
+      where: filters,
+    });
 
-      const totalCount = await prisma.hrms_m_statutory_rate.count({
-      //   where: filters,
-      });
-      return {
-        data: salary,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount: totalCount,
-      };
-
+    console.log("📦 Filters:", filters);
+    return {
+      data: salary,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
-      console.log(error)
-      throw new CustomError('Error retrieving statutory rate', 503);
+    console.log(error);
+    throw new CustomError("Error retrieving statutory rate", 503);
   }
 };
-
 
 module.exports = {
   createStatutoryRate,

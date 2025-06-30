@@ -8,6 +8,7 @@ const createTaxRelief = async (data) => {
       data: {
         relief_name: data.relief_name,
         amount: data.amount,
+        is_active: data.is_active || "Y",
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
         createdate: new Date(),
@@ -66,7 +67,14 @@ const deleteTaxRelief = async (id) => {
 };
 
 // Get all PF
-const getAllTaxRelief = async (page, size, search) => {
+const getAllTaxRelief = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -81,6 +89,12 @@ const getAllTaxRelief = async (page, size, search) => {
       ];
     }
 
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
     const data = await prisma.hrms_m_tax_relief.findMany({
       where: filters,
       skip: skip,
