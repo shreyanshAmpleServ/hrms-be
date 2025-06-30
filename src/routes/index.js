@@ -128,6 +128,7 @@ const costCenterRoute = require("../v1/routes/costCenterRoute.js");
 const finalSettlementProcessingRoute = require("../v1/routes/finalSettlementProcessingRoute.js");
 const overtimePayrollProcessingRoute = require("../v1/routes/overtimePayrollProcessingRoute.js");
 const midmonthPayrollProcessingRoute = require("../v1/routes/midmonthPayrollProcessingRoute.js");
+const BasicPayRoute = require("../v1/routes/BasicPayRoutes");
 const router = express.Router();
 
 // Version 1 API
@@ -261,6 +262,7 @@ router.use("/v1", finalSettlementProcessingRoute);
 router.use("/v1", overtimePayrollProcessingRoute);
 router.use("/v1", midmonthPayrollProcessingRoute);
 
+router.use("/v1", BasicPayRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
