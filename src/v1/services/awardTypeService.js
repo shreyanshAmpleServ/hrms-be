@@ -1,5 +1,4 @@
-
-const awardTypeModel = require('../models/awardTypeModel');
+const awardTypeModel = require("../models/awardTypeModel");
 
 const createAwardType = async (data) => {
   return await awardTypeModel.createAwardType(data);
@@ -17,8 +16,22 @@ const deleteAwardType = async (id) => {
   return await awardTypeModel.deleteAwardType(id);
 };
 
-const getAllAwardType = async (page, size, search,  startDate,endDate) => {
-  return await awardTypeModel.getAllAwardType(page, size, search,  startDate,endDate);
+const getAllAwardType = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await awardTypeModel.getAllAwardType(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {

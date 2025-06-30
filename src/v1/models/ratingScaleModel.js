@@ -7,6 +7,8 @@ const createRatingScale = async (data) => {
     const finalData = await prisma.hrms_m_rating_scale.create({
       data: {
         rating_value: data.rating_value || null,
+        is_active: data.is_active || "Y",
+
         rating_description: data.rating_description || "",
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
@@ -66,7 +68,14 @@ const deleteRatingScale = async (id) => {
 };
 
 // Get all rating scale
-const getAllRatingScale = async (page, size, search, startDate, endDate) => {
+const getAllRatingScale = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -80,7 +89,12 @@ const getAllRatingScale = async (page, size, search, startDate, endDate) => {
         },
       ];
     }
-
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
     const data = await prisma.hrms_m_rating_scale.findMany({
       where: filters,
       skip: skip,

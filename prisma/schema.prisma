@@ -171,10 +171,12 @@ model hrms_d_competency {
 }
 
 model hrms_d_disciplinary_action {
-  id                       Int                          @id(map: "PK__hrms_d_d__3213E83F3B5CF98E") @default(autoincrement())
-  employee_id              Int
-  incident_date            DateTime?                    @db.Date
-  incident_description     String?
+  id                   Int       @id(map: "PK__hrms_d_d__3213E83F3B5CF98E") @default(autoincrement())
+  employee_id          Int
+  incident_date        DateTime? @db.Date
+  incident_description String?
+  is_active            String?   @default("Y") @db.Char(1)
+
   action_taken             String?                      @db.NVarChar(255)
   committee_notes          String?
   penalty_type             Int?
@@ -435,6 +437,7 @@ model hrms_d_grievance {
   id                    Int                    @id(map: "PK__hrms_d_g__3213E83FF9AE53A7") @default(autoincrement())
   employee_id           Int
   grievance_type        Int?
+  is_active             String?                @default("Y") @db.Char(1)
   description           String?
   anonymous             Boolean?
   submitted_on          DateTime?              @db.DateTime
@@ -917,8 +920,10 @@ model hrms_d_travel_expense {
 }
 
 model hrms_d_work_life_event {
-  id                         Int                                               @id(map: "PK__hrms_d_w__3213E83F17E65FDB") @default(autoincrement())
-  employee_id                Int
+  id          Int     @id(map: "PK__hrms_d_w__3213E83F17E65FDB") @default(autoincrement())
+  employee_id Int
+  is_active   String? @default("Y") @db.Char(1)
+
   event_type                 Int?
   event_date                 DateTime?                                         @db.Date
   notes                      String?
@@ -971,9 +976,11 @@ model hrms_m_advance_type {
 }
 
 model hrms_m_asset_type {
-  id                    Int                       @id(map: "PK__hrms_m_a__3213E83FAD5C7A8E") @default(autoincrement())
-  asset_type_name       String?                   @db.NVarChar(100)
-  depreciation_rate     Decimal?                  @db.Decimal(5, 2)
+  id                Int      @id(map: "PK__hrms_m_a__3213E83FAD5C7A8E") @default(autoincrement())
+  asset_type_name   String?  @db.NVarChar(100)
+  depreciation_rate Decimal? @db.Decimal(5, 2)
+  is_active         String?  @default("Y") @db.Char(1)
+
   createdate            DateTime?                 @default(now(), map: "DF__hrms_m_as__creat__41EDCAC5") @db.DateTime
   createdby             Int
   updatedate            DateTime?                 @db.DateTime
@@ -983,8 +990,10 @@ model hrms_m_asset_type {
 }
 
 model hrms_m_award_type {
-  id          Int       @id(map: "PK__hrms_m_a__3213E83FE5DF34C8") @default(autoincrement())
-  award_name  String?   @db.NVarChar(100)
+  id         Int     @id(map: "PK__hrms_m_a__3213E83FE5DF34C8") @default(autoincrement())
+  award_name String? @db.NVarChar(100)
+  is_active  String? @default("Y") @db.Char(1)
+
   description String?   @db.NVarChar(255)
   createdate  DateTime? @default(now(), map: "DF__hrms_m_aw__creat__382F5661") @db.DateTime
   createdby   Int
@@ -1089,6 +1098,8 @@ model hrms_m_designation_master {
 model hrms_m_disciplinary_penalty {
   id                   Int                          @id(map: "PK__hrms_m_d__3213E83F893BEA80") @default(autoincrement())
   penalty_type         String?                      @db.NVarChar(100)
+  is_active            String?                      @default("Y") @db.Char(1)
+  action_taken         String?                      @db.NVarChar(255)
   description          String?                      @db.NVarChar(255)
   createdate           DateTime?                    @default(now(), map: "DF__hrms_m_di__creat__2F9A1060") @db.DateTime
   createdby            Int
@@ -1099,8 +1110,10 @@ model hrms_m_disciplinary_penalty {
 }
 
 model hrms_m_document_type {
-  id         Int       @id(map: "PK__hrms_m_d__3213E83F6F7CBFB3") @default(autoincrement())
-  doc_type   String?   @db.NVarChar(100)
+  id        Int     @id(map: "PK__hrms_m_d__3213E83F6F7CBFB3") @default(autoincrement())
+  doc_type  String? @db.NVarChar(100)
+  is_active String? @default("Y") @db.Char(1)
+
   createdate DateTime? @default(now(), map: "DF__hrms_m_do__creat__3C34F16F") @db.DateTime
   createdby  Int
   updatedate DateTime? @db.DateTime
@@ -1144,14 +1157,16 @@ model hrms_m_goal_category {
 }
 
 model hrms_m_grievance_type {
-  id                  Int                @id(map: "PK__hrms_m_g__3213E83FADA6089E") @default(autoincrement())
-  grievance_type_name String?            @db.NVarChar(100)
-  createdate          DateTime?          @default(now(), map: "DF__hrms_m_gr__creat__2CBDA3B5") @db.DateTime
-  createdby           Int
-  updatedate          DateTime?          @db.DateTime
-  updatedby           Int?
-  log_inst            Int?
-  grievance_types     hrms_d_grievance[]
+  id                  Int     @id(map: "PK__hrms_m_g__3213E83FADA6089E") @default(autoincrement())
+  grievance_type_name String? @db.NVarChar(100)
+  is_active           String? @default("Y") @db.Char(1)
+
+  createdate      DateTime?          @default(now(), map: "DF__hrms_m_gr__creat__2CBDA3B5") @db.DateTime
+  createdby       Int
+  updatedate      DateTime?          @db.DateTime
+  updatedby       Int?
+  log_inst        Int?
+  grievance_types hrms_d_grievance[]
 }
 
 model hrms_m_holiday_calendar {
@@ -1167,13 +1182,15 @@ model hrms_m_holiday_calendar {
 }
 
 model hrms_m_job_category {
-  id                Int       @id(map: "PK__hrms_m_j__3213E83F1434C918") @default(autoincrement())
-  job_category_name String?   @db.NVarChar(100)
-  createdate        DateTime? @default(now(), map: "DF__hrms_m_jo__creat__3552E9B6") @db.DateTime
-  createdby         Int
-  updatedate        DateTime? @db.DateTime
-  updatedby         Int?
-  log_inst          Int?
+  id                Int     @id(map: "PK__hrms_m_j__3213E83F1434C918") @default(autoincrement())
+  job_category_name String? @db.NVarChar(100)
+  is_active         String? @default("Y") @db.Char(1)
+
+  createdate DateTime? @default(now(), map: "DF__hrms_m_jo__creat__3552E9B6") @db.DateTime
+  createdby  Int
+  updatedate DateTime? @db.DateTime
+  updatedby  Int?
+  log_inst   Int?
 }
 
 model hrms_m_kpi_master {
@@ -1208,8 +1225,10 @@ model hrms_m_leave_type_master {
 }
 
 model hrms_m_letter_type {
-  id                    Int                      @id(map: "PK__hrms_m_l__3213E83F746BC6B8") @default(autoincrement())
-  letter_name           String?                  @db.NVarChar(100)
+  id          Int     @id(map: "PK__hrms_m_l__3213E83F746BC6B8") @default(autoincrement())
+  letter_name String? @db.NVarChar(100)
+  is_active   String? @default("Y") @db.Char(1)
+
   template_path         String?                  @db.NVarChar(255)
   createdate            DateTime?                @default(now(), map: "DF__hrms_m_le__creat__3DE82FB7") @db.DateTime
   createdby             Int
@@ -1301,10 +1320,9 @@ model hrms_m_provident_fund {
 }
 
 model hrms_m_rating_scale {
-  id           Int     @id(map: "PK__hrms_m_r__3213E83F3F1F2020") @default(autoincrement())
-  rating_value Int?
-  is_active    String? @default("Y") @db.Char(1)
-
+  id                 Int       @id(map: "PK__hrms_m_r__3213E83F3F1F2020") @default(autoincrement())
+  rating_value       Int?
+  is_active          String?   @default("Y") @db.Char(1)
   rating_description String?   @db.NVarChar(255)
   createdate         DateTime? @default(now(), map: "DF__hrms_m_ra__creat__5E8A0973") @db.DateTime
   createdby          Int
@@ -1374,17 +1392,19 @@ model hrms_m_statutory_rate {
 }
 
 model hrms_m_survey_master {
-  id           Int                      @id(map: "PK__hrms_m_s__3213E83FA2306E59") @default(autoincrement())
-  survey_title String?                  @db.NVarChar(255)
-  description  String?                  @db.NVarChar(500)
-  launch_date  DateTime?                @db.Date
-  close_date   DateTime?                @db.Date
-  createdate   DateTime?                @default(now(), map: "DF__hrms_m_su__creat__3B0BC30C") @db.DateTime
-  createdby    Int
-  updatedate   DateTime?                @db.DateTime
-  updatedby    Int?
-  log_inst     Int?
-  survey_type  hrms_d_survey_response[]
+  id           Int     @id(map: "PK__hrms_m_s__3213E83FA2306E59") @default(autoincrement())
+  survey_title String? @db.NVarChar(255)
+  description  String? @db.NVarChar(500)
+  is_active    String? @default("Y") @db.Char(1)
+
+  launch_date DateTime?                @db.Date
+  close_date  DateTime?                @db.Date
+  createdate  DateTime?                @default(now(), map: "DF__hrms_m_su__creat__3B0BC30C") @db.DateTime
+  createdby   Int
+  updatedate  DateTime?                @db.DateTime
+  updatedby   Int?
+  log_inst    Int?
+  survey_type hrms_d_survey_response[]
 }
 
 model hrms_m_tax_regime {

@@ -8,6 +8,7 @@ const createDisciplinaryPenalty = async (data) => {
       data: {
         penalty_type: data.penalty_type || "",
         description: data.description || "",
+        is_active: data.is_active || "Y",
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
         createdate: new Date(),
@@ -74,7 +75,14 @@ const deleteDisciplinaryPenalty = async (id) => {
   }
 };
 
-const getAllDisciplinaryPenalty = async (page, size, search) => {
+const getAllDisciplinaryPenalty = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -87,6 +95,13 @@ const getAllDisciplinaryPenalty = async (page, size, search) => {
           penalty_type: { contains: search.toLowerCase() },
         },
       ];
+    }
+
+    if (typeof is_active === "boolean") {
+      filters.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
     const data = await prisma.hrms_m_disciplinary_penalty.findMany({

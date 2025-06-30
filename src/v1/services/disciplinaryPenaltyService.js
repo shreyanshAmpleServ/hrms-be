@@ -1,5 +1,4 @@
-
-const disciplinaryPenaltyModel = require('../models/disciplinaryPenaltyModel');
+const disciplinaryPenaltyModel = require("../models/disciplinaryPenaltyModel");
 
 const createDisciplinaryPenalty = async (data) => {
   return await disciplinaryPenaltyModel.createDisciplinaryPenalty(data);
@@ -17,8 +16,22 @@ const deleteDisciplinaryPenalty = async (id) => {
   return await disciplinaryPenaltyModel.deleteDisciplinaryPenalty(id);
 };
 
-const getAllDisciplinaryPenalty = async (page, size, search,  startDate,endDate) => {
-  return await disciplinaryPenaltyModel.getAllDisciplinaryPenalty(page, size, search,  startDate,endDate);
+const getAllDisciplinaryPenalty = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  is_active
+) => {
+  return await disciplinaryPenaltyModel.getAllDisciplinaryPenalty(
+    page,
+    size,
+    search,
+    startDate,
+    endDate,
+    is_active
+  );
 };
 
 module.exports = {
