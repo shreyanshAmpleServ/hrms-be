@@ -4,10 +4,8 @@ const prisma = new PrismaClient();
 const moment = require("moment");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const requiredFields = {
-  line_num: "Line Number is required",
   pay_component_id: "Pay Component is required",
   amount: "Amount is required",
-  type_value: "Type Value is required",
   is_taxable: "Is Taxable is required",
   is_recurring: "Is Recurring is required",
   is_worklife_related: "Is Worklife Related is required",
@@ -239,8 +237,8 @@ const createBasicPay = async (data) => {
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
           },
-          pay_component_for_line: {
-            select: { id: true, component_name: true },
+          hrms_d_employee_pay_component_assignment_line: {
+            select: { id: true, component_type: true },
           },
           hrms_d_employee: {
             include: {
@@ -436,12 +434,6 @@ const updateBasicPay = async (id, data) => {
               work_life_entry_pay_header: {
                 select: { id: true, event_type: true },
               },
-              pay_component_for_line: {
-                select: { id: true, event_type: true },
-              },
-              pay_component_for_line: {
-                select: { id: true, component_name: true },
-              },
               branch_pay_component_header: {
                 select: { id: true, branch_name: true },
               },
@@ -548,8 +540,8 @@ const findBasicPayById = async (id) => {
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
           },
-          pay_component_for_line: {
-            select: { id: true, component_name: true },
+          hrms_d_employee_pay_component_assignment_line: {
+            select: { id: true, component_type: true },
           },
           branch_pay_component_header: {
             select: { id: true, branch_name: true },
@@ -690,8 +682,8 @@ const getAllBasicPay = async (
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
           },
-          pay_component_for_line: {
-            select: { id: true, component_name: true },
+          hrms_d_employee_pay_component_assignment_line: {
+            select: { id: true, component_type: true },
           },
           branch_pay_component_header: {
             select: { id: true, branch_name: true },

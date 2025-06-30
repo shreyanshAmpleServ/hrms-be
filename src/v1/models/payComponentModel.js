@@ -154,6 +154,21 @@ const updatePayComponent = async (id, data) => {
           { component_code: toLowerCase(data.component_code) },
         ],
       },
+
+    });
+    if (totalCount > 0) {
+      throw new CustomError(
+        "Pay component with the same name or code already exists",
+        400
+      );
+    }
+    const updatedEntry = await prisma.hrms_m_pay_component.update({
+      where: { id: parseInt(id) },
+      data: {
+        ...serializePayComponentData(data),
+        updatedby: data.updatedby || 1,
+        updatedate: new Date(),
+      },
       include: {
         pay_component_tax: {
           select: {
@@ -204,20 +219,6 @@ const updatePayComponent = async (id, data) => {
             dimension_id: true,
           },
         },
-      },
-    });
-    if (totalCount > 0) {
-      throw new CustomError(
-        "Pay component with the same name or code already exists",
-        400
-      );
-    }
-    const updatedEntry = await prisma.hrms_m_pay_component.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...serializePayComponentData(data),
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
       },
     });
     return updatedEntry;
