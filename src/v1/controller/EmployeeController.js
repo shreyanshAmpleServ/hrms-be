@@ -96,14 +96,14 @@ const deleteEmployee = async (req, res, next) => {
 
 const getAllEmployee = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate, status } = req.query;
+    const { page, size, search, startDate, endDate, is_active } = req.query;
     const deals = await EmployeeService.getAllEmployee(
       Number(page),
       Number(size),
       search,
       moment(startDate),
       moment(endDate),
-      status
+      is_active
     );
     res.status(200).success(null, deals);
   } catch (error) {

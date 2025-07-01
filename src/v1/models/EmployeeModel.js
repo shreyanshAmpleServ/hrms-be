@@ -546,7 +546,7 @@ const getAllEmployee = async (
   search,
   startDate,
   endDate,
-  status
+  is_active
 ) => {
   try {
     if (!page || page === 0) {
@@ -579,12 +579,16 @@ const getAllEmployee = async (
       ];
     }
 
-    if (startDate && endDate) {
+    if (startDate && endDate && is_active !== "true") {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
         filters.createdate = { gte: start, lte: end };
       }
+    }
+
+    if (is_active === "true") {
+      filters.status = "Active";
     }
 
     const employees = await prisma.hrms_d_employee.findMany({
