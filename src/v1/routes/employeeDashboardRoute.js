@@ -21,4 +21,16 @@ router.get(
   authenticateToken,
   employeeDashboardController.getEmployeeAttendanceSummary
 );
+
+router.get(
+  "/employeeDashboard/employee-details",
+  authenticateToken,
+  employeeDashboardController.getEmployeeDetails
+);
+
+router.get(
+  "/employeeDashboard/get-all-upcoming-birthdays",
+  authenticateToken,
+  employeeDashboardController.getAllUpcomingBirthdays
+);
 module.exports = router;
