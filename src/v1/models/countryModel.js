@@ -63,24 +63,25 @@ const deleteCountry = async (id) => {
   }
 };
 
-const getAllCountries = async (filters, is_active) => {
+const getAllCountries = async (is_active) => {
   try {
+    const filters = {};
+
     if (typeof is_active === "boolean") {
       filters.is_active = is_active ? "Y" : "N";
     } else if (typeof is_active === "string") {
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
+
     const countries = await prisma.hrms_m_country_master.findMany({
-      orderBy: [
-        { name: "asc" },
-        // { updatedate: 'desc' },
-        // { createdate: 'desc' },
-      ],
+      where: filters,
+      orderBy: [{ name: "asc" }],
     });
+
     return countries;
   } catch (error) {
-    console.log("Country ", error);
+    console.error("Country error: ", error);
     throw new CustomError("Error retrieving countries", 503);
   }
 };
