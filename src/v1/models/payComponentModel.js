@@ -58,67 +58,98 @@ const createPayComponent = async (data) => {
         400
       );
     }
-    const reqData = await prisma.hrms_m_pay_component.create({
-      data: {
-        ...serializePayComponentData(data),
-        createdby: data.createdby || 1,
-        createdate: new Date(),
-        log_inst: data.log_inst || 1,
-      },
-      include: {
-        pay_component_tax: {
-          select: {
-            id: true,
-            pay_component_id: true,
-            rule_type: true,
+    const result = await prisma.$transaction(async (prisma) => {
+      const reqData = await prisma.hrms_m_pay_component.create({
+        data: {
+          ...serializePayComponentData(data),
+          createdby: data.createdby || 1,
+          createdate: new Date(),
+          log_inst: data.log_inst || 1,
+        },
+        include: {
+          pay_component_tax: {
+            select: {
+              id: true,
+              pay_component_id: true,
+              rule_type: true,
+            },
+          },
+          pay_component_project: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+            },
+          },
+          pay_component_for_line: {
+            select: {
+              id: true,
+              component_name: true,
+              component_code: true,
+              component_type: true,
+            },
+          },
+          pay_component_cost_center1: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
+          },
+          pay_component_cost_center2: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
+          },
+          pay_component_cost_center3: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
+          },
+          pay_component_cost_center4: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
+          },
+          pay_component_cost_center5: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
           },
         },
-        pay_component_project: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        },
-        pay_component_cost_center1: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center2: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center3: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center4: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center5: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-      },
+      });
+      // Step 2: Dynamically add column to monthly payroll table
+      // const columnName = prisma.sql([`"${data.component_code}"`]); // Safe quoting
+      // const alterQuery = prisma.raw(`
+      //   ALTER TABLE monthly_payroll_processing
+      //   ADD COLUMN ${data.component_code} VARCHAR(255) DEFAULT NULL;
+      // `);
+
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE hrms_d_monthly_payroll_processing 
+        ADD ${data.component_code} VARCHAR(255) NULL;
+      `);
+      return reqData;
     });
-    return reqData;
+    return result;
   } catch (error) {
+    if (
+      error.code === "23505" || // unique_violation in Postgres
+      error.message.includes("already exists")
+    ) {
+      throw new CustomError(
+        `Component code already used as column in payroll processing`,
+        400
+      );
+    }
     throw new CustomError(
       `Error creating pay component: ${error.message}`,
       500
@@ -181,6 +212,14 @@ const updatePayComponent = async (id, data) => {
             id: true,
             code: true,
             name: true,
+          },
+        },
+        pay_component_for_line: {
+          select: {
+            id: true,
+            component_name: true,
+            component_code: true,
+            component_type: true,
           },
         },
         pay_component_cost_center1: {
@@ -341,6 +380,14 @@ const getAllPayComponent = async (
             id: true,
             code: true,
             name: true,
+          },
+        },
+        pay_component_for_line: {
+          select: {
+            id: true,
+            component_name: true,
+            component_code: true,
+            component_type: true,
           },
         },
         pay_component_cost_center1: {
