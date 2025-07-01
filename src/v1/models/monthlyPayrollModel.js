@@ -16,22 +16,71 @@ const serializePayrollData = (data) => ({
 });
 
 // Create a new payroll entry
+// const createMonthlyPayroll = async (data) => {
+//   try {
+//     const serializedData = serializePayrollData(data);
+
+//     const { employee_id, ...payrollData } = serializedData;
+
+//     const reqData = await prisma.hrms_d_monthly_payroll_processing.create({
+//       data: {
+//         ...payrollData,
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst || 1,
+//         hrms_monthly_payroll_employee: {
+//           connect: {
+//             id: employee_id,
+//           },
+//         },
+//       },
+//       include: {
+//         hrms_monthly_payroll_employee: {
+//           select: {
+//             id: true,
+//             employee_code: true,
+//             full_name: true,
+//           },
+//         },
+//       },
+//     });
+//     return reqData;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error creating payroll entry: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const createMonthlyPayroll = async (data) => {
   try {
     const serializedData = serializePayrollData(data);
+    const { employee_id, payroll_month } = serializedData;
 
-    const { employee_id, ...payrollData } = serializedData;
+    // Check if payroll already exists for the same employee and month
+    const existing = await prisma.hrms_d_monthly_payroll_processing.findFirst({
+      where: {
+        hrms_monthly_payroll_employee: { id: employee_id },
+        payroll_month: payroll_month,
+      },
+    });
+
+    if (existing) {
+      throw new CustomError(
+        `Payroll already exists for employee ID ${employee_id} in month ${payroll_month}`,
+        400
+      );
+    }
 
     const reqData = await prisma.hrms_d_monthly_payroll_processing.create({
       data: {
-        ...payrollData,
+        ...serializedData,
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
         hrms_monthly_payroll_employee: {
-          connect: {
-            id: employee_id,
-          },
+          connect: { id: employee_id },
         },
       },
       include: {
@@ -44,6 +93,7 @@ const createMonthlyPayroll = async (data) => {
         },
       },
     });
+
     return reqData;
   } catch (error) {
     throw new CustomError(
