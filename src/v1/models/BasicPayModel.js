@@ -237,9 +237,6 @@ const createBasicPay = async (data) => {
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
           },
-          hrms_d_employee_pay_component_assignment_line: {
-            select: { id: true, component_type: true },
-          },
           hrms_d_employee: {
             include: {
               hrms_employee_department: {
@@ -540,9 +537,6 @@ const findBasicPayById = async (id) => {
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
           },
-          hrms_d_employee_pay_component_assignment_line: {
-            select: { id: true, component_type: true },
-          },
           branch_pay_component_header: {
             select: { id: true, branch_name: true },
           },
@@ -681,9 +675,6 @@ const getAllBasicPay = async (
           },
           work_life_entry_pay_header: {
             select: { id: true, event_type: true },
-          },
-          hrms_d_employee_pay_component_assignment_line: {
-            select: { id: true, component_type: true },
           },
           branch_pay_component_header: {
             select: { id: true, branch_name: true },
