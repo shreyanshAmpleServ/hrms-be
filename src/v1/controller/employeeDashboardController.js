@@ -36,8 +36,34 @@ const getEmployeeAttendanceSummary = async (req, res, next) => {
     next(error);
   }
 };
+
+const getEmployeeDetails = async (req, res, next) => {
+  try {
+    const employeeId = req.user.employee_id;
+    const data = await employeeDashboardService.getEmployeeDetails(employeeId);
+    res.status(200).success(null, data);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllUpcomingBirthdays = async (req, res, next) => {
+  try {
+    const designationData =
+      await employeeDashboardService.getAllUpcomingBirthdays();
+
+    res
+      .status(200)
+      .success("Today Birthdays fetched successfully", designationData);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getEmployeeDashboardData,
   getEmployeeLeavesData,
   getEmployeeAttendanceSummary,
+  getEmployeeDetails,
+  getAllUpcomingBirthdays,
 };

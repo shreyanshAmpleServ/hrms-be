@@ -114,42 +114,34 @@ const getEmployeeDashboardData = async (filterDays) => {
 };
 
 const getEmployeeLeavesData = async (employeeId) => {
-  const leaveApplications = await prisma.hrms_d_leave_application.findMany({
-    where: {
-      employee_id: employeeId,
-    },
-    include: {
-      leave_types: true,
-    },
-    orderBy: {
-      start_date: "desc",
-    },
-  });
+  const [leaveApplications, leaveBalance, leaveEncashments] = await Promise.all(
+    [
+      prisma.hrms_d_leave_application.findMany({
+        where: { employee_id: employeeId },
+        include: { leave_types: true },
+        orderBy: { start_date: "desc" },
+        take: 10, // ✅ optional: limit to latest 10 applications
+      }),
 
-  const leaveBalance = await prisma.hrms_d_leave_balance.findFirst({
-    where: {
-      employee_id: employeeId,
-    },
-    include: {
-      leave_balance_details_parent: {
+      prisma.hrms_d_leave_balance.findFirst({
+        where: { employee_id: employeeId },
         include: {
-          leave_balance_details_LeaveType: true,
+          leave_balance_details_parent: {
+            include: {
+              leave_balance_details_LeaveType: true,
+            },
+          },
         },
-      },
-    },
-  });
+      }),
 
-  const leaveEncashments = await prisma.hrms_d_leave_encashment.findMany({
-    where: {
-      employee_id: employeeId,
-    },
-    include: {
-      encashment_leave_types: true,
-    },
-    orderBy: {
-      encashment_date: "desc",
-    },
-  });
+      prisma.hrms_d_leave_encashment.findMany({
+        where: { employee_id: employeeId },
+        include: { encashment_leave_types: true },
+        orderBy: { encashment_date: "desc" },
+        take: 10, // ✅ optional: limit to latest 10 encashments
+      }),
+    ]
+  );
 
   return {
     leaveApplications,
@@ -158,98 +150,9 @@ const getEmployeeLeavesData = async (employeeId) => {
   };
 };
 
-// const getEmployeeAttendanceSummary = async (employeeId) => {
-//   const today = moment().startOf("day");
-//   const weekStart = moment().startOf("isoWeek");
-//   const lastWeekStart = moment().subtract(1, "week").startOf("isoWeek");
-//   const lastWeekEnd = moment().subtract(1, "week").endOf("isoWeek");
-//   const monthStart = moment().startOf("month");
-//   const lastMonthStart = moment().subtract(1, "month").startOf("month");
-//   const lastMonthEnd = moment().subtract(1, "month").endOf("month");
-
-//   const [todayData, weekData, lastWeekData, monthData, lastMonthData] =
-//     await Promise.all([
-//       prisma.hrms_d_daily_attendance_entry.findFirst({
-//         where: {
-//           employee_id: employeeId,
-//           attendance_date: {
-//             gte: today.toDate(),
-//             lt: moment(today).add(1, "day").toDate(),
-//           },
-//         },
-//         orderBy: { attendance_date: "desc" },
-//       }),
-//       prisma.hrms_d_daily_attendance_entry.findMany({
-//         where: {
-//           employee_id: employeeId,
-//           attendance_date: {
-//             gte: weekStart.toDate(),
-//             lte: moment().toDate(),
-//           },
-//         },
-//       }),
-//       prisma.hrms_d_daily_attendance_entry.findMany({
-//         where: {
-//           employee_id: employeeId,
-//           attendance_date: {
-//             gte: lastWeekStart.toDate(),
-//             lte: lastWeekEnd.toDate(),
-//           },
-//         },
-//       }),
-//       prisma.hrms_d_daily_attendance_entry.findMany({
-//         where: {
-//           employee_id: employeeId,
-//           attendance_date: {
-//             gte: monthStart.toDate(),
-//             lte: moment().toDate(),
-//           },
-//         },
-//       }),
-//       prisma.hrms_d_daily_attendance_entry.findMany({
-//         where: {
-//           employee_id: employeeId,
-//           attendance_date: {
-//             gte: lastMonthStart.toDate(),
-//             lte: lastMonthEnd.toDate(),
-//           },
-//         },
-//       }),
-//     ]);
-
-//   const sumHours = (entries) =>
-//     entries.reduce(
-//       (sum, a) => sum + (a.working_hours ? Number(a.working_hours) : 0),
-//       0
-//     );
-
-//   return {
-//     today: {
-//       check_in_time: todayData?.check_in_time,
-//       check_out_time: todayData?.check_out_time,
-//       working_hours: Number(todayData?.working_hours || 0),
-//     },
-//     thisWeek: {
-//       total_hours: sumHours(weekData),
-//       target: 40,
-//     },
-//     lastWeek: {
-//       total_hours: sumHours(lastWeekData),
-//       target: 40,
-//     },
-//     thisMonth: {
-//       total_hours: sumHours(monthData),
-//       target: 160,
-//     },
-//     lastMonth: {
-//       total_hours: sumHours(lastMonthData),
-//       target: 160,
-//     },
-//   };
-// };
-
 const getEmployeeAttendanceSummary = async (employeeId) => {
   const today = moment().startOf("day");
+  const now = moment();
   const weekStart = moment().startOf("isoWeek");
   const lastWeekStart = moment().subtract(1, "week").startOf("isoWeek");
   const lastWeekEnd = moment().subtract(1, "week").endOf("isoWeek");
@@ -257,55 +160,21 @@ const getEmployeeAttendanceSummary = async (employeeId) => {
   const lastMonthStart = moment().subtract(1, "month").startOf("month");
   const lastMonthEnd = moment().subtract(1, "month").endOf("month");
 
-  const [todayData, weekData, lastWeekData, monthData, lastMonthData] =
-    await Promise.all([
-      prisma.hrms_d_daily_attendance_entry.findFirst({
-        where: {
-          employee_id: employeeId,
-          attendance_date: {
-            gte: today.toDate(),
-            lt: moment(today).add(1, "day").toDate(),
-          },
-        },
-        orderBy: { attendance_date: "desc" },
-      }),
-      prisma.hrms_d_daily_attendance_entry.findMany({
-        where: {
-          employee_id: employeeId,
-          attendance_date: {
-            gte: weekStart.toDate(),
-            lte: moment().toDate(),
-          },
-        },
-      }),
-      prisma.hrms_d_daily_attendance_entry.findMany({
-        where: {
-          employee_id: employeeId,
-          attendance_date: {
-            gte: lastWeekStart.toDate(),
-            lte: lastWeekEnd.toDate(),
-          },
-        },
-      }),
-      prisma.hrms_d_daily_attendance_entry.findMany({
-        where: {
-          employee_id: employeeId,
-          attendance_date: {
-            gte: monthStart.toDate(),
-            lte: moment().toDate(),
-          },
-        },
-      }),
-      prisma.hrms_d_daily_attendance_entry.findMany({
-        where: {
-          employee_id: employeeId,
-          attendance_date: {
-            gte: lastMonthStart.toDate(),
-            lte: lastMonthEnd.toDate(),
-          },
-        },
-      }),
-    ]);
+  console.time("attendance-query");
+
+  const allEntries = await prisma.hrms_d_daily_attendance_entry.findMany({
+    where: {
+      employee_id: employeeId,
+      attendance_date: {
+        gte: lastMonthStart.toDate(),
+        lte: now.toDate(),
+      },
+    },
+  });
+
+  const todayData = allEntries.find((entry) =>
+    moment(entry.attendance_date).isSame(today, "day")
+  );
 
   const sumHours = (entries) =>
     entries.reduce(
@@ -313,16 +182,23 @@ const getEmployeeAttendanceSummary = async (employeeId) => {
       0
     );
 
+  const filterByRange = (start, end) =>
+    allEntries.filter((entry) =>
+      moment(entry.attendance_date).isBetween(start, end, null, "[]")
+    );
+
   const formatPercentage = (worked, target) =>
     target > 0 ? Math.round((worked / target) * 100) : 0;
 
-  const targetWeek = 40; // hrs
-  const targetMonth = 160; // hrs
+  const thisWeek = filterByRange(weekStart, now);
+  const lastWeek = filterByRange(lastWeekStart, lastWeekEnd);
+  const thisMonth = filterByRange(monthStart, now);
+  const lastMonth = filterByRange(lastMonthStart, lastMonthEnd);
 
-  const thisWeekHours = sumHours(weekData);
-  const lastWeekHours = sumHours(lastWeekData);
-  const thisMonthHours = sumHours(monthData);
-  const lastMonthHours = sumHours(lastMonthData);
+  const targetWeek = 40;
+  const targetMonth = 160;
+
+  console.timeEnd("attendance-query");
 
   return {
     today: {
@@ -331,30 +207,274 @@ const getEmployeeAttendanceSummary = async (employeeId) => {
       working_hours: Number(todayData?.working_hours || 0),
     },
     thisWeek: {
-      total_hours: thisWeekHours,
+      total_hours: sumHours(thisWeek),
       target: targetWeek,
-      percentage: formatPercentage(thisWeekHours, targetWeek),
+      percentage: formatPercentage(sumHours(thisWeek), targetWeek),
     },
     lastWeek: {
-      total_hours: lastWeekHours,
+      total_hours: sumHours(lastWeek),
       target: targetWeek,
-      percentage: formatPercentage(lastWeekHours, targetWeek),
+      percentage: formatPercentage(sumHours(lastWeek), targetWeek),
     },
     thisMonth: {
-      total_hours: thisMonthHours,
+      total_hours: sumHours(thisMonth),
       target: targetMonth,
-      percentage: formatPercentage(thisMonthHours, targetMonth),
+      percentage: formatPercentage(sumHours(thisMonth), targetMonth),
     },
     lastMonth: {
-      total_hours: lastMonthHours,
+      total_hours: sumHours(lastMonth),
       target: targetMonth,
-      percentage: formatPercentage(lastMonthHours, targetMonth),
+      percentage: formatPercentage(sumHours(lastMonth), targetMonth),
     },
   };
 };
 
+// const getEmployeeAttendanceSummary = async (employeeId) => {
+//   const today = new Date();
+//   today.setHours(0, 0, 0, 0);
+//   const now = new Date();
+
+//   const startOfWeek = new Date(today);
+//   startOfWeek.setDate(today.getDate() - ((today.getDay() + 6) % 7));
+
+//   const startOfLastWeek = new Date(startOfWeek);
+//   startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
+//   const endOfLastWeek = new Date(startOfWeek);
+//   endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
+
+//   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+//   const startOfLastMonth = new Date(
+//     today.getFullYear(),
+//     today.getMonth() - 1,
+//     1
+//   );
+//   const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
+
+//   console.time("attendance-query");
+
+//   const allEntries = await prisma.hrms_d_daily_attendance_entry.findMany({
+//     where: {
+//       employee_id: employeeId,
+//       attendance_date: {
+//         gte: startOfLastMonth,
+//         lte: now,
+//       },
+//     },
+//     select: {
+//       attendance_date: true,
+//       check_in_time: true,
+//       check_out_time: true,
+//       working_hours: true,
+//     },
+//   });
+
+//   const buckets = {
+//     thisWeek: [],
+//     lastWeek: [],
+//     thisMonth: [],
+//     lastMonth: [],
+//   };
+
+//   let todayData = null;
+//   const todayISO = today.toISOString().slice(0, 10);
+
+//   for (const entry of allEntries) {
+//     const entryDate = new Date(entry.attendance_date);
+//     const entryISO = entryDate.toISOString().slice(0, 10);
+
+//     if (entryISO === todayISO) {
+//       todayData = entry;
+//     }
+
+//     if (entryDate >= startOfWeek && entryDate <= now) {
+//       buckets.thisWeek.push(entry);
+//     }
+
+//     if (entryDate >= startOfLastWeek && entryDate <= endOfLastWeek) {
+//       buckets.lastWeek.push(entry);
+//     }
+
+//     if (entryDate >= startOfMonth && entryDate <= now) {
+//       buckets.thisMonth.push(entry);
+//     }
+
+//     if (entryDate >= startOfLastMonth && entryDate <= endOfLastMonth) {
+//       buckets.lastMonth.push(entry);
+//     }
+//   }
+
+//   const sumHours = (entries) =>
+//     entries.reduce(
+//       (sum, a) => sum + (a.working_hours ? Number(a.working_hours) : 0),
+//       0
+//     );
+
+//   const formatPercentage = (worked, target) =>
+//     target > 0 ? Math.round((worked / target) * 100) : 0;
+
+//   const targetWeek = 40;
+//   const targetMonth = 160;
+
+//   console.timeEnd("attendance-query");
+
+//   return {
+//     today: {
+//       check_in_time: todayData?.check_in_time,
+//       check_out_time: todayData?.check_out_time,
+//       working_hours: Number(todayData?.working_hours || 0),
+//     },
+//     thisWeek: {
+//       total_hours: sumHours(buckets.thisWeek),
+//       target: targetWeek,
+//       percentage: formatPercentage(sumHours(buckets.thisWeek), targetWeek),
+//     },
+//     lastWeek: {
+//       total_hours: sumHours(buckets.lastWeek),
+//       target: targetWeek,
+//       percentage: formatPercentage(sumHours(buckets.lastWeek), targetWeek),
+//     },
+//     thisMonth: {
+//       total_hours: sumHours(buckets.thisMonth),
+//       target: targetMonth,
+//       percentage: formatPercentage(sumHours(buckets.thisMonth), targetMonth),
+//     },
+//     lastMonth: {
+//       total_hours: sumHours(buckets.lastMonth),
+//       target: targetMonth,
+//       percentage: formatPercentage(sumHours(buckets.lastMonth), targetMonth),
+//     },
+//   };
+// };
+
+const getEmployeeDetails = async (employeeId) => {
+  return await prisma.hrms_d_employee.findUnique({
+    where: { id: employeeId },
+    select: {
+      full_name: true,
+      phone_number: true,
+      email: true,
+      join_date: true,
+      profile_pic: true,
+      hrms_employee_designation: {
+        select: {
+          designation_name: true,
+        },
+      },
+      hrms_employee_department: {
+        select: {
+          department_name: true,
+        },
+      },
+    },
+  });
+};
+
+const getAllUpcomingBirthdays = async (page = 1, size = 10) => {
+  const today = moment();
+  const tomorrow = moment().add(1, "day");
+
+  const employees = await prisma.hrms_d_employee.findMany({
+    where: {
+      date_of_birth: {
+        not: null,
+      },
+    },
+    select: {
+      id: true,
+      first_name: true,
+      last_name: true,
+      designation_id: true,
+      profile_pic: true,
+      date_of_birth: true,
+      hrms_employee_designation: {
+        select: {
+          designation_name: true,
+        },
+      },
+    },
+  });
+
+  const todayList = [];
+  const tomorrowList = [];
+  const others = [];
+
+  employees.forEach((emp) => {
+    const dob = moment(emp.date_of_birth);
+    const currentYear = today.year();
+    let birthdayThisYear = moment(
+      `${currentYear}-${dob.format("MM-DD")}`,
+      "YYYY-MM-DD"
+    );
+
+    if (birthdayThisYear.isBefore(today, "day")) {
+      birthdayThisYear.add(1, "year");
+    }
+
+    const formattedLabel = birthdayThisYear.isSame(today, "day")
+      ? "today"
+      : birthdayThisYear.isSame(tomorrow, "day")
+      ? "tomorrow"
+      : birthdayThisYear.format("DD MMM YYYY");
+
+    const birthdayObj = {
+      id: emp.id,
+      name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+      designation: emp.hrms_employee_designation?.designation_name || "",
+      profile_pic: emp.profile_pic || "",
+      birthday: birthdayThisYear.toDate(),
+      label: formattedLabel,
+    };
+
+    if (formattedLabel === "today") {
+      todayList.push(birthdayObj);
+    } else if (formattedLabel === "tomorrow") {
+      tomorrowList.push(birthdayObj);
+    } else {
+      others.push(birthdayObj);
+    }
+  });
+
+  const all = [...todayList, ...tomorrowList, ...others].sort(
+    (a, b) => a.birthday - b.birthday
+  );
+
+  const totalCount = all.length;
+  const totalPages = Math.ceil(totalCount / size);
+  const offset = (page - 1) * size;
+
+  const paginated = all.slice(offset, offset + size);
+
+  if (paginated.length === 0) {
+    return {
+      data: {},
+      currentPage: page,
+      size,
+      totalPages,
+      totalCount,
+    };
+  }
+
+  const grouped = {};
+  paginated.forEach((item) => {
+    const { birthday, label, ...rest } = item;
+    if (!grouped[label]) {
+      grouped[label] = [];
+    }
+    grouped[label].push(rest);
+  });
+
+  return {
+    data: grouped,
+    currentPage: page,
+    size,
+    totalPages,
+    totalCount,
+  };
+};
 module.exports = {
   getEmployeeDashboardData,
   getEmployeeLeavesData,
   getEmployeeAttendanceSummary,
+  getEmployeeDetails,
+  getAllUpcomingBirthdays,
 };

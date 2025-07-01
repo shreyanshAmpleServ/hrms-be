@@ -11,8 +11,34 @@ const getEmployeeLeavesData = async (employeeId) => {
 const getEmployeeAttendanceSummary = async (employeeId) => {
   return await employeeDashboardModel.getEmployeeAttendanceSummary(employeeId);
 };
+
+const getEmployeeDetails = async (employeeId) => {
+  const employee = await employeeDashboardModel.getEmployeeDetails(employeeId);
+  if (!employee) {
+    throw new Error("Employee not found");
+  }
+
+  return {
+    full_name: employee.full_name,
+    phone_number: employee.phone_number,
+    email: employee.email,
+    join_date: employee.join_date,
+    profile_pic: employee.profile_pic,
+    designation:
+      employee.hrms_employee_designation?.designation_name || "Not Assigned",
+    department:
+      employee.hrms_employee_department?.department_name || "Not Assigned",
+  };
+};
+
+const getAllUpcomingBirthdays = async () => {
+  return await employeeDashboardModel.getAllUpcomingBirthdays();
+};
+
 module.exports = {
   getEmployeeDashboardData,
   getEmployeeLeavesData,
   getEmployeeAttendanceSummary,
+  getEmployeeDetails,
+  getAllUpcomingBirthdays,
 };
