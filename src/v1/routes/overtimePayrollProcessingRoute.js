@@ -21,11 +21,11 @@ router.get(
   overtimePayrollProcessingController.findOvertimePayrollProcessing
 );
 
-// router.put(
-//   "/midmonth-payroll-processing/:id",
-//   authenticateToken,
-//   overtimePayrollProcessingController.updateOvertimePayrollProcessing
-// );
+router.put(
+  "/overtime-payroll-processing/:id",
+  authenticateToken,
+  overtimePayrollProcessingController.updateOvertimePayrollProcessing
+);
 
 router.delete(
   "/overtime-payroll-processing/:id",

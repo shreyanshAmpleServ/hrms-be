@@ -42,7 +42,7 @@ const serializeSettlementData = (data) => ({
 });
 
 //  Create
-const createFinalSettlement = async (data) => {
+const createFinalSettlementProcessing = async (data) => {
   try {
     const result = await prisma.hrms_d_finalsettlement_processing.create({
       data: {
@@ -52,10 +52,10 @@ const createFinalSettlement = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        hrms_d_employee: {
+        final_settlement_employee: {
           select: { id: true, employee_code: true, full_name: true },
         },
-        hrms_m_pay_component: {
+        finalsettlement_component: {
           select: { id: true, component_name: true, component_code: true },
         },
       },
@@ -174,7 +174,7 @@ const deleteFinalSettlement = async (id) => {
 };
 
 module.exports = {
-  createFinalSettlement,
+  createFinalSettlementProcessing,
   getAllFinalSettlements,
   getFinalSettlementById,
   updateFinalSettlement,

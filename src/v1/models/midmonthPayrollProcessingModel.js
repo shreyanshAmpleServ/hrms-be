@@ -47,6 +47,13 @@ const createMidMonthPayrollProcessing = async (data) => {
             full_name: true,
           },
         },
+        midmonth_payroll_processing_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
         midmonth_payroll_processing_component: {
           select: {
             id: true,
@@ -130,6 +137,13 @@ const getAllMidMonthPayrollProcessing = async (
             component_name: true,
           },
         },
+        midmonth_payroll_processing_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
         midmonth_payroll_processing_center1: {
           select: { id: true, name: true },
         },
@@ -196,6 +210,13 @@ const updateMidMonthPayrollProcessing = async (id, data) => {
           select: {
             id: true,
             component_name: true,
+          },
+        },
+        midmonth_payroll_processing_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
           },
         },
         midmonth_payroll_processing_center1: {

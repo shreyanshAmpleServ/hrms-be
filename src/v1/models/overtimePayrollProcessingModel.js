@@ -136,10 +136,6 @@ const getAllOvertimePayrollProcessing = async (
 const findOvertimePayrollProcessingById = async (id) => {
   const result = await prisma.hrms_d_overtime_payroll_processing.findUnique({
     where: { id: Number(id) },
-    include: {
-      overtime_payroll_processing_employee: true,
-      overtime_payroll_processing_component: true,
-    },
   });
   if (!result) throw new CustomError("Record not found", 404);
   return result;
