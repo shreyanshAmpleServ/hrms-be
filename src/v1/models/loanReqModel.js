@@ -5,18 +5,18 @@ const prisma = new PrismaClient();
 
 const serializeData = (data) => {
   return {
-    // employee_id: Number(data.employee_id) || null,
-    // loan_type_id: Number(data.loan_type_id) || null,
+    employee_id: Number(data.employee_id) || null,
+    loan_type_id: Number(data.loan_type_id) || null,
     amount: Number(data.amount) || 0,
     emi_months: Number(data.emi_months) || 0,
-    currency: data.currency,
+    currency: Number(data.currency),
     status: data.status || "",
-    loan_req_employee: {
-      connect: { id: Number(data?.employee_id) || null },
-    },
-    loan_types: {
-      connect: { id: Number(data?.loan_type_id) || null },
-    },
+    // loan_req_employee: {
+    //   connect: { id: Number(data?.employee_id) || null },
+    // },
+    // loan_types: {
+    //   connect: { id: Number(data?.loan_type_id) || null },
+    // },
   };
 };
 
@@ -36,6 +36,13 @@ const createLoanRequest = async (data) => {
           select: {
             full_name: true,
             id: true,
+          },
+        },
+        loan_req_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
           },
         },
         loan_types: {
