@@ -9,6 +9,7 @@ const serializeData = (data) => {
     // loan_type_id: Number(data.loan_type_id) || null,
     amount: Number(data.amount) || 0,
     emi_months: Number(data.emi_months) || 0,
+    currency: data.currency,
     status: data.status || "",
     loan_req_employee: {
       connect: { id: Number(data?.employee_id) || null },
@@ -89,6 +90,13 @@ const updateLoanRequest = async (id, data) => {
             id: true,
           },
         },
+        loan_req_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
+        },
         loan_types: {
           select: {
             loan_name: true,
@@ -167,6 +175,13 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
           select: {
             loan_name: true,
             id: true,
+          },
+        },
+        loan_req_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
           },
         },
       },
