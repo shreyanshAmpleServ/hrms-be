@@ -1054,17 +1054,19 @@ model hrms_m_company_master {
 }
 
 model hrms_m_currency_master {
-  id                          Int                                             @id(map: "PK__hrms_m_c__3213E83F74D02FD5") @default(autoincrement())
-  currency_code               String?                                         @db.VarChar(5)
-  currency_name               String?                                         @db.NVarChar(100)
-  createdate                  DateTime?                                       @default(now(), map: "DF__hrms_m_cu__creat__339FAB6E") @db.DateTime
-  createdby                   Int
-  updatedate                  DateTime?                                       @db.DateTime
-  updatedby                   Int?
-  log_inst                    Int?
-  is_active                   String?                                         @default("Y") @db.Char(1)
-  travel_expense_currency     hrms_d_travel_expense[]
-  pay_component_line_currency hrms_d_employee_pay_component_assignment_line[]
+  id                                   Int                                             @id(map: "PK__hrms_m_c__3213E83F74D02FD5") @default(autoincrement())
+  currency_code                        String?                                         @db.VarChar(5)
+  currency_name                        String?                                         @db.NVarChar(100)
+  createdate                           DateTime?                                       @default(now(), map: "DF__hrms_m_cu__creat__339FAB6E") @db.DateTime
+  createdby                            Int
+  updatedate                           DateTime?                                       @db.DateTime
+  updatedby                            Int?
+  log_inst                             Int?
+  is_active                            String?                                         @default("Y") @db.Char(1)
+  travel_expense_currency              hrms_d_travel_expense[]
+  pay_component_line_currency          hrms_d_employee_pay_component_assignment_line[]
+  hrms_monthly_payroll_currency        hrms_d_midmonth_payroll_processing[]
+  midmonth_payroll_processing_currency hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCurrency")
 }
 
 model hrms_m_department_master {
@@ -1245,16 +1247,16 @@ model hrms_m_letter_type {
 }
 
 model hrms_m_loan_type {
-  id            Int      @id(map: "PK__hrms_m_l__3213E83F83117D15") @default(autoincrement())
-  loan_name     String?  @db.NVarChar(100)
-  interest_rate Decimal? @db.Decimal(5, 2)
-  is_active     String?  @default("Y") @db.Char(1)
-  createdate DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
-  createdby  Int
-  updatedate DateTime?             @db.DateTime
-  updatedby  Int?
-  log_inst   Int?
-  loan_types hrms_d_loan_request[]
+  id            Int                   @id(map: "PK__hrms_m_l__3213E83F83117D15") @default(autoincrement())
+  loan_name     String?               @db.NVarChar(100)
+  interest_rate Decimal?              @db.Decimal(5, 2)
+  is_active     String?               @default("Y") @db.Char(1)
+  createdate    DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
+  createdby     Int
+  updatedate    DateTime?             @db.DateTime
+  updatedby     Int?
+  log_inst      Int?
+  loan_types    hrms_d_loan_request[]
 }
 
 model hrms_m_pay_component {
@@ -1672,7 +1674,7 @@ model hrms_d_monthly_payroll_processing {
   payroll_start_date            DateTime?       @db.Date
   payroll_end_date              DateTime?       @db.Date
   payroll_paid_days             Int?
-  pay_currency                  String          @db.NVarChar(3)
+  pay_currency                  Int?
   total_earnings                Decimal         @db.Decimal(18, 4)
   taxable_earnings              Decimal         @db.Decimal(18, 4)
   tax_amount                    Decimal         @db.Decimal(18, 4)
@@ -1990,19 +1992,19 @@ model hrms_d_finalsettlement_processing {
 }
 
 model hrms_d_midmonth_payroll_processing {
-  id                                    Int                  @id @default(autoincrement())
+  id                                    Int                     @id @default(autoincrement())
   employee_id                           Int
-  payroll_month                         Int                  @db.SmallInt
-  payroll_year                          Int                  @db.SmallInt
-  payroll_week                          Int                  @db.SmallInt
-  pay_currency                          String               @db.NVarChar(3)
+  payroll_month                         Int                     @db.SmallInt
+  payroll_year                          Int                     @db.SmallInt
+  payroll_week                          Int                     @db.SmallInt
+  pay_currency                          Int?
   component_id                          Int
-  net_pay                               Decimal              @db.Decimal(18, 2)
-  status                                String               @db.NVarChar(20)
-  execution_date                        DateTime?            @db.Date
-  pay_date                              DateTime?            @db.DateTime
-  doc_date                              DateTime?            @db.Date
-  processed                             String               @default("N", map: "DF__hrms_d_mi__proce__0E591826") @db.Char(1)
+  net_pay                               Decimal                 @db.Decimal(18, 2)
+  status                                String                  @db.NVarChar(20)
+  execution_date                        DateTime?               @db.Date
+  pay_date                              DateTime?               @db.DateTime
+  doc_date                              DateTime?               @db.Date
+  processed                             String                  @default("N", map: "DF__hrms_d_mi__proce__0E591826") @db.Char(1)
   je_transid                            Int?
   project_id                            Int?
   cost_center1_id                       Int?
@@ -2010,23 +2012,27 @@ model hrms_d_midmonth_payroll_processing {
   cost_center3_id                       Int?
   cost_center4_id                       Int?
   cost_center5_id                       Int?
-  approved1                             String               @default("N", map: "DF__hrms_d_mi__appro__0F4D3C5F") @db.Char(1)
+  approved1                             String                  @default("N", map: "DF__hrms_d_mi__appro__0F4D3C5F") @db.Char(1)
   approver1_id                          Int?
-  employee_email                        String?              @db.NVarChar(100)
-  remarks                               String?              @db.NVarChar(250)
-  createdate                            DateTime             @db.DateTime
+  employee_email                        String?                 @db.NVarChar(100)
+  remarks                               String?                 @db.NVarChar(250)
+  createdate                            DateTime                @db.DateTime
   createdby                             Int
-  updatedate                            DateTime?            @db.DateTime
+  updatedate                            DateTime?               @db.DateTime
   updatedby                             Int?
   log_inst                              Int?
-  midmonth_payroll_processing_component hrms_m_pay_component @relation("MidMonthPayrollProcessingComponent", fields: [component_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mi__compo__0D64F3ED")
-  midmonth_payroll_processing_project   hrms_m_projects?     @relation("MidMonthPayrollProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  midmonth_payroll_processing_employee  hrms_d_employee?     @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center1   hrms_m_costcenters?  @relation("MidMonthCostCenter1", fields: [cost_center1_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center2   hrms_m_costcenters?  @relation("MidMonthCostCenter2", fields: [cost_center2_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center3   hrms_m_costcenters?  @relation("MidMonthCostCenter3", fields: [cost_center3_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center4   hrms_m_costcenters?  @relation("MidMonthCostCenter4", fields: [cost_center4_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center5   hrms_m_costcenters?  @relation("MidMonthCostCenter5", fields: [cost_center5_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_component hrms_m_pay_component    @relation("MidMonthPayrollProcessingComponent", fields: [component_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mi__compo__0D64F3ED")
+  midmonth_payroll_processing_project   hrms_m_projects?        @relation("MidMonthPayrollProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  midmonth_payroll_processing_employee  hrms_d_employee?        @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center1   hrms_m_costcenters?     @relation("MidMonthCostCenter1", fields: [cost_center1_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center2   hrms_m_costcenters?     @relation("MidMonthCostCenter2", fields: [cost_center2_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center3   hrms_m_costcenters?     @relation("MidMonthCostCenter3", fields: [cost_center3_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center4   hrms_m_costcenters?     @relation("MidMonthCostCenter4", fields: [cost_center4_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center5   hrms_m_costcenters?     @relation("MidMonthCostCenter5", fields: [cost_center5_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  hrms_m_currency_master                hrms_m_currency_master? @relation(fields: [hrms_m_currency_masterId], references: [id])
+  midmonth_payroll_processing_currency  hrms_m_currency_master? @relation("MidMonthCurrency", fields: [pay_currency], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  hrms_m_currency_masterId Int?
 }
 
 model hrms_d_overtime_payroll_processing {

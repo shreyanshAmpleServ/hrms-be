@@ -29,8 +29,9 @@ const findFinalSettlementProcessing = async (req, res, next) => {
       await finalSettlementProcessingService.findFinalSettlementProcessingById(
         req.params.id
       );
-    if (!reqData)
-      throw new CustomError("Final Settlement Processing not found", 404);
+    res
+      .status(200)
+      .success("Final Settlement Processing retrieved successfully", reqData);
   } catch (error) {
     next(error);
   }
@@ -61,7 +62,9 @@ const deleteFinalSettlementProcessing = async (req, res, next) => {
     await finalSettlementProcessingService.deleteFinalSettlementProcessing(
       req.params.id
     );
-    res.status(200).success("Probation review deleted successfully", null);
+    res
+      .status(200)
+      .success("Final Settlement Processing  deleted successfully", null);
   } catch (error) {
     next(error);
   }
