@@ -1,5 +1,5 @@
 const express = require("express");
-const loanEmiScheduleController = require("../controller/loanEmiScheduleController");
+const loanEmiScheduleController = require("../controller/loanEmiScheduleController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
@@ -33,7 +33,7 @@ router.get(
 router.patch(
   "/loan-emi-schedule/:id/status",
   authenticateToken,
-  loanEmiController.updateLoanEmiScheduleStatus
+  loanEmiScheduleController.updateLoanEmiScheduleStatus
 );
 
 module.exports = router;
