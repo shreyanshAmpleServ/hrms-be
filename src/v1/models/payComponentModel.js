@@ -81,14 +81,14 @@ const createPayComponent = async (data) => {
               name: true,
             },
           },
-          pay_component_for_line: {
-            select: {
-              id: true,
-              component_name: true,
-              component_code: true,
-              component_type: true,
-            },
-          },
+          // pay_component_for_line: {
+          //   select: {
+          //     id: true,
+          //     component_name: true,
+          //     component_code: true,
+          //     component_type: true,
+          //   },
+          // },
           pay_component_cost_center1: {
             select: {
               id: true,
@@ -382,14 +382,14 @@ const getAllPayComponent = async (
             name: true,
           },
         },
-        pay_component_for_line: {
-          select: {
-            id: true,
-            component_name: true,
-            component_code: true,
-            component_type: true,
-          },
-        },
+        // pay_component_for_line: {
+        //   select: {
+        //     id: true,
+        //     component_name: true,
+        //     component_code: true,
+        //     component_type: true,
+        //   },
+        // },
         pay_component_cost_center1: {
           select: {
             id: true,

@@ -15,23 +15,34 @@ const serializePayrollData = (data) => ({
   remarks: data.remarks || "",
 });
 
-// Create a new payroll entry
 // const createMonthlyPayroll = async (data) => {
 //   try {
 //     const serializedData = serializePayrollData(data);
+//     const { employee_id, payroll_month } = serializedData;
 
-//     const { employee_id, ...payrollData } = serializedData;
+//     // Check if payroll already exists for the same employee and month
+//     const existing = await prisma.hrms_d_monthly_payroll_processing.findFirst({
+//       where: {
+//         hrms_monthly_payroll_employee: { id: employee_id },
+//         payroll_month: payroll_month,
+//       },
+//     });
+
+//     if (existing) {
+//       throw new CustomError(
+//         `Payroll already exists for employee ID ${employee_id} in month ${payroll_month}`,
+//         400
+//       );
+//     }
 
 //     const reqData = await prisma.hrms_d_monthly_payroll_processing.create({
 //       data: {
-//         ...payrollData,
+//         ...serializedData,
 //         createdby: data.createdby || 1,
 //         createdate: new Date(),
 //         log_inst: data.log_inst || 1,
 //         hrms_monthly_payroll_employee: {
-//           connect: {
-//             id: employee_id,
-//           },
+//           connect: { id: employee_id },
 //         },
 //       },
 //       include: {
@@ -44,6 +55,7 @@ const serializePayrollData = (data) => ({
 //         },
 //       },
 //     });
+
 //     return reqData;
 //   } catch (error) {
 //     throw new CustomError(
@@ -52,24 +64,36 @@ const serializePayrollData = (data) => ({
 //     );
 //   }
 // };
-
 const createMonthlyPayroll = async (data) => {
   try {
     const serializedData = serializePayrollData(data);
     const { employee_id, payroll_month } = serializedData;
 
     // Check if payroll already exists for the same employee and month
-    const existing = await prisma.hrms_d_monthly_payroll_processing.findFirst({
-      where: {
-        hrms_monthly_payroll_employee: { id: employee_id },
-        payroll_month: payroll_month,
-      },
-    });
+    // const existing = await prisma.hrms_d_monthly_payroll_processing.findFirst({
+    //   where: {
+    //     hrms_monthly_payroll_employee: { id: employee_id },
+    //     payroll_month: payroll_month,
+    //   },
+    // });
+    try {
+      const result = await prisma.$queryRawUnsafe(`
+      SELECT TOP 1 *
+      FROM hrms_d_monthly_payroll_processing
+      WHERE employee_id = ${employee_id}
+        AND payroll_month = '${payroll_month}'
+    `);
 
-    if (existing) {
+      if (!result || result.length > 0) {
+        throw new CustomError(
+          `Payroll already exists for employee ID ${employee_id} in month ${payroll_month}`,
+          400
+        );
+      }
+    } catch (error) {
       throw new CustomError(
-        `Payroll already exists for employee ID ${employee_id} in month ${payroll_month}`,
-        400
+        `Error fetching payroll entry: ${error.message}`,
+        500
       );
     }
 
