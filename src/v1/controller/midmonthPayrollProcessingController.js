@@ -29,14 +29,21 @@ const findMidMonthPayrollProcessing = async (req, res, next) => {
       await midmonthPayrollProcessingService.findMidMonthPayrollProcessingById(
         req.params.id
       );
+
     if (!reqData)
       throw new CustomError("MidMonth Payroll Processing not found", 404);
+
+    res
+      .status(200)
+      .success("MidMonth Payroll Processing fetched successfully", reqData);
   } catch (error) {
     next(error);
   }
 };
 
 const updateMidMonthPayrollProcessing = async (req, res, next) => {
+  console.log("📥 Controller hit: GET /midmonth-payroll-processing/:id");
+
   try {
     const data = {
       ...req.body,

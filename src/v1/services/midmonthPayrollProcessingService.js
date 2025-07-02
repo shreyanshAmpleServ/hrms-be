@@ -6,8 +6,12 @@ const createMidMonthPayrollProcessing = async (data) => {
   );
 };
 
-const findMidMonthPayrollProcessing = async (id) => {
-  return await midmonthPayrollProcessingModel.findMidMonthPayrollProcessing(id);
+const findMidMonthPayrollProcessingById = async (id) => {
+  console.log("🔍 Inside service: finding midmonth payroll by ID", id);
+
+  return await midmonthPayrollProcessingModel.findMidMonthPayrollProcessingById(
+    id
+  );
 };
 
 const updateMidMonthPayrollProcessing = async (id, data) => {
@@ -41,7 +45,7 @@ const getAllMidMonthPayrollProcessing = async (
 
 module.exports = {
   createMidMonthPayrollProcessing,
-  findMidMonthPayrollProcessing,
+  findMidMonthPayrollProcessingById,
   updateMidMonthPayrollProcessing,
   deleteMidMonthPayrollProcessing,
   getAllMidMonthPayrollProcessing,
