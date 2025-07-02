@@ -19,6 +19,7 @@ const getEmployeeDetails = async (employeeId) => {
   }
 
   return {
+    id: employee.id,
     full_name: employee.full_name,
     phone_number: employee.phone_number,
     email: employee.email,

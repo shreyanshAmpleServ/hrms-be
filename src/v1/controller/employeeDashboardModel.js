@@ -350,6 +350,7 @@ const getEmployeeDetails = async (employeeId) => {
   return await prisma.hrms_d_employee.findUnique({
     where: { id: employeeId },
     select: {
+      id: true,
       full_name: true,
       phone_number: true,
       email: true,
@@ -381,6 +382,7 @@ const getAllUpcomingBirthdays = async (page = 1, size = 10) => {
     },
     select: {
       id: true,
+
       first_name: true,
       last_name: true,
       designation_id: true,
