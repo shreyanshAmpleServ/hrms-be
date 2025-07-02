@@ -540,13 +540,111 @@ const findEmployeeById = async (id) => {
  * @returns {Promise<Object>} The paginated employee data.
  * @throws {CustomError} If retrieval fails.
  */
+// const getAllEmployee = async (
+//   page,
+//   size,
+//   search,
+//   startDate,
+//   endDate,
+//   is_active
+// ) => {
+//   try {
+//     if (!page || page === 0) {
+//       page = 1;
+//     }
+//     size = size || 10;
+//     const skip = (page - 1) * size;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         {
+//           hrms_employee_designation: {
+//             designation_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         // {
+//         //   experiance_of_employee: {
+//         //     company_name: { contains: search.toLowerCase() },
+//         //   },
+//         // },
+//         {
+//           hrms_employee_department: {
+//             department_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         { first_name: { contains: search.toLowerCase() } },
+//         { full_name: { contains: search.toLowerCase() } },
+//         { employee_code: { contains: search.toLowerCase() } },
+//       ];
+//     }
+
+//     if (startDate && endDate && is_active !== "true") {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = { gte: start, lte: end };
+//       }
+//     }
+
+//     if (is_active === "true") {
+//       filters.status = "Active";
+//     }
+
+//     const employees = await prisma.hrms_d_employee.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       include: {
+//         hrms_employee_address: {
+//           include: {
+//             employee_state: {
+//               select: { id: true, name: true },
+//             },
+//             employee_country: {
+//               select: { id: true, name: true },
+//             },
+//           },
+//         },
+//         hrms_employee_designation: {
+//           select: { id: true, designation_name: true },
+//         },
+//         hrms_employee_department: {
+//           select: { id: true, department_name: true },
+//         },
+//         hrms_employee_bank: {
+//           select: { id: true, bank_name: true },
+//         },
+//         experiance_of_employee: true,
+//         eduction_of_employee: true,
+//       },
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//     });
+
+//     const totalCount = await prisma.hrms_d_employee.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: employees,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     console.error("Error employee get : ", error);
+//     throw new CustomError("Error retrieving employees", 503);
+//   }
+// };
+
 const getAllEmployee = async (
   page,
   size,
   search,
   startDate,
   endDate,
-  is_active
+  status
 ) => {
   try {
     if (!page || page === 0) {
@@ -556,30 +654,28 @@ const getAllEmployee = async (
     const skip = (page - 1) * size;
 
     const filters = {};
+
+    // Search filter
     if (search) {
+      const lowerSearch = search.toLowerCase();
       filters.OR = [
         {
           hrms_employee_designation: {
-            designation_name: { contains: search.toLowerCase() },
+            designation_name: { contains: lowerSearch },
           },
         },
-        // {
-        //   experiance_of_employee: {
-        //     company_name: { contains: search.toLowerCase() },
-        //   },
-        // },
         {
           hrms_employee_department: {
-            department_name: { contains: search.toLowerCase() },
+            department_name: { contains: lowerSearch },
           },
         },
-        { first_name: { contains: search.toLowerCase() } },
-        { full_name: { contains: search.toLowerCase() } },
-        { employee_code: { contains: search.toLowerCase() } },
+        { first_name: { contains: lowerSearch } },
+        { full_name: { contains: lowerSearch } },
+        { employee_code: { contains: lowerSearch } },
       ];
     }
 
-    if (startDate && endDate && is_active !== "true") {
+    if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
@@ -587,8 +683,8 @@ const getAllEmployee = async (
       }
     }
 
-    if (is_active === "true") {
-      filters.status = "Active";
+    if (status !== undefined && status !== "") {
+      filters.status = status;
     }
 
     const employees = await prisma.hrms_d_employee.findMany({
@@ -598,12 +694,8 @@ const getAllEmployee = async (
       include: {
         hrms_employee_address: {
           include: {
-            employee_state: {
-              select: { id: true, name: true },
-            },
-            employee_country: {
-              select: { id: true, name: true },
-            },
+            employee_state: { select: { id: true, name: true } },
+            employee_country: { select: { id: true, name: true } },
           },
         },
         hrms_employee_designation: {

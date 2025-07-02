@@ -120,7 +120,7 @@ const getEmployeeLeavesData = async (employeeId) => {
         where: { employee_id: employeeId },
         include: { leave_types: true },
         orderBy: { start_date: "desc" },
-        take: 10, // ✅ optional: limit to latest 10 applications
+        take: 10,
       }),
 
       prisma.hrms_d_leave_balance.findFirst({
@@ -138,7 +138,7 @@ const getEmployeeLeavesData = async (employeeId) => {
         where: { employee_id: employeeId },
         include: { encashment_leave_types: true },
         orderBy: { encashment_date: "desc" },
-        take: 10, // ✅ optional: limit to latest 10 encashments
+        take: 10,
       }),
     ]
   );
@@ -350,6 +350,7 @@ const getEmployeeDetails = async (employeeId) => {
   return await prisma.hrms_d_employee.findUnique({
     where: { id: employeeId },
     select: {
+      id: true,
       full_name: true,
       phone_number: true,
       email: true,
@@ -381,6 +382,7 @@ const getAllUpcomingBirthdays = async (page = 1, size = 10) => {
     },
     select: {
       id: true,
+
       first_name: true,
       last_name: true,
       designation_id: true,

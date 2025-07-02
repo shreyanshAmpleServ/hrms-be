@@ -22,7 +22,7 @@ const getAllEmployee = async (
   search,
   startDate,
   endDate,
-  is_active,
+  status,
   priority
 ) => {
   return await employeeModel.getAllEmployee(
@@ -31,7 +31,7 @@ const getAllEmployee = async (
     search,
     startDate,
     endDate,
-    is_active,
+    status,
     priority
   );
 };
