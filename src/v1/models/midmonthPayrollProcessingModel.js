@@ -208,7 +208,7 @@ const findMidMonthPayrollProcessingById = async (id) => {
   }
 };
 
-// Update
+// Updates
 const updateMidMonthPayrollProcessing = async (id, data) => {
   try {
     const result = await prisma.hrms_d_midmonth_payroll_processing.update({
