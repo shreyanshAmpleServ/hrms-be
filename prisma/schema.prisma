@@ -1249,7 +1249,6 @@ model hrms_m_loan_type {
   loan_name     String?  @db.NVarChar(100)
   interest_rate Decimal? @db.Decimal(5, 2)
   is_active     String?  @default("Y") @db.Char(1)
-
   createdate DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
   createdby  Int
   updatedate DateTime?             @db.DateTime

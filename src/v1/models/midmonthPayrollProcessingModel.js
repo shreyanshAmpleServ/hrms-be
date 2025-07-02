@@ -165,14 +165,10 @@ const getAllMidMonthPayrollProcessing = async (
 };
 
 // Get By ID
-const findMidMonthPayrollProcessing = async (id) => {
+const findMidMonthPayrollProcessingById = async (id) => {
   try {
     const result = await prisma.hrms_d_midmonth_payroll_processing.findUnique({
       where: { id: parseInt(id) },
-      include: {
-        hrms_d_employee: { select: { id: true, full_name: true } },
-        hrms_m_pay_component: { select: { id: true, component_name: true } },
-      },
     });
     if (!result) throw new CustomError("Payroll record not found", 404);
     return result;
@@ -250,7 +246,7 @@ const deleteMidMonthPayrollProcessing = async (id) => {
 
 module.exports = {
   createMidMonthPayrollProcessing,
-  findMidMonthPayrollProcessing,
+  findMidMonthPayrollProcessingById,
   updateMidMonthPayrollProcessing,
   deleteMidMonthPayrollProcessing,
   getAllMidMonthPayrollProcessing,
