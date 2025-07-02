@@ -1,4 +1,4 @@
-const loanEmiScheduleModel = require("../models/loanEmiScheduleModel");
+const loanEmiScheduleModel = require("../models/loanEmiScheduleModel.js");
 
 const createLoanEmiSchedule = async (data) => {
   return await loanEmiScheduleModel.createLoanEmiSchedule(data);

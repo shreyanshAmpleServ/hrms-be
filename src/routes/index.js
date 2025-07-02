@@ -130,6 +130,7 @@ const overtimePayrollProcessingRoute = require("../v1/routes/overtimePayrollProc
 const midmonthPayrollProcessingRoute = require("../v1/routes/midmonthPayrollProcessingRoute.js");
 const BasicPayRoute = require("../v1/routes/BasicPayRoutes");
 const employeeDashboarRoute = require("../v1/routes/employeeDashboardRoute");
+const loanEmiScheduleRoute = require("../v1/routes/loanEmiScheduleRoute");
 
 const router = express.Router();
 
@@ -265,6 +266,7 @@ router.use("/v1", overtimePayrollProcessingRoute);
 router.use("/v1", midmonthPayrollProcessingRoute);
 router.use("/v1", employeeDashboarRoute);
 router.use("/v1", BasicPayRoute);
+router.use("/v1", loanEmiScheduleRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
