@@ -257,6 +257,87 @@ const deleteLoanRequest = async (id) => {
 };
 
 // Get all loan requests
+// const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+
+//     const filters = {};
+//     // Handle search
+//     if (search) {
+//       filters.OR = [
+//         {
+//           loan_req_employee: {
+//             full_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         {
+//           loan_types: {
+//             loan_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         {
+//           status: { contains: search.toLowerCase() },
+//         },
+//       ];
+//     }
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = {
+//           gte: start,
+//           lte: end,
+//         };
+//       }
+//     }
+//     const datas = await prisma.hrms_d_loan_request.findMany({
+//       where: filters,
+//       skip: skip,
+//       take: size,
+//       include: {
+//         loan_req_employee: {
+//           select: {
+//             full_name: true,
+//             id: true,
+//           },
+//         },
+//         loan_types: {
+//           select: {
+//             loan_name: true,
+//             id: true,
+//           },
+//         },
+//         loan_req_currency: {
+//           select: {
+//             id: true,
+//             currency_code: true,
+//             currency_name: true,
+//           },
+//         },
+//       },
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//     });
+//     // const totalCount = await prisma.hrms_d_loan_request.count();
+//     const totalCount = await prisma.hrms_d_loan_request.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: datas,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount: totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError("Error retrieving loan requests", 503);
+//   }
+// };
+
 const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -294,6 +375,7 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
         };
       }
     }
+
     const datas = await prisma.hrms_d_loan_request.findMany({
       where: filters,
       skip: skip,
@@ -318,10 +400,20 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
             currency_name: true,
           },
         },
+        loan_emi_loan_request: {
+          select: {
+            id: true,
+            due_month: true,
+            due_year: true,
+            emi_amount: true,
+            status: true,
+            payslip_id: true,
+          },
+        },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_loan_request.count();
+
     const totalCount = await prisma.hrms_d_loan_request.count({
       where: filters,
     });
