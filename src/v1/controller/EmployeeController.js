@@ -111,10 +111,20 @@ const getAllEmployee = async (req, res, next) => {
   }
 };
 
+const employeeOptions = async (req, res, next) => {
+  try {
+    const employees = await EmployeeService.employeeOptions();
+    res.status(200).success(null, employees);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createEmployee,
   findEmployeeById,
   updateEmployee,
   deleteEmployee,
   getAllEmployee,
+  employeeOptions,
 };

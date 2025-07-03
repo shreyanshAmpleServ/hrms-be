@@ -40,4 +40,11 @@ router.delete(
 // Route to get all employees
 router.get("/employee", authenticateToken, EmployeeController.getAllEmployee);
 
+// Route to get all employees options
+router.get(
+  "/employee-options",
+  authenticateToken,
+  EmployeeController.employeeOptions
+);
+
 module.exports = router;

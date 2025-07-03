@@ -36,10 +36,15 @@ const getAllEmployee = async (
   );
 };
 
+const employeeOptions = async () => {
+  return await employeeModel.employeeOptions();
+};
+
 module.exports = {
   createEmployee,
   findEmployeeById,
   updateEmployee,
   getAllEmployee,
   deleteEmployee,
+  employeeOptions,
 };

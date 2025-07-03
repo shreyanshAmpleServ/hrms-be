@@ -14,7 +14,7 @@ const prisma = new PrismaClient();
  */
 const surveyResponseSchema = z.object({
   employee_id: z
-    .string({
+    .number({
       required_error: "Employee ID is required",
     })
     .min(1, "Employee ID is required"),
@@ -30,7 +30,7 @@ const surveyResponseSchema = z.object({
     })
     .min(1, "Response text is required"),
   survey_id: z
-    .string({
+    .number({
       required_error: "Survey ID is required",
     })
     .min(1, "Survey ID is required"),
