@@ -6,7 +6,7 @@ const { authorizeRole } = require("../middlewares/authorizeRoleMiddleware.js");
 const employee = [authenticateToken, authorizeRole(["Employee", "Admin"])];
 
 const router = express.Router();
-
+//coomit
 router.get(
   "/employeeDashboard/employee-leaves",
   employee,
