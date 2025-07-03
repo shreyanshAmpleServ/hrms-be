@@ -8,31 +8,31 @@ const router = express.Router();
 
 router.get(
   "/employeeDashboard/employee-leaves",
-  authenticateToken,
+  employeeOnly,
   employeeDashboardController.getEmployeeLeavesData
 );
 
 router.get(
   "/employeeDashboard",
-  authenticateToken,
+  employeeOnly,
   employeeDashboardController.getEmployeeDashboardData
 );
 
 router.get(
   "/employeeDashboard/employee-attendance",
-  authenticateToken,
+  employeeOnly,
   employeeDashboardController.getEmployeeAttendanceSummary
 );
 
 router.get(
   "/employeeDashboard/employee-details",
-  authenticateToken,
+  employeeOnly,
   employeeDashboardController.getEmployeeDetails
 );
 
 router.get(
   "/employeeDashboard/get-all-upcoming-birthdays",
-  authenticateToken,
+  employeeOnly,
   employeeDashboardController.getAllUpcomingBirthdays
 );
 module.exports = router;
