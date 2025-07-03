@@ -15,129 +15,6 @@ const serializeData = (data) => {
   };
 };
 
-// const createLoanRequest = async (data) => {
-//   try {
-//     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
-//     const reqData = await prisma.hrms_d_loan_request.create({
-//       data: {
-//         ...serializeData(data),
-//         createdby: data.createdby || 1,
-//         createdate: new Date(),
-//         log_inst: data.log_inst || 1,
-//       },
-//       include: {
-//         loan_req_employee: {
-//           select: {
-//             full_name: true,
-//             id: true,
-//           },
-//         },
-//         loan_req_currency: {
-//           select: {
-//             id: true,
-//             currency_code: true,
-//             currency_name: true,
-//           },
-//         },
-//         loan_types: {
-//           select: {
-//             loan_name: true,
-//             id: true,
-//           },
-//         },
-//       },
-//     });
-//     return reqData;
-//   } catch (error) {
-//     console.error("Error creating loan request:", error);
-//     throw new CustomError(`Error creating loan request: ${error.message}`, 500);
-//   }
-// };
-//   try {
-//     await errorNotExist("hrms_d_employee", employee_id, "Employee");
-
-//     const result = await prisma.$transaction(async (tx) => {
-//       const loanRequest = await tx.hrms_d_loan_request.create({
-//         data: {
-//           ...serializeData(data),
-//           createdby: createdby || 1,
-//           createdate: new Date(),
-//           log_inst: log_inst || 1,
-//         },
-//       });
-
-//       if (emi_months && emi_months > 0 && amount) {
-//         const monthlyEMI = (Number(amount) / emi_months).toFixed(2);
-//         const emiEntries = [];
-
-//         const today = new Date();
-//         const startMonth = new Date(
-//           today.getFullYear(),
-//           today.getMonth() + 1,
-//           1
-//         );
-//         for (let i = 0; i < emi_months; i++) {
-//           const due = new Date(
-//             startMonth.getFullYear(),
-//             startMonth.getMonth() + i,
-//             1
-//           );
-//           const dueMonth = `${due.getFullYear()}-${(due.getMonth() + 1)
-//             .toString()
-//             .padStart(2, "0")}`;
-
-//           emiEntries.push({
-//             loan_request_id: loanRequest.id,
-//             employee_id: employee_id,
-//             due_month: dueMonth,
-//             emi_amount: Number(monthlyEMI),
-//             payslip_id: null,
-//             status: "Pending",
-//             createdby: createdby || 1,
-//             createdate: new Date(),
-//             log_inst: log_inst || 1,
-//           });
-//         }
-
-//         await tx.hrms_d_loan_emi_schedule.createMany({
-//           data: emiEntries,
-//         });
-//       }
-
-//       const reqData = await tx.hrms_d_loan_request.findUnique({
-//         where: { id: loanRequest.id },
-//         include: {
-//           loan_req_employee: {
-//             select: { full_name: true, id: true },
-//           },
-//           loan_req_currency: {
-//             select: { id: true, currency_code: true, currency_name: true },
-//           },
-//           loan_types: {
-//             select: { loan_name: true, id: true },
-//           },
-//           loan_emi_loan_request: {
-//             select: {
-//               id: true,
-//               due_month: true,
-//               emi_amount: true,
-//               status: true,
-//               payslip_id: true,
-//             },
-//           },
-//         },
-//       });
-
-//       return reqData;
-//     });
-
-//     return result;
-//   } catch (error) {
-//     console.error("Error creating loan request:", error);
-//     throw new CustomError(`Error creating loan request: ${error.message}`, 500);
-//   }
-// };
-
 const createLoanRequest = async (data) => {
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
@@ -145,7 +22,6 @@ const createLoanRequest = async (data) => {
     const result = await prisma.$transaction(async (tx) => {
       const serialized = serializeData(data);
 
-      // Step 1: Insert loan request
       const loanRequest = await tx.hrms_d_loan_request.create({
         data: {
           ...serialized,
@@ -159,7 +35,6 @@ const createLoanRequest = async (data) => {
       const employeeId = serialized.employee_id;
       const { emi_schedule = [] } = data;
 
-      // Step 2: Validate & insert EMI schedule
       if (!Array.isArray(emi_schedule) || emi_schedule.length === 0) {
         throw new CustomError("emi_schedule is required", 400);
       }
@@ -181,7 +56,6 @@ const createLoanRequest = async (data) => {
         data: emiData,
       });
 
-      // Step 3: Fetch and return full data
       const reqData = await tx.hrms_d_loan_request.findUnique({
         where: { id: loanId },
         include: {
@@ -234,41 +108,140 @@ const findLoanRequestById = async (id) => {
   }
 };
 
+// const updateLoanRequest = async (id, data) => {
+//   try {
+//     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+
+//     const updatedLoanRequest = await prisma.hrms_d_loan_request.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         ...serializeData(data),
+//         updatedby: data.updatedby || 1,
+//         updatedate: new Date(),
+//       },
+//       include: {
+//         loan_req_employee: {
+//           select: {
+//             full_name: true,
+//             id: true,
+//           },
+//         },
+//         loan_req_currency: {
+//           select: {
+//             id: true,
+//             currency_code: true,
+//             currency_name: true,
+//           },
+//         },
+//         loan_types: {
+//           select: {
+//             loan_name: true,
+//             id: true,
+//           },
+//         },
+//       },
+//     });
+//     return updatedLoanRequest;
+//   } catch (error) {
+//     throw new CustomError(`Error updating loan request: ${error.message}`, 500);
+//   }
+// };
+
 const updateLoanRequest = async (id, data) => {
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
-    const updatedLoanRequest = await prisma.hrms_d_loan_request.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...serializeData(data),
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
-      },
-      include: {
-        loan_req_employee: {
-          select: {
-            full_name: true,
-            id: true,
+    const result = await prisma.$transaction(async (tx) => {
+      const serialized = serializeData(data);
+
+      // Step 1: Update the loan request
+      const updatedLoanRequest = await tx.hrms_d_loan_request.update({
+        where: { id: parseInt(id) },
+        data: {
+          ...serialized,
+          updatedby: data.updatedby || 1,
+          updatedate: new Date(),
+        },
+      });
+
+      const loanId = updatedLoanRequest.id;
+      const employeeId = serialized.employee_id;
+
+      const { emi_schedule = [] } = data;
+      if (!Array.isArray(emi_schedule) || emi_schedule.length === 0) {
+        throw new CustomError("emi_schedule is required", 400);
+      }
+
+      // Step 2: Fetch existing EMI schedule for this loan
+      const existingEmis = await tx.hrms_d_loan_emi_schedule.findMany({
+        where: {
+          loan_request_id: loanId,
+          employee_id: employeeId,
+        },
+      });
+
+      // Step 3: Filter out paid ones (status = "P")
+      const paidEmis = existingEmis.filter((emi) => emi.status === "P");
+
+      // Step 4: Insert new EMIs from frontend (excluding months already marked paid)
+      const newEntries = emi_schedule.filter(
+        (emi) =>
+          !paidEmis.some(
+            (p) => p.due_month === emi.due_month && p.due_year === emi.due_year
+          )
+      );
+
+      if (newEntries.length > 0) {
+        const emiData = newEntries.map((emi) => ({
+          loan_request_id: loanId,
+          employee_id: employeeId,
+          due_month: emi.due_month,
+          due_year: emi.due_year,
+          emi_amount: Number(emi.emi_amount),
+          status: emi.status || "U",
+          payslip_id: emi.payslip_id ?? null,
+          createdby: data.updatedby || 1,
+          createdate: new Date(),
+          log_inst: data.log_inst || 1,
+        }));
+
+        await tx.hrms_d_loan_emi_schedule.createMany({
+          data: emiData,
+        });
+      }
+
+      // Step 5: Return final response
+      const finalData = await tx.hrms_d_loan_request.findUnique({
+        where: { id: loanId },
+        include: {
+          loan_req_employee: {
+            select: { full_name: true, id: true },
+          },
+          loan_req_currency: {
+            select: { id: true, currency_code: true, currency_name: true },
+          },
+          loan_types: {
+            select: { loan_name: true, id: true },
+          },
+          loan_emi_loan_request: {
+            select: {
+              id: true,
+              due_month: true,
+              due_year: true,
+              emi_amount: true,
+              status: true,
+              payslip_id: true,
+            },
           },
         },
-        loan_req_currency: {
-          select: {
-            id: true,
-            currency_code: true,
-            currency_name: true,
-          },
-        },
-        loan_types: {
-          select: {
-            loan_name: true,
-            id: true,
-          },
-        },
-      },
+      });
+
+      return finalData;
     });
-    return updatedLoanRequest;
+
+    return result;
   } catch (error) {
+    console.error("Error updating loan request with EMI schedule:", error);
     throw new CustomError(`Error updating loan request: ${error.message}`, 500);
   }
 };
