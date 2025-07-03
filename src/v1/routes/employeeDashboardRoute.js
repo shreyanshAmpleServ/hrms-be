@@ -1,6 +1,8 @@
 const express = require("express");
 const employeeDashboardController = require("../controller/employeeDashboardController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const { authorizeRole } = require("../middlewares/authorizeRoleMiddleware.js");
+const employeeOnly = [authenticateToken, authorizeRole(["Employee"])];
 
 const router = express.Router();
 

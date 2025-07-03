@@ -63,6 +63,9 @@ const getAllLoanEmiSchedule = async (
       filters.request_date = { gte: start, lte: end };
     }
     const result = await prisma.hrms_d_loan_emi_schedule.findMany({
+      where: filters,
+      skip,
+      take: size,
       orderBy: { createdate: "desc" },
       include: {
         loan_emi_employee: {
@@ -77,7 +80,17 @@ const getAllLoanEmiSchedule = async (
         },
       },
     });
-    return result;
+    const totalCount = await prisma.hrms_d_loan_emi_schedule.count({
+      where: filters,
+    });
+
+    return {
+      data: result,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount,
+    };
   } catch (error) {
     throw new CustomError(
       `Error creating Loan EMI Schedule:${error.message}`,
