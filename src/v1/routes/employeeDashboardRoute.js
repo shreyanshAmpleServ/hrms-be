@@ -2,37 +2,39 @@ const express = require("express");
 const employeeDashboardController = require("../controller/employeeDashboardController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 const { authorizeRole } = require("../middlewares/authorizeRoleMiddleware.js");
-const employeeOnly = [authenticateToken, authorizeRole(["Employee"])];
+
+const employee = [authenticateToken, authorizeRole(["Employee", "Admin"])];
 
 const router = express.Router();
 
 router.get(
   "/employeeDashboard/employee-leaves",
-  employeeOnly,
+  employee,
   employeeDashboardController.getEmployeeLeavesData
 );
 
 router.get(
   "/employeeDashboard",
-  employeeOnly,
+  employee,
   employeeDashboardController.getEmployeeDashboardData
 );
 
 router.get(
   "/employeeDashboard/employee-attendance",
-  employeeOnly,
+  employee,
   employeeDashboardController.getEmployeeAttendanceSummary
 );
 
 router.get(
   "/employeeDashboard/employee-details",
-  employeeOnly,
+  employee,
   employeeDashboardController.getEmployeeDetails
 );
 
 router.get(
   "/employeeDashboard/get-all-upcoming-birthdays",
-  employeeOnly,
+  employee,
   employeeDashboardController.getAllUpcomingBirthdays
 );
+
 module.exports = router;
