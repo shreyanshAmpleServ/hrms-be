@@ -135,7 +135,7 @@ const createPayComponent = async (data) => {
 
       await prisma.$executeRawUnsafe(`
         ALTER TABLE hrms_d_monthly_payroll_processing 
-        ADD ${data.component_code} VARCHAR(255) NULL;
+        ADD ${data.component_code} DECIMAL(18,4) NULL;
       `);
       return reqData;
     });
