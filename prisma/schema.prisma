@@ -597,6 +597,7 @@ model hrms_d_loan_request {
   loan_type_id          Int?
   amount                Decimal?                   @db.Decimal(10, 2)
   emi_months            Int?
+  start_date            String?
   status                String?                    @db.VarChar(20)
   createdate            DateTime?                  @default(now(), map: "DF__hrms_d_lo__creat__04AFB25B") @db.DateTime
   createdby             Int
@@ -1949,7 +1950,8 @@ model hrms_d_loan_emi_schedule {
   employee_id           Int
   due_month             String               @db.VarChar(7)
   emi_amount            Decimal              @db.Decimal(18, 2)
-  status                String?              @default("Pending", map: "DF__hrms_d_lo__statu__53385258") @db.VarChar(20)
+  due_year              String?
+  status                String?              @default("U", map: "DF__hrms_d_lo__statu__53385258") @db.VarChar(1)
   payslip_id            Int?
   createdate            DateTime?            @default(now(), map: "DF__hrms_d_lo__creat__542C7691") @db.DateTime
   createdby             Int
