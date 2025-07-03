@@ -95,6 +95,37 @@ const findLoanRequestById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_loan_request.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        loan_req_employee: {
+          select: {
+            full_name: true,
+            id: true,
+          },
+        },
+        loan_types: {
+          select: {
+            loan_name: true,
+            id: true,
+          },
+        },
+        loan_req_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
+        },
+        loan_emi_loan_request: {
+          select: {
+            id: true,
+            due_month: true,
+            due_year: true,
+            emi_amount: true,
+            status: true,
+            payslip_id: true,
+          },
+        },
+      },
     });
     if (!reqData) {
       throw new CustomError("loan request not found", 404);
@@ -400,16 +431,16 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
             currency_name: true,
           },
         },
-        loan_emi_loan_request: {
-          select: {
-            id: true,
-            due_month: true,
-            due_year: true,
-            emi_amount: true,
-            status: true,
-            payslip_id: true,
-          },
-        },
+        // loan_emi_loan_request: {
+        //   select: {
+        //     id: true,
+        //     due_month: true,
+        //     due_year: true,
+        //     emi_amount: true,
+        //     status: true,
+        //     payslip_id: true,
+        //   },
+        // },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
