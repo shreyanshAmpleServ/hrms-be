@@ -167,7 +167,7 @@ const deleteLoanEmiSchedule = async (id) => {
   }
 };
 
-const updateLoanEmiScheduleStatus = async () => {
+const updateLoanEmiScheduleStatus = async (id, data) => {
   try {
     const loanEmiId = parseInt(id);
     console.log("Loan Emi ID: ", loanEmiId);
@@ -190,11 +190,11 @@ const updateLoanEmiScheduleStatus = async () => {
       updatedate: new Date(),
     };
     if (data.status === "Approved") {
-      updateData.status = data.status_remarks || "";
+      updateData.status = data.status || "";
     } else if (data.status === "Rejected") {
-      updateData.status = data.status_remarks || "";
+      updateData.status = data.status || "";
     } else {
-      updateData.status_remarks = "";
+      updateData.status = "";
     }
     const updatedEntry = await prisma.hrms_d_loan_emi_schedule.update({
       where: { id: loanEmiId },
@@ -203,6 +203,8 @@ const updateLoanEmiScheduleStatus = async () => {
 
     return updatedEntry;
   } catch (error) {
+    console.log(error);
+
     throw new CustomError(
       `Error updating Loan Emi status: ${error.message}`,
       500
