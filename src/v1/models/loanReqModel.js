@@ -238,90 +238,95 @@ const updateLoanRequest = async (id, data) => {
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
-    const result = await prisma.$transaction(async (tx) => {
-      const serialized = serializeData(data);
+    const result = await prisma.$transaction(
+      async (tx) => {
+        const serialized = serializeData(data);
 
-      const updatedLoanRequest = await tx.hrms_d_loan_request.update({
-        where: { id: parseInt(id) },
-        data: {
-          ...serialized,
-          updatedby: data.updatedby || 1,
-          updatedate: new Date(),
-        },
-      });
+        const updatedLoanRequest = await tx.hrms_d_loan_request.update({
+          where: { id: parseInt(id) },
+          data: {
+            ...serialized,
+            updatedby: data.updatedby || 1,
+            updatedate: new Date(),
+          },
+        });
 
-      const loanId = updatedLoanRequest.id;
-      const employeeId = serialized.employee_id;
-      const { emi_schedule = [] } = data;
+        const loanId = updatedLoanRequest.id;
+        const employeeId = serialized.employee_id;
+        const { emi_schedule = [] } = data;
 
-      if (!Array.isArray(emi_schedule) || emi_schedule.length === 0) {
-        throw new CustomError("emi_schedule is required", 400);
-      }
-
-      for (const emi of emi_schedule) {
-        if (emi.status === "P") continue; // Skip paid EMIs
-
-        const commonFields = {
-          loan_request_id: loanId,
-          employee_id: employeeId,
-          due_month: emi.due_month,
-          due_year: emi.due_year,
-          emi_amount: Number(emi.emi_amount),
-          payslip_id: emi.payslip_id ?? null,
-          log_inst: data.log_inst || 1,
-        };
-
-        if (emi.id) {
-          // Update existing EMI schedule
-          await tx.hrms_d_loan_emi_schedule.update({
-            where: { id: emi.id },
-            data: {
-              ...commonFields,
-              updatedby: data.updatedby || 1,
-              updatedate: new Date(),
-            },
-          });
-        } else {
-          // Create new EMI schedule
-          await tx.hrms_d_loan_emi_schedule.create({
-            data: {
-              ...commonFields,
-              status: emi.status || "U",
-              createdby: data.updatedby || 1,
-              createdate: new Date(),
-            },
-          });
+        if (!Array.isArray(emi_schedule) || emi_schedule.length === 0) {
+          throw new CustomError("emi_schedule is required", 400);
         }
-      }
 
-      // Final response with all EMI schedules
-      const finalData = await tx.hrms_d_loan_request.findUnique({
-        where: { id: loanId },
-        include: {
-          loan_req_employee: {
-            select: { full_name: true, id: true },
-          },
-          loan_req_currency: {
-            select: { id: true, currency_code: true, currency_name: true },
-          },
-          loan_types: {
-            select: { loan_name: true, id: true },
-          },
-          loan_emi_loan_request: {
-            select: {
-              id: true,
-              due_month: true,
-              due_year: true,
-              emi_amount: true,
-              status: true,
-              payslip_id: true,
+        for (const emi of emi_schedule) {
+          if (emi.status === "P") continue; // Skip paid EMIs
+
+          const commonFields = {
+            loan_request_id: loanId,
+            employee_id: employeeId,
+            due_month: emi.due_month,
+            due_year: emi.due_year,
+            emi_amount: Number(emi.emi_amount),
+            payslip_id: emi.payslip_id ?? null,
+            log_inst: data.log_inst || 1,
+          };
+
+          if (emi.id) {
+            // Update existing EMI schedule
+            await tx.hrms_d_loan_emi_schedule.update({
+              where: { id: emi.id },
+              data: {
+                ...commonFields,
+                updatedby: data.updatedby || 1,
+                updatedate: new Date(),
+              },
+            });
+          } else {
+            // Create new EMI schedule
+            await tx.hrms_d_loan_emi_schedule.create({
+              data: {
+                ...commonFields,
+                status: emi.status || "U",
+                createdby: data.updatedby || 1,
+                createdate: new Date(),
+              },
+            });
+          }
+        }
+
+        // Final response with all EMI schedules
+        const finalData = await tx.hrms_d_loan_request.findUnique({
+          where: { id: loanId },
+          include: {
+            loan_req_employee: {
+              select: { full_name: true, id: true },
+            },
+            loan_req_currency: {
+              select: { id: true, currency_code: true, currency_name: true },
+            },
+            loan_types: {
+              select: { loan_name: true, id: true },
+            },
+            loan_emi_loan_request: {
+              select: {
+                id: true,
+                due_month: true,
+                due_year: true,
+                emi_amount: true,
+                status: true,
+                payslip_id: true,
+              },
             },
           },
-        },
-      });
+        });
 
-      return finalData;
-    });
+        return finalData;
+      },
+      {
+        timeout: 10000,
+      }
+    );
 
     return result;
   } catch (error) {

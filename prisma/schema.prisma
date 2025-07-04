@@ -1948,7 +1948,7 @@ model hrms_d_loan_emi_schedule {
   id                    Int                  @id(map: "PK__hrms_d_l__3213E83F89B3FAA3") @default(autoincrement())
   loan_request_id       Int
   employee_id           Int
-  due_month             String               @db.VarChar(7)
+  due_month             String               @db.VarChar(50)
   emi_amount            Decimal              @db.Decimal(18, 2)
   due_year              String?
   status                String?              @default("U", map: "DF__hrms_d_lo__statu__53385258") @db.VarChar(1)
