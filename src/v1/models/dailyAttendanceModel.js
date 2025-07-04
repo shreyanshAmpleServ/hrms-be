@@ -112,7 +112,6 @@ const deleteDailyAttendance = async (id) => {
   }
 };
 
-// Get all attendance entries with pagination and search
 const getAllDailyAttendance = async (
   search,
   page,
@@ -126,6 +125,7 @@ const getAllDailyAttendance = async (
     const skip = (page - 1) * size || 0;
 
     const filters = {};
+
     if (search) {
       filters.OR = [
         {
@@ -142,12 +142,19 @@ const getAllDailyAttendance = async (
         { remarks: { contains: search.toLowerCase() } },
       ];
     }
+
+    let start, end;
     if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.attendance_date = { gte: start, lte: end };
-      }
+      start = new Date(startDate);
+      end = new Date(endDate);
+    } else {
+      const now = new Date();
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now);
+    }
+
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      filters.attendance_date = { gte: start, lte: end };
     }
 
     const datas = await prisma.hrms_d_daily_attendance_entry.findMany({
@@ -165,6 +172,7 @@ const getAllDailyAttendance = async (
         },
       },
     });
+
     const totalCount = await prisma.hrms_d_daily_attendance_entry.count({
       where: filters,
     });
