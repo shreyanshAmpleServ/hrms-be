@@ -141,10 +141,7 @@ const createPayComponent = async (data) => {
     });
     return result;
   } catch (error) {
-    if (
-      error.code === "23505" || // unique_violation in Postgres
-      error.message.includes("already exists")
-    ) {
+    if (error.code === "23505" || error.message.includes("already exists")) {
       throw new CustomError(
         `Component code already used as column in payroll processing`,
         400
@@ -282,50 +279,6 @@ const deletePayComponent = async (id) => {
   }
 };
 
-// Get all pay components with pagination and search
-// const getAllPayComponent = async (search, page, size, startDate, endDate) => {
-//   try {
-//     page = !page || page == 0 ? 1 : page;
-//     size = size || 10;
-//     const skip = (page - 1) * size || 0;
-
-//     const filters = {};
-//     if (search) {
-//       filters.OR = [
-//         { component_name: { contains: search.toLowerCase() } },
-//         { component_code: { contains: search.toLowerCase() } },
-//         { component_type: { contains: search.toLowerCase() } },
-//       ];
-//     }
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-//         filters.createdate = { gte: start, lte: end };
-//       }
-//     }
-
-//     const datas = await prisma.hrms_m_pay_component.findMany({
-//       where: filters,
-//       skip,
-//       take: size,
-//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-//     });
-//     const totalCount = await prisma.hrms_m_pay_component.count({
-//       where: filters,
-//     });
-
-//     return {
-//       data: datas,
-//       currentPage: page,
-//       size,
-//       totalPages: Math.ceil(totalCount / size),
-//       totalCount,
-//     };
-//   } catch (error) {
-//     throw new CustomError("Error retrieving pay components", 503);
-//   }
-// };
 const getAllPayComponent = async (
   page,
   size,
@@ -335,7 +288,7 @@ const getAllPayComponent = async (
   is_active
 ) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    page = typeof page === "number" && page > 0 ? page : 1;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -360,7 +313,17 @@ const getAllPayComponent = async (
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
 
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = { gte: start, lte: end };
+      }
+    }
     const pays = await prisma.hrms_m_pay_component.findMany({
       where: filters,
       skip: skip,
@@ -382,14 +345,7 @@ const getAllPayComponent = async (
             name: true,
           },
         },
-        // pay_component_for_line: {
-        //   select: {
-        //     id: true,
-        //     component_name: true,
-        //     component_code: true,
-        //     component_type: true,
-        //   },
-        // },
+
         pay_component_cost_center1: {
           select: {
             id: true,
