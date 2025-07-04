@@ -39,6 +39,10 @@ const workAnniversary = async (page, limit) => {
   return await dashboardModel.workAnniversary(page, limit);
 };
 
+const getEmployeeActivity = async (page, limit) => {
+  return await dashboardModel.getEmployeeActivity(page, limit);
+};
+
 const attendanceOverview = async () => {
   return await dashboardModel.attendanceOverview();
 };
@@ -55,4 +59,5 @@ module.exports = {
   getStatus,
   workAnniversary,
   attendanceOverview,
+  getEmployeeActivity,
 };

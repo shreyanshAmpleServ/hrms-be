@@ -13,6 +13,13 @@ const createProbationReview = async (req, res, next) => {
     };
     const reqData = await probationReviewService.createProbationReview(data);
     res.status(201).success("Probation review created successfully", reqData);
+    await logActivity({
+      employee_id: req.user.id,
+      module: "Probation",
+      action_type: "CREATE",
+      activity: `Created probation review for employee ID ${req.body.employee_id}`,
+      reference_id: reqData.id,
+    });
   } catch (error) {
     next(error);
   }

@@ -127,6 +127,15 @@ const attendanceOverview = async (req, res, next) => {
   }
 };
 
+const getEmployeeActivity = async (req, res, next) => {
+  try {
+    const data = await dashboardService.getEmployeeActivity();
+    res.status(200).success("Employee activity fetched successfully", data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   getDealById,
   getDashboardData,
@@ -139,4 +148,5 @@ module.exports = {
   getStatus,
   workAnniversary,
   attendanceOverview,
+  getEmployeeActivity,
 };
