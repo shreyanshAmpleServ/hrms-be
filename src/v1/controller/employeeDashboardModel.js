@@ -177,10 +177,15 @@ const getEmployeeAttendanceSummary = async (employeeId) => {
   );
 
   const sumHours = (entries) =>
-    entries.reduce(
-      (sum, a) => sum + (a.working_hours ? Number(a.working_hours) : 0),
-      0
-    );
+    entries.reduce((sum, entry) => {
+      if (entry.check_in_time && entry.check_out_time) {
+        const inTime = moment(entry.check_in_time);
+        const outTime = moment(entry.check_out_time);
+        const hours = outTime.diff(inTime, "minutes") / 60;
+        return sum + hours;
+      }
+      return sum;
+    }, 0);
 
   const filterByRange = (start, end) =>
     allEntries.filter((entry) =>
@@ -204,7 +209,13 @@ const getEmployeeAttendanceSummary = async (employeeId) => {
     today: {
       check_in_time: todayData?.check_in_time,
       check_out_time: todayData?.check_out_time,
-      working_hours: Number(todayData?.working_hours || 0),
+      working_hours:
+        todayData?.check_in_time && todayData?.check_out_time
+          ? moment(todayData.check_out_time).diff(
+              moment(todayData.check_in_time),
+              "minutes"
+            ) / 60
+          : 0,
     },
     thisWeek: {
       total_hours: sumHours(thisWeek),
@@ -229,123 +240,6 @@ const getEmployeeAttendanceSummary = async (employeeId) => {
   };
 };
 
-// const getEmployeeAttendanceSummary = async (employeeId) => {
-//   const today = new Date();
-//   today.setHours(0, 0, 0, 0);
-//   const now = new Date();
-
-//   const startOfWeek = new Date(today);
-//   startOfWeek.setDate(today.getDate() - ((today.getDay() + 6) % 7));
-
-//   const startOfLastWeek = new Date(startOfWeek);
-//   startOfLastWeek.setDate(startOfLastWeek.getDate() - 7);
-//   const endOfLastWeek = new Date(startOfWeek);
-//   endOfLastWeek.setDate(endOfLastWeek.getDate() - 1);
-
-//   const startOfMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-//   const startOfLastMonth = new Date(
-//     today.getFullYear(),
-//     today.getMonth() - 1,
-//     1
-//   );
-//   const endOfLastMonth = new Date(today.getFullYear(), today.getMonth(), 0);
-
-//   console.time("attendance-query");
-
-//   const allEntries = await prisma.hrms_d_daily_attendance_entry.findMany({
-//     where: {
-//       employee_id: employeeId,
-//       attendance_date: {
-//         gte: startOfLastMonth,
-//         lte: now,
-//       },
-//     },
-//     select: {
-//       attendance_date: true,
-//       check_in_time: true,
-//       check_out_time: true,
-//       working_hours: true,
-//     },
-//   });
-
-//   const buckets = {
-//     thisWeek: [],
-//     lastWeek: [],
-//     thisMonth: [],
-//     lastMonth: [],
-//   };
-
-//   let todayData = null;
-//   const todayISO = today.toISOString().slice(0, 10);
-
-//   for (const entry of allEntries) {
-//     const entryDate = new Date(entry.attendance_date);
-//     const entryISO = entryDate.toISOString().slice(0, 10);
-
-//     if (entryISO === todayISO) {
-//       todayData = entry;
-//     }
-
-//     if (entryDate >= startOfWeek && entryDate <= now) {
-//       buckets.thisWeek.push(entry);
-//     }
-
-//     if (entryDate >= startOfLastWeek && entryDate <= endOfLastWeek) {
-//       buckets.lastWeek.push(entry);
-//     }
-
-//     if (entryDate >= startOfMonth && entryDate <= now) {
-//       buckets.thisMonth.push(entry);
-//     }
-
-//     if (entryDate >= startOfLastMonth && entryDate <= endOfLastMonth) {
-//       buckets.lastMonth.push(entry);
-//     }
-//   }
-
-//   const sumHours = (entries) =>
-//     entries.reduce(
-//       (sum, a) => sum + (a.working_hours ? Number(a.working_hours) : 0),
-//       0
-//     );
-
-//   const formatPercentage = (worked, target) =>
-//     target > 0 ? Math.round((worked / target) * 100) : 0;
-
-//   const targetWeek = 40;
-//   const targetMonth = 160;
-
-//   console.timeEnd("attendance-query");
-
-//   return {
-//     today: {
-//       check_in_time: todayData?.check_in_time,
-//       check_out_time: todayData?.check_out_time,
-//       working_hours: Number(todayData?.working_hours || 0),
-//     },
-//     thisWeek: {
-//       total_hours: sumHours(buckets.thisWeek),
-//       target: targetWeek,
-//       percentage: formatPercentage(sumHours(buckets.thisWeek), targetWeek),
-//     },
-//     lastWeek: {
-//       total_hours: sumHours(buckets.lastWeek),
-//       target: targetWeek,
-//       percentage: formatPercentage(sumHours(buckets.lastWeek), targetWeek),
-//     },
-//     thisMonth: {
-//       total_hours: sumHours(buckets.thisMonth),
-//       target: targetMonth,
-//       percentage: formatPercentage(sumHours(buckets.thisMonth), targetMonth),
-//     },
-//     lastMonth: {
-//       total_hours: sumHours(buckets.lastMonth),
-//       target: targetMonth,
-//       percentage: formatPercentage(sumHours(buckets.lastMonth), targetMonth),
-//     },
-//   };
-// };
-
 const getEmployeeDetails = async (employeeId) => {
   return await prisma.hrms_d_employee.findUnique({
     where: { id: employeeId },
@@ -365,6 +259,7 @@ const getEmployeeDetails = async (employeeId) => {
           designation_name: true,
         },
       },
+
       hrms_employee_department: {
         select: {
           department_name: true,
