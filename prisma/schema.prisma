@@ -352,6 +352,7 @@ model hrms_d_employee {
   interview_stage_employee_id                     hrms_m_interview_stage_remark[]
   user_employee                                   hrms_m_user[]
   projects_employee_detail                        hrms_m_projects[]
+  activity_employee                               hrms_d_activity_log[]
 }
 
 model hrms_d_employee_address {
@@ -2236,4 +2237,17 @@ model hrms_m_projects {
   pay_component_project               hrms_m_pay_component[]
   pay_component_line_project          hrms_d_employee_pay_component_assignment_line[]
   midmonth_payroll_processing_project hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProject")
+}
+
+model hrms_d_activity_log {
+  id                Int             @id @default(autoincrement())
+  employee_id       Int
+  module            String          @db.VarChar(100)
+  action_type       String          @db.VarChar(50)
+  activity          String          @db.VarChar(255)
+  reference_id      Int?
+  description       String?         @db.Text
+  is_deleted        Boolean         @default(false)
+  created_at        DateTime        @default(now())
+  activity_employee hrms_d_employee @relation(fields: [employee_id], references: [id])
 }

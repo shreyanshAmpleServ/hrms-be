@@ -58,10 +58,9 @@ router.get(
   dashboardController.getDashboardData
 );
 
-// router.get(
-//   "/dashboard/:id",
-//   authenticateToken,
-//   dashboardController.getDealById
-// );
-
+router.get(
+  "/dashboard/employee-activity",
+  authenticateToken,
+  dashboardController.getEmployeeActivity
+);
 module.exports = router;

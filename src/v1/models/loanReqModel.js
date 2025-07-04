@@ -237,12 +237,31 @@ const updateLoanRequest = async (id, data) => {
   }
 };
 
+// const deleteLoanRequest = async (id) => {
+//   try {
+//     await prisma.hrms_d_loan_request.delete({
+//       where: { id: parseInt(id) },
+//     });
+//   } catch (error) {
+//     throw new CustomError(`Error deleting loan request: ${error.message}`, 500);
+//   }
+// };
+
 const deleteLoanRequest = async (id) => {
   try {
-    await prisma.hrms_d_loan_request.delete({
-      where: { id: parseInt(id) },
+    await prisma.$transaction(async (tx) => {
+      const loanId = parseInt(id);
+
+      await tx.hrms_d_loan_emi_schedule.deleteMany({
+        where: { loan_request_id: loanId },
+      });
+
+      await tx.hrms_d_loan_request.delete({
+        where: { id: loanId },
+      });
     });
   } catch (error) {
+    console.error("Error deleting loan request and EMI schedule:", error);
     throw new CustomError(`Error deleting loan request: ${error.message}`, 500);
   }
 };

@@ -305,6 +305,7 @@ model hrms_d_employee {
   exit_clearance_employee                         hrms_d_exit_clearance[]
   exit_interview_employee                         hrms_d_exit_interview[]
   final_settlement_employee                       hrms_d_finalsettlement_processing[]
+  loan_emi_employee                               hrms_d_loan_emi_schedule[]
   goal_sheet_assignment_employee                  hrms_d_goal_sheet_assignment[]
   grievance_assigned_to                           hrms_d_grievance[]                                @relation("GrievanceAssignedTo")
   grievance_employee                              hrms_d_grievance[]                                @relation("GrievanceSubmittedBy")
@@ -325,7 +326,7 @@ model hrms_d_employee {
   notification_log_employee                       hrms_d_notification_log[]
   overtime_payroll_processing_employee            hrms_d_overtime_payroll_processing[]
   payslip_employee                                hrms_d_payslip[]
-  probation_review_employee                       hrms_d_probation_review[]
+  w_employee                                      hrms_d_probation_review[]
   probation_employee                              hrms_d_probation_review[]                         @relation("ProbationEmployee")
   probation_reviewer                              hrms_d_probation_review[]                         @relation("ProbationReviewer")
   recognition_award_employee                      hrms_d_recognition_award[]                        @relation("RecognitionAwardEmployee")
@@ -351,6 +352,7 @@ model hrms_d_employee {
   interview_stage_employee_id                     hrms_m_interview_stage_remark[]
   user_employee                                   hrms_m_user[]
   projects_employee_detail                        hrms_m_projects[]
+  activity_employee                               hrms_d_activity_log[]
 }
 
 model hrms_d_employee_address {
@@ -544,8 +546,10 @@ model hrms_d_leave_application {
 }
 
 model hrms_d_leave_balance {
-  id                           Int                            @id @default(autoincrement())
-  employee_id                  Int
+  id          Int     @id @default(autoincrement())
+  employee_id Int
+  is_active   String? @default("Y") @db.Char(1)
+
   employee_code                String                         @db.VarChar(20)
   first_name                   String?                        @db.NVarChar(100)
   last_name                    String?                        @db.NVarChar(100)
@@ -588,19 +592,23 @@ model hrms_d_leave_encashment {
 }
 
 model hrms_d_loan_request {
-  id                Int               @id(map: "PK__hrms_d_l__3213E83FF14CF674") @default(autoincrement())
-  employee_id       Int?
-  loan_type_id      Int?
-  amount            Decimal?          @db.Decimal(10, 2)
-  emi_months        Int?
-  status            String?           @db.VarChar(20)
-  createdate        DateTime?         @default(now(), map: "DF__hrms_d_lo__creat__04AFB25B") @db.DateTime
-  createdby         Int
-  updatedate        DateTime?         @db.DateTime
-  updatedby         Int?
-  log_inst          Int?
-  loan_req_employee hrms_d_employee?  @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  loan_types        hrms_m_loan_type? @relation(fields: [loan_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                    Int                        @id(map: "PK__hrms_d_l__3213E83FF14CF674") @default(autoincrement())
+  employee_id           Int?
+  currency              Int?
+  loan_type_id          Int?
+  amount                Decimal?                   @db.Decimal(10, 2)
+  emi_months            Int?
+  start_date            String?
+  status                String?                    @db.VarChar(20)
+  createdate            DateTime?                  @default(now(), map: "DF__hrms_d_lo__creat__04AFB25B") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?                  @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  loan_req_employee     hrms_d_employee?           @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  loan_types            hrms_m_loan_type?          @relation(fields: [loan_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  loan_req_currency     hrms_m_currency_master?    @relation(fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  loan_emi_loan_request hrms_d_loan_emi_schedule[]
 }
 
 model hrms_d_medical_record {
@@ -670,27 +678,28 @@ model hrms_d_org_chart {
 }
 
 model hrms_d_payslip {
-  id                    Int              @id(map: "PK__hrms_d_p__3213E83F1EC9183D") @default(autoincrement())
+  id                    Int                        @id(map: "PK__hrms_d_p__3213E83F1EC9183D") @default(autoincrement())
   employee_id           Int?
-  month                 String?          @db.VarChar(7)
-  net_salary            Decimal?         @db.Decimal(10, 2)
-  pdf_path              String?          @db.NVarChar(255)
-  createdate            DateTime?        @default(now(), map: "DF__hrms_d_pa__creat__793DFFAF") @db.DateTime
+  month                 String?                    @db.VarChar(7)
+  net_salary            Decimal?                   @db.Decimal(10, 2)
+  pdf_path              String?                    @db.NVarChar(255)
+  createdate            DateTime?                  @default(now(), map: "DF__hrms_d_pa__creat__793DFFAF") @db.DateTime
   createdby             Int
-  updatedate            DateTime?        @db.DateTime
+  updatedate            DateTime?                  @db.DateTime
   updatedby             Int?
   log_inst              Int?
   year                  String?
-  gross_salary          Decimal?         @db.Decimal(18, 2)
-  total_earnings        Decimal?         @db.Decimal(18, 2)
-  total_deductions      Decimal?         @db.Decimal(18, 2)
-  pay_component_summary String?          @db.NVarChar(Max)
-  tax_deductions        Decimal?         @db.Decimal(18, 2)
-  loan_deductions       Decimal?         @db.Decimal(18, 2)
-  other_adjustments     Decimal?         @db.Decimal(18, 2)
-  status                String?          @default("Generated", map: "DF__hrms_d_pa__statu__4F9CCB9E") @db.NVarChar(50)
-  remarks               String?          @db.NVarChar(500)
-  payslip_employee      hrms_d_employee? @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
+  gross_salary          Decimal?                   @db.Decimal(18, 2)
+  total_earnings        Decimal?                   @db.Decimal(18, 2)
+  total_deductions      Decimal?                   @db.Decimal(18, 2)
+  pay_component_summary String?                    @db.NVarChar(Max)
+  tax_deductions        Decimal?                   @db.Decimal(18, 2)
+  loan_deductions       Decimal?                   @db.Decimal(18, 2)
+  other_adjustments     Decimal?                   @db.Decimal(18, 2)
+  status                String?                    @default("Generated", map: "DF__hrms_d_pa__statu__4F9CCB9E") @db.NVarChar(50)
+  remarks               String?                    @db.NVarChar(500)
+  payslip_employee      hrms_d_employee?           @relation(fields: [employee_id], references: [id], onUpdate: NoAction)
+  loan_emi_payslip      hrms_d_loan_emi_schedule[]
 }
 
 model hrms_d_probation_review {
@@ -1052,17 +1061,21 @@ model hrms_m_company_master {
 }
 
 model hrms_m_currency_master {
-  id                          Int                                             @id(map: "PK__hrms_m_c__3213E83F74D02FD5") @default(autoincrement())
-  currency_code               String?                                         @db.VarChar(5)
-  currency_name               String?                                         @db.NVarChar(100)
-  createdate                  DateTime?                                       @default(now(), map: "DF__hrms_m_cu__creat__339FAB6E") @db.DateTime
-  createdby                   Int
-  updatedate                  DateTime?                                       @db.DateTime
-  updatedby                   Int?
-  log_inst                    Int?
-  is_active                   String?                                         @default("Y") @db.Char(1)
-  travel_expense_currency     hrms_d_travel_expense[]
-  pay_component_line_currency hrms_d_employee_pay_component_assignment_line[]
+  id                                   Int                                             @id(map: "PK__hrms_m_c__3213E83F74D02FD5") @default(autoincrement())
+  currency_code                        String?                                         @db.VarChar(5)
+  currency_name                        String?                                         @db.NVarChar(100)
+  createdate                           DateTime?                                       @default(now(), map: "DF__hrms_m_cu__creat__339FAB6E") @db.DateTime
+  createdby                            Int
+  updatedate                           DateTime?                                       @db.DateTime
+  updatedby                            Int?
+  log_inst                             Int?
+  is_active                            String?                                         @default("Y") @db.Char(1)
+  travel_expense_currency              hrms_d_travel_expense[]
+  pay_component_line_currency          hrms_d_employee_pay_component_assignment_line[]
+  hrms_monthly_payroll_currency        hrms_d_midmonth_payroll_processing[]
+  midmonth_payroll_processing_currency hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCurrency")
+  overtime_payroll_processing_currency hrms_d_overtime_payroll_processing[]            @relation("OvertimeCurrency")
+  loan_req_currency                    hrms_d_loan_request[]
 }
 
 model hrms_m_department_master {
@@ -1098,7 +1111,7 @@ model hrms_m_designation_master {
 model hrms_m_disciplinary_penalty {
   id                   Int                          @id(map: "PK__hrms_m_d__3213E83F893BEA80") @default(autoincrement())
   penalty_type         String?                      @db.NVarChar(100)
-  is_active                         String?                     @default("Y") @db.Char(1)
+  is_active            String?                      @default("Y") @db.Char(1)
   action_taken         String?                      @db.NVarChar(255)
   description          String?                      @db.NVarChar(255)
   createdate           DateTime?                    @default(now(), map: "DF__hrms_m_di__creat__2F9A1060") @db.DateTime
@@ -1173,12 +1186,14 @@ model hrms_m_holiday_calendar {
   id           Int       @id(map: "PK__hrms_m_h__3213E83F4175E2D3") @default(autoincrement())
   holiday_name String?   @db.NVarChar(100)
   holiday_date DateTime? @db.Date
-  location     String?   @db.NVarChar(100)
-  createdate   DateTime? @default(now(), map: "DF__hrms_m_ho__creat__2B0A656D") @db.DateTime
-  createdby    Int
-  updatedate   DateTime? @db.DateTime
-  updatedby    Int?
-  log_inst     Int?
+  is_active    String?   @default("Y") @db.Char(1)
+
+  location   String?   @db.NVarChar(100)
+  createdate DateTime? @default(now(), map: "DF__hrms_m_ho__creat__2B0A656D") @db.DateTime
+  createdby  Int
+  updatedate DateTime? @db.DateTime
+  updatedby  Int?
+  log_inst   Int?
 }
 
 model hrms_m_job_category {
@@ -1209,6 +1224,7 @@ model hrms_m_kpi_master {
 model hrms_m_leave_type_master {
   id                              Int                            @id(map: "PK__hrms_m_l__3213E83F7F49932B") @default(autoincrement())
   leave_type                      String?                        @db.NVarChar(100)
+  is_active                       String?                        @default("Y") @db.Char(1)
   carry_forward                   Boolean?
   createdate                      DateTime?                      @default(now(), map: "DF__hrms_m_le__creat__282DF8C2") @db.DateTime
   createdby                       Int
@@ -1240,17 +1256,16 @@ model hrms_m_letter_type {
 }
 
 model hrms_m_loan_type {
-  id            Int      @id(map: "PK__hrms_m_l__3213E83F83117D15") @default(autoincrement())
-  loan_name     String?  @db.NVarChar(100)
-  interest_rate Decimal? @db.Decimal(5, 2)
-  is_active     String?  @default("Y") @db.Char(1)
-
-  createdate DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
-  createdby  Int
-  updatedate DateTime?             @db.DateTime
-  updatedby  Int?
-  log_inst   Int?
-  loan_types hrms_d_loan_request[]
+  id            Int                   @id(map: "PK__hrms_m_l__3213E83F83117D15") @default(autoincrement())
+  loan_name     String?               @db.NVarChar(100)
+  interest_rate Decimal?              @db.Decimal(5, 2)
+  is_active     String?               @default("Y") @db.Char(1)
+  createdate    DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
+  createdby     Int
+  updatedate    DateTime?             @db.DateTime
+  updatedby     Int?
+  log_inst      Int?
+  loan_types    hrms_d_loan_request[]
 }
 
 model hrms_m_pay_component {
@@ -1356,10 +1371,12 @@ model hrms_m_salary_structure {
 }
 
 model hrms_m_shift_master {
-  id                     Int                       @id(map: "PK__hrms_m_s__3213E83F3E04C8DC") @default(autoincrement())
-  shift_name             String?                   @db.NVarChar(100)
-  start_time             String?                   @db.VarChar(50)
-  end_time               String?                   @db.VarChar(50)
+  id         Int     @id(map: "PK__hrms_m_s__3213E83F3E04C8DC") @default(autoincrement())
+  shift_name String? @db.NVarChar(100)
+  start_time String? @db.VarChar(50)
+  end_time   String? @db.VarChar(50)
+  is_active  String? @default("Y") @db.Char(1)
+
   createdate             DateTime?                 @default(now(), map: "DF__hrms_m_sh__creat__25518C17") @db.DateTime
   createdby              Int
   updatedate             DateTime?                 @db.DateTime
@@ -1392,19 +1409,18 @@ model hrms_m_statutory_rate {
 }
 
 model hrms_m_survey_master {
-  id           Int     @id(map: "PK__hrms_m_s__3213E83FA2306E59") @default(autoincrement())
-  survey_title String? @db.NVarChar(255)
-  description  String? @db.NVarChar(500)
-  is_active    String? @default("Y") @db.Char(1)
-
-  launch_date DateTime?                @db.Date
-  close_date  DateTime?                @db.Date
-  createdate  DateTime?                @default(now(), map: "DF__hrms_m_su__creat__3B0BC30C") @db.DateTime
-  createdby   Int
-  updatedate  DateTime?                @db.DateTime
-  updatedby   Int?
-  log_inst    Int?
-  survey_type hrms_d_survey_response[]
+  id           Int                      @id(map: "PK__hrms_m_s__3213E83FA2306E59") @default(autoincrement())
+  survey_title String?                  @db.NVarChar(255)
+  description  String?                  @db.NVarChar(500)
+  is_active    String?                  @default("Y") @db.Char(1)
+  launch_date  DateTime?                @db.Date
+  close_date   DateTime?                @db.Date
+  createdate   DateTime?                @default(now(), map: "DF__hrms_m_su__creat__3B0BC30C") @db.DateTime
+  createdby    Int
+  updatedate   DateTime?                @db.DateTime
+  updatedby    Int?
+  log_inst     Int?
+  survey_type  hrms_d_survey_response[]
 }
 
 model hrms_m_tax_regime {
@@ -1435,8 +1451,10 @@ model hrms_m_tax_relief {
 }
 
 model hrms_m_work_life_event_type {
-  id                   Int                      @id(map: "PK__hrms_m_w__3213E83FCFB88DCB") @default(autoincrement())
-  event_type_name      String?                  @db.NVarChar(100)
+  id              Int     @id(map: "PK__hrms_m_w__3213E83FCFB88DCB") @default(autoincrement())
+  event_type_name String? @db.NVarChar(100)
+  is_active       String? @default("Y") @db.Char(1)
+
   createdate           DateTime?                @default(now(), map: "DF__hrms_m_wo__creat__32767D0B") @db.DateTime
   createdby            Int
   updatedate           DateTime?                @db.DateTime
@@ -1446,14 +1464,16 @@ model hrms_m_work_life_event_type {
 }
 
 model hrms_m_work_schedule_template {
-  id            Int       @id(map: "PK__hrms_m_w__3213E83F9426192B") @default(autoincrement())
-  template_name String?   @db.NVarChar(100)
-  description   String?   @db.NVarChar(255)
-  createdate    DateTime? @default(now(), map: "DF__hrms_m_wo__creat__3F115E1A") @db.DateTime
-  createdby     Int
-  updatedate    DateTime? @db.DateTime
-  updatedby     Int?
-  log_inst      Int?
+  id            Int     @id(map: "PK__hrms_m_w__3213E83F9426192B") @default(autoincrement())
+  template_name String? @db.NVarChar(100)
+  description   String? @db.NVarChar(255)
+  is_active     String? @default("Y") @db.Char(1)
+
+  createdate DateTime? @default(now(), map: "DF__hrms_m_wo__creat__3F115E1A") @db.DateTime
+  createdby  Int
+  updatedate DateTime? @db.DateTime
+  updatedby  Int?
+  log_inst   Int?
 }
 
 model hrms_m_country_master {
@@ -1663,7 +1683,7 @@ model hrms_d_monthly_payroll_processing {
   payroll_start_date            DateTime?       @db.Date
   payroll_end_date              DateTime?       @db.Date
   payroll_paid_days             Int?
-  pay_currency                  String          @db.NVarChar(3)
+  pay_currency                  Int?
   total_earnings                Decimal         @db.Decimal(18, 4)
   taxable_earnings              Decimal         @db.Decimal(18, 4)
   tax_amount                    Decimal         @db.Decimal(18, 4)
@@ -1926,18 +1946,22 @@ model hrms_d_leave_balance_details {
 }
 
 model hrms_d_loan_emi_schedule {
-  id              Int       @id(map: "PK__hrms_d_l__3213E83F89B3FAA3") @default(autoincrement())
-  loan_request_id Int
-  employee_id     Int
-  due_month       String    @db.VarChar(7)
-  emi_amount      Decimal   @db.Decimal(18, 2)
-  status          String?   @default("Pending", map: "DF__hrms_d_lo__statu__53385258") @db.VarChar(20)
-  payslip_id      Int?
-  createdate      DateTime? @default(now(), map: "DF__hrms_d_lo__creat__542C7691") @db.DateTime
-  createdby       Int
-  updatedate      DateTime? @db.DateTime
-  updatedby       Int?
-  log_inst        Int?
+  id                    Int                  @id(map: "PK__hrms_d_l__3213E83F89B3FAA3") @default(autoincrement())
+  loan_request_id       Int
+  employee_id           Int
+  due_month             String               @db.VarChar(50)
+  emi_amount            Decimal              @db.Decimal(18, 2)
+  due_year              String?
+  status                String?              @default("U", map: "DF__hrms_d_lo__statu__53385258") @db.VarChar(1)
+  payslip_id            Int?
+  createdate            DateTime?            @default(now(), map: "DF__hrms_d_lo__creat__542C7691") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?            @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  loan_emi_employee     hrms_d_employee?     @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  loan_emi_loan_request hrms_d_loan_request? @relation(fields: [loan_request_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  loan_emi_payslip      hrms_d_payslip?      @relation(fields: [payslip_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_d_finalsettlement_processing {
@@ -1981,19 +2005,19 @@ model hrms_d_finalsettlement_processing {
 }
 
 model hrms_d_midmonth_payroll_processing {
-  id                                    Int                  @id @default(autoincrement())
+  id                                    Int                     @id @default(autoincrement())
   employee_id                           Int
-  payroll_month                         Int                  @db.SmallInt
-  payroll_year                          Int                  @db.SmallInt
-  payroll_week                          Int                  @db.SmallInt
-  pay_currency                          String               @db.NVarChar(3)
+  payroll_month                         Int                     @db.SmallInt
+  payroll_year                          Int                     @db.SmallInt
+  payroll_week                          Int                     @db.SmallInt
+  pay_currency                          Int?
   component_id                          Int
-  net_pay                               Decimal              @db.Decimal(18, 2)
-  status                                String               @db.NVarChar(20)
-  execution_date                        DateTime?            @db.Date
-  pay_date                              DateTime?            @db.DateTime
-  doc_date                              DateTime?            @db.Date
-  processed                             String               @default("N", map: "DF__hrms_d_mi__proce__0E591826") @db.Char(1)
+  net_pay                               Decimal                 @db.Decimal(18, 2)
+  status                                String                  @db.NVarChar(20)
+  execution_date                        DateTime?               @db.Date
+  pay_date                              DateTime?               @db.DateTime
+  doc_date                              DateTime?               @db.Date
+  processed                             String                  @default("N", map: "DF__hrms_d_mi__proce__0E591826") @db.Char(1)
   je_transid                            Int?
   project_id                            Int?
   cost_center1_id                       Int?
@@ -2001,61 +2025,66 @@ model hrms_d_midmonth_payroll_processing {
   cost_center3_id                       Int?
   cost_center4_id                       Int?
   cost_center5_id                       Int?
-  approved1                             String               @default("N", map: "DF__hrms_d_mi__appro__0F4D3C5F") @db.Char(1)
+  approved1                             String                  @default("N", map: "DF__hrms_d_mi__appro__0F4D3C5F") @db.Char(1)
   approver1_id                          Int?
-  employee_email                        String?              @db.NVarChar(100)
-  remarks                               String?              @db.NVarChar(250)
-  createdate                            DateTime             @db.DateTime
+  employee_email                        String?                 @db.NVarChar(100)
+  remarks                               String?                 @db.NVarChar(250)
+  createdate                            DateTime                @db.DateTime
   createdby                             Int
-  updatedate                            DateTime?            @db.DateTime
+  updatedate                            DateTime?               @db.DateTime
   updatedby                             Int?
   log_inst                              Int?
-  midmonth_payroll_processing_component hrms_m_pay_component @relation("MidMonthPayrollProcessingComponent", fields: [component_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mi__compo__0D64F3ED")
-  midmonth_payroll_processing_project   hrms_m_projects?     @relation("MidMonthPayrollProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  midmonth_payroll_processing_employee  hrms_d_employee?     @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center1   hrms_m_costcenters?  @relation("MidMonthCostCenter1", fields: [cost_center1_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center2   hrms_m_costcenters?  @relation("MidMonthCostCenter2", fields: [cost_center2_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center3   hrms_m_costcenters?  @relation("MidMonthCostCenter3", fields: [cost_center3_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center4   hrms_m_costcenters?  @relation("MidMonthCostCenter4", fields: [cost_center4_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  midmonth_payroll_processing_center5   hrms_m_costcenters?  @relation("MidMonthCostCenter5", fields: [cost_center5_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_component hrms_m_pay_component    @relation("MidMonthPayrollProcessingComponent", fields: [component_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mi__compo__0D64F3ED")
+  midmonth_payroll_processing_project   hrms_m_projects?        @relation("MidMonthPayrollProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  midmonth_payroll_processing_employee  hrms_d_employee?        @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center1   hrms_m_costcenters?     @relation("MidMonthCostCenter1", fields: [cost_center1_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center2   hrms_m_costcenters?     @relation("MidMonthCostCenter2", fields: [cost_center2_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center3   hrms_m_costcenters?     @relation("MidMonthCostCenter3", fields: [cost_center3_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center4   hrms_m_costcenters?     @relation("MidMonthCostCenter4", fields: [cost_center4_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  midmonth_payroll_processing_center5   hrms_m_costcenters?     @relation("MidMonthCostCenter5", fields: [cost_center5_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  hrms_m_currency_master                hrms_m_currency_master? @relation(fields: [hrms_m_currency_masterId], references: [id])
+  midmonth_payroll_processing_currency  hrms_m_currency_master? @relation("MidMonthCurrency", fields: [pay_currency], references: [id], onUpdate: NoAction, onDelete: NoAction)
+
+  hrms_m_currency_masterId Int?
 }
 
 model hrms_d_overtime_payroll_processing {
-  id                                    Int                  @id(map: "PK__hrms_d_o__3213E83FD60C6CB6") @default(autoincrement())
+  id                                    Int                     @id(map: "PK__hrms_d_o__3213E83FD60C6CB6") @default(autoincrement())
   employee_id                           Int
-  payroll_month                         Int                  @db.SmallInt
-  payroll_year                          Int                  @db.SmallInt
-  overtime_date                         DateTime             @db.Date
-  pay_currency                          String               @db.NVarChar(3)
+  payroll_month                         Int                     @db.SmallInt
+  payroll_year                          Int                     @db.SmallInt
+  overtime_date                         DateTime                @db.Date
+  pay_currency                          Int?
   component_id                          Int
-  start_time                            DateTime             @db.Time
-  end_time                              DateTime             @db.Time
-  overtime_hours                        Decimal              @db.Decimal(18, 2)
-  overtime_formula                      String?              @db.NVarChar(Max)
-  overtime_type                         String?              @db.NVarChar(50)
-  overtime_category                     String?              @db.NVarChar(50)
-  overtime_rate_multiplier              Decimal?             @db.Decimal(5, 2)
-  calculation_basis                     String?              @db.NVarChar(50)
+  start_time                            String?
+  end_time                              String?
+  overtime_hours                        Decimal                 @db.Decimal(18, 2)
+  overtime_formula                      String?                 @db.NVarChar(Max)
+  overtime_type                         String?                 @db.NVarChar(50)
+  overtime_category                     String?                 @db.NVarChar(50)
+  overtime_rate_multiplier              Decimal?                @db.Decimal(5, 2)
+  calculation_basis                     String?                 @db.NVarChar(50)
   payroll_cycle_id                      Int?
   linked_payslip_id                     Int?
-  source_doc                            String?              @db.NVarChar(100)
-  overtime_pay                          Decimal              @db.Decimal(18, 2)
-  status                                String               @db.NVarChar(20)
-  execution_date                        DateTime?            @db.Date
-  pay_date                              DateTime?            @db.DateTime
+  source_doc                            String?                 @db.NVarChar(100)
+  overtime_pay                          Decimal                 @db.Decimal(18, 2)
+  status                                String                  @db.NVarChar(20)
+  execution_date                        DateTime?               @db.Date
+  pay_date                              DateTime?               @db.DateTime
   pay_id                                Int?
-  processed                             String               @default("N", map: "DF__hrms_d_ov__proce__290D0E62") @db.Char(1)
-  approved1                             String               @default("N", map: "DF__hrms_d_ov__appro__2A01329B") @db.Char(1)
+  processed                             String                  @default("N", map: "DF__hrms_d_ov__proce__290D0E62") @db.Char(1)
+  approved1                             String                  @default("N", map: "DF__hrms_d_ov__appro__2A01329B") @db.Char(1)
   approver1_id                          Int?
-  employee_email                        String?              @db.NVarChar(100)
-  remarks                               String?              @db.NVarChar(250)
-  createdate                            DateTime             @db.DateTime
+  employee_email                        String?                 @db.NVarChar(100)
+  remarks                               String?                 @db.NVarChar(250)
+  createdate                            DateTime                @db.DateTime
   createdby                             Int
-  updatedate                            DateTime?            @db.DateTime
+  updatedate                            DateTime?               @db.DateTime
   updatedby                             Int?
   log_inst                              Int?
-  overtime_payroll_processing_component hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
-  overtime_payroll_processing_employee  hrms_d_employee      @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_ov__emplo__2724C5F0")
+  overtime_payroll_processing_component hrms_m_pay_component    @relation(fields: [component_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  overtime_payroll_processing_employee  hrms_d_employee         @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_ov__emplo__2724C5F0")
+  overtime_payroll_processing_currency  hrms_m_currency_master? @relation("OvertimeCurrency", fields: [pay_currency], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_m_pay_component_formula {
@@ -2208,4 +2237,18 @@ model hrms_m_projects {
   pay_component_project               hrms_m_pay_component[]
   pay_component_line_project          hrms_d_employee_pay_component_assignment_line[]
   midmonth_payroll_processing_project hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProject")
+}
+
+
+model hrms_d_activity_log {
+  id           Int              @id @default(autoincrement())
+  employee_id  Int
+  module       String           @db.VarChar(100)
+  action_type  String           @db.VarChar(50) 
+  activity     String           @db.VarChar(255)
+  reference_id Int?            
+  description  String?          @db.Text
+  is_deleted   Boolean          @default(false)
+  created_at   DateTime         @default(now())
+  activity_employee     hrms_d_employee  @relation(fields: [employee_id], references: [id])
 }
