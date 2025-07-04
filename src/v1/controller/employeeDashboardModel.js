@@ -352,9 +352,13 @@ const getEmployeeDetails = async (employeeId) => {
     select: {
       id: true,
       full_name: true,
+      employee_code: true,
       phone_number: true,
+      date_of_birth: true,
+      gender: true,
       email: true,
       join_date: true,
+      address: true,
       profile_pic: true,
       hrms_employee_designation: {
         select: {
