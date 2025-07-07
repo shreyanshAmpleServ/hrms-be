@@ -18,7 +18,7 @@ const createOverTimeSetup = async (req, res, next) => {
   }
 };
 
-const findOverTimeSetupById = async (req, res, next) => {
+const findOverTimeSetup = async (req, res, next) => {
   try {
     const reqData = await overTimeSetupService.findOverTimeSetupById(
       req.params.id
