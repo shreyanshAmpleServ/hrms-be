@@ -4,7 +4,7 @@ const createOverTimeSetup = async (data) => {
   return await overTimeSetupModel.createOverTimeSetup(data);
 };
 
-const findOverTimeSetupId = async (id) => {
+const findOverTimeSetupById = async (id) => {
   return await overTimeSetupModel.findOverTimeSetupId(id);
 };
 
@@ -29,7 +29,7 @@ const getAllOverTimeSetup = async (search, page, size, startDate, endDate) => {
 
 module.exports = {
   createOverTimeSetup,
-  findOverTimeSetupId,
+  findOverTimeSetupById,
   updateOverTimeSetup,
   deleteOverTimeSetup,
   getAllOverTimeSetup,
