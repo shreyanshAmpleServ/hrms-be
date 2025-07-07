@@ -59,7 +59,7 @@ const deleteOverTimeSetup = async (req, res, next) => {
 const getAllOverTimeSetup = async (req, res, next) => {
   try {
     const { page, size, search, startDate, endDate } = req.query;
-    const data = await loanMasterService.getAllOverTimeSetup(
+    const data = await overTimeSetupService.getAllOverTimeSetup(
       search,
       Number(page),
       Number(size),

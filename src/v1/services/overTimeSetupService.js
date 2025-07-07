@@ -5,7 +5,7 @@ const createOverTimeSetup = async (data) => {
 };
 
 const findOverTimeSetupById = async (id) => {
-  return await overTimeSetupModel.findOverTimeSetupId(id);
+  return await overTimeSetupModel.findOverTimeSetupById(id);
 };
 
 const updateOverTimeSetup = async (id, data) => {
