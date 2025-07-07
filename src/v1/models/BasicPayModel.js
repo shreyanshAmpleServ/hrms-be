@@ -571,7 +571,8 @@ const getAllBasicPay = async (
   search,
   startDate,
   endDate,
-  status
+  status,
+  employee_id
 ) => {
   try {
     page = page || page == 0 ? 1 : page;
@@ -591,6 +592,9 @@ const getAllBasicPay = async (
         //   first_name: { contains: search.toLowerCase() },
         // },
       ];
+    }
+    if (employee_id) {
+      filters.employee_id = { equals: parseInt(employee_id) };
     }
     // if (status) {
     //   filters.is_active = { equals: status };
