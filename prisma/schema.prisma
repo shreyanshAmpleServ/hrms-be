@@ -2263,6 +2263,7 @@ model hrms_m_loan_master {
   minimum_tenure  String    @db.VarChar(50)
   maximum_tenure  String    @db.VarChar(50)
   tenure_divider  Int
+  minimum_amount  Int
   maximum_amount  Int
   amount_currency Int
   in_active       Boolean   @default(false)
