@@ -1,0 +1,36 @@
+const overTimeSetupModel = require("../models/overTimeSetupModel.js");
+
+const createOverTimeSetup = async (data) => {
+  return await overTimeSetupModel.createOverTimeSetup(data);
+};
+
+const findOverTimeSetupId = async (id) => {
+  return await overTimeSetupModel.findOverTimeSetupId(id);
+};
+
+const updateOverTimeSetup = async (id, data) => {
+  return await overTimeSetupModel.updateOverTimeSetup(id, data);
+};
+
+const deleteOverTimeSetup = async (id) => {
+  return await overTimeSetupModel.deleteOverTimeSetup(id);
+};
+//comment
+
+const getAllOverTimeSetup = async (search, page, size, startDate, endDate) => {
+  return await overTimeSetupModel.getAllOverTimeSetup(
+    search,
+    page,
+    size,
+    startDate,
+    endDate
+  );
+};
+
+module.exports = {
+  createOverTimeSetup,
+  findOverTimeSetupId,
+  updateOverTimeSetup,
+  deleteOverTimeSetup,
+  getAllOverTimeSetup,
+};

@@ -10,6 +10,8 @@ const serializeLoanMasterData = (data) => ({
   minimum_tenure: data.minimum_tenure || null,
   maximum_tenure: data.maximum_tenure || null,
   tenure_divider: data.tenure_divider ? Number(data.tenure_divider) : null,
+  minimum_amount: data.maximum_amount ? Number(data.maximum_amount) : null,
+
   maximum_amount: data.maximum_amount ? Number(data.maximum_amount) : null,
   //   amount_currency_id: data.amount_currency_id
   //     ? Number(data.amount_currency_id)
