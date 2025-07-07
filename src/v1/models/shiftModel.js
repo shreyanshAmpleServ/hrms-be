@@ -39,7 +39,7 @@ const serializeShiftMasterData = (data) => ({
   half_day_working: data.half_day_working || "N",
   half_day_on: data.half_day_on ? Number(data.half_day_on) : null,
   remarks: data.remarks || "",
-  weekoff_days: data.week_off || "",
+  weekoff_days: data.weekoff_days || "",
   is_active: data.is_active || "Y",
 });
 
