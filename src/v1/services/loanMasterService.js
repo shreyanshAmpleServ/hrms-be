@@ -15,6 +15,7 @@ const updateLoanMaster = async (id, data) => {
 const deleteLoanMaster = async (id) => {
   return await loanMasterModel.deleteLoanMaster(id);
 };
+//comment
 
 const getAllLoanMaster = async (search, page, size, startDate, endDate) => {
   return await loanMasterModel.getAllLoanMaster(

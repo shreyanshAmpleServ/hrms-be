@@ -59,7 +59,7 @@ const createLoanMaster = async (data) => {
 };
 
 // Get by ID
-const getLoanMasterById = async (id) => {
+const findLoanMasterById = async (id) => {
   try {
     const result = await prisma.hrms_m_loan_master.findUnique({
       where: { id: parseInt(id) },
@@ -118,7 +118,7 @@ const deleteLoanMaster = async (id) => {
 };
 
 // Get all with search + pagination
-const getAllLoanMasters = async (search, page, size, startDate, endDate) => {
+const getAllLoanMaster = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -187,8 +187,8 @@ const getAllLoanMasters = async (search, page, size, startDate, endDate) => {
 
 module.exports = {
   createLoanMaster,
-  getLoanMasterById,
+  findLoanMasterById,
   updateLoanMaster,
   deleteLoanMaster,
-  getAllLoanMasters,
+  getAllLoanMaster,
 };
