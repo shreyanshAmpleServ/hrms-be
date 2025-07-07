@@ -4,20 +4,23 @@ const moment = require("moment");
 
 const createMidMonthPayrollProcessing = async (req, res, next) => {
   try {
-    console.log("Incoming request body:", req.body);
-
-    const data = {
-      ...req.body,
+    const data = req.body.map((item) => ({
+      ...item,
       createdby: req.user.id,
       log_inst: req.user.log_inst,
-    };
-    const reqData =
+    }));
+
+    const errors =
       await midmonthPayrollProcessingService.createMidMonthPayrollProcessing(
         data
       );
-    res
-      .status(201)
-      .success("MidMonth Payroll Processing created successfully", reqData);
+
+    res.status(201).json({
+      success: true,
+      message: "MidMonth Payroll Processing completed",
+      status: 201,
+      errors,
+    });
   } catch (error) {
     next(error);
   }
