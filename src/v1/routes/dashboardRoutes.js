@@ -63,4 +63,5 @@ router.get(
   authenticateToken,
   dashboardController.getEmployeeActivity
 );
+
 module.exports = router;
