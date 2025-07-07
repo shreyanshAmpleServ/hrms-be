@@ -84,7 +84,7 @@ const getAllOverTimeSetup = async (search, page, size, startDate, endDate) => {
 };
 
 // READ by ID
-const getOverTimeSetupById = async (id) => {
+const findOverTimeSetupById = async (id) => {
   try {
     const result = await prisma.hrms_m_overtime_setup.findUnique({
       where: { id: parseInt(id) },
@@ -134,7 +134,7 @@ const deleteOverTimeSetup = async (id) => {
 module.exports = {
   createOverTimeSetup,
   getAllOverTimeSetup,
-  getOverTimeSetupById,
+  findOverTimeSetupById,
   updateOverTimeSetup,
   deleteOverTimeSetup,
 };
