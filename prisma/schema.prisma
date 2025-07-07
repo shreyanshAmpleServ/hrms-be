@@ -2255,32 +2255,36 @@ model hrms_d_activity_log {
 }
 
 model hrms_m_loan_master {
-  id              Int       @id @default(autoincrement())
-  loan_code       String    @db.VarChar(20)
-  loan_name       String    @db.VarChar(100)
-  loan_type_id    Int?
-  wage_type       String    @db.VarChar(50)
-  minimum_tenure  String    @db.VarChar(50)
-  maximum_tenure  String    @db.VarChar(50)
-  tenure_divider  Int
-  minimum_amount  Int
-  maximum_amount  Int
-  amount_currency Int
-  in_active       Boolean   @default(false)
-  createdate      DateTime  @default(now())
-  createdby       Int
-  updatedate      DateTime?
-  updatedby       Int?
-  log_inst        Int?
-
+  id                          Int                     @id @default(autoincrement())
+  loan_code                   String                  @db.VarChar(20)
+  loan_name                   String                  @db.VarChar(100)
+  loan_type_id                Int?
+  wage_type                   String                  @db.VarChar(50)
+  minimum_tenure              String                  @db.VarChar(50)
+  maximum_tenure              String                  @db.VarChar(50)
+  tenure_divider              Int
+  minimum_amount              Int
+  maximum_amount              Int
+  amount_currency             Int
+  in_active                   Boolean                 @default(false)
+  createdate                  DateTime                @default(now())
+  createdby                   Int
+  updatedate                  DateTime?
+  updatedby                   Int?
+  log_inst                    Int?
   loan_master_loan_type       hrms_m_loan_type?       @relation(fields: [loan_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   loan_master_amount_currency hrms_m_currency_master? @relation(fields: [amount_currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_m_overtime_setup {
-  id                       Int     @id @default(autoincrement())
-  days_code                String  @db.VarChar(20)
-  wage_type                String  @db.VarChar(50)
-  hourly_rate_hike         Decimal @db.Decimal(10, 5)
-  maximum_overtime_allowed String  @db.VarChar(50)
+  id                       Int       @id @default(autoincrement())
+  days_code                String    @db.VarChar(20)
+  wage_type                String    @db.VarChar(50)
+  hourly_rate_hike         Decimal   @db.Decimal(10, 5)
+  maximum_overtime_allowed String    @db.VarChar(50)
+  createdate               DateTime  @default(now())
+  createdby                Int
+  updatedate               DateTime?
+  updatedby                Int?
+  log_inst                 Int?
 }
