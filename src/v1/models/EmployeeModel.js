@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 const moment = require("moment");
+const { se } = require("date-fns/locale");
 
 /**
  * Handles transaction notifications for employee operations
@@ -142,6 +143,7 @@ const serializeAddress = (data) => {
     state: Number(data?.state) || null,
     country: Number(data?.country) || null,
     zip_code: data?.zip_code || "",
+    shift_id: Number(data?.shift_id) || null,
   };
 };
 
@@ -298,6 +300,12 @@ const createEmployee = async (data) => {
             bank_name: true,
           },
         },
+        employee_shift_id: {
+          select: {
+            id: true,
+            shift_name: true,
+          },
+        },
         hrms_manager: {
           select: {
             id: true,
@@ -430,6 +438,12 @@ const updateEmployee = async (id, data) => {
           select: {
             id: true,
             designation_name: true,
+          },
+        },
+        employee_shift_id: {
+          select: {
+            id: true,
+            shift_name: true,
           },
         },
         hrms_employee_department: {
@@ -606,6 +620,12 @@ const getAllEmployee = async (
         },
         hrms_employee_department: {
           select: { id: true, department_name: true },
+        },
+        employee_shift_id: {
+          select: {
+            id: true,
+            shift_name: true,
+          },
         },
         hrms_employee_bank: {
           select: { id: true, bank_name: true },
