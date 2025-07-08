@@ -27,7 +27,7 @@ const getAllBasicPay = async (
   startDate,
   endDate,
   status,
-  priority
+  employee_id
 ) => {
   return await BasicPayModel.getAllBasicPay(
     page,
@@ -36,7 +36,7 @@ const getAllBasicPay = async (
     startDate,
     endDate,
     status,
-    priority
+    employee_id
   );
 };
 
