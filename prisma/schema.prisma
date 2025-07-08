@@ -1650,7 +1650,7 @@ model hrms_d_daily_attendance_entry {
   check_out_time                 DateTime?       @db.DateTime
   status                         String          @db.NVarChar(20)
   remarks                        String?         @db.NVarChar(250)
-  total_login_time               String          @db.VarChar(50)
+  total_login_hours              String          @db.VarChar(50)
   createdate                     DateTime        @default(now()) @db.DateTime
   createdby                      Int
   updatedate                     DateTime?       @db.DateTime
