@@ -106,6 +106,8 @@ const updateOverTimeSetup = async (id, data) => {
       where: { id: parseInt(id) },
       data: {
         ...serializeOvertimeSetupData(data),
+        updatedby: data.updatedby || 1,
+        updatedate: new Date(),
       },
     });
     return updated;
