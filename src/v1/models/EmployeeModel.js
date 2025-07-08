@@ -44,7 +44,7 @@ const serializeTags = (data) => {
     serialized.full_name = `${data.first_name || ""} ${
       data.last_name || ""
     }`.trim();
-  if ("shift_id" in data) serialized.shift_id = data.shift_id;
+  if ("shift_id" in data) serialized.shift_id = Number(data.shift_id) || null;
 
   if ("gender" in data) serialized.gender = data.gender;
   if ("date_of_birth" in data)
