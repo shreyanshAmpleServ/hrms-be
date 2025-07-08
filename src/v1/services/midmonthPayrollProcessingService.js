@@ -7,7 +7,7 @@ const createMidMonthPayrollProcessing = async (data) => {
 };
 
 const findMidMonthPayrollProcessingById = async (id) => {
-  console.log("🔍 Inside service: finding midmonth payroll by ID", id);
+  console.log("Inside service: finding midmonth payroll by ID", id);
 
   return await midmonthPayrollProcessingModel.findMidMonthPayrollProcessingById(
     id
