@@ -263,7 +263,7 @@ const getAllMidMonthPayrollProcessing = async (
   }
 };
 
-// Get By ID
+// Get By IDs
 const findMidMonthPayrollProcessingById = async (id) => {
   try {
     const result = await prisma.hrms_d_midmonth_payroll_processing.findUnique({
