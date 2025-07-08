@@ -22,7 +22,8 @@ const getAllPayComponent = async (
   search,
   startDate,
   endDate,
-  is_active
+  is_active,
+  is_advance
 ) => {
   return await payComponentModel.getAllPayComponent(
     page,
@@ -30,7 +31,8 @@ const getAllPayComponent = async (
     search,
     startDate,
     endDate,
-    is_active
+    is_active,
+    is_advance
   );
 };
 

@@ -287,31 +287,6 @@ const updatePayComponent = async (id, data) => {
       );
     }
 
-    if (!/^\d+$/.test(data.component_code)) {
-      throw new CustomError("Invalid component code. Must be numeric.", 400);
-    }
-
-    try {
-      await prisma.$executeRawUnsafe(`
-        ALTER TABLE hrms_d_monthly_payroll_processing
-        ADD [${data.component_code}] DECIMAL(18,4) NULL
-      `);
-      console.log(`Successfully created column ${data.component_code}`);
-    } catch (sqlError) {
-      console.error("SQL Error:", sqlError.message); // Add this
-      if (
-        sqlError.message.includes("duplicate") ||
-        sqlError.message.includes("already exists")
-      ) {
-        console.log(`Column ${data.component_code} already exists`);
-      } else {
-        throw new CustomError(
-          `Failed to alter payroll processing table: ${sqlError.message}`,
-          500
-        );
-      }
-    }
-
     const updatedEntry = await prisma.hrms_m_pay_component.update({
       where: { id: parseInt(id) },
       data: {
@@ -408,7 +383,8 @@ const getAllPayComponent = async (
   search,
   startDate,
   endDate,
-  is_active
+  is_active,
+  is_advance
 ) => {
   try {
     page = typeof page === "number" && page > 0 ? page : 1;
@@ -435,6 +411,9 @@ const getAllPayComponent = async (
     } else if (typeof is_active === "string") {
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
+    if (is_advance) {
+      filters.is_advance = is_advance === "Y" ? "Y" : "N";
     }
     if (startDate && endDate) {
       const start = new Date(startDate);

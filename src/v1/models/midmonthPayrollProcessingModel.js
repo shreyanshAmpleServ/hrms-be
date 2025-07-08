@@ -165,6 +165,113 @@ const createMidMonthPayrollProcessing = async (dataArray) => {
   }
 };
 
+// const getAllMidMonthPayrollProcessing = async (
+//   search,
+//   page,
+//   size,
+//   startDate,
+//   endDate,
+//   payroll_month,
+//   payroll_year
+// ) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+//     const filters = {};
+
+//     if (search) {
+//       filters.OR = [
+//         { employee_email: { contains: search.toLowerCase() } },
+//         { status: { contains: search.toLowerCase() } },
+//       ];
+//     }
+//     if (payroll_month) {
+//       filters.payroll_month = parseInt(payroll_month);
+//     }
+//     if (payroll_year) {
+//       filters.payroll_year = parseInt(payroll_year);
+//     }
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       start.setHours(0, 0, 0, 0);
+
+//       const end = new Date(endDate);
+//       end.setHours(23, 59, 59, 999);
+
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = { gte: start, lte: end };
+//       }
+//     }
+
+//     const data = await prisma.hrms_d_midmonth_payroll_processing.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       orderBy: { createdate: "desc" },
+//       include: {
+//         midmonth_payroll_processing_employee: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//           },
+//         },
+//         midmonth_payroll_processing_component: {
+//           select: {
+//             id: true,
+//             component_name: true,
+//           },
+//         },
+//         midmonth_payroll_processing_currency: {
+//           select: {
+//             id: true,
+//             currency_code: true,
+//             currency_name: true,
+//           },
+//         },
+//         midmonth_payroll_processing_project: {
+//           select: {
+//             id: true,
+//             code: true,
+//             name: true,
+//           },
+//         },
+//         midmonth_payroll_processing_center1: {
+//           select: { id: true, name: true },
+//         },
+//         midmonth_payroll_processing_center2: {
+//           select: { id: true, name: true },
+//         },
+//         midmonth_payroll_processing_center3: {
+//           select: { id: true, name: true },
+//         },
+//         midmonth_payroll_processing_center4: {
+//           select: { id: true, name: true },
+//         },
+//         midmonth_payroll_processing_center5: {
+//           select: { id: true, name: true },
+//         },
+//       },
+//     });
+
+//     const totalCount = await prisma.hrms_d_midmonth_payroll_processing.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError(`Error retrieving payrolls: ${error.message}`, 500);
+//   }
+// };
+
+// Get By IDs
+
 const getAllMidMonthPayrollProcessing = async (
   search,
   page,
@@ -205,7 +312,12 @@ const getAllMidMonthPayrollProcessing = async (
     }
 
     const data = await prisma.hrms_d_midmonth_payroll_processing.findMany({
-      where: filters,
+      where: {
+        ...filters,
+        midmonth_payroll_processing_component: {
+          is_advance: "Y",
+        },
+      },
       skip,
       take: size,
       orderBy: { createdate: "desc" },
@@ -220,6 +332,7 @@ const getAllMidMonthPayrollProcessing = async (
           select: {
             id: true,
             component_name: true,
+            is_advance: true,
           },
         },
         midmonth_payroll_processing_currency: {
@@ -253,11 +366,16 @@ const getAllMidMonthPayrollProcessing = async (
         },
       },
     });
+    console.log("Data retrieved:", data);
 
     const totalCount = await prisma.hrms_d_midmonth_payroll_processing.count({
-      where: filters,
+      where: {
+        ...filters,
+        midmonth_payroll_processing_component: {
+          is_advance: "Y",
+        },
+      },
     });
-
     return {
       data,
       currentPage: page,
@@ -270,7 +388,6 @@ const getAllMidMonthPayrollProcessing = async (
   }
 };
 
-// Get By IDs
 const findMidMonthPayrollProcessingById = async (id) => {
   try {
     const result = await prisma.hrms_d_midmonth_payroll_processing.findUnique({
