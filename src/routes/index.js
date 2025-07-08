@@ -129,6 +129,11 @@ const finalSettlementProcessingRoute = require("../v1/routes/finalSettlementProc
 const overtimePayrollProcessingRoute = require("../v1/routes/overtimePayrollProcessingRoute.js");
 const midmonthPayrollProcessingRoute = require("../v1/routes/midmonthPayrollProcessingRoute.js");
 const BasicPayRoute = require("../v1/routes/BasicPayRoutes");
+const employeeDashboarRoute = require("../v1/routes/employeeDashboardRoute");
+const loanEmiScheduleRoute = require("../v1/routes/loanEmiScheduleRoute");
+const loanMasterRoute = require("../v1/routes/loanMasterRoute.js");
+const overtimeSetupRoute = require("../v1/routes/overtimeSetupRoute.js");
+
 const router = express.Router();
 
 // Version 1 API
@@ -256,13 +261,16 @@ router.use("/v1", interviewStageRoute);
 router.use("/v1", interviewStageRemarkRoute);
 router.use("/v1", taxSlabRoute);
 router.use("/v1", hrLetterRoute);
-router.use("v1", projectRoutes);
+router.use("/v1", projectRoutes);
 router.use("/v1", costCenterRoute);
 router.use("/v1", finalSettlementProcessingRoute);
 router.use("/v1", overtimePayrollProcessingRoute);
 router.use("/v1", midmonthPayrollProcessingRoute);
-
+router.use("/v1", employeeDashboarRoute);
 router.use("/v1", BasicPayRoute);
+router.use("/v1", loanEmiScheduleRoute);
+router.use("/v1", loanMasterRoute);
+router.use("/v1", overtimeSetupRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;

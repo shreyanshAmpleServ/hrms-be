@@ -8,10 +8,10 @@ const serializeOvertimeData = (data) => ({
   payroll_month: Number(data.payroll_month),
   payroll_year: Number(data.payroll_year),
   overtime_date: new Date(data.overtime_date),
-  pay_currency: data.pay_currency,
+  pay_currency: Number(data.pay_currency),
   component_id: Number(data.component_id),
-  start_time: new Date(data.start_time),
-  end_time: new Date(data.end_time),
+  start_time: data.start_time,
+  end_time: data.end_time,
   overtime_hours: parseFloat(data.overtime_hours),
   overtime_formula: data.overtime_formula || null,
   overtime_type: data.overtime_type || null,
@@ -55,6 +55,13 @@ const createOvertimePayrollProcessing = async (data) => {
         },
         overtime_payroll_processing_component: {
           select: { id: true, component_name: true },
+        },
+        overtime_payroll_processing_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
         },
       },
     });
@@ -110,6 +117,21 @@ const getAllOvertimePayrollProcessing = async (
       skip,
       take: size,
       orderBy: { createdate: "desc" },
+      include: {
+        overtime_payroll_processing_employee: {
+          select: { id: true, full_name: true, employee_code: true },
+        },
+        overtime_payroll_processing_component: {
+          select: { id: true, component_name: true },
+        },
+        overtime_payroll_processing_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
+        },
+      },
     });
 
     const totalCount = await prisma.hrms_d_overtime_payroll_processing.count({
@@ -136,10 +158,6 @@ const getAllOvertimePayrollProcessing = async (
 const findOvertimePayrollProcessingById = async (id) => {
   const result = await prisma.hrms_d_overtime_payroll_processing.findUnique({
     where: { id: Number(id) },
-    include: {
-      overtime_payroll_processing_employee: true,
-      overtime_payroll_processing_component: true,
-    },
   });
   if (!result) throw new CustomError("Record not found", 404);
   return result;
@@ -156,10 +174,17 @@ const updateOvertimePayrollProcessing = async (id, data) => {
       },
       include: {
         overtime_payroll_processing_employee: {
-          select: { id: true, full_name: true },
+          select: { id: true, full_name: true, employee_code: true },
         },
         overtime_payroll_processing_component: {
           select: { id: true, component_name: true },
+        },
+        overtime_payroll_processing_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
         },
       },
     });

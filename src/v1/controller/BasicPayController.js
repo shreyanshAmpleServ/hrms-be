@@ -61,14 +61,16 @@ const deleteBasicPay = async (req, res, next) => {
 
 const getAllBasicPay = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate, status } = req.query;
+    const { page, size, search, startDate, endDate, status, employee_id } =
+      req.query;
     const deals = await BasicPayService.getAllBasicPay(
       Number(page),
       Number(size),
       search,
       moment(startDate),
       moment(endDate),
-      status
+      status,
+      employee_id
     );
     res.status(200).success(null, deals);
   } catch (error) {

@@ -29,10 +29,9 @@ const findOvertimePayrollProcessing = async (req, res, next) => {
       await overtimePayrollProcessingService.findOvertimePayrollProcessingById(
         req.params.id
       );
-    if (!reqData)
-      throw new CustomError("MidMonth Payroll Processing not found", 404);
+    res.status(200).json({ success: true, reqData });
   } catch (error) {
-    next(error);
+    next(new CustomError(error.message, 400));
   }
 };
 

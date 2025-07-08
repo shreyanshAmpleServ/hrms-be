@@ -58,67 +58,99 @@ const createPayComponent = async (data) => {
         400
       );
     }
-    const reqData = await prisma.hrms_m_pay_component.create({
-      data: {
-        ...serializePayComponentData(data),
-        createdby: data.createdby || 1,
-        createdate: new Date(),
-        log_inst: data.log_inst || 1,
-      },
-      include: {
-        pay_component_tax: {
-          select: {
-            id: true,
-            pay_component_id: true,
-            rule_type: true,
+    const result = await prisma.$transaction(async (prisma) => {
+      const reqData = await prisma.hrms_m_pay_component.create({
+        data: {
+          ...serializePayComponentData(data),
+          createdby: data.createdby || 1,
+          createdate: new Date(),
+          log_inst: data.log_inst || 1,
+        },
+        include: {
+          pay_component_tax: {
+            select: {
+              id: true,
+              pay_component_id: true,
+              rule_type: true,
+            },
+          },
+          pay_component_project: {
+            select: {
+              id: true,
+              code: true,
+              name: true,
+            },
+          },
+          // pay_component_for_line: {
+          //   select: {
+          //     id: true,
+          //     component_name: true,
+          //     component_code: true,
+          //     component_type: true,
+          //   },
+          // },
+          pay_component_cost_center1: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
+          },
+          pay_component_cost_center2: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
+          },
+          pay_component_cost_center3: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
+          },
+          pay_component_cost_center4: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
+          },
+          pay_component_cost_center5: {
+            select: {
+              id: true,
+              name: true,
+              dimension_id: true,
+            },
           },
         },
-        pay_component_project: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        },
-        pay_component_cost_center1: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center2: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center3: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center4: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center5: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-      },
+      });
+      // Step 2: Dynamically add column to monthly payroll table
+      // const columnName = prisma.sql([`"${data.component_code}"`]); // Safe quoting
+      // const alterQuery = prisma.raw(`
+      //   ALTER TABLE monthly_payroll_processing
+      //   ADD COLUMN ${data.component_code} VARCHAR(255) DEFAULT NULL;
+      // `);
+
+      if (!/^\d+$/.test(data.component_code)) {
+        throw new Error("Invalid column name. Must be numeric.");
+      }
+
+      await prisma.$executeRawUnsafe(`
+  ALTER TABLE hrms_d_monthly_payroll_processing
+  ADD [${data.component_code}] DECIMAL(18,4) NULL
+`);
+      return reqData;
     });
-    return reqData;
+    return result;
   } catch (error) {
+    if (error.code === "23505" || error.message.includes("already exists")) {
+      throw new CustomError(
+        `Component code already used as column in payroll processing`,
+        400
+      );
+    }
     throw new CustomError(
       `Error creating pay component: ${error.message}`,
       500
@@ -145,6 +177,98 @@ const findPayComponentById = async (id) => {
 };
 
 // Update pay component
+// const updatePayComponent = async (id, data) => {
+//   try {
+//     const totalCount = await prisma.hrms_m_pay_component.count({
+//       where: {
+//         OR: [
+//           { component_name: toLowerCase(data.component_name) },
+//           { component_code: toLowerCase(data.component_code) },
+//         ],
+//       },
+//     });
+//     if (totalCount > 0) {
+//       throw new CustomError(
+//         "Pay component with the same name or code already exists",
+//         400
+//       );
+//     }
+//     const updatedEntry = await prisma.hrms_m_pay_component.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         ...serializePayComponentData(data),
+//         updatedby: data.updatedby || 1,
+//         updatedate: new Date(),
+//       },
+//       include: {
+//         pay_component_tax: {
+//           select: {
+//             id: true,
+//             pay_component_id: true,
+//             rule_type: true,
+//           },
+//         },
+//         pay_component_project: {
+//           select: {
+//             id: true,
+//             code: true,
+//             name: true,
+//           },
+//         },
+//         pay_component_for_line: {
+//           select: {
+//             id: true,
+//             component_name: true,
+//             component_code: true,
+//             component_type: true,
+//           },
+//         },
+//         pay_component_cost_center1: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//         pay_component_cost_center2: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//         pay_component_cost_center3: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//         pay_component_cost_center4: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//         pay_component_cost_center5: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//       },
+//     });
+//     return updatedEntry;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error updating pay component: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const updatePayComponent = async (id, data) => {
   try {
     const totalCount = await prisma.hrms_m_pay_component.count({
@@ -155,12 +279,39 @@ const updatePayComponent = async (id, data) => {
         ],
       },
     });
+
     if (totalCount > 0) {
       throw new CustomError(
         "Pay component with the same name or code already exists",
         400
       );
     }
+
+    if (!/^\d+$/.test(data.component_code)) {
+      throw new CustomError("Invalid component code. Must be numeric.", 400);
+    }
+
+    try {
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE hrms_d_monthly_payroll_processing
+        ADD [${data.component_code}] DECIMAL(18,4) NULL
+      `);
+      console.log(`Successfully created column ${data.component_code}`);
+    } catch (sqlError) {
+      console.error("SQL Error:", sqlError.message); // Add this
+      if (
+        sqlError.message.includes("duplicate") ||
+        sqlError.message.includes("already exists")
+      ) {
+        console.log(`Column ${data.component_code} already exists`);
+      } else {
+        throw new CustomError(
+          `Failed to alter payroll processing table: ${sqlError.message}`,
+          500
+        );
+      }
+    }
+
     const updatedEntry = await prisma.hrms_m_pay_component.update({
       where: { id: parseInt(id) },
       data: {
@@ -181,6 +332,13 @@ const updatePayComponent = async (id, data) => {
             id: true,
             code: true,
             name: true,
+          },
+        },
+        pay_component_for_line: {
+          select: {
+            id: true,
+
+            component_type: true,
           },
         },
         pay_component_cost_center1: {
@@ -220,6 +378,7 @@ const updatePayComponent = async (id, data) => {
         },
       },
     });
+
     return updatedEntry;
   } catch (error) {
     throw new CustomError(
@@ -243,50 +402,6 @@ const deletePayComponent = async (id) => {
   }
 };
 
-// Get all pay components with pagination and search
-// const getAllPayComponent = async (search, page, size, startDate, endDate) => {
-//   try {
-//     page = !page || page == 0 ? 1 : page;
-//     size = size || 10;
-//     const skip = (page - 1) * size || 0;
-
-//     const filters = {};
-//     if (search) {
-//       filters.OR = [
-//         { component_name: { contains: search.toLowerCase() } },
-//         { component_code: { contains: search.toLowerCase() } },
-//         { component_type: { contains: search.toLowerCase() } },
-//       ];
-//     }
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-//         filters.createdate = { gte: start, lte: end };
-//       }
-//     }
-
-//     const datas = await prisma.hrms_m_pay_component.findMany({
-//       where: filters,
-//       skip,
-//       take: size,
-//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-//     });
-//     const totalCount = await prisma.hrms_m_pay_component.count({
-//       where: filters,
-//     });
-
-//     return {
-//       data: datas,
-//       currentPage: page,
-//       size,
-//       totalPages: Math.ceil(totalCount / size),
-//       totalCount,
-//     };
-//   } catch (error) {
-//     throw new CustomError("Error retrieving pay components", 503);
-//   }
-// };
 const getAllPayComponent = async (
   page,
   size,
@@ -296,7 +411,7 @@ const getAllPayComponent = async (
   is_active
 ) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    page = typeof page === "number" && page > 0 ? page : 1;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -321,7 +436,17 @@ const getAllPayComponent = async (
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
 
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = { gte: start, lte: end };
+      }
+    }
     const pays = await prisma.hrms_m_pay_component.findMany({
       where: filters,
       skip: skip,
@@ -343,6 +468,7 @@ const getAllPayComponent = async (
             name: true,
           },
         },
+
         pay_component_cost_center1: {
           select: {
             id: true,

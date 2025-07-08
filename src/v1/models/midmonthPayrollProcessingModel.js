@@ -31,61 +31,148 @@ const serializeMidmonthPayrollData = (data) => ({
 });
 
 //  Create
-const createMidMonthPayrollProcessing = async (data) => {
+// const createMidMonthPayrollProcessing = async (data) => {
+//   try {
+//     const result = await prisma.hrms_d_midmonth_payroll_processing.create({
+//       data: {
+//         ...serializeMidmonthPayrollData(data),
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst || 1,
+//       },
+//       include: {
+//         midmonth_payroll_processing_employee: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//           },
+//         },
+//         midmonth_payroll_processing_currency: {
+//           select: {
+//             id: true,
+//             currency_code: true,
+//             currency_name: true,
+//           },
+//         },
+//         midmonth_payroll_processing_project: {
+//           select: {
+//             id: true,
+//             code: true,
+//             name: true,
+//           },
+//         },
+//         midmonth_payroll_processing_component: {
+//           select: {
+//             id: true,
+//             component_name: true,
+//           },
+//         },
+//         midmonth_payroll_processing_center1: {
+//           select: { id: true, name: true },
+//         },
+//         midmonth_payroll_processing_center2: {
+//           select: { id: true, name: true },
+//         },
+//         midmonth_payroll_processing_center3: {
+//           select: { id: true, name: true },
+//         },
+//         midmonth_payroll_processing_center4: {
+//           select: { id: true, name: true },
+//         },
+//         midmonth_payroll_processing_center5: {
+//           select: { id: true, name: true },
+//         },
+//       },
+//     });
+//     return result;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error creating mid-month payroll: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
+const createMidMonthPayrollProcessing = async (dataArray) => {
   try {
-    const result = await prisma.hrms_d_midmonth_payroll_processing.create({
-      data: {
-        ...serializeMidmonthPayrollData(data),
-        createdby: data.createdby || 1,
-        createdate: new Date(),
-        log_inst: data.log_inst || 1,
-      },
-      include: {
-        midmonth_payroll_processing_employee: {
-          select: {
-            id: true,
-            full_name: true,
-          },
-        },
-        midmonth_payroll_processing_component: {
-          select: {
-            id: true,
-            component_name: true,
-          },
-        },
-        midmonth_payroll_processing_center1: {
-          select: { id: true, name: true },
-        },
-        midmonth_payroll_processing_center2: {
-          select: { id: true, name: true },
-        },
-        midmonth_payroll_processing_center3: {
-          select: { id: true, name: true },
-        },
-        midmonth_payroll_processing_center4: {
-          select: { id: true, name: true },
-        },
-        midmonth_payroll_processing_center5: {
-          select: { id: true, name: true },
-        },
-      },
-    });
-    return result;
+    if (!Array.isArray(dataArray) || dataArray.length === 0) {
+      throw new CustomError("Input must be a non-empty array", 400);
+    }
+
+    const errorResults = [];
+
+    await Promise.all(
+      dataArray.map(async (data) => {
+        try {
+          const requiredFields = [
+            "employee_id",
+            "payroll_month",
+            "payroll_year",
+            "payroll_week",
+            "component_id",
+            "net_pay",
+            "status",
+          ];
+
+          const missingFields = requiredFields.filter(
+            (field) => data[field] === undefined || data[field] === null
+          );
+
+          if (missingFields.length > 0) {
+            errorResults.push({
+              employee_id: data.employee_id || null,
+              error: `Incomplete data: ${missingFields.join(", ")} required`,
+            });
+            console.warn(
+              `Skipping employee_id=${
+                data.employee_id || "Unknown"
+              }: Missing fields - ${missingFields.join(", ")}`
+            );
+            return;
+          }
+
+          const record = {
+            ...serializeMidmonthPayrollData(data),
+            createdby: data.createdby || 1,
+            createdate: new Date(),
+            log_inst: data.log_inst || 1,
+          };
+
+          await prisma.hrms_d_midmonth_payroll_processing.create({
+            data: record,
+          });
+        } catch (err) {
+          errorResults.push({
+            employee_id: data.employee_id || null,
+            error: `Insert failed: ${err.message}`,
+          });
+          console.error(
+            `Insert failed for employee_id=${data.employee_id || "Unknown"}: ${
+              err.message
+            }`
+          );
+        }
+      })
+    );
+
+    return errorResults;
   } catch (error) {
+    console.log("Bulk insert error:", error);
     throw new CustomError(
-      `Error creating mid-month payroll: ${error.message}`,
+      `Error creating mid-month payroll records: ${error.message}`,
       500
     );
   }
 };
 
-// Get All
 const getAllMidMonthPayrollProcessing = async (
   search,
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  payroll_month,
+  payroll_year
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -99,7 +186,12 @@ const getAllMidMonthPayrollProcessing = async (
         { status: { contains: search.toLowerCase() } },
       ];
     }
-
+    if (payroll_month) {
+      filters.payroll_month = parseInt(payroll_month);
+    }
+    if (payroll_year) {
+      filters.payroll_year = parseInt(payroll_year);
+    }
     if (startDate && endDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
@@ -128,6 +220,20 @@ const getAllMidMonthPayrollProcessing = async (
           select: {
             id: true,
             component_name: true,
+          },
+        },
+        midmonth_payroll_processing_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
+        },
+        midmonth_payroll_processing_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
           },
         },
         midmonth_payroll_processing_center1: {
@@ -164,15 +270,11 @@ const getAllMidMonthPayrollProcessing = async (
   }
 };
 
-// Get By ID
-const findMidMonthPayrollProcessing = async (id) => {
+// Get By IDs
+const findMidMonthPayrollProcessingById = async (id) => {
   try {
     const result = await prisma.hrms_d_midmonth_payroll_processing.findUnique({
       where: { id: parseInt(id) },
-      include: {
-        hrms_d_employee: { select: { id: true, full_name: true } },
-        hrms_m_pay_component: { select: { id: true, component_name: true } },
-      },
     });
     if (!result) throw new CustomError("Payroll record not found", 404);
     return result;
@@ -184,7 +286,7 @@ const findMidMonthPayrollProcessing = async (id) => {
   }
 };
 
-// Update
+// Updates
 const updateMidMonthPayrollProcessing = async (id, data) => {
   try {
     const result = await prisma.hrms_d_midmonth_payroll_processing.update({
@@ -196,10 +298,18 @@ const updateMidMonthPayrollProcessing = async (id, data) => {
             full_name: true,
           },
         },
+
         midmonth_payroll_processing_component: {
           select: {
             id: true,
             component_name: true,
+          },
+        },
+        midmonth_payroll_processing_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
           },
         },
         midmonth_payroll_processing_center1: {
@@ -213,6 +323,13 @@ const updateMidMonthPayrollProcessing = async (id, data) => {
         },
         midmonth_payroll_processing_center4: {
           select: { id: true, name: true },
+        },
+        midmonth_payroll_processing_currency: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
         },
         midmonth_payroll_processing_center5: {
           select: { id: true, name: true },
@@ -248,10 +365,60 @@ const deleteMidMonthPayrollProcessing = async (id) => {
   }
 };
 
+const callMidMonthPostingSP = async (params) => {
+  try {
+    const {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage = "",
+    } = params;
+    console.log("Calling stored procedure with params:", {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage,
+    });
+
+    const result = await prisma.$executeRawUnsafe(`
+      EXEC sp_hrms_employee_midmonth_posting 
+        @paymonth = '${paymonth}',
+        @payyear = '${payyear}',
+        @empidfrom = '${empidfrom}',
+        @empidto = '${empidto}',
+        @depidfrom = '${depidfrom}',
+        @depidto = '${depidto}',
+        @positionidfrom = '${positionidfrom}',
+        @positionidto = '${positionidto}',
+        @wage = '${wage}'
+    `);
+    console.log("Successfully executed stored procedure", result);
+
+    return {
+      success: true,
+      message: "Mid-month payroll processed successfully",
+    };
+  } catch (error) {
+    console.error("SP Execution Failed:", error);
+    throw new CustomError("Mid-month payroll processing failed", 500);
+  }
+};
+
 module.exports = {
   createMidMonthPayrollProcessing,
-  findMidMonthPayrollProcessing,
+  findMidMonthPayrollProcessingById,
   updateMidMonthPayrollProcessing,
   deleteMidMonthPayrollProcessing,
   getAllMidMonthPayrollProcessing,
+  callMidMonthPostingSP,
 };

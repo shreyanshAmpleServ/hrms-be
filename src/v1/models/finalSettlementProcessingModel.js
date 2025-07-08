@@ -42,7 +42,7 @@ const serializeSettlementData = (data) => ({
 });
 
 //  Create
-const createFinalSettlement = async (data) => {
+const createFinalSettlementProcessing = async (data) => {
   try {
     const result = await prisma.hrms_d_finalsettlement_processing.create({
       data: {
@@ -52,10 +52,10 @@ const createFinalSettlement = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        hrms_d_employee: {
+        final_settlement_employee: {
           select: { id: true, employee_code: true, full_name: true },
         },
-        hrms_m_pay_component: {
+        finalsettlement_component: {
           select: { id: true, component_name: true, component_code: true },
         },
       },
@@ -70,11 +70,26 @@ const createFinalSettlement = async (data) => {
 };
 
 //  Get All
-const getAllFinalSettlements = async (search, page = 1, size = 10) => {
+const getAllFinalSettlementProcessing = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
   try {
-    const skip = (page - 1) * size;
+    page = !page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
     const filters = {};
 
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        filters.createdate = { gte: start, lte: end };
+      }
+    }
     if (search) {
       filters.OR = [
         { employee_email: { contains: search.toLowerCase() } },
@@ -88,10 +103,10 @@ const getAllFinalSettlements = async (search, page = 1, size = 10) => {
       take: size,
       orderBy: { createdate: "desc" },
       include: {
-        hrms_d_employee: {
+        final_settlement_employee: {
           select: { id: true, employee_code: true, full_name: true },
         },
-        hrms_m_pay_component: {
+        finalsettlement_component: {
           select: { id: true, component_name: true, component_code: true },
         },
       },
@@ -114,18 +129,10 @@ const getAllFinalSettlements = async (search, page = 1, size = 10) => {
 };
 
 // Get By ID
-const getFinalSettlementById = async (id) => {
+const findFinalSettlementProcessingById = async (id) => {
   try {
     const result = await prisma.hrms_d_finalsettlement_processing.findUnique({
       where: { id: parseInt(id) },
-      include: {
-        hrms_d_employee: {
-          select: { id: true, employee_code: true, full_name: true },
-        },
-        hrms_m_pay_component: {
-          select: { id: true, component_name: true, component_code: true },
-        },
-      },
     });
     if (!result) throw new CustomError("Final settlement not found", 404);
     return result;
@@ -135,22 +142,22 @@ const getFinalSettlementById = async (id) => {
 };
 
 // Update
-const updateFinalSettlement = async (id, data) => {
+const updateFinalSettlementProcessing = async (id, data) => {
   try {
     const result = await prisma.hrms_d_finalsettlement_processing.update({
       where: { id: parseInt(id) },
-      include: {
-        hrms_d_employee: {
-          select: { id: true, employee_code: true, full_name: true },
-        },
-        hrms_m_pay_component: {
-          select: { id: true, component_name: true, component_code: true },
-        },
-      },
       data: {
         ...serializeSettlementData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
+      },
+      include: {
+        final_settlement_employee: {
+          select: { id: true, employee_code: true, full_name: true },
+        },
+        finalsettlement_component: {
+          select: { id: true, component_name: true, component_code: true },
+        },
       },
     });
     return result;
@@ -163,7 +170,7 @@ const updateFinalSettlement = async (id, data) => {
 };
 
 //  Delete
-const deleteFinalSettlement = async (id) => {
+const deleteFinalSettlementProcessing = async (id) => {
   try {
     await prisma.hrms_d_finalsettlement_processing.delete({
       where: { id: parseInt(id) },
@@ -174,9 +181,9 @@ const deleteFinalSettlement = async (id) => {
 };
 
 module.exports = {
-  createFinalSettlement,
-  getAllFinalSettlements,
-  getFinalSettlementById,
-  updateFinalSettlement,
-  deleteFinalSettlement,
+  createFinalSettlementProcessing,
+  getAllFinalSettlementProcessing,
+  findFinalSettlementProcessingById,
+  updateFinalSettlementProcessing,
+  deleteFinalSettlementProcessing,
 };

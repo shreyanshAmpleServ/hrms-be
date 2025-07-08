@@ -701,6 +701,27 @@ const attendanceOverview = async (dateString) => {
   }
 };
 
+const getEmployeeActivity = async () => {
+  try {
+    const logs = await prisma.hrms_d_activity_log.findMany({
+      orderBy: { created_at: "desc" },
+      take: 10,
+      include: {
+        activity_employee: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+          },
+        },
+      },
+    });
+
+    return logs;
+  } catch (error) {
+    console.log("Error getting activities:", error);
+  }
+};
 module.exports = {
   findDealById,
   getDashboardData,
@@ -712,4 +733,5 @@ module.exports = {
   getStatus,
   workAnniversary,
   attendanceOverview,
+  getEmployeeActivity,
 };

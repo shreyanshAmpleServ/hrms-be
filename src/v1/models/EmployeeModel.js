@@ -540,6 +540,7 @@ const findEmployeeById = async (id) => {
  * @returns {Promise<Object>} The paginated employee data.
  * @throws {CustomError} If retrieval fails.
  */
+
 const getAllEmployee = async (
   page,
   size,
@@ -556,26 +557,24 @@ const getAllEmployee = async (
     const skip = (page - 1) * size;
 
     const filters = {};
+
+    // Search filter
     if (search) {
+      const lowerSearch = search.toLowerCase();
       filters.OR = [
         {
           hrms_employee_designation: {
-            designation_name: { contains: search.toLowerCase() },
+            designation_name: { contains: lowerSearch },
           },
         },
-        // {
-        //   experiance_of_employee: {
-        //     company_name: { contains: search.toLowerCase() },
-        //   },
-        // },
         {
           hrms_employee_department: {
-            department_name: { contains: search.toLowerCase() },
+            department_name: { contains: lowerSearch },
           },
         },
-        { first_name: { contains: search.toLowerCase() } },
-        { full_name: { contains: search.toLowerCase() } },
-        { employee_code: { contains: search.toLowerCase() } },
+        { first_name: { contains: lowerSearch } },
+        { full_name: { contains: lowerSearch } },
+        { employee_code: { contains: lowerSearch } },
       ];
     }
 
@@ -587,6 +586,10 @@ const getAllEmployee = async (
       }
     }
 
+    if (status !== undefined && status !== "") {
+      filters.status = status;
+    }
+
     const employees = await prisma.hrms_d_employee.findMany({
       where: filters,
       skip,
@@ -594,12 +597,8 @@ const getAllEmployee = async (
       include: {
         hrms_employee_address: {
           include: {
-            employee_state: {
-              select: { id: true, name: true },
-            },
-            employee_country: {
-              select: { id: true, name: true },
-            },
+            employee_state: { select: { id: true, name: true } },
+            employee_country: { select: { id: true, name: true } },
           },
         },
         hrms_employee_designation: {
@@ -630,6 +629,46 @@ const getAllEmployee = async (
     };
   } catch (error) {
     console.error("Error employee get : ", error);
+    throw new CustomError("Error retrieving employees", 503);
+  }
+};
+
+/**
+ * Retrieves a list of active employees formatted for select options.
+ * Each option contains value (employee id), label (full name and code), and meta (department and designation ids).
+ * Optimized for minimal data transfer and mapping.
+ * @returns {Promise<Array<{value: number, label: string, meta: {department_id: number, designation_id: number}}>>}
+ * @throws {CustomError} If retrieval fails.
+ */
+const employeeOptions = async () => {
+  try {
+    const employees = await prisma.hrms_d_employee.findMany({
+      where: { status: "Active" },
+      select: {
+        id: true,
+        full_name: true,
+        employee_code: true,
+        department_id: true,
+        designation_id: true,
+        email: true,
+      },
+    });
+    return employees.map(
+      ({
+        id,
+        full_name,
+        employee_code,
+        department_id,
+        designation_id,
+        email,
+      }) => ({
+        value: id,
+        label: `${full_name} (${employee_code})`,
+        meta: { department_id, designation_id, email },
+      })
+    );
+  } catch (error) {
+    console.error("Error retrieving employee options: ", error);
     throw new CustomError("Error retrieving employees", 503);
   }
 };
@@ -668,4 +707,5 @@ module.exports = {
   updateEmployee,
   getAllEmployee,
   deleteEmployee,
+  employeeOptions,
 };

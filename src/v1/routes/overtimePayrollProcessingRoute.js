@@ -22,7 +22,7 @@ router.get(
 );
 
 router.put(
-  "/midmonth-payroll-processing/:id",
+  "/overtime-payroll-processing/:id",
   authenticateToken,
   overtimePayrollProcessingController.updateOvertimePayrollProcessing
 );

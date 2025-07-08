@@ -5,7 +5,26 @@ const { id } = require("date-fns/locale");
 const prisma = new PrismaClient();
 
 // Serialize shift master data
+// const serializeShiftMasterData = (data) => ({
+//   shift_name: data.shift_name || "",
+//   start_time: data.start_time || null,
+//   end_time: data.end_time || null,
+//   lunch_time: data.lunch_time ? Number(data.lunch_time) : null,
+//   daily_working_hours: data.daily_working_hours
+//     ? Number(data.daily_working_hours)
+//     : null,
+//   department_id: data.department_id ? Number(data.department_id) : null,
+//   number_of_working_days: data.number_of_working_days
+//     ? Number(data.number_of_working_days)
+//     : null,
+//   half_day_working: data.half_day_working || "N",
+//   half_day_on: data.half_day_on ? Number(data.half_day_on) : null,
+//   remarks: data.remarks || "",
+//   is_active: data.is_active || "Y",
+// });
+
 const serializeShiftMasterData = (data) => ({
+  id: data.id ? Number(data.id) : undefined,
   shift_name: data.shift_name || "",
   start_time: data.start_time || null,
   end_time: data.end_time || null,
@@ -13,13 +32,14 @@ const serializeShiftMasterData = (data) => ({
   daily_working_hours: data.daily_working_hours
     ? Number(data.daily_working_hours)
     : null,
-  department_id: data.department_id ? Number(data.department_id) : null,
+  // department_id: data.department_id ? Number(data.department_id) : null,
   number_of_working_days: data.number_of_working_days
     ? Number(data.number_of_working_days)
     : null,
   half_day_working: data.half_day_working || "N",
   half_day_on: data.half_day_on ? Number(data.half_day_on) : null,
   remarks: data.remarks || "",
+  weekoff_days: data.weekoff_days || "",
   is_active: data.is_active || "Y",
 });
 
@@ -28,10 +48,18 @@ const createShift = async (data) => {
   try {
     const reqData = await prisma.hrms_m_shift_master.create({
       data: {
-        ...serializeShiftMasterData(data),
+        ...serializeShiftMasterData({
+          ...data,
+          department_id: undefined, // Don't pass this directly
+        }),
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
+        shift_department_id: data.department_id
+          ? {
+              connect: { id: Number(data.department_id) },
+            }
+          : undefined,
       },
       include: {
         shift_department_id: {
@@ -41,6 +69,7 @@ const createShift = async (data) => {
         },
       },
     });
+
     return reqData;
   } catch (error) {
     throw new CustomError(`Error creating shift master: ${error.message}`, 500);

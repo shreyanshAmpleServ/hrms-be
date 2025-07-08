@@ -38,11 +38,13 @@ router.delete(
 );
 
 // Route to get all employees
+router.get("/employee", authenticateToken, EmployeeController.getAllEmployee);
+
+// Route to get all employees options
 router.get(
-  "/employee",
+  "/employee-options",
   authenticateToken,
-  upload.single("profile_pic"),
-  EmployeeController.getAllEmployee
+  EmployeeController.employeeOptions
 );
 
 module.exports = router;
