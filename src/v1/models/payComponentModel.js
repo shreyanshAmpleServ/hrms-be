@@ -408,7 +408,8 @@ const getAllPayComponent = async (
   search,
   startDate,
   endDate,
-  is_active
+  is_active,
+  is_advance
 ) => {
   try {
     page = typeof page === "number" && page > 0 ? page : 1;
@@ -435,6 +436,9 @@ const getAllPayComponent = async (
     } else if (typeof is_active === "string") {
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
+    }
+    if (is_advance) {
+      filters.is_advance = is_advance === "Y" ? "Y" : "N";
     }
     if (startDate && endDate) {
       const start = new Date(startDate);
