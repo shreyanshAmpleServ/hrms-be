@@ -170,7 +170,9 @@ const getAllMidMonthPayrollProcessing = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  payroll_month,
+  payroll_year
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -184,7 +186,12 @@ const getAllMidMonthPayrollProcessing = async (
         { status: { contains: search.toLowerCase() } },
       ];
     }
-
+    if (payroll_month) {
+      filters.payroll_month = parseInt(payroll_month);
+    }
+    if (payroll_year) {
+      filters.payroll_year = parseInt(payroll_year);
+    }
     if (startDate && endDate) {
       const start = new Date(startDate);
       start.setHours(0, 0, 0, 0);
@@ -358,10 +365,60 @@ const deleteMidMonthPayrollProcessing = async (id) => {
   }
 };
 
+const callMidMonthPostingSP = async (params) => {
+  try {
+    const {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage = "",
+    } = params;
+    console.log("Calling stored procedure with params:", {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage,
+    });
+
+    const result = await prisma.$executeRawUnsafe(`
+      EXEC sp_hrms_employee_midmonth_posting 
+        @paymonth = '${paymonth}',
+        @payyear = '${payyear}',
+        @empidfrom = '${empidfrom}',
+        @empidto = '${empidto}',
+        @depidfrom = '${depidfrom}',
+        @depidto = '${depidto}',
+        @positionidfrom = '${positionidfrom}',
+        @positionidto = '${positionidto}',
+        @wage = '${wage}'
+    `);
+    console.log("Successfully executed stored procedure", result);
+
+    return {
+      success: true,
+      message: "Mid-month payroll processed successfully",
+    };
+  } catch (error) {
+    console.error("SP Execution Failed:", error);
+    throw new CustomError("Mid-month payroll processing failed", 500);
+  }
+};
+
 module.exports = {
   createMidMonthPayrollProcessing,
   findMidMonthPayrollProcessingById,
   updateMidMonthPayrollProcessing,
   deleteMidMonthPayrollProcessing,
   getAllMidMonthPayrollProcessing,
+  callMidMonthPostingSP,
 };
