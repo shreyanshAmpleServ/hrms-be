@@ -15,7 +15,7 @@ const serializeAttendanceData = async (data) => {
   const checkOut = data.check_out_time ? new Date(data.check_out_time) : null;
 
   let working_hours = null;
-  let status = data.status || "Absent"; // default if getStatusFromWorkingHours fails
+  let status = data.status;
 
   // Calculate working hours as decimal
   if (checkIn && checkOut && checkOut > checkIn) {
@@ -44,15 +44,17 @@ const serializeAttendanceData = async (data) => {
 const getStatusFromWorkingHours = async (employeeId, working_hours) => {
   if (!employeeId || working_hours == null) return null;
 
+  // Fetch employee's shift_id
   const employee = await prisma.hrms_d_employee.findUnique({
     where: { id: employeeId },
-    select: { department_id: true },
+    select: { shift_id: true },
   });
 
-  if (!employee?.department_id) return "Absent";
+  if (!employee?.shift_id) return "Absent";
 
-  const shift = await prisma.hrms_m_shift_master.findFirst({
-    where: { department_id: employee.department_id },
+  // Fetch shift master data using shift_id
+  const shift = await prisma.hrms_m_shift_master.findUnique({
+    where: { id: employee.shift_id },
     select: { daily_working_hours: true },
   });
 

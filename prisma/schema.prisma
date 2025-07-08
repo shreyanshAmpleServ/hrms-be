@@ -1366,6 +1366,7 @@ model hrms_m_shift_master {
   start_time             String?                   @db.VarChar(50)
   end_time               String?                   @db.VarChar(50)
   is_active              String?                   @default("Y") @db.Char(1)
+  weekoff_days           String?                   @db.VarChar(50)
   createdate             DateTime?                 @default(now(), map: "DF__hrms_m_sh__creat__25518C17") @db.DateTime
   createdby              Int
   updatedate             DateTime?                 @db.DateTime
