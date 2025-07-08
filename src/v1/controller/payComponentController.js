@@ -61,8 +61,8 @@ const getAllPayComponent = async (req, res, next) => {
       Number(page),
       Number(size),
       search,
-      moment(startDate),
-      moment(endDate),
+      startDate && moment(startDate),
+      endDate && moment(endDate),
       is_active
     );
     res.status(200).success(null, departments);

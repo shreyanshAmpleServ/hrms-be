@@ -33,4 +33,9 @@ router.delete(
   midmonthPayrollProcessingController.deleteMidMonthPayrollProcessing
 );
 
+router.get(
+  "/midmonth-payroll-processing/run-sp",
+  midmonthPayrollProcessingController.triggerMidMonthPostingSP
+);
+
 module.exports = router;

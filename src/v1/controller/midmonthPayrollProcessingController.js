@@ -45,7 +45,7 @@ const findMidMonthPayrollProcessing = async (req, res, next) => {
 };
 
 const updateMidMonthPayrollProcessing = async (req, res, next) => {
-  console.log("📥 Controller hit: GET /midmonth-payroll-processing/:id");
+  console.log(" Controller hit: GET /midmonth-payroll-processing/:id");
 
   try {
     const data = {
@@ -81,25 +81,57 @@ const deleteMidMonthPayrollProcessing = async (req, res, next) => {
 
 const getAllMidMonthPayrollProcessing = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const {
+      search,
+      page,
+      size,
+      startDate,
+      endDate,
+      payroll_month,
+      payroll_year,
+    } = req.query;
+
     const data =
       await midmonthPayrollProcessingService.getAllMidMonthPayrollProcessing(
         search,
-        Number(page),
-        Number(size),
-        startDate && moment(startDate),
-        endDate && moment(endDate)
+        page,
+        size,
+        startDate,
+        endDate,
+        payroll_month,
+        payroll_year
       );
-    res.status(200).success(null, data);
+
+    res.status(200).json({
+      success: true,
+      data,
+      message: "Success",
+      status: 200,
+    });
   } catch (error) {
     next(error);
   }
 };
 
+const triggerMidMonthPostingSP = async (req, res, next) => {
+  try {
+    const result = await midmonthPayrollProcessingService.callMidMonthPostingSP(
+      req.body
+    );
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   createMidMonthPayrollProcessing,
   updateMidMonthPayrollProcessing,
   deleteMidMonthPayrollProcessing,
   getAllMidMonthPayrollProcessing,
   findMidMonthPayrollProcessing,
+  triggerMidMonthPostingSP,
 };

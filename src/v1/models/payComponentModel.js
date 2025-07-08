@@ -296,11 +296,14 @@ const updatePayComponent = async (id, data) => {
         ALTER TABLE hrms_d_monthly_payroll_processing
         ADD [${data.component_code}] DECIMAL(18,4) NULL
       `);
+      console.log(`Successfully created column ${data.component_code}`);
     } catch (sqlError) {
+      console.error("SQL Error:", sqlError.message); // Add this
       if (
         sqlError.message.includes("duplicate") ||
         sqlError.message.includes("already exists")
       ) {
+        console.log(`Column ${data.component_code} already exists`);
       } else {
         throw new CustomError(
           `Failed to alter payroll processing table: ${sqlError.message}`,
@@ -309,7 +312,6 @@ const updatePayComponent = async (id, data) => {
       }
     }
 
-    // Proceed to update the entry
     const updatedEntry = await prisma.hrms_m_pay_component.update({
       where: { id: parseInt(id) },
       data: {
@@ -335,8 +337,7 @@ const updatePayComponent = async (id, data) => {
         pay_component_for_line: {
           select: {
             id: true,
-            component_name: true,
-            component_code: true,
+
             component_type: true,
           },
         },
