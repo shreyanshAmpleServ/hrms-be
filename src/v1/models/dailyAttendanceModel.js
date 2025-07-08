@@ -14,30 +14,18 @@ const serializeAttendanceData = async (data) => {
   const checkIn = data.check_in_time ? new Date(data.check_in_time) : null;
   const checkOut = data.check_out_time ? new Date(data.check_out_time) : null;
 
-  let total_login_hours = "";
   let working_hours = null;
-  let status = data.status || null;
+  let status = data.status || "Absent"; // default if getStatusFromWorkingHours fails
 
-  // Step 1: Calculate total_login_hours & working_hours
+  // Calculate working hours as decimal
   if (checkIn && checkOut && checkOut > checkIn) {
     const diffMs = checkOut - checkIn;
-    const totalSeconds = Math.floor(diffMs / 1000);
-    const hours = Math.floor(totalSeconds / 3600);
-    const minutes = Math.floor((totalSeconds % 3600) / 60);
-    const seconds = totalSeconds % 60;
-
-    total_login_hours = [
-      hours.toString().padStart(2, "0"),
-      minutes.toString().padStart(2, "0"),
-      seconds.toString().padStart(2, "0"),
-    ].join(":");
-
-    working_hours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+    working_hours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2)); // e.g. 7.5
   }
 
-  // Step 2: Auto-assign status if not provided
-  if (!status && total_login_hours && data.employee_id) {
-    status = await getStatusFromLoginHours(data.employee_id, total_login_hours);
+  // Auto-assign status
+  if (!status && working_hours !== null && data.employee_id) {
+    status = await getStatusFromWorkingHours(data.employee_id, working_hours);
   }
 
   return {
@@ -49,34 +37,32 @@ const serializeAttendanceData = async (data) => {
     check_out_time: checkOut,
     status,
     remarks: data.remarks || "",
-    total_login_hours,
     working_hours,
   };
 };
 
-const getStatusFromLoginHours = async (employeeId, total_login_hours) => {
-  if (!employeeId || !total_login_hours) return null;
+const getStatusFromWorkingHours = async (employeeId, working_hours) => {
+  if (!employeeId || working_hours == null) return null;
 
   const employee = await prisma.hrms_d_employee.findUnique({
     where: { id: employeeId },
     select: { department_id: true },
   });
-  if (!employee?.department_id) return null;
+
+  if (!employee?.department_id) return "Absent";
 
   const shift = await prisma.hrms_m_shift_master.findFirst({
     where: { department_id: employee.department_id },
     select: { daily_working_hours: true },
   });
-  if (!shift?.daily_working_hours) return null;
 
-  const [h = 0, m = 0, s = 0] = total_login_hours.split(":").map(Number);
-  const loginHours = h + m / 60 + s / 3600;
+  if (!shift?.daily_working_hours) return "Absent";
 
   const fullDay = parseFloat(shift.daily_working_hours);
   const halfDay = fullDay / 2;
 
-  if (loginHours >= fullDay) return "Present";
-  if (loginHours >= halfDay) return "Half Day";
+  if (working_hours >= fullDay) return "Present";
+  if (working_hours >= halfDay) return "Half Day";
   return "Absent";
 };
 
@@ -84,7 +70,6 @@ const getStatusFromLoginHours = async (employeeId, total_login_hours) => {
 const createDailyAttendance = async (data) => {
   try {
     const serializedData = await serializeAttendanceData(data);
-
     const reqData = await prisma.hrms_d_daily_attendance_entry.create({
       data: {
         ...serializedData,
