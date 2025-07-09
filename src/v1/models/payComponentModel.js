@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
+const { id } = require("date-fns/locale");
 const prisma = new PrismaClient();
 
 // Serialize pay component data
@@ -287,6 +288,30 @@ const updatePayComponent = async (id, data) => {
       );
     }
 
+    if (!/^\d+$/.test(data.component_code)) {
+      throw new CustomError("Invalid component code. Must be numeric.", 400);
+    }
+
+    try {
+      await prisma.$executeRawUnsafe(`
+        ALTER TABLE hrms_d_monthly_payroll_processing
+        ADD [${data.component_code}] DECIMAL(18,4) NULL
+      `);
+      console.log(`Successfully created column ${data.component_code}`);
+    } catch (sqlError) {
+      console.error("SQL Error:", sqlError.message);
+      if (
+        sqlError.message.includes("duplicate") ||
+        sqlError.message.includes("already exists")
+      ) {
+        console.log(`Column ${data.component_code} already exists`);
+      } else {
+        throw new CustomError(
+          `Failed to alter payroll processing table: ${sqlError.message}`,
+          500
+        );
+      }
+    }
     const updatedEntry = await prisma.hrms_m_pay_component.update({
       where: { id: parseInt(id) },
       data: {
@@ -312,7 +337,6 @@ const updatePayComponent = async (id, data) => {
         pay_component_for_line: {
           select: {
             id: true,
-
             component_type: true,
           },
         },
@@ -502,10 +526,36 @@ const getAllPayComponent = async (
   }
 };
 
+const getPayComponentOptions = async () => {
+  try {
+    const payComponent = await prisma.hrms_m_pay_component.findMany({
+      select: {
+        id: true,
+        component_name: true,
+        component_code: true,
+        component_type: true,
+      },
+    });
+    return payComponent.map(
+      ({ id, component_name, component_code, component_type }) => ({
+        value: id,
+        label: component_name,
+        meta: {
+          component_code,
+          component_type,
+        },
+      })
+    );
+  } catch (error) {
+    console.error("Error retrieving pay component options: ", error);
+    throw new CustomError("Error retrieving pay component", 503);
+  }
+};
 module.exports = {
   createPayComponent,
   findPayComponentById,
   updatePayComponent,
   deletePayComponent,
   getAllPayComponent,
+  getPayComponentOptions,
 };

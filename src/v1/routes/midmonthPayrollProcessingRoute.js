@@ -33,7 +33,7 @@ router.delete(
   midmonthPayrollProcessingController.deleteMidMonthPayrollProcessing
 );
 
-router.get(
+router.post(
   "/midmonth-payroll-processing/run-sp",
   midmonthPayrollProcessingController.triggerMidMonthPostingSP
 );

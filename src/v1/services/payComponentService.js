@@ -36,10 +36,14 @@ const getAllPayComponent = async (
   );
 };
 
+const getPayComponentOptions = async () => {
+  return await payComponentModel.getPayComponentOptions();
+};
 module.exports = {
   createPayComponent,
   findPayComponentById,
   updatePayComponent,
   deletePayComponent,
   getAllPayComponent,
+  getPayComponentOptions,
 };
