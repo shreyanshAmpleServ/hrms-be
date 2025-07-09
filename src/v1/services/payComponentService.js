@@ -36,8 +36,8 @@ const getAllPayComponent = async (
   );
 };
 
-const getPayComponentOptions = async () => {
-  return await payComponentModel.getPayComponentOptions();
+const getPayComponentOptions = async (isAdvance) => {
+  return await payComponentModel.getPayComponentOptions(isAdvance);
 };
 module.exports = {
   createPayComponent,
