@@ -133,10 +133,60 @@ const deleteOverTimeSetup = async (id) => {
   }
 };
 
+const callOvertimePostingSP = async (params) => {
+  try {
+    const {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage = "",
+    } = params;
+    console.log("Calling stored procedure with params:", {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage,
+    });
+
+    const result = await prisma.$queryRawUnsafe(`
+      EXEC sp_hrms_employee_overtime_posting
+        @paymonth = '${paymonth}',
+        @payyear = '${payyear}',
+        @empidfrom = '${empidfrom}',
+        @empidto = '${empidto}',
+        @depidfrom = '${depidfrom}',
+        @depidto = '${depidto}',
+        @positionidfrom = '${positionidfrom}',
+        @positionidto = '${positionidto}',
+        @wage = '${wage}'
+    `);
+    console.log("Successfully executed stored procedure", result);
+
+    return {
+      success: true,
+      message: "Overtime payroll processed successfully",
+    };
+  } catch (error) {
+    console.error("SP Execution Failed:", error);
+    throw new CustomError("Overtime payroll processing failed", 500);
+  }
+};
+
 module.exports = {
   createOverTimeSetup,
   getAllOverTimeSetup,
   findOverTimeSetupById,
   updateOverTimeSetup,
   deleteOverTimeSetup,
+  callOvertimePostingSP,
 };

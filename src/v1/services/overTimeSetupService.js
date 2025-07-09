@@ -27,10 +27,42 @@ const getAllOverTimeSetup = async (search, page, size, startDate, endDate) => {
   );
 };
 
+const callOvertimePostingSP = async (params) => {
+  try {
+    const {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage = "",
+    } = params;
+    await overTimeSetupModel.callOvertimePostingSP({
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage,
+    });
+    return {
+      success: true,
+      message: "Overtime payroll processed successfully.",
+    };
+  } catch (error) {}
+};
+
 module.exports = {
   createOverTimeSetup,
   findOverTimeSetupById,
   updateOverTimeSetup,
   deleteOverTimeSetup,
   getAllOverTimeSetup,
+  callOvertimePostingSP,
 };
