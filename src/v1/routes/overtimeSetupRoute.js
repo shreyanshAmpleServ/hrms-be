@@ -21,6 +21,10 @@ router.get(
   overTimeSetupController.findOverTimeSetup
 );
 
+router.get(
+  "/overtime-setup/run-sp",
+  overTimeSetupController.triggerOvertimePostingSP
+);
 router.put(
   "/overtime-setup/:id",
   authenticateToken,

@@ -10,6 +10,7 @@ const serializeOvertimeData = (data) => ({
   overtime_date: new Date(data.overtime_date),
   pay_currency: Number(data.pay_currency),
   component_id: Number(data.component_id),
+  amount: data.amount ? parseFloat(data.amount) : 0,
   start_time: data.start_time,
   end_time: data.end_time,
   overtime_hours: parseFloat(data.overtime_hours),
@@ -26,45 +27,63 @@ const serializeOvertimeData = (data) => ({
   linked_payslip_id: data.linked_payslip_id
     ? Number(data.linked_payslip_id)
     : null,
+  doc_date: data.doc_date ? new Date(data.doc_date) : null,
+  je_transid: data.je_transid || null,
+
   source_doc: data.source_doc || null,
   overtime_pay: parseFloat(data.overtime_pay),
   status: data.status || "Pending",
   execution_date: data.execution_date ? new Date(data.execution_date) : null,
-  pay_date: data.pay_date ? new Date(data.pay_date) : null,
-  pay_id: data.pay_id ? Number(data.pay_id) : null,
-  processed: data.processed || "N",
+  // pay_date: data.pay_date ? new Date(data.pay_date) : null,
+  // pay_id: data.pay_id ? Number(data.pay_id) : null,
+  project_id: data.project_id ? Number(data.project_id) : null,
   approved1: data.approved1 || "N",
   approver1_id: data.approver1_id ? Number(data.approver1_id) : null,
-  employee_email: data.employee_email || null,
   remarks: data.remarks || null,
-  createdate: new Date(),
-  createdby: data.createdby || 1,
-  updatedate: new Date(),
-  updatedby: data.updatedby || 1,
-  log_inst: data.log_inst || 1,
 });
 
 // CREATE
 const createOvertimePayrollProcessing = async (data) => {
   try {
-    const result = await prisma.hrms_d_overtime_payroll_processing.create({
-      data: serializeOvertimeData(data),
+    const result = await prisma.hrms_d_employee_payroll_adjustment.create({
+      data: {
+        ...serializeOvertimeData(data),
+        createdate: new Date(),
+        createdby: data.createdby || 1,
+        log_inst: data.log_inst || 1,
+      },
       include: {
-        overtime_payroll_processing_employee: {
+        employee_payroll_adjustment_employee: {
           select: { id: true, full_name: true, employee_code: true },
         },
-        overtime_payroll_processing_component: {
+        employee_payroll_adjustment_component: {
           select: { id: true, component_name: true },
         },
-        overtime_payroll_processing_currency: {
+        employee_payroll_adjustment_currency: {
           select: {
             id: true,
             currency_code: true,
             currency_name: true,
           },
         },
+        employee_payroll_adjustment_center1: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center2: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center3: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center4: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center5: {
+          select: { id: true, name: true },
+        },
       },
     });
+
     return result;
   } catch (error) {
     throw new CustomError(`Error creating record: ${error.message}`, 500);
@@ -112,29 +131,44 @@ const getAllOvertimePayrollProcessing = async (
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
-    const data = await prisma.hrms_d_overtime_payroll_processing.findMany({
+    const data = await prisma.hrms_d_employee_payroll_adjustment.findMany({
       where: filters,
       skip,
       take: size,
       orderBy: { createdate: "desc" },
       include: {
-        overtime_payroll_processing_employee: {
+        employee_payroll_adjustment_employee: {
           select: { id: true, full_name: true, employee_code: true },
         },
-        overtime_payroll_processing_component: {
+        employee_payroll_adjustment_component: {
           select: { id: true, component_name: true },
         },
-        overtime_payroll_processing_currency: {
+        employee_payroll_adjustment_currency: {
           select: {
             id: true,
             currency_code: true,
             currency_name: true,
           },
         },
+        employee_payroll_adjustment_center1: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center2: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center3: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center4: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center5: {
+          select: { id: true, name: true },
+        },
       },
     });
 
-    const totalCount = await prisma.hrms_d_overtime_payroll_processing.count({
+    const totalCount = await prisma.hrms_d_employee_payroll_adjustment.count({
       where: filters,
     });
 
@@ -156,7 +190,7 @@ const getAllOvertimePayrollProcessing = async (
 
 // GET BY ID
 const findOvertimePayrollProcessingById = async (id) => {
-  const result = await prisma.hrms_d_overtime_payroll_processing.findUnique({
+  const result = await prisma.hrms_d_employee_payroll_adjustment.findUnique({
     where: { id: Number(id) },
   });
   if (!result) throw new CustomError("Record not found", 404);
@@ -166,25 +200,41 @@ const findOvertimePayrollProcessingById = async (id) => {
 // UPDATE
 const updateOvertimePayrollProcessing = async (id, data) => {
   try {
-    const result = await prisma.hrms_d_overtime_payroll_processing.update({
+    const result = await prisma.hrms_d_employee_payroll_adjustment.update({
       where: { id: Number(id) },
       data: {
         ...serializeOvertimeData(data),
         updatedate: new Date(),
+        updatedby: data.updatedby || 1,
       },
       include: {
-        overtime_payroll_processing_employee: {
+        employee_payroll_adjustment_employee: {
           select: { id: true, full_name: true, employee_code: true },
         },
-        overtime_payroll_processing_component: {
+        employee_payroll_adjustment_component: {
           select: { id: true, component_name: true },
         },
-        overtime_payroll_processing_currency: {
+        employee_payroll_adjustment_currency: {
           select: {
             id: true,
             currency_code: true,
             currency_name: true,
           },
+        },
+        employee_payroll_adjustment_center1: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center2: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center3: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center4: {
+          select: { id: true, name: true },
+        },
+        employee_payroll_adjustment_center5: {
+          select: { id: true, name: true },
         },
       },
     });
@@ -197,7 +247,7 @@ const updateOvertimePayrollProcessing = async (id, data) => {
 // DELETE
 const deleteOvertimePayrollProcessing = async (id) => {
   try {
-    await prisma.hrms_d_overtime_payroll_processing.delete({
+    await prisma.hrms_d_employee_payroll_adjustment.delete({
       where: { id: Number(id) },
     });
   } catch (error) {

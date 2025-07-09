@@ -353,6 +353,8 @@ model hrms_d_employee {
   user_employee                                   hrms_m_user[]
   projects_employee_detail                        hrms_m_projects[]
   activity_employee                               hrms_d_activity_log[]
+  employee_payroll_deduction_employee             hrms_d_employee_payroll_deduction_schedule[]      @relation("EmployeePayrollDeductionEmployee")
+  employee_payroll_adjustment_employee            hrms_d_employee_payroll_adjustment[]              @relation("EmployeePayrollAdjustmentEmployee")
 }
 
 model hrms_d_employee_address {
@@ -1073,6 +1075,8 @@ model hrms_m_currency_master {
   overtime_payroll_processing_currency hrms_d_overtime_payroll_processing[]            @relation("OvertimeCurrency")
   travel_expense_currency              hrms_d_travel_expense[]
   loan_master_amount_currency          hrms_m_loan_master[]
+  employee_payroll_deduction_currency  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeductionCurrency")
+  employee_payroll_adjustment_currency hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentCurrency")
 }
 
 model hrms_m_department_master {
@@ -1310,6 +1314,8 @@ model hrms_m_pay_component {
   pay_component_project                 hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_tax                     hrms_m_tax_slab_rule?                           @relation(fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
+  employee_payroll_deduction_component  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeduction")
+  employee_payroll_adjustment_component hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentComponent")
 }
 
 model hrms_m_provident_fund {
@@ -1661,7 +1667,6 @@ model hrms_d_daily_attendance_entry {
 }
 
 model hrms_d_monthly_payroll_processing {
-
   id                            Int             @id @default(autoincrement())
   employee_id                   Int
   payroll_month                 Int             @db.SmallInt
@@ -1944,65 +1949,83 @@ model hrms_d_employee_pay_component_assignment_line {
 }
 
 model hrms_d_employee_payroll_adjustment {
-  id                       Int       @id(map: "PK__hrms_d_e__3213E83FD3B08BF0") @default(autoincrement())
-  employee_id              Int
-  payroll_month            Int       @db.SmallInt
-  payroll_year             Int       @db.SmallInt
-  payroll_week             Int       @db.SmallInt
-  pay_currency             Int?
-  overtime_type            Int?
-  overtime_rate            Decimal   @db.Decimal(18, 2)
-  component_id             Int
-  amount                   Decimal   @db.Decimal(18, 2)
-  status                   String?   @db.VarChar(20)
-  execution_date           DateTime? @db.Date
-  doc_date                 DateTime? @db.Date
-  je_transid               Int?
-  project_id               Int?
-  cost_center1_id          Int?
-  cost_center2_id          Int?
-  cost_center3_id          Int?
-  cost_center4_id          Int?
-  cost_center5_id          Int?
-  approved1                String    @default("N", map: "DF__hrms_d_em__appro__3D9E16F4") @db.Char(1)
-  approver1_id             Int?
-  remarks                  String?   @db.NVarChar(250)
-  createdate               DateTime? @db.DateTime
-  createdby                Int
-  updatedate               DateTime? @db.DateTime
-  updatedby                Int?
-  log_inst                 Int?
-  hrms_m_currency_masterId Int?
+  id                                    Int                     @id(map: "PK__hrms_d_e__3213E83FD3B08BF0") @default(autoincrement())
+  employee_id                           Int
+  payroll_month                         Int                     @db.SmallInt
+  payroll_year                          Int                     @db.SmallInt
+  payroll_week                          Int                     @db.SmallInt
+  pay_currency                          Int?
+  overtime_type                         Int?
+  overtime_rate                         Decimal                 @db.Decimal(18, 2)
+  component_id                          Int
+  amount                                Decimal                 @db.Decimal(18, 2)
+  status                                String?                 @db.VarChar(20)
+  execution_date                        DateTime?               @db.Date
+  doc_date                              DateTime?               @db.Date
+  je_transid                            Int?
+  project_id                            Int?
+  cost_center1_id                       Int?
+  cost_center2_id                       Int?
+  cost_center3_id                       Int?
+  cost_center4_id                       Int?
+  cost_center5_id                       Int?
+  approved1                             String                  @default("N", map: "DF__hrms_d_em__appro__3D9E16F4") @db.Char(1)
+  approver1_id                          Int?
+  remarks                               String?                 @db.NVarChar(250)
+  createdate                            DateTime?               @db.DateTime
+  createdby                             Int
+  updatedate                            DateTime?               @db.DateTime
+  updatedby                             Int?
+  log_inst                              Int?
+  hrms_m_currency_masterId              Int?
+  employee_payroll_adjustment_component hrms_m_pay_component?   @relation("EmployeePayrollAdjustmentComponent", fields: [component_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_center1   hrms_m_costcenters?     @relation("CostCenter1", fields: [cost_center1_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_center2   hrms_m_costcenters?     @relation("CostCenter2", fields: [cost_center2_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_center3   hrms_m_costcenters?     @relation("CostCenter3", fields: [cost_center3_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_center4   hrms_m_costcenters?     @relation("CostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_center5   hrms_m_costcenters?     @relation("CostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_employee  hrms_d_employee?        @relation("EmployeePayrollAdjustmentEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_project   hrms_m_projects?        @relation("EmployeePayrollAdjustmentProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_currency  hrms_m_currency_master? @relation("EmployeePayrollAdjustmentCurrency", fields: [hrms_m_currency_masterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_employee_payroll_deduction_schedule {
-  id                       Int       @id @default(autoincrement())
-  employee_id              Int
-  payroll_month            Int       @db.SmallInt
-  payroll_year             Int       @db.SmallInt
-  payroll_week             Int       @db.SmallInt
-  pay_currency             Int?
-  component_id             Int
-  amount                   Decimal   @db.Decimal(18, 2)
-  status                   String    @db.NVarChar(20)
-  execution_date           DateTime? @db.Date
-  doc_date                 DateTime? @db.Date
-  je_transid               Int?
-  project_id               Int?
-  cost_center1_id          Int?
-  cost_center2_id          Int?
-  cost_center3_id          Int?
-  cost_center4_id          Int?
-  cost_center5_id          Int?
-  approved1                String    @default("N", map: "DF__hrms_d_em__appro__4DD47EBD") @db.Char(1)
-  approver1_id             Int?
-  remarks                  String?   @db.NVarChar(250)
-  createdate               DateTime  @db.DateTime
-  createdby                Int
-  updatedate               DateTime? @db.DateTime
-  updatedby                Int?
-  log_inst                 Int?
-  hrms_m_currency_masterId Int?
+  id                                   Int                     @id @default(autoincrement())
+  employee_id                          Int
+  payroll_month                        Int                     @db.SmallInt
+  payroll_year                         Int                     @db.SmallInt
+  payroll_week                         Int                     @db.SmallInt
+  pay_currency                         Int?
+  component_id                         Int
+  amount                               Decimal                 @db.Decimal(18, 2)
+  status                               String                  @db.NVarChar(20)
+  execution_date                       DateTime?               @db.Date
+  doc_date                             DateTime?               @db.Date
+  je_transid                           Int?
+  project_id                           Int?
+  cost_center1_id                      Int?
+  cost_center2_id                      Int?
+  cost_center3_id                      Int?
+  cost_center4_id                      Int?
+  cost_center5_id                      Int?
+  approved1                            String                  @default("N", map: "DF__hrms_d_em__appro__4DD47EBD") @db.Char(1)
+  approver1_id                         Int?
+  remarks                              String?                 @db.NVarChar(250)
+  createdate                           DateTime                @db.DateTime
+  createdby                            Int
+  updatedate                           DateTime?               @db.DateTime
+  updatedby                            Int?
+  log_inst                             Int?
+  hrms_m_currency_masterId             Int?
+  employee_payroll_deduction_component hrms_m_pay_component?   @relation("EmployeePayrollDeduction", fields: [component_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_center1   hrms_m_costcenters?     @relation("CostCenter1", fields: [cost_center1_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_center2   hrms_m_costcenters?     @relation("CostCenter2", fields: [cost_center2_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_center3   hrms_m_costcenters?     @relation("CostCenter3", fields: [cost_center3_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_center4   hrms_m_costcenters?     @relation("CostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_center5   hrms_m_costcenters?     @relation("CostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_employee  hrms_d_employee?        @relation("EmployeePayrollDeductionEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_project   hrms_m_projects?        @relation("EmployeePayrollDeductionProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_currency  hrms_m_currency_master? @relation("EmployeePayrollDeductionCurrency", fields: [pay_currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_leave_balance_details {
@@ -2291,6 +2314,16 @@ model hrms_m_costcenters {
   pay_component_cost_center3          hrms_m_pay_component[]                          @relation("CostCenter3")
   pay_component_cost_center4          hrms_m_pay_component[]                          @relation("CostCenter4")
   pay_component_cost_center5          hrms_m_pay_component[]                          @relation("CostCenter5")
+  employee_payroll_deduction_center1  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter1")
+  employee_payroll_deduction_center2  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter2")
+  employee_payroll_deduction_center3  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter3")
+  employee_payroll_deduction_center4  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter4")
+  employee_payroll_deduction_center5  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter5")
+  employee_payroll_adjustment_center1 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter1")
+  employee_payroll_adjustment_center2 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter2")
+  employee_payroll_adjustment_center3 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter3")
+  employee_payroll_adjustment_center4 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter4")
+  employee_payroll_adjustment_center5 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter5")
 }
 
 model hrms_m_projects {
@@ -2313,6 +2346,8 @@ model hrms_m_projects {
   midmonth_payroll_processing_project hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProject")
   pay_component_project               hrms_m_pay_component[]
   projects_employee_detail            hrms_d_employee?                                @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_project  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeductionProject")
+  employee_payroll_adjustment_project hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentProject")
 }
 
 model hrms_d_activity_log {

@@ -14,6 +14,10 @@ router.get(
   authenticateToken,
   midmonthPayrollProcessingController.getAllMidMonthPayrollProcessing
 );
+router.get(
+  "/midmonth-payroll-processing/run-sp",
+  midmonthPayrollProcessingController.triggerMidMonthPostingSP
+);
 
 router.get(
   "/midmonth-payroll-processing/:id",
@@ -31,11 +35,6 @@ router.delete(
   "/midmonth-payroll-processing/:id",
   authenticateToken,
   midmonthPayrollProcessingController.deleteMidMonthPayrollProcessing
-);
-
-router.post(
-  "/midmonth-payroll-processing/run-sp",
-  midmonthPayrollProcessingController.triggerMidMonthPostingSP
 );
 
 module.exports = router;
