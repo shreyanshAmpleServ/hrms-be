@@ -83,10 +83,20 @@ const getAllDepartments = async (req, res, next) => {
   }
 };
 
+const getDepartmentOptions = async (req, res, next) => {
+  try {
+    const { is_active } = req.query;
+    const department = await departmentService.getDepartmentOptions(is_active);
+    res.status(200).success(null, department);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   createDepartment,
   findDepartmentById,
   updateDepartment,
   deleteDepartment,
   getAllDepartments,
+  getDepartmentOptions,
 };

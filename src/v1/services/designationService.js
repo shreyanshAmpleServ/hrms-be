@@ -34,10 +34,14 @@ const getAllDesignation = async (
   );
 };
 
+const getDesignationOptions = async (is_active) => {
+  return await designationModel.getDesignationOptions(is_active);
+};
 module.exports = {
   createDesignation,
   findDesignationById,
   updateDesignation,
   deleteDesignation,
   getAllDesignation,
+  getDesignationOptions,
 };

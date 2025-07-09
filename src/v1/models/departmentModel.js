@@ -119,10 +119,39 @@ const getAllDepartments = async (
   }
 };
 
+const getDepartmentOptions = async (is_active) => {
+  try {
+    let where = {};
+    if (typeof is_active === "boolean") {
+      where.is_active = is_active ? "Y" : "N";
+    } else if (typeof is_active === "string") {
+      if (is_active.toLowerCase() === "true") where.is_active = "Y";
+      else if (is_active.toLowerCase() === "false") where.is_active = "N";
+    }
+
+    const departments = await prisma.hrms_m_department_master.findMany({
+      where,
+      select: {
+        id: true,
+        department_name: true,
+      },
+    });
+
+    return departments.map(({ id, department_name }) => ({
+      value: id,
+      label: department_name,
+    }));
+  } catch (error) {
+    console.error("Error retrieving department options: ", error);
+    throw new CustomError("Error retrieving department component", 503);
+  }
+};
+
 module.exports = {
   createDepartment,
   findDepartmentById,
   updateDepartment,
   deleteDepartment,
   getAllDepartments,
+  getDepartmentOptions,
 };
