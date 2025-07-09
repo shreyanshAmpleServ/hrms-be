@@ -529,6 +529,7 @@ const getAllPayComponent = async (
 const getPayComponentOptions = async () => {
   try {
     const payComponent = await prisma.hrms_m_pay_component.findMany({
+      where: { is_advance: "Y" },
       select: {
         id: true,
         component_name: true,
