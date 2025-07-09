@@ -66,10 +66,23 @@ const getAllDesignation = async (req, res, next) => {
   }
 };
 
+const getDesignationOptions = async (req, res, next) => {
+  try {
+    const { is_active } = req.query;
+    const designations = await designationService.getDesignationOptions(
+      is_active
+    );
+    res.status(200).success(null, designations);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createDesignation,
   findDesignationById,
   updateDesignation,
   deleteDesignation,
   getAllDesignation,
+  getDesignationOptions,
 };

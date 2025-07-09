@@ -34,10 +34,14 @@ const getAllDepartments = async (
   );
 };
 
+const getDepartmentOptions = async (is_active) => {
+  return await departmentModel.getDepartmentOptions(is_active);
+};
 module.exports = {
   createDepartment,
   findDepartmentById,
   updateDepartment,
   deleteDepartment,
   getAllDepartments,
+  getDepartmentOptions,
 };
