@@ -72,11 +72,19 @@ const getAllPayComponent = async (req, res, next) => {
     next(error);
   }
 };
-
+const getPayComponentOptions = async (req, res, next) => {
+  try {
+    const payComponent = await payComponentService.getPayComponentOptions();
+    res.status(200).success(null, payComponent);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   createPayComponent,
   findPayComponentById,
   updatePayComponent,
   deletePayComponent,
   getAllPayComponent,
+  getPayComponentOptions,
 };

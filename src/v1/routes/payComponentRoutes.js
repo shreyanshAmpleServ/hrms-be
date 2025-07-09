@@ -31,4 +31,9 @@ router.get(
   payComponentController.getAllPayComponent
 );
 
+router.get(
+  "/pay-component-options",
+  authenticateToken,
+  payComponentController.getPayComponentOptions
+);
 module.exports = router;
