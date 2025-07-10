@@ -1,4 +1,5 @@
 const midmonthPayrollProcessingModel = require("../models/midmonthPayrollProcessingModel.js");
+const CustomError = require("../../utils/CustomError");
 
 const createMidMonthPayrollProcessing = async (data) => {
   return await midmonthPayrollProcessingModel.createMidMonthPayrollProcessing(
