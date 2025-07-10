@@ -302,11 +302,7 @@ const callOvertimePostingSP = async (params) => {
         @wage = '${wage}'
     `);
     console.log("Successfully executed stored procedure", result);
-
-    return {
-      success: true,
-      message: "Overtime payroll processed successfully",
-    };
+    return result;
   } catch (error) {
     console.error("SP Execution Failed:", error);
     throw new CustomError("Overtime payroll processing failed", 500);

@@ -89,13 +89,13 @@ const triggerOvertimePostingSP = async (req, res, next) => {
     const result = await overtimePayrollProcessingService.callOvertimePostingSP(
       req.body
     );
-
     res.status(200).json({
       success: true,
       message: result.message,
+      data: result.result,
     });
   } catch (error) {
-    next(error);
+    next(new CustomError(error.message, 400));
   }
 };
 
