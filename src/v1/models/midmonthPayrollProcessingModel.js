@@ -430,6 +430,43 @@ const deleteMidMonthPayrollProcessing = async (id) => {
   }
 };
 
+// const callMidMonthPostingSP = async (params) => {
+//   try {
+//     const {
+//       paymonth,
+//       payyear,
+//       empidfrom,
+//       empidto,
+//       depidfrom,
+//       depidto,
+//       positionidfrom,
+//       positionidto,
+//       wage = "",
+//     } = params;
+
+//     console.log("Model calling SP with params:", params);
+
+//     const result = await prisma.$queryRawUnsafe(`
+//       EXEC sp_hrms_employee_midmonth_posting
+//         @paymonth = '${paymonth}',
+//         @payyear = '${payyear}',
+//         @empidfrom = '${empidfrom}',
+//         @empidto = '${empidto}',
+//         @depidfrom = '${depidfrom}',
+//         @depidto = '${depidto}',
+//         @positionidfrom = '${positionidfrom}',
+//         @positionidto = '${positionidto}',
+//         @wage = '${wage}'
+//     `);
+
+//     console.log("Stored procedure executed. Result:", result);
+//     return result;
+//   } catch (error) {
+//     console.error(" Stored procedure execution failed:", error);
+//     throw new CustomError("Mid-month payroll processing failed", 500);
+//   }
+// };
+
 const callMidMonthPostingSP = async (params) => {
   try {
     const {
@@ -443,23 +480,27 @@ const callMidMonthPostingSP = async (params) => {
       positionidto,
       wage = "",
     } = params;
-
     console.log("Model calling SP with params:", params);
+
+    const sanitize = (val) => {
+      const num = Number(val);
+      return isNaN(num) ? 0 : num;
+    };
 
     const result = await prisma.$queryRawUnsafe(`
       EXEC sp_hrms_employee_midmonth_posting 
-        @paymonth = '${paymonth}',
-        @payyear = '${payyear}',
-        @empidfrom = '${empidfrom}',
-        @empidto = '${empidto}',
-        @depidfrom = '${depidfrom}',
-        @depidto = '${depidto}',
-        @positionidfrom = '${positionidfrom}',
-        @positionidto = '${positionidto}',
-        @wage = '${wage}'
+        @paymonth = ${sanitize(paymonth)},
+        @payyear = ${sanitize(payyear)},
+        @empidfrom = ${sanitize(empidfrom)},
+        @empidto = ${sanitize(empidto)},
+        @depidfrom = ${sanitize(depidfrom)},
+        @depidto = ${sanitize(depidto)},
+        @positionidfrom = ${sanitize(positionidfrom)},
+        @positionidto = ${sanitize(positionidto)},
+        @wage = '${wage || ""}'
     `);
 
-    console.log("Stored procedure executed. Result:", result);
+    console.log("SP Result:", result);
     return result;
   } catch (error) {
     console.error("Stored procedure execution failed:", error);
