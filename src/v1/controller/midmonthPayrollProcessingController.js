@@ -122,11 +122,13 @@ const triggerMidMonthPostingSP = async (req, res, next) => {
     res.status(200).json({
       success: true,
       message: result.message,
+      data: result.result,
     });
   } catch (error) {
     next(error);
   }
 };
+
 module.exports = {
   createMidMonthPayrollProcessing,
   updateMidMonthPayrollProcessing,

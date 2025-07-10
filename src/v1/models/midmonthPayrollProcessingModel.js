@@ -443,17 +443,8 @@ const callMidMonthPostingSP = async (params) => {
       positionidto,
       wage = "",
     } = params;
-    console.log("Calling stored procedure with params:", {
-      paymonth,
-      payyear,
-      empidfrom,
-      empidto,
-      depidfrom,
-      depidto,
-      positionidfrom,
-      positionidto,
-      wage,
-    });
+
+    console.log("Model calling SP with params:", params);
 
     const result = await prisma.$queryRawUnsafe(`
       EXEC sp_hrms_employee_midmonth_posting 
@@ -467,15 +458,11 @@ const callMidMonthPostingSP = async (params) => {
         @positionidto = '${positionidto}',
         @wage = '${wage}'
     `);
-    console.log("Successfully executed stored procedure", result);
 
-    return {
-      success: true,
-      message: "Mid-month payroll processed successfully",
-      result: result,
-    };
+    console.log("Stored procedure executed. Result:", result);
+    return result;
   } catch (error) {
-    console.error("SP Execution Failed:", error);
+    console.error("Stored procedure execution failed:", error);
     throw new CustomError("Mid-month payroll processing failed", 500);
   }
 };
