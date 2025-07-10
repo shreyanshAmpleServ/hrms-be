@@ -42,33 +42,20 @@ const getAllOvertimePayrollProcessing = async (
 };
 const callOvertimePostingSP = async (params) => {
   try {
-    const {
-      paymonth,
-      payyear,
-      empidfrom,
-      empidto,
-      depidfrom,
-      depidto,
-      positionidfrom,
-      positionidto,
-      wage = "",
-    } = params;
-    await overtimePayrollProcessingModel.callOvertimePostingSP({
-      paymonth,
-      payyear,
-      empidfrom,
-      empidto,
-      depidfrom,
-      depidto,
-      positionidfrom,
-      positionidto,
-      wage,
-    });
+    const result = await overtimePayrollProcessingModel.callOvertimePostingSP(
+      params
+    );
+
+    console.log(" Service layer result:", result);
+
     return {
       success: true,
       message: "Overtime payroll processed successfully.",
+      result: result,
     };
-  } catch (error) {}
+  } catch (error) {
+    throw new CustomError(`SP execution failed: ${error.message}`, 500);
+  }
 };
 
 module.exports = {
