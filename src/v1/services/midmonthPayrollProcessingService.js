@@ -49,38 +49,22 @@ const getAllMidMonthPayrollProcessing = async (
 
 const callMidMonthPostingSP = async (params) => {
   try {
-    const {
-      paymonth,
-      payyear,
-      empidfrom,
-      empidto,
-      depidfrom,
-      depidto,
-      positionidfrom,
-      positionidto,
-      wage = "",
-    } = params;
+    const result = await midmonthPayrollProcessingModel.callMidMonthPostingSP(
+      params
+    );
 
-    await midmonthPayrollProcessingModel.callMidMonthPostingSP({
-      paymonth,
-      payyear,
-      empidfrom,
-      empidto,
-      depidfrom,
-      depidto,
-      positionidfrom,
-      positionidto,
-      wage,
-    });
+    console.log(" Service layer result:", result);
 
     return {
       success: true,
       message: "Mid-month payroll processed successfully.",
+      result: result,
     };
   } catch (error) {
     throw new CustomError(`SP execution failed: ${error.message}`, 500);
   }
 };
+
 module.exports = {
   createMidMonthPayrollProcessing,
   findMidMonthPayrollProcessingById,
