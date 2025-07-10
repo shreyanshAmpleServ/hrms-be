@@ -15,12 +15,20 @@ const createMidMonthPayrollProcessing = async (req, res, next) => {
         data
       );
 
-    res.status(201).json({
-      success: true,
-      message: "MidMonth Payroll Processing completed",
-      status: 201,
-      errors,
-    });
+    if (errors.length > 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Mid Month Payroll Processing failed",
+        status: 400,
+        errors,
+      });
+    } else {
+      res.status(201).json({
+        success: true,
+        message: "Mid Month Payroll Processed successfully",
+        status: 201,
+      });
+    }
   } catch (error) {
     next(error);
   }

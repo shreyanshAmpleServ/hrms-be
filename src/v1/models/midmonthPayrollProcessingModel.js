@@ -127,6 +127,7 @@ const createMidMonthPayrollProcessing = async (dataArray) => {
             "payroll_year",
             "payroll_week",
             "component_id",
+            "pay_currency",
             "status",
           ];
 
