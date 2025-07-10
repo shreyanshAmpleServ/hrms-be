@@ -264,6 +264,51 @@ const deleteOvertimePayrollProcessing = async (id) => {
   }
 };
 
+// const callOvertimePostingSP = async (params) => {
+//   try {
+//     const {
+//       paymonth,
+//       payyear,
+//       empidfrom,
+//       empidto,
+//       depidfrom,
+//       depidto,
+//       positionidfrom,
+//       positionidto,
+//       wage = "",
+//     } = params;
+//     console.log("Calling stored procedure with params:", {
+//       paymonth,
+//       payyear,
+//       empidfrom,
+//       empidto,
+//       depidfrom,
+//       depidto,
+//       positionidfrom,
+//       positionidto,
+//       wage,
+//     });
+
+//     const result = await prisma.$queryRawUnsafe(`
+//       EXEC sp_hrms_employee_overtime_posting
+//         @paymonth = '${paymonth}',
+//         @payyear = '${payyear}',
+//         @empidfrom = '${empidfrom}',
+//         @empidto = '${empidto}',
+//         @depidfrom = '${depidfrom}',
+//         @depidto = '${depidto}',
+//         @positionidfrom = '${positionidfrom}',
+//         @positionidto = '${positionidto}',
+//         @wage = '${wage}'
+//     `);
+//     console.log("Successfully executed stored procedure", result);
+//     return result;
+//   } catch (error) {
+//     console.error("SP Execution Failed:", error);
+//     throw new CustomError("Overtime payroll processing failed", 500);
+//   }
+// };
+
 const callOvertimePostingSP = async (params) => {
   try {
     const {
@@ -288,19 +333,23 @@ const callOvertimePostingSP = async (params) => {
       positionidto,
       wage,
     });
-
+    const sanitize = (val) => {
+      const num = Number(val);
+      return isNaN(num) ? 0 : num;
+    };
     const result = await prisma.$queryRawUnsafe(`
-      EXEC sp_hrms_employee_overtime_posting
-        @paymonth = '${paymonth}',
-        @payyear = '${payyear}',
-        @empidfrom = '${empidfrom}',
-        @empidto = '${empidto}',
-        @depidfrom = '${depidfrom}',
-        @depidto = '${depidto}',
-        @positionidfrom = '${positionidfrom}',
-        @positionidto = '${positionidto}',
-        @wage = '${wage}'
+      EXEC sp_hrms_employee_midmonth_posting 
+        @paymonth = ${sanitize(paymonth)},
+        @payyear = ${sanitize(payyear)},
+        @empidfrom = ${sanitize(empidfrom)},
+        @empidto = ${sanitize(empidto)},
+        @depidfrom = ${sanitize(depidfrom)},
+        @depidto = ${sanitize(depidto)},
+        @positionidfrom = ${sanitize(positionidfrom)},
+        @positionidto = ${sanitize(positionidto)},
+        @wage = '${wage || ""}'
     `);
+
     console.log("Successfully executed stored procedure", result);
     return result;
   } catch (error) {
