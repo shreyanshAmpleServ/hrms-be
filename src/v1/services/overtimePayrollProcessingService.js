@@ -1,4 +1,5 @@
 const overtimePayrollProcessingModel = require("../models/overtimePayrollProcessingModel.js");
+const CustomError = require("../../utils/CustomError");
 
 const createOvertimePayrollProcessing = async (data) => {
   return await overtimePayrollProcessingModel.createOvertimePayrollProcessing(
