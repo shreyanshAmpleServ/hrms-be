@@ -420,7 +420,7 @@ const callOvertimePostingSP = async (params) => {
     };
 
     const result = await prisma.$queryRawUnsafe(`
-      EXEC sp_hrms_employee_midmonth_posting 
+      EXEC sp_hrms_employee_overtime_posting 
         @paymonth = ${sanitize(paymonth)},
         @payyear = ${sanitize(payyear)},
         @empidfrom = ${sanitize(empidfrom)},

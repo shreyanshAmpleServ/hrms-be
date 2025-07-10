@@ -109,7 +109,7 @@ const getAllOvertimePayrollProcessing = async (req, res, next) => {
 const triggerOvertimePostingSP = async (req, res, next) => {
   try {
     const result = await overtimePayrollProcessingService.callOvertimePostingSP(
-      req.body
+      req.query
     );
     res.status(200).json({
       success: true,

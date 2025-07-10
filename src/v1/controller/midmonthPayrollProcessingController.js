@@ -124,7 +124,7 @@ const getAllMidMonthPayrollProcessing = async (req, res, next) => {
 const triggerMidMonthPostingSP = async (req, res, next) => {
   try {
     const result = await midmonthPayrollProcessingService.callMidMonthPostingSP(
-      req.body
+      req.query
     );
 
     res.status(200).json({
