@@ -411,21 +411,13 @@ const callOvertimePostingSP = async (params) => {
       positionidto,
       wage = "",
     } = params;
-    console.log("Calling stored procedure with params:", {
-      paymonth,
-      payyear,
-      empidfrom,
-      empidto,
-      depidfrom,
-      depidto,
-      positionidfrom,
-      positionidto,
-      wage,
-    });
+    console.log("Model calling SP with params:", params);
+
     const sanitize = (val) => {
       const num = Number(val);
       return isNaN(num) ? 0 : num;
     };
+
     const result = await prisma.$queryRawUnsafe(`
       EXEC sp_hrms_employee_midmonth_posting 
         @paymonth = ${sanitize(paymonth)},
@@ -439,7 +431,7 @@ const callOvertimePostingSP = async (params) => {
         @wage = '${wage || ""}'
     `);
 
-    console.log("Successfully executed stored procedure", result);
+    console.log("SP Result:", result);
     return result;
   } catch (error) {
     console.error("SP Execution Failed:", error);
