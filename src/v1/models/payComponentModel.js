@@ -526,33 +526,98 @@ const getAllPayComponent = async (
   }
 };
 
+// const getPayComponentOptions = async (isAdvance) => {
+//   try {
+//     const payComponent = await prisma.hrms_m_pay_component.findMany({
+//       where: isAdvance === "true" ? { is_advance: "Y" } : {},
+//       select: {
+//         id: true,
+//         component_name: true,
+//         component_code: true,
+//         component_type: true,
+//       },
+//     });
+
+//     return payComponent.map(
+//       ({ id, component_name, component_code, component_type }) => ({
+//         value: id,
+//         label: component_name,
+//         meta: {
+//           component_code,
+//           component_type,
+//         },
+//       })
+//     );
+//   } catch (error) {
+//     console.error("Error retrieving pay component options: ", error);
+//     throw new CustomError("Error retrieving pay component", 503);
+//   }
+// };
+
 const getPayComponentOptions = async (isAdvance) => {
   try {
     const payComponent = await prisma.hrms_m_pay_component.findMany({
       where: isAdvance === "true" ? { is_advance: "Y" } : {},
-      select: {
-        id: true,
-        component_name: true,
-        component_code: true,
-        component_type: true,
+      include: {
+        pay_component_tax: {
+          select: {
+            id: true,
+            pay_component_id: true,
+            rule_type: true,
+          },
+        },
+        pay_component_project: {
+          select: {
+            id: true,
+            code: true,
+            name: true,
+          },
+        },
+        pay_component_cost_center1: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center2: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center3: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center4: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
+        pay_component_cost_center5: {
+          select: {
+            id: true,
+            name: true,
+            dimension_id: true,
+          },
+        },
       },
     });
 
-    return payComponent.map(
-      ({ id, component_name, component_code, component_type }) => ({
-        value: id,
-        label: component_name,
-        meta: {
-          component_code,
-          component_type,
-        },
-      })
-    );
+    return payComponent;
   } catch (error) {
     console.error("Error retrieving pay component options: ", error);
     throw new CustomError("Error retrieving pay component", 503);
   }
 };
+
 module.exports = {
   createPayComponent,
   findPayComponentById,

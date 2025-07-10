@@ -40,6 +40,36 @@ const getAllOvertimePayrollProcessing = async (
     endDate
   );
 };
+const callOvertimePostingSP = async (params) => {
+  try {
+    const {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage = "",
+    } = params;
+    await overtimePayrollProcessingModel.callOvertimePostingSP({
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage,
+    });
+    return {
+      success: true,
+      message: "Overtime payroll processed successfully.",
+    };
+  } catch (error) {}
+};
 
 module.exports = {
   createOvertimePayrollProcessing,
@@ -47,4 +77,5 @@ module.exports = {
   updateOvertimePayrollProcessing,
   deleteOvertimePayrollProcessing,
   getAllOvertimePayrollProcessing,
+  callOvertimePostingSP,
 };

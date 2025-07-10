@@ -14,7 +14,10 @@ router.get(
   authenticateToken,
   overtimePayrollProcessingController.getAllOvertimePayrollProcessing
 );
-
+router.get(
+  "/overtime-payroll-processing/run-sp",
+  overtimePayrollProcessingController.triggerOvertimePostingSP
+);
 router.get(
   "/overtime-payroll-processing/:id",
   authenticateToken,

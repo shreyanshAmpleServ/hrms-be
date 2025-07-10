@@ -72,24 +72,10 @@ const getAllOverTimeSetup = async (req, res, next) => {
   }
 };
 
-const triggerOvertimePostingSP = async (req, res, next) => {
-  try {
-    const result = await overTimeSetupService.callOvertimePostingSP(req.body);
-
-    res.status(200).json({
-      success: true,
-      message: result.message,
-    });
-  } catch (error) {
-    next(error);
-  }
-};
-
 module.exports = {
   createOverTimeSetup,
   updateOverTimeSetup,
   findOverTimeSetup,
   deleteOverTimeSetup,
   getAllOverTimeSetup,
-  triggerOvertimePostingSP,
 };
