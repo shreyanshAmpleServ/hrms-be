@@ -84,6 +84,20 @@ const getAllOvertimePayrollProcessing = async (req, res, next) => {
     next(error);
   }
 };
+const triggerOvertimePostingSP = async (req, res, next) => {
+  try {
+    const result = await overtimePayrollProcessingService.callOvertimePostingSP(
+      req.body
+    );
+
+    res.status(200).json({
+      success: true,
+      message: result.message,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   createOvertimePayrollProcessing,
@@ -92,4 +106,5 @@ module.exports = {
   updateOvertimePayrollProcessing,
   getAllOvertimePayrollProcessing,
   deleteOvertimePayrollProcessing,
+  triggerOvertimePostingSP,
 };

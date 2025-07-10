@@ -4,42 +4,20 @@ const CustomError = require("../../utils/CustomError");
 
 // Serializer to prepare data for insert/update
 const serializeOvertimeData = (data) => ({
-  employee_id: Number(data.employee_id),
   payroll_month: Number(data.payroll_month),
   payroll_year: Number(data.payroll_year),
-  overtime_date: new Date(data.overtime_date),
   pay_currency: Number(data.pay_currency),
-  component_id: Number(data.component_id),
   amount: data.amount ? parseFloat(data.amount) : 0,
-  start_time: data.start_time,
-  end_time: data.end_time,
-  overtime_hours: parseFloat(data.overtime_hours),
-  overtime_formula: data.overtime_formula || null,
-  overtime_type: data.overtime_type || null,
-  overtime_category: data.overtime_category || null,
-  overtime_rate_multiplier: data.overtime_rate_multiplier
-    ? parseFloat(data.overtime_rate_multiplier)
-    : null,
-  calculation_basis: data.calculation_basis || null,
-  payroll_cycle_id: data.payroll_cycle_id
-    ? Number(data.payroll_cycle_id)
-    : null,
-  linked_payslip_id: data.linked_payslip_id
-    ? Number(data.linked_payslip_id)
-    : null,
+  overtime_type: Number(data.overtime_type) || null,
   doc_date: data.doc_date ? new Date(data.doc_date) : null,
   je_transid: data.je_transid || null,
-
-  source_doc: data.source_doc || null,
-  overtime_pay: parseFloat(data.overtime_pay),
   status: data.status || "Pending",
   execution_date: data.execution_date ? new Date(data.execution_date) : null,
-  // pay_date: data.pay_date ? new Date(data.pay_date) : null,
-  // pay_id: data.pay_id ? Number(data.pay_id) : null,
-  project_id: data.project_id ? Number(data.project_id) : null,
   approved1: data.approved1 || "N",
   approver1_id: data.approver1_id ? Number(data.approver1_id) : null,
   remarks: data.remarks || null,
+  payroll_week: Number(data.payroll_week),
+  overtime_rate: data.overtime_rate ? parseFloat(data.overtime_rate) : 0,
 });
 
 // CREATE
@@ -48,6 +26,37 @@ const createOvertimePayrollProcessing = async (data) => {
     const result = await prisma.hrms_d_employee_payroll_adjustment.create({
       data: {
         ...serializeOvertimeData(data),
+
+        // Prisma requires this format for relations
+        employee_payroll_adjustment_employee: {
+          connect: { id: Number(data.employee_id) },
+        },
+        employee_payroll_adjustment_component: {
+          connect: { id: Number(data.component_id) },
+        },
+        employee_payroll_adjustment_currency: {
+          connect: { id: Number(data.pay_currency) },
+        },
+        employee_payroll_adjustment_project: data.project_id
+          ? { connect: { id: Number(data.project_id) } }
+          : undefined,
+
+        employee_payroll_adjustment_center1: data.cost_center1_id
+          ? { connect: { id: Number(data.cost_center1_id) } }
+          : undefined,
+        employee_payroll_adjustment_center2: data.cost_center2_id
+          ? { connect: { id: Number(data.cost_center2_id) } }
+          : undefined,
+        employee_payroll_adjustment_center3: data.cost_center3_id
+          ? { connect: { id: Number(data.cost_center3_id) } }
+          : undefined,
+        employee_payroll_adjustment_center4: data.cost_center4_id
+          ? { connect: { id: Number(data.cost_center4_id) } }
+          : undefined,
+        employee_payroll_adjustment_center5: data.cost_center5_id
+          ? { connect: { id: Number(data.cost_center5_id) } }
+          : undefined,
+
         createdate: new Date(),
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
@@ -255,10 +264,60 @@ const deleteOvertimePayrollProcessing = async (id) => {
   }
 };
 
+const callOvertimePostingSP = async (params) => {
+  try {
+    const {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage = "",
+    } = params;
+    console.log("Calling stored procedure with params:", {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage,
+    });
+
+    const result = await prisma.$queryRawUnsafe(`
+      EXEC sp_hrms_employee_overtime_posting
+        @paymonth = '${paymonth}',
+        @payyear = '${payyear}',
+        @empidfrom = '${empidfrom}',
+        @empidto = '${empidto}',
+        @depidfrom = '${depidfrom}',
+        @depidto = '${depidto}',
+        @positionidfrom = '${positionidfrom}',
+        @positionidto = '${positionidto}',
+        @wage = '${wage}'
+    `);
+    console.log("Successfully executed stored procedure", result);
+
+    return {
+      success: true,
+      message: "Overtime payroll processed successfully",
+    };
+  } catch (error) {
+    console.error("SP Execution Failed:", error);
+    throw new CustomError("Overtime payroll processing failed", 500);
+  }
+};
+
 module.exports = {
   createOvertimePayrollProcessing,
   findOvertimePayrollProcessingById,
   updateOvertimePayrollProcessing,
   deleteOvertimePayrollProcessing,
   getAllOvertimePayrollProcessing,
+  callOvertimePostingSP,
 };
