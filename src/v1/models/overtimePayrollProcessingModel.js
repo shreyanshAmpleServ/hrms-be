@@ -8,7 +8,7 @@ const serializeOvertimeData = (data) => ({
   payroll_year: Number(data.payroll_year),
   payroll_week: Number(data.payroll_week),
   pay_currency: Number(data.pay_currency),
-  amount: data.amount ? parseFloat(data.amount) : 0,
+  amount: data.overtime_amount ? parseFloat(data.overtime_amount) : 0,
   overtime_type: data.overtime_type || null,
   doc_date: data.doc_date ? new Date(data.doc_date) : null,
   je_transid: data.je_transid || null,
@@ -116,6 +116,7 @@ const createOvertimePayrollProcessing = async (dataArray) => {
             "payroll_year",
             "payroll_week",
             "component_id",
+            "pay_currency",
             "status",
           ];
 
