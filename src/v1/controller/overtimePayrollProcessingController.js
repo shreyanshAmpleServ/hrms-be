@@ -108,51 +108,16 @@ const getAllOvertimePayrollProcessing = async (req, res, next) => {
 };
 const triggerOvertimePostingSP = async (req, res, next) => {
   try {
-    const {
-      paymonth,
-      payyear,
-      empidfrom,
-      empidto,
-      depidfrom,
-      depidto,
-      positionidfrom,
-      positionidto,
-      wage,
-    } = req.body;
-
-    // Optional: Add basic validation
-    if (
-      paymonth === undefined ||
-      payyear === undefined ||
-      empidfrom === undefined ||
-      empidto === undefined
-    ) {
-      return next(
-        new CustomError("Required parameters missing for SP call", 400)
-      );
-    }
-
     const result = await overtimePayrollProcessingService.callOvertimePostingSP(
-      {
-        paymonth,
-        payyear,
-        empidfrom,
-        empidto,
-        depidfrom,
-        depidto,
-        positionidfrom,
-        positionidto,
-        wage,
-      }
+      req.body
     );
-
     res.status(200).json({
       success: true,
-      message: "Stored procedure executed successfully",
-      data: result,
+      message: result.message,
+      data: result.result,
     });
   } catch (error) {
-    next(new CustomError(error.message, 400));
+    next(error);
   }
 };
 
