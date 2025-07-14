@@ -156,18 +156,21 @@ const getDesignationOptions = async (is_active) => {
   try {
     let where = {};
 
+    console.log("is_active", is_active);
+
+    let isActiveValue;
     if (
       is_active === undefined ||
       is_active === null ||
-      (typeof is_active === "string" && is_active.trim() === "")
-    ) {
-      where.is_active = "true";
-    } else if (
+      (typeof is_active === "string" && is_active.trim() === "") ||
       (typeof is_active === "boolean" && is_active === true) ||
       (typeof is_active === "string" && is_active.toLowerCase() === "true")
     ) {
-      where.is_active = "true";
+      isActiveValue = "Y";
+    } else if (is_active === "false") {
+      isActiveValue = "N";
     }
+    where.is_active = isActiveValue;
 
     const designation = await prisma.hrms_m_designation_master.findMany({
       where,
