@@ -68,7 +68,12 @@ const getAllDesignation = async (req, res, next) => {
 
 const getDesignationOptions = async (req, res, next) => {
   try {
-    const { is_active } = req.query;
+    let { is_active } = req.query;
+
+    if (is_active === undefined || is_active === null || is_active === "") {
+      is_active = "true";
+    }
+
     const designations = await designationService.getDesignationOptions(
       is_active
     );
