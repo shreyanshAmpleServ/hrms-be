@@ -156,8 +156,6 @@ const getDesignationOptions = async (is_active) => {
   try {
     let where = {};
 
-    console.log("is_active", is_active);
-
     let isActiveValue;
     if (
       is_active === undefined ||
