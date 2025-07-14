@@ -124,14 +124,49 @@ const getAllDesignation = async (
   }
 };
 
+// const getDesignationOptions = async (is_active) => {
+//   try {
+//     let where = {};
+//     if (typeof is_active === "boolean") {
+//       where.is_active = is_active ? "Y" : "N";
+//     } else if (typeof is_active === "string") {
+//       if (is_active.toLowerCase() === "true") where.is_active = "Y";
+//       else if (is_active.toLowerCase() === "false") where.is_active = "N";
+//     }
+
+//     const designation = await prisma.hrms_m_designation_master.findMany({
+//       where,
+//       select: {
+//         id: true,
+//         designation_name: true,
+//       },
+//     });
+
+//     return designation.map(({ id, designation_name }) => ({
+//       value: id,
+//       label: designation_name,
+//     }));
+//   } catch (error) {
+//     console.error("Error retrieving designation options: ", error);
+//     throw new CustomError("Error retrieving designation component", 503);
+//   }
+// };
+
 const getDesignationOptions = async (is_active) => {
   try {
     let where = {};
-    if (typeof is_active === "boolean") {
-      where.is_active = is_active ? "Y" : "N";
-    } else if (typeof is_active === "string") {
-      if (is_active.toLowerCase() === "true") where.is_active = "Y";
-      else if (is_active.toLowerCase() === "false") where.is_active = "N";
+
+    if (
+      is_active === undefined ||
+      is_active === null ||
+      (typeof is_active === "string" && is_active.trim() === "")
+    ) {
+      where.is_active = "true";
+    } else if (
+      (typeof is_active === "boolean" && is_active === true) ||
+      (typeof is_active === "string" && is_active.toLowerCase() === "true")
+    ) {
+      where.is_active = "true";
     }
 
     const designation = await prisma.hrms_m_designation_master.findMany({
@@ -151,6 +186,7 @@ const getDesignationOptions = async (is_active) => {
     throw new CustomError("Error retrieving designation component", 503);
   }
 };
+
 module.exports = {
   createDesignation,
   findDesignationById,
