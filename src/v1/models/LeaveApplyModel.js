@@ -288,11 +288,11 @@ const updateLeaveStatus = async (id, data) => {
       updatedate: new Date(),
     };
 
-    if (data.status === "Approved") {
+    if (data.status === "A") {
       updateData.approver_id = Number(data.approver_id) || null;
       updateData.approval_date = new Date();
       updateData.rejection_reason = "";
-    } else if (data.status === "Rejected") {
+    } else if (data.status === "R") {
       updateData.approver_id = Number(data.approver_id) || null;
       updateData.approval_date = new Date();
       updateData.rejection_reason = data.rejection_reason || "";
