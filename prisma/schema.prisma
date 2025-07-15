@@ -1943,7 +1943,7 @@ model hrms_d_employee_pay_component_assignment_line {
   pay_component_line_cost_center4                 hrms_m_costcenters?                             @relation("LineCostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_line_cost_center5                 hrms_m_costcenters?                             @relation("LineCostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_line_currency                     hrms_m_currency_master?                         @relation(fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  pay_component_for_line                          hrms_m_pay_component                            @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
+  pay_component_for_line                          hrms_m_pay_component                            @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   pay_component_line_project                      hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_line_tax_slab                     hrms_m_tax_slab_rule?                           @relation(fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -2100,7 +2100,7 @@ model hrms_d_finalsettlement_processing {
   updatedate                DateTime?            @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
-  finalsettlement_component hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_fi__compo__17E28260")
+  finalsettlement_component hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK__hrms_d_fi__compo__17E28260")
   final_settlement_employee hrms_d_employee      @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_fi__emplo__16EE5E27")
 }
 

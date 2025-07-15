@@ -235,7 +235,19 @@ const createBasicPay = async (data) => {
             },
           },
           work_life_entry_pay_header: {
-            select: { id: true, event_type: true },
+            select: {
+              id: true,
+              event_type: true,
+              work_life_event_type: {
+                select: {
+                  id: true,
+                  event_type_name: true,
+                },
+              },
+            },
+          },
+          branch_pay_component_header: {
+            select: { id: true, branch_name: true },
           },
           hrms_d_employee: {
             include: {
@@ -429,7 +441,16 @@ const updateBasicPay = async (id, data) => {
                 },
               },
               work_life_entry_pay_header: {
-                select: { id: true, event_type: true },
+                select: {
+                  id: true,
+                  event_type: true,
+                  work_life_event_type: {
+                    select: {
+                      id: true,
+                      event_type_name: true,
+                    },
+                  },
+                },
               },
               branch_pay_component_header: {
                 select: { id: true, branch_name: true },
@@ -541,7 +562,16 @@ const findBasicPayById = async (id) => {
             },
           },
           work_life_entry_pay_header: {
-            select: { id: true, event_type: true },
+            select: {
+              id: true,
+              event_type: true,
+              work_life_event_type: {
+                select: {
+                  id: true,
+                  event_type_name: true,
+                },
+              },
+            },
           },
           branch_pay_component_header: {
             select: { id: true, branch_name: true },
@@ -684,7 +714,16 @@ const getAllBasicPay = async (
             },
           },
           work_life_entry_pay_header: {
-            select: { id: true, event_type: true },
+            select: {
+              id: true,
+              event_type: true,
+              work_life_event_type: {
+                select: {
+                  id: true,
+                  event_type_name: true,
+                },
+              },
+            },
           },
           branch_pay_component_header: {
             select: { id: true, branch_name: true },
@@ -734,7 +773,7 @@ const deleteBasicPay = async (id) => {
   try {
     const result = await prisma.$transaction(async (prisma) => {
       // Step 1: Delete related data from DealContacts
-      await prisma.hrms_d_employee_pay_component_assignment_header.deleteMany({
+      await prisma.hrms_d_employee_pay_component_assignment_line.deleteMany({
         where: { parent_id: parseInt(id) },
       });
 
