@@ -18,6 +18,11 @@ router.get(
   monthlyPayrollController.getAllMonthlyPayroll
 );
 
+router.get(
+  "/monthly-payroll/run-sp",
+  monthlyPayrollController.triggerMonthlyPayrollSP
+);
+
 // Get a single monthly payroll by ID routes
 router.get(
   "/monthly-payroll/:id",

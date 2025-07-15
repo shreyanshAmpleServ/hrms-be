@@ -1,4 +1,5 @@
 const monthlyPayrollModel = require("../models/monthlyPayrollModel.js");
+const CustomError = require("../../utils/CustomError");
 
 const createMonthlyPayroll = async (data) => {
   return await monthlyPayrollModel.createMonthlyPayroll(data);
@@ -26,10 +27,26 @@ const getAllMonthlyPayroll = async (search, page, size, startDate, endDate) => {
   );
 };
 
+const callMonthlyPayrollSP = async (params) => {
+  try {
+    const result = await monthlyPayrollModel.callMonthlyPayrollSP(params);
+
+    console.log("Service layer result:", result);
+
+    return {
+      success: true,
+      message: "Monthly payroll processed successfully.",
+      result: result,
+    };
+  } catch (error) {
+    throw new CustomError(`SP execution failed: ${error.message}`, 500);
+  }
+};
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
   updateMonthlyPayroll,
   deleteMonthlyPayroll,
   getAllMonthlyPayroll,
+  callMonthlyPayrollSP,
 };

@@ -4,7 +4,7 @@ const prisma = new PrismaClient();
 
 // Serialize payroll data
 const serializePayrollData = (data) => ({
-  employee_id: Number(data.employee_id), // ✅ ADD THIS LINE BACK
+  employee_id: Number(data.employee_id),
   payroll_month: Number(data.payroll_month),
   payroll_year: Number(data.payroll_year),
   payroll_week: Number(data.payroll_week) || 0,
@@ -112,7 +112,7 @@ const createMonthlyPayroll = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
         hrms_monthly_payroll_employee: {
-          connect: { id: Number(data.employee_id) }, // ✅ Correct way
+          connect: { id: Number(data.employee_id) },
         },
       },
       include: {
@@ -257,10 +257,49 @@ const getAllMonthlyPayroll = async (search, page, size, startDate, endDate) => {
   }
 };
 
+const callMonthlyPayrollSP = async (params) => {
+  try {
+    const {
+      paymonth,
+      payyear,
+      empidfrom,
+      empidto,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+    } = params;
+    console.log("Model calling SP with params:", params);
+
+    const sanitize = (val) => {
+      const num = Number(val);
+      return isNaN(num) ? 0 : num;
+    };
+
+    const result = await prisma.$queryRawUnsafe(`
+      EXEC sp_hrms_monthly_payroll_processing  
+       @paymonth = ${sanitize(paymonth)},
+       @payyear = ${sanitize(payyear)},
+       @empidfrom = ${sanitize(empidfrom)},
+       @empidto = ${sanitize(empidto)},
+       @depidfrom = ${sanitize(depidfrom)},
+       @depidto = ${sanitize(depidto)},
+       @positionidfrom = ${sanitize(positionidfrom)},
+       @positionidto = ${sanitize(positionidto)}
+    `);
+
+    console.log("SP Result:", result);
+    return result;
+  } catch (error) {
+    console.error("SP Execution Failed:", error);
+    throw new CustomError("Monthly payroll processing failed", 500);
+  }
+};
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
   updateMonthlyPayroll,
   deleteMonthlyPayroll,
   getAllMonthlyPayroll,
+  callMonthlyPayrollSP,
 };
