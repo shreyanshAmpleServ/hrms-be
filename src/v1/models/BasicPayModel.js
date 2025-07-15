@@ -134,7 +134,10 @@ const createBasicPay = async (data) => {
         where: { employee_id: Number(data.employee_id) },
       });
     if (existing) {
-      throw new CustomError("Basic pay already exists for this employee.", 400);
+      throw new CustomError(
+        "Component is already assigned for this employee.",
+        400
+      );
     }
     const serializedData = serializeHeaders(headerDatas);
     // Use transaction for atomicity
