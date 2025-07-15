@@ -536,6 +536,7 @@ const findBasicPayById = async (id) => {
                 select: {
                   id: true,
                   component_name: true,
+                  pay_or_deduct: true,
                 },
               },
               pay_component_line_tax_slab: {
