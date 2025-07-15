@@ -483,6 +483,12 @@ const findBasicPayById = async (id) => {
                   currency_code: true,
                 },
               },
+              pay_component_for_line: {
+                select: {
+                  id: true,
+                  component_name: true,
+                },
+              },
               pay_component_line_tax_slab: {
                 select: {
                   id: true,
