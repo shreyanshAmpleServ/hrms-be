@@ -74,9 +74,11 @@ const getAllPayComponent = async (req, res, next) => {
 };
 const getPayComponentOptions = async (req, res, next) => {
   try {
-    const { is_advance: isAdvance } = req.query;
+    const { is_advance: isAdvance, is_overtime_related: isOvertimeRelated } =
+      req.query;
     const payComponent = await payComponentService.getPayComponentOptions(
-      isAdvance
+      isAdvance,
+      isOvertimeRelated
     );
     res.status(200).success(null, payComponent);
   } catch (error) {

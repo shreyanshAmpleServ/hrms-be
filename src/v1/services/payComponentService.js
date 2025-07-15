@@ -36,8 +36,11 @@ const getAllPayComponent = async (
   );
 };
 
-const getPayComponentOptions = async (isAdvance) => {
-  return await payComponentModel.getPayComponentOptions(isAdvance);
+const getPayComponentOptions = async (isAdvance, isOvertimeRelated) => {
+  return await payComponentModel.getPayComponentOptions(
+    isAdvance,
+    isOvertimeRelated
+  );
 };
 module.exports = {
   createPayComponent,
