@@ -12,6 +12,7 @@ const serializePayComponentData = (data) => ({
   is_taxable: data.is_taxable || "Y",
   is_statutory: data.is_statutory || "N",
   is_active: data.is_active || "Y",
+  is_loan: data.is_loan || "N",
   pay_or_deduct: data.pay_or_deduct || "P",
   is_worklife_related: data.is_worklife_related || "N",
   is_grossable: data.is_grossable || "N",
