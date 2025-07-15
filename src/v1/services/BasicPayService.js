@@ -11,7 +11,7 @@ const findBasicPayById = async (id) => {
 // const findDealsByStatus = async (status) => {
 //   return await BasicPayModel.findDealsByStatus(status);
 // };
-
+//comment
 const updateBasicPay = async (id, data) => {
   return await BasicPayModel.updateBasicPay(id, data);
 };
