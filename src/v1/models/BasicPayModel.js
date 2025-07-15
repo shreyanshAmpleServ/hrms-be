@@ -129,6 +129,12 @@ const createBasicPay = async (data) => {
       throw new CustomError(`Status Type is required`, 400);
     }
 
+    const existing = await prisma_d_employee_pay_componenet_header.findFirst({
+      where: { employee_id: Number(data.employee_id) },
+    });
+    if (existing) {
+      throw new CustomError("Basic pay already exists for this employee.", 400);
+    }
     const serializedData = serializeHeaders(headerDatas);
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
@@ -282,6 +288,20 @@ const createBasicPay = async (data) => {
 const updateBasicPay = async (id, data) => {
   const { payLineData, ...headerDatas } = data; // Separate `contactIds` from other employee data
   try {
+    if (data.employee_id) {
+      const existing = await prisma_d_employee_pay_componenet_header.findFirst({
+        where: {
+          employee_id: Number(employee_id),
+          NOT: { id: Number(id) },
+        },
+      });
+      if (existing) {
+        throw new CustomError(
+          "Another basic pay record already exists for this employee.",
+          400
+        );
+      }
+    }
     const updatedData = {
       ...headerDatas,
       updatedby: data.updatedby || 1,
@@ -611,10 +631,9 @@ const getAllBasicPay = async (
   employee_id
 ) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
-
     const filters = {};
     // Handle search
     if (search) {
@@ -636,15 +655,27 @@ const getAllBasicPay = async (
     //   filters.is_active = { equals: status };
     // }
 
+    // if (startDate && endDate) {
+    //   const start = new Date(startDate);
+    //   const end = new Date(endDate);
+
+    //   if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+    //     filters.createdate = {
+    //       gte: start,
+    //       lte: end,
+    //     };
+    //   }
+    // }
+
     if (startDate && endDate) {
       const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+
       const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
 
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = {
-          gte: start,
-          lte: end,
-        };
+        filters.createdate = { gte: start, lte: end };
       }
     }
     const employee =
