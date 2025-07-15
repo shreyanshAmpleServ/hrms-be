@@ -129,9 +129,10 @@ const createBasicPay = async (data) => {
       throw new CustomError(`Status Type is required`, 400);
     }
 
-    const existing = await prisma_d_employee_pay_componenet_header.findFirst({
-      where: { employee_id: Number(data.employee_id) },
-    });
+    const existing =
+      await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+        where: { employee_id: Number(data.employee_id) },
+      });
     if (existing) {
       throw new CustomError("Basic pay already exists for this employee.", 400);
     }
@@ -289,12 +290,13 @@ const updateBasicPay = async (id, data) => {
   const { payLineData, ...headerDatas } = data; // Separate `contactIds` from other employee data
   try {
     if (data.employee_id) {
-      const existing = await prisma_d_employee_pay_componenet_header.findFirst({
-        where: {
-          employee_id: Number(employee_id),
-          NOT: { id: Number(id) },
-        },
-      });
+      const existing =
+        await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+          where: {
+            employee_id: Number(data.employee_id),
+            NOT: { id: Number(id) },
+          },
+        });
       if (existing) {
         throw new CustomError(
           "Another basic pay record already exists for this employee.",
@@ -321,182 +323,185 @@ const updateBasicPay = async (id, data) => {
       })) || [];
 
     // Use transaction for atomicity
-    const result = await prisma.$transaction(async (prisma) => {
-      // Update the employee
-      const employee =
-        await prisma.hrms_d_employee_pay_component_assignment_header.update({
-          where: { id: parseInt(id) },
-          data: {
-            ...serializedData,
-          },
-          select: {
-            hrms_d_employee_pay_component_assignment_line: {
-              select: {
-                id: true,
-              },
-            },
-          },
-        });
-
-      // 2. Fetch current DB address IDs
-      // const dbAddresses = await prisma.hrms_d_employee_pay_component_assignment_header.findMany({
-      //   where: { employee_id: parseInt(id) },
-      //   select: { id: true },
-      // });
-
-      if (Array.isArray(payLineData) && payLineData.length > 0) {
-        const dbIds =
-          employee?.hrms_d_employee_pay_component_assignment_line?.map(
-            (a) => a.id
-          );
-        const requestIds = existingAddresses?.map((a) => a.id);
-
-        for (const addr of payLineData) {
-          for (const [field, message] of Object.entries(requiredFields)) {
-            if (!addr[field]) {
-              throw new CustomError(message, 400);
-            }
-          }
-        }
-        // 3. Delete removed addresses (if any)
-        const toDeleteIds = payLineData
-          ? dbIds.filter((id) => !requestIds.includes(id))
-          : [];
-        if (toDeleteIds.length > 0) {
-          await prisma.hrms_d_employee_pay_component_assignment_line.deleteMany(
-            {
-              where: { id: { in: toDeleteIds } },
-            }
-          );
-        }
-
-        // 4. Update existing addresses
-        for (const addr of existingAddresses) {
-          await prisma.hrms_d_employee_pay_component_assignment_line.update({
-            where: { id: addr.id },
-            data: serializePayLine(addr),
-          });
-        }
-
-        // 5. Create new addresses in bulk
-        if (newSerialized.length > 0) {
-          await prisma.hrms_d_employee_pay_component_assignment_line.createMany(
-            {
-              data: newSerialized,
-            }
-          );
-        }
-      }
-      //  const serializedAddres = serializePayLine(payLineData);
-      // // Map contacts to the employee
-      // const addressDatas = {
-      //   ...serializedAddres,
-      //   employee_id: employee.id,
-      // };
-      // await prisma.hrms_d_employee_pay_component_assignment_header.update({ data: addressDatas });
-      // Retrieve the updated employee with hrms_d_employee_pay_component_assignment_header and employeeHistory included
-      const updatedEmp =
-        await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
-          {
+    const result = await prisma.$transaction(
+      async (prisma) => {
+        // Update the employee
+        const employee =
+          await prisma.hrms_d_employee_pay_component_assignment_header.update({
             where: { id: parseInt(id) },
-            include: {
+            data: {
+              ...serializedData,
+            },
+            select: {
               hrms_d_employee_pay_component_assignment_line: {
-                include: {
-                  pay_component_line_currency: {
-                    select: {
-                      id: true,
-                      currency_name: true,
-                      currency_code: true,
-                    },
-                  },
-                  pay_component_line_tax_slab: {
-                    select: {
-                      id: true,
-                      pay_component_id: true,
-                      rule_type: true,
-                    },
-                  },
-                  pay_component_line_project: {
-                    select: {
-                      id: true,
-                      code: true,
-                      name: true,
-                    },
-                  },
-                  pay_component_line_cost_center1: {
-                    select: {
-                      id: true,
-                      name: true,
-                      dimension_id: true,
-                    },
-                  },
-                  pay_component_line_cost_center2: {
-                    select: {
-                      id: true,
-                      name: true,
-                      dimension_id: true,
-                    },
-                  },
-                  pay_component_line_cost_center3: {
-                    select: {
-                      id: true,
-                      name: true,
-                      dimension_id: true,
-                    },
-                  },
-                  pay_component_line_cost_center4: {
-                    select: {
-                      id: true,
-                      name: true,
-                      dimension_id: true,
-                    },
-                  },
-                  pay_component_line_cost_center5: {
-                    select: {
-                      id: true,
-                      name: true,
-                      dimension_id: true,
-                    },
-                  },
-                },
-              },
-              work_life_entry_pay_header: {
                 select: {
                   id: true,
-                  event_type: true,
-                  work_life_event_type: {
-                    select: {
-                      id: true,
-                      event_type_name: true,
-                    },
-                  },
-                },
-              },
-              branch_pay_component_header: {
-                select: { id: true, branch_name: true },
-              },
-              hrms_d_employee: {
-                include: {
-                  hrms_employee_department: {
-                    select: {
-                      id: true,
-                      department_name: true,
-                    },
-                  },
-                  hrms_employee_designation: {
-                    select: {
-                      id: true,
-                      designation_name: true,
-                    },
-                  },
                 },
               },
             },
-          }
-        );
+          });
 
-      return updatedEmp;
-    });
+        // 2. Fetch current DB address IDs
+        // const dbAddresses = await prisma.hrms_d_employee_pay_component_assignment_header.findMany({
+        //   where: { employee_id: parseInt(id) },
+        //   select: { id: true },
+        // });
+
+        if (Array.isArray(payLineData) && payLineData.length > 0) {
+          const dbIds =
+            employee?.hrms_d_employee_pay_component_assignment_line?.map(
+              (a) => a.id
+            );
+          const requestIds = existingAddresses?.map((a) => a.id);
+
+          for (const addr of payLineData) {
+            for (const [field, message] of Object.entries(requiredFields)) {
+              if (!addr[field]) {
+                throw new CustomError(message, 400);
+              }
+            }
+          }
+          // 3. Delete removed addresses (if any)
+          const toDeleteIds = payLineData
+            ? dbIds.filter((id) => !requestIds.includes(id))
+            : [];
+          if (toDeleteIds.length > 0) {
+            await prisma.hrms_d_employee_pay_component_assignment_line.deleteMany(
+              {
+                where: { id: { in: toDeleteIds } },
+              }
+            );
+          }
+
+          // 4. Update existing addresses
+          for (const addr of existingAddresses) {
+            await prisma.hrms_d_employee_pay_component_assignment_line.update({
+              where: { id: addr.id },
+              data: serializePayLine(addr),
+            });
+          }
+
+          // 5. Create new addresses in bulk
+          if (newSerialized.length > 0) {
+            await prisma.hrms_d_employee_pay_component_assignment_line.createMany(
+              {
+                data: newSerialized,
+              }
+            );
+          }
+        }
+        //  const serializedAddres = serializePayLine(payLineData);
+        // // Map contacts to the employee
+        // const addressDatas = {
+        //   ...serializedAddres,
+        //   employee_id: employee.id,
+        // };
+        // await prisma.hrms_d_employee_pay_component_assignment_header.update({ data: addressDatas });
+        // Retrieve the updated employee with hrms_d_employee_pay_component_assignment_header and employeeHistory included
+        const updatedEmp =
+          await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
+            {
+              where: { id: parseInt(id) },
+              include: {
+                hrms_d_employee_pay_component_assignment_line: {
+                  include: {
+                    pay_component_line_currency: {
+                      select: {
+                        id: true,
+                        currency_name: true,
+                        currency_code: true,
+                      },
+                    },
+                    pay_component_line_tax_slab: {
+                      select: {
+                        id: true,
+                        pay_component_id: true,
+                        rule_type: true,
+                      },
+                    },
+                    pay_component_line_project: {
+                      select: {
+                        id: true,
+                        code: true,
+                        name: true,
+                      },
+                    },
+                    pay_component_line_cost_center1: {
+                      select: {
+                        id: true,
+                        name: true,
+                        dimension_id: true,
+                      },
+                    },
+                    pay_component_line_cost_center2: {
+                      select: {
+                        id: true,
+                        name: true,
+                        dimension_id: true,
+                      },
+                    },
+                    pay_component_line_cost_center3: {
+                      select: {
+                        id: true,
+                        name: true,
+                        dimension_id: true,
+                      },
+                    },
+                    pay_component_line_cost_center4: {
+                      select: {
+                        id: true,
+                        name: true,
+                        dimension_id: true,
+                      },
+                    },
+                    pay_component_line_cost_center5: {
+                      select: {
+                        id: true,
+                        name: true,
+                        dimension_id: true,
+                      },
+                    },
+                  },
+                },
+                work_life_entry_pay_header: {
+                  select: {
+                    id: true,
+                    event_type: true,
+                    work_life_event_type: {
+                      select: {
+                        id: true,
+                        event_type_name: true,
+                      },
+                    },
+                  },
+                },
+                branch_pay_component_header: {
+                  select: { id: true, branch_name: true },
+                },
+                hrms_d_employee: {
+                  include: {
+                    hrms_employee_department: {
+                      select: {
+                        id: true,
+                        department_name: true,
+                      },
+                    },
+                    hrms_employee_designation: {
+                      select: {
+                        id: true,
+                        designation_name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            }
+          );
+
+        return updatedEmp;
+      },
+      { timeout: 20000 }
+    );
 
     return parseData(result);
   } catch (error) {
