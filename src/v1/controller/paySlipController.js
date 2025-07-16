@@ -85,15 +85,35 @@ const deletePaySlip = async (req, res, next) => {
   }
 };
 
+// const getAllPaySlip = async (req, res, next) => {
+//   try {
+//     const { page, size, search, startDate, endDate } = req.query;
+//     const data = await paySlipService.getAllPaySlip(
+//       search,
+//       Number(page),
+//       Number(size),
+//       startDate && moment(startDate),
+//       endDate && moment(endDate)
+//     );
+//     res.status(200).success(null, data);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const getAllPaySlip = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, employee_id, month, year } =
+      req.query;
     const data = await paySlipService.getAllPaySlip(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      employee_id,
+      month,
+      year
     );
     res.status(200).success(null, data);
   } catch (error) {

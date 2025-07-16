@@ -102,7 +102,75 @@ const deletePaySlip = async (id) => {
 };
 
 // Get all payslips with pagination and search
-const getAllPaySlip = async (search, page, size, startDate, endDate) => {
+// const getAllPaySlip = async (search, page, size, startDate, endDate) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         {
+//           payslip_employee: {
+//             full_name: {
+//               contains: search.toLowerCase(),
+//             },
+//           },
+//         },
+//         { month: { contains: search.toLowerCase() } },
+//         { year: { contains: search.toLowerCase() } },
+//         { status: { contains: search.toLowerCase() } },
+//         { remarks: { contains: search.toLowerCase() } },
+//       ];
+//     }
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = { gte: start, lte: end };
+//       }
+//     }
+
+//     const datas = await prisma.hrms_d_payslip.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       include: {
+//         payslip_employee: {
+//           select: {
+//             full_name: true,
+//             id: true,
+//           },
+//         },
+//       },
+
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//     });
+//     const totalCount = await prisma.hrms_d_payslip.count({ where: filters });
+
+//     return {
+//       data: datas,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError("Error retrieving payslips", 503);
+//   }
+// };
+
+const getAllPaySlip = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  employee_id,
+  month,
+  year
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -131,6 +199,32 @@ const getAllPaySlip = async (search, page, size, startDate, endDate) => {
         filters.createdate = { gte: start, lte: end };
       }
     }
+    if (employee_id) {
+      filters.employee_id = Number(employee_id);
+    }
+    if (month) {
+      const monthNames = [
+        "",
+        "January",
+        "February",
+        "March",
+        "April",
+        "May",
+        "June",
+        "July",
+        "August",
+        "September",
+        "October",
+        "November",
+        "December",
+      ];
+      const monthName = monthNames[parseInt(month)];
+      filters.month = monthName;
+    }
+
+    if (year) {
+      filters.year = String(year);
+    }
 
     const datas = await prisma.hrms_d_payslip.findMany({
       where: filters,
@@ -144,19 +238,43 @@ const getAllPaySlip = async (search, page, size, startDate, endDate) => {
           },
         },
       },
-
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
+
     const totalCount = await prisma.hrms_d_payslip.count({ where: filters });
 
+    const monthNames = [
+      "",
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const resultData = datas.map((item) => ({
+      ...item,
+      monthName: monthNames[parseInt(item.month, 10)],
+      year: item.year,
+    }));
+
     return {
-      data: datas,
+      data: resultData,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
       totalCount,
     };
   } catch (error) {
+    console.log("Error in get", error);
+
     throw new CustomError("Error retrieving payslips", 503);
   }
 };
