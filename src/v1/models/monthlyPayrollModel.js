@@ -343,8 +343,9 @@ const callMonthlyPayrollSP = async (params) => {
 
 const getComponentNames = async () => {
   try {
-    const result = await prisma.$queryRawUnsafe(`
-      SELECT component_code, component_name FROM vw_hrms_get_component_names`);
+    const result = await prisma.$queryRawUnsafe(
+      `SELECT * FROM vw_hrms_get_component_names`
+    );
     return result;
   } catch (error) {
     console.log("Error", error);

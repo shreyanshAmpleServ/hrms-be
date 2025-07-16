@@ -23,10 +23,7 @@ router.get(
   monthlyPayrollController.triggerMonthlyPayrollSP
 );
 
-router.get(
-  "/monthly-payroll/components",
-  monthlyPayrollController.getComponentNames
-);
+router.get("/components", monthlyPayrollController.getComponentNames);
 
 // Get a single monthly payroll by ID routes
 router.get(
