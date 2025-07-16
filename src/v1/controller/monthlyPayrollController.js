@@ -87,6 +87,14 @@ const triggerMonthlyPayrollSP = async (req, res, next) => {
   }
 };
 
+const getComponentNames = async (req, res, next) => {
+  try {
+    const data = await monthlyPayrollService.getComponentNames();
+    res.status(200).success("Component names fetched successfully", data);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayroll,
@@ -94,4 +102,5 @@ module.exports = {
   deleteMonthlyPayroll,
   getAllMonthlyPayroll,
   triggerMonthlyPayrollSP,
+  getComponentNames,
 };
