@@ -341,6 +341,16 @@ const callMonthlyPayrollSP = async (params) => {
   }
 };
 
+const getComponentNames = async () => {
+  try {
+    const result = await prisma.$queryRawUnsafe(`
+      SELECT component_code, component_name FROM vw_hrms_get_component_names`);
+    return result;
+  } catch (error) {
+    console.log("Error", error);
+    throw new CustomError("Failed to fetch component names", 500);
+  }
+};
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
@@ -348,4 +358,5 @@ module.exports = {
   deleteMonthlyPayroll,
   getAllMonthlyPayroll,
   callMonthlyPayrollSP,
+  getComponentNames,
 };

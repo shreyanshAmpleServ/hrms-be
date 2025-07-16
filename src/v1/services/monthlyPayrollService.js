@@ -42,6 +42,10 @@ const callMonthlyPayrollSP = async (params) => {
     throw new CustomError(`SP execution failed: ${error.message}`, 500);
   }
 };
+
+const getComponentNames = async () => {
+  return await monthlyPayrollModel.getComponentNames();
+};
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
@@ -49,4 +53,5 @@ module.exports = {
   deleteMonthlyPayroll,
   getAllMonthlyPayroll,
   callMonthlyPayrollSP,
+  getComponentNames,
 };
