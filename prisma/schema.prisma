@@ -1668,41 +1668,76 @@ model hrms_d_daily_attendance_entry {
 }
 
 model hrms_d_monthly_payroll_processing {
-  id                            Int             @id @default(autoincrement())
-  employee_id                   Int
-  payroll_month                 Int             @db.SmallInt
-  payroll_year                  Int             @db.SmallInt
-  payroll_week                  Int             @db.SmallInt
-  payroll_start_date            DateTime?       @db.Date
-  payroll_end_date              DateTime?       @db.Date
-  payroll_paid_days             Int?
-  pay_currency                  Int?
-  total_earnings                Decimal         @db.Decimal(18, 4)
-  taxable_earnings              Decimal         @db.Decimal(18, 4)
-  tax_amount                    Decimal         @db.Decimal(18, 4)
-  total_deductions              Decimal         @db.Decimal(18, 4)
-  net_pay                       Decimal         @db.Decimal(18, 2)
-  status                        String          @db.NVarChar(20)
-  execution_date                DateTime?       @db.Date
-  pay_date                      DateTime?       @db.DateTime
-  doc_date                      DateTime?       @db.Date
-  processed                     String          @default("N", map: "DF__hrms_d_mo__proce__09946309") @db.Char(1)
-  je_transid                    Int?
-  project_id                    Int?
-  cost_center1_id               Int?
-  cost_center2_id               Int?
-  cost_center3_id               Int?
-  cost_center4_id               Int?
-  cost_center5_id               Int?
-  approved1                     String          @default("N", map: "DF__hrms_d_mo__appro__0A888742") @db.Char(1)
-  approver1_id                  Int?
-  employee_email                String?         @db.NVarChar(100)
-  remarks                       String?         @db.NVarChar(250)
-  createdate                    DateTime        @db.DateTime
-  createdby                     Int
-  updatedate                    DateTime?       @db.DateTime
-  updatedby                     Int?
-  log_inst                      Int?
+  id Int @id @default(autoincrement())
+
+  employee_id Int
+
+  payroll_month Int @db.SmallInt
+
+  payroll_year Int @db.SmallInt
+
+  payroll_week Int @db.SmallInt
+
+  payroll_start_date DateTime? @db.Date
+
+  payroll_end_date DateTime? @db.Date
+
+  payroll_paid_days Int?
+
+  pay_currency Int?
+
+  total_earnings Decimal @db.Decimal(18, 4)
+
+  taxable_earnings Decimal @db.Decimal(18, 4)
+
+  tax_amount Decimal @db.Decimal(18, 4)
+
+  total_deductions Decimal @db.Decimal(18, 4)
+
+  net_pay Decimal @db.Decimal(18, 2)
+
+  status String @db.NVarChar(20)
+
+  execution_date DateTime? @db.Date
+
+  pay_date DateTime? @db.DateTime
+
+  doc_date DateTime? @db.Date
+
+  processed String @default("N", map: "DF__hrms_d_mo__proce__09946309") @db.Char(1)
+
+  je_transid Int?
+
+  project_id Int?
+
+  cost_center1_id Int?
+
+  cost_center2_id Int?
+
+  cost_center3_id Int?
+
+  cost_center4_id Int?
+
+  cost_center5_id Int?
+
+  approved1 String @default("N", map: "DF__hrms_d_mo__appro__0A888742") @db.Char(1)
+
+  approver1_id Int?
+
+  employee_email String? @db.NVarChar(100)
+
+  remarks String? @db.NVarChar(250)
+
+  createdate DateTime @db.DateTime
+
+  createdby Int
+
+  updatedate DateTime? @db.DateTime
+
+  updatedby Int?
+
+  log_inst Int?
+
   hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0")
 
   @@ignore
