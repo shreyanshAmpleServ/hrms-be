@@ -1,6 +1,7 @@
 const monthlyPayrollService = require("../services/monthlyPayrollService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { success } = require("zod/v4");
 
 const createMonthlyPayroll = async (req, res, next) => {
   try {
@@ -87,6 +88,20 @@ const triggerMonthlyPayrollSP = async (req, res, next) => {
   }
 };
 
+const triggerMonthlyPayrollCalculationSP = async (req, res, next) => {
+  try {
+    const result =
+      await monthlyPayrollService.triggerMonthlyPayrollCalculationSP(req.query);
+    console.log("Result", result);
+    res.status(200).json({
+      success: true,
+      message: result.message,
+      data: result.result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 const getComponentNames = async (req, res, next) => {
   try {
     const data = await monthlyPayrollService.getComponentNames();
@@ -103,4 +118,5 @@ module.exports = {
   getAllMonthlyPayroll,
   triggerMonthlyPayrollSP,
   getComponentNames,
+  triggerMonthlyPayrollCalculationSP,
 };
