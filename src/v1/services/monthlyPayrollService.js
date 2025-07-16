@@ -43,6 +43,23 @@ const callMonthlyPayrollSP = async (params) => {
   }
 };
 
+const triggerMonthlyPayrollCalculationSP = async (params) => {
+  try {
+    const result = await monthlyPayrollModel.triggerMonthlyPayrollCalculationSP(
+      params
+    );
+    return {
+      message: "Taxable amount SP executed successfully",
+      result: result,
+    };
+  } catch (error) {
+    throw new CustomError(
+      `Calculation SP execution failed: ${error.message}`,
+      500
+    );
+  }
+};
+
 const getComponentNames = async () => {
   return await monthlyPayrollModel.getComponentNames();
 };
@@ -54,4 +71,5 @@ module.exports = {
   getAllMonthlyPayroll,
   callMonthlyPayrollSP,
   getComponentNames,
+  triggerMonthlyPayrollCalculationSP,
 };

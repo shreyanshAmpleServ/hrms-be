@@ -341,6 +341,31 @@ const callMonthlyPayrollSP = async (params) => {
   }
 };
 
+const triggerMonthlyPayrollCalculationSP = async ({
+  employee_id,
+  taxable_amount,
+}) => {
+  try {
+    if (!employee_id || !taxable_amount) {
+      throw new CustomError("Missing employee_id or taxable_amount", 400);
+    }
+
+    const result = await prisma.$queryRawUnsafe(`
+      EXEC sp_hrms_taxable_amount 
+        @employee_id = ${parseInt(employee_id)}, 
+        @taxable_amount = ${parseFloat(taxable_amount)}
+    `);
+
+    return result;
+  } catch (error) {
+    console.error("SP Execution Error:", error);
+    throw new CustomError(
+      `Stored procedure execution failed: ${error.message}`,
+      500
+    );
+  }
+};
+
 const getComponentNames = async () => {
   try {
     const result = await prisma.$queryRawUnsafe(
@@ -360,4 +385,5 @@ module.exports = {
   getAllMonthlyPayroll,
   callMonthlyPayrollSP,
   getComponentNames,
+  triggerMonthlyPayrollCalculationSP,
 };
