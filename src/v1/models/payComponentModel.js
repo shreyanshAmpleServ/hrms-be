@@ -436,7 +436,6 @@ const updatePayComponent = async (id, data) => {
         }
       }
 
-      // 3. Update the pay component entry
       const updatedEntry = await tx.hrms_m_pay_component.update({
         where: { id: componentId },
         data: {
