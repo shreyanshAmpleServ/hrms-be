@@ -257,6 +257,47 @@ const getAllMonthlyPayroll = async (search, page, size, startDate, endDate) => {
   }
 };
 
+// const callMonthlyPayrollSP = async (params) => {
+//   try {
+//     const {
+//       paymonth,
+//       payyear,
+//       empidfrom,
+//       empidto,
+//       // depidfrom,
+//       // depidto,
+//       positionidfrom,
+//       positionidto,
+//       loanflag,
+//       grade,
+//     } = params;
+//     console.log("Model calling SP with params:", params);
+
+//     const sanitize = (val) => {
+//       const num = Number(val);
+//       return isNaN(num) ? 0 : num;
+//     };
+
+//     const result = await prisma.$queryRawUnsafe(`
+//       EXEC sp_hrms_monthly_payroll_processing
+//        @paymonth = ${sanitize(paymonth)},
+//        @payyear = ${sanitize(payyear)},
+//        @empidfrom = ${sanitize(empidfrom)},
+//        @empidto = ${sanitize(empidto)},
+//        @positionidfrom = ${sanitize(positionidfrom)},
+//        @positionidto = ${sanitize(positionidto)},
+//        @loanflag = ${sanitize(loanflag)},
+//        @grade = grade
+//     `);
+
+//     console.log("SP Result:", result);
+//     return result;
+//   } catch (error) {
+//     console.error("SP Execution Failed:", error);
+//     throw new CustomError("Monthly payroll processing failed", 500);
+//   }
+// };
+
 const callMonthlyPayrollSP = async (params) => {
   try {
     const {
@@ -264,28 +305,32 @@ const callMonthlyPayrollSP = async (params) => {
       payyear,
       empidfrom,
       empidto,
-      depidfrom,
-      depidto,
       positionidfrom,
       positionidto,
+      dptfrom,
+      dptto,
+      branchfrom,
+      branchto,
+      loanflag,
+      grade,
     } = params;
-    console.log("Model calling SP with params:", params);
 
-    const sanitize = (val) => {
-      const num = Number(val);
-      return isNaN(num) ? 0 : num;
-    };
+    console.log("Model calling SP with params:", params);
 
     const result = await prisma.$queryRawUnsafe(`
       EXEC sp_hrms_monthly_payroll_processing  
-       @paymonth = ${sanitize(paymonth)},
-       @payyear = ${sanitize(payyear)},
-       @empidfrom = ${sanitize(empidfrom)},
-       @empidto = ${sanitize(empidto)},
-       @depidfrom = ${sanitize(depidfrom)},
-       @depidto = ${sanitize(depidto)},
-       @positionidfrom = ${sanitize(positionidfrom)},
-       @positionidto = ${sanitize(positionidto)}
+        @paymonth = ${parseInt(paymonth)},
+        @payyear = ${parseInt(payyear)},
+        @EmpIdFrom = '${empidfrom}',
+        @EmpIdTo = '${empidto}',
+        @positionFrom = '${positionidfrom}',
+        @positionTo = '${positionidto}',
+        @dptFrom = '${dptfrom}',
+        @dpTo = '${dptto}',
+        @branchFrom = '${branchfrom}',
+        @branchTo = '${branchto}',
+        @Loanflag = ${parseInt(loanflag)},
+        @Grade = '${grade}'
     `);
 
     console.log("SP Result:", result);
@@ -295,6 +340,7 @@ const callMonthlyPayrollSP = async (params) => {
     throw new CustomError("Monthly payroll processing failed", 500);
   }
 };
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,

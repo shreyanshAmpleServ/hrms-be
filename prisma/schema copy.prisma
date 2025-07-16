@@ -281,7 +281,7 @@ model hrms_d_employee {
   work_address_id                                 Int?
   payment_mode                                    String?                                           @db.NVarChar(50)
   notes                                           String?                                           @db.NVarChar(500)
-  employee_shift_id                               hrms_m_shift_master?                              @relation(fields: [shift_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  activity_employee                               hrms_d_activity_log[]
   hrms_advance_payement_entry_approvedBy          hrms_d_advance_payment_entry[]                    @relation("AdvanceApprovedBy")
   hrms_advance_payement_entry_employee            hrms_d_advance_payment_entry[]                    @relation("AdvancePayementEntry")
   appraisal_employee                              hrms_d_appraisal[]
@@ -297,15 +297,17 @@ model hrms_d_employee {
   hrms_employee_designation                       hrms_m_designation_master?                        @relation(fields: [designation_id], references: [id], onUpdate: NoAction)
   hrms_manager                                    hrms_d_employee?                                  @relation("EmployeeManager", fields: [manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   subordinates                                    hrms_d_employee[]                                 @relation("EmployeeManager")
+  employee_shift_id                               hrms_m_shift_master?                              @relation(fields: [shift_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_employee_address                           hrms_d_employee_address[]
   hrms_d_employee_pay_component_assignment_header hrms_d_employee_pay_component_assignment_header[]
+  employee_payroll_adjustment_employee            hrms_d_employee_payroll_adjustment[]              @relation("EmployeePayrollAdjustmentEmployee")
+  employee_payroll_deduction_employee             hrms_d_employee_payroll_deduction_schedule[]      @relation("EmployeePayrollDeductionEmployee")
   suggestion_box_employee                         hrms_d_employee_suggestion[]
   contracted_employee                             hrms_d_employment_contract[]
   exit_clearance_by_user                          hrms_d_exit_clearance[]                           @relation("UserCleared")
   exit_clearance_employee                         hrms_d_exit_clearance[]
   exit_interview_employee                         hrms_d_exit_interview[]
   final_settlement_employee                       hrms_d_finalsettlement_processing[]
-  loan_emi_employee                               hrms_d_loan_emi_schedule[]
   goal_sheet_assignment_employee                  hrms_d_goal_sheet_assignment[]
   grievance_assigned_to                           hrms_d_grievance[]                                @relation("GrievanceAssignedTo")
   grievance_employee                              hrms_d_grievance[]                                @relation("GrievanceSubmittedBy")
@@ -319,6 +321,7 @@ model hrms_d_employee {
   leave_employee                                  hrms_d_leave_application[]
   leave_balance_employee                          hrms_d_leave_balance[]                            @relation("LeaveBalanceEmployee")
   leave_encashment_employee                       hrms_d_leave_encashment[]
+  loan_emi_employee                               hrms_d_loan_emi_schedule[]
   loan_req_employee                               hrms_d_loan_request[]
   medical_employee_id                             hrms_d_medical_record[]
   midmonth_payroll_processing_employee            hrms_d_midmonth_payroll_processing[]
@@ -350,11 +353,8 @@ model hrms_d_employee {
   eduction_of_employee                            hrms_employee_d_educations[]
   experiance_of_employee                          hrms_employee_d_experiences[]
   interview_stage_employee_id                     hrms_m_interview_stage_remark[]
-  user_employee                                   hrms_m_user[]
   projects_employee_detail                        hrms_m_projects[]
-  activity_employee                               hrms_d_activity_log[]
-  employee_payroll_deduction_employee             hrms_d_employee_payroll_deduction_schedule[]      @relation("EmployeePayrollDeductionEmployee")
-  employee_payroll_adjustment_employee            hrms_d_employee_payroll_adjustment[]              @relation("EmployeePayrollAdjustmentEmployee")
+  user_employee                                   hrms_m_user[]
 }
 
 model hrms_d_employee_address {
@@ -1069,14 +1069,14 @@ model hrms_m_currency_master {
   log_inst                             Int?
   is_active                            String?                                         @default("Y") @db.Char(1)
   pay_component_line_currency          hrms_d_employee_pay_component_assignment_line[]
+  employee_payroll_adjustment_currency hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentCurrency")
+  employee_payroll_deduction_currency  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeductionCurrency")
   loan_req_currency                    hrms_d_loan_request[]
   hrms_monthly_payroll_currency        hrms_d_midmonth_payroll_processing[]
   midmonth_payroll_processing_currency hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCurrency")
   overtime_payroll_processing_currency hrms_d_overtime_payroll_processing[]            @relation("OvertimeCurrency")
   travel_expense_currency              hrms_d_travel_expense[]
   loan_master_amount_currency          hrms_m_loan_master[]
-  employee_payroll_deduction_currency  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeductionCurrency")
-  employee_payroll_adjustment_currency hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentCurrency")
 }
 
 model hrms_m_department_master {
@@ -1302,7 +1302,10 @@ model hrms_m_pay_component {
   formula_editable                      String                                          @default("Y", map: "DF__hrms_m_pa__formu__2EC5E7B8") @db.Char(1)
   visible_in_payslip                    String                                          @default("Y", map: "DF__hrms_m_pa__visib__2FBA0BF1") @db.Char(1)
   execution_order                       Int?
+  is_loan                               String?                                         @default("N", map: "DF__hrms_m_pa__is_lo__6C5905DD") @db.NVarChar(1)
   pay_component_for_line                hrms_d_employee_pay_component_assignment_line[]
+  employee_payroll_adjustment_component hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentComponent")
+  employee_payroll_deduction_component  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeduction")
   finalsettlement_component             hrms_d_finalsettlement_processing[]
   midmonth_payroll_processing_component hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProcessingComponent")
   overtime_payroll_processing_component hrms_d_overtime_payroll_processing[]
@@ -1314,8 +1317,6 @@ model hrms_m_pay_component {
   pay_component_project                 hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_tax                     hrms_m_tax_slab_rule?                           @relation(fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
-  employee_payroll_deduction_component  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeduction")
-  employee_payroll_adjustment_component hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentComponent")
 }
 
 model hrms_m_provident_fund {
@@ -1371,8 +1372,6 @@ model hrms_m_shift_master {
   shift_name             String?                   @db.NVarChar(100)
   start_time             String?                   @db.VarChar(50)
   end_time               String?                   @db.VarChar(50)
-  is_active              String?                   @default("Y") @db.Char(1)
-  weekoff_days           String?                   @db.VarChar(50)
   createdate             DateTime?                 @default(now(), map: "DF__hrms_m_sh__creat__25518C17") @db.DateTime
   createdby              Int
   updatedate             DateTime?                 @db.DateTime
@@ -1385,8 +1384,10 @@ model hrms_m_shift_master {
   half_day_working       String?                   @default("N", map: "DF__hrms_m_sh__half___0E8E2250") @db.Char(1)
   half_day_on            Int?                      @db.SmallInt
   remarks                String?                   @db.NVarChar(300)
-  shift_department_id    hrms_m_department_master? @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  is_active              String?                   @default("Y") @db.Char(1)
+  weekoff_days           String?                   @db.VarChar(50)
   employee_shift_id      hrms_d_employee[]
+  shift_department_id    hrms_m_department_master? @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_m_statutory_rate {
@@ -1702,66 +1703,6 @@ model hrms_d_monthly_payroll_processing {
   updatedate                    DateTime?       @db.DateTime
   updatedby                     Int?
   log_inst                      Int?
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1001 Decimal? @map("1001") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1222 Decimal? @map("1222") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1036 Decimal? @map("1036") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1035 Decimal? @map("1035") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1030 Decimal? @map("1030") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1029 Decimal? @map("1029") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1028 Decimal? @map("1028") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1024 Decimal? @map("1024") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1023 Decimal? @map("1023") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1021 Decimal? @map("1021") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1022 Decimal? @map("1022") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1020 Decimal? @map("1020") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1019 Decimal? @map("1019") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1018 Decimal? @map("1018") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1017 Decimal? @map("1017") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1016 Decimal? @map("1016") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1015 Decimal? @map("1015") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1012 Decimal? @map("1012") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1013 Decimal? @map("1013") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1011 Decimal? @map("1011") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1010 Decimal? @map("1010") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1009 Decimal? @map("1009") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1008 Decimal? @map("1008") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1007 Decimal? @map("1007") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1006 Decimal? @map("1006") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1005 Decimal? @map("1005") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1004 Decimal? @map("1004") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1003 Decimal? @map("1003") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1002 Decimal? @map("1002") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1334 Decimal? @map("1334") @db.Decimal(18, 4)
   hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0")
 
   @@ignore
@@ -1943,7 +1884,7 @@ model hrms_d_employee_pay_component_assignment_line {
   pay_component_line_cost_center4                 hrms_m_costcenters?                             @relation("LineCostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_line_cost_center5                 hrms_m_costcenters?                             @relation("LineCostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_line_currency                     hrms_m_currency_master?                         @relation(fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  pay_component_for_line                          hrms_m_pay_component                            @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
+  pay_component_for_line                          hrms_m_pay_component                            @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   pay_component_line_project                      hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_line_tax_slab                     hrms_m_tax_slab_rule?                           @relation(fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
@@ -1978,15 +1919,15 @@ model hrms_d_employee_payroll_adjustment {
   updatedby                             Int?
   log_inst                              Int?
   hrms_m_currency_masterId              Int?
-  employee_payroll_adjustment_component hrms_m_pay_component?   @relation("EmployeePayrollAdjustmentComponent", fields: [component_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_component hrms_m_pay_component    @relation("EmployeePayrollAdjustmentComponent", fields: [component_id], references: [id], onUpdate: NoAction)
   employee_payroll_adjustment_center1   hrms_m_costcenters?     @relation("CostCenter1", fields: [cost_center1_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee_payroll_adjustment_center2   hrms_m_costcenters?     @relation("CostCenter2", fields: [cost_center2_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee_payroll_adjustment_center3   hrms_m_costcenters?     @relation("CostCenter3", fields: [cost_center3_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee_payroll_adjustment_center4   hrms_m_costcenters?     @relation("CostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee_payroll_adjustment_center5   hrms_m_costcenters?     @relation("CostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  employee_payroll_adjustment_employee  hrms_d_employee?        @relation("EmployeePayrollAdjustmentEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  employee_payroll_adjustment_project   hrms_m_projects?        @relation("EmployeePayrollAdjustmentProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_employee  hrms_d_employee         @relation("EmployeePayrollAdjustmentEmployee", fields: [employee_id], references: [id], onUpdate: NoAction)
   employee_payroll_adjustment_currency  hrms_m_currency_master? @relation("EmployeePayrollAdjustmentCurrency", fields: [hrms_m_currency_masterId], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_adjustment_project   hrms_m_projects?        @relation("EmployeePayrollAdjustmentProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_employee_payroll_deduction_schedule {
@@ -2017,15 +1958,15 @@ model hrms_d_employee_payroll_deduction_schedule {
   updatedby                            Int?
   log_inst                             Int?
   hrms_m_currency_masterId             Int?
-  employee_payroll_deduction_component hrms_m_pay_component?   @relation("EmployeePayrollDeduction", fields: [component_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_component hrms_m_pay_component    @relation("EmployeePayrollDeduction", fields: [component_id], references: [id], onUpdate: NoAction)
   employee_payroll_deduction_center1   hrms_m_costcenters?     @relation("CostCenter1", fields: [cost_center1_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee_payroll_deduction_center2   hrms_m_costcenters?     @relation("CostCenter2", fields: [cost_center2_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee_payroll_deduction_center3   hrms_m_costcenters?     @relation("CostCenter3", fields: [cost_center3_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee_payroll_deduction_center4   hrms_m_costcenters?     @relation("CostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   employee_payroll_deduction_center5   hrms_m_costcenters?     @relation("CostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  employee_payroll_deduction_employee  hrms_d_employee?        @relation("EmployeePayrollDeductionEmployee", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  employee_payroll_deduction_project   hrms_m_projects?        @relation("EmployeePayrollDeductionProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_employee  hrms_d_employee         @relation("EmployeePayrollDeductionEmployee", fields: [employee_id], references: [id], onUpdate: NoAction)
   employee_payroll_deduction_currency  hrms_m_currency_master? @relation("EmployeePayrollDeductionCurrency", fields: [pay_currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_payroll_deduction_project   hrms_m_projects?        @relation("EmployeePayrollDeductionProject", fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_leave_balance_details {
@@ -2100,7 +2041,7 @@ model hrms_d_finalsettlement_processing {
   updatedate                DateTime?            @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
-  finalsettlement_component hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_fi__compo__17E28260")
+  finalsettlement_component hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK__hrms_d_fi__compo__17E28260")
   final_settlement_employee hrms_d_employee      @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_fi__emplo__16EE5E27")
 }
 
@@ -2304,6 +2245,16 @@ model hrms_m_costcenters {
   pay_component_line_cost_center3     hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter3")
   pay_component_line_cost_center4     hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter4")
   pay_component_line_cost_center5     hrms_d_employee_pay_component_assignment_line[] @relation("LineCostCenter5")
+  employee_payroll_adjustment_center1 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter1")
+  employee_payroll_adjustment_center2 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter2")
+  employee_payroll_adjustment_center3 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter3")
+  employee_payroll_adjustment_center4 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter4")
+  employee_payroll_adjustment_center5 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter5")
+  employee_payroll_deduction_center1  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter1")
+  employee_payroll_deduction_center2  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter2")
+  employee_payroll_deduction_center3  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter3")
+  employee_payroll_deduction_center4  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter4")
+  employee_payroll_deduction_center5  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter5")
   midmonth_payroll_processing_center1 hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCostCenter1")
   midmonth_payroll_processing_center2 hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCostCenter2")
   midmonth_payroll_processing_center3 hrms_d_midmonth_payroll_processing[]            @relation("MidMonthCostCenter3")
@@ -2314,16 +2265,6 @@ model hrms_m_costcenters {
   pay_component_cost_center3          hrms_m_pay_component[]                          @relation("CostCenter3")
   pay_component_cost_center4          hrms_m_pay_component[]                          @relation("CostCenter4")
   pay_component_cost_center5          hrms_m_pay_component[]                          @relation("CostCenter5")
-  employee_payroll_deduction_center1  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter1")
-  employee_payroll_deduction_center2  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter2")
-  employee_payroll_deduction_center3  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter3")
-  employee_payroll_deduction_center4  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter4")
-  employee_payroll_deduction_center5  hrms_d_employee_payroll_deduction_schedule[]    @relation("CostCenter5")
-  employee_payroll_adjustment_center1 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter1")
-  employee_payroll_adjustment_center2 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter2")
-  employee_payroll_adjustment_center3 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter3")
-  employee_payroll_adjustment_center4 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter4")
-  employee_payroll_adjustment_center5 hrms_d_employee_payroll_adjustment[]            @relation("CostCenter5")
 }
 
 model hrms_m_projects {
@@ -2343,11 +2284,11 @@ model hrms_m_projects {
   ValidTo                             DateTime                                        @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_pr__Valid__67FE6514")
   is_active                           String?                                         @default("Y", map: "DF__hrms_m_pr__is_ac__69E6AD86") @db.Char(1)
   pay_component_line_project          hrms_d_employee_pay_component_assignment_line[]
+  employee_payroll_adjustment_project hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentProject")
+  employee_payroll_deduction_project  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeductionProject")
   midmonth_payroll_processing_project hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProject")
   pay_component_project               hrms_m_pay_component[]
   projects_employee_detail            hrms_d_employee?                                @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  employee_payroll_deduction_project  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeductionProject")
-  employee_payroll_adjustment_project hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentProject")
 }
 
 model hrms_d_activity_log {

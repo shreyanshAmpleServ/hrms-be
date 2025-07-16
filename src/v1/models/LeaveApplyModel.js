@@ -287,6 +287,7 @@ const updateLeaveStatus = async (id, data) => {
       updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
+    console.log("Data", data);
 
     if (data.status === "A") {
       updateData.approver_id = Number(data.approver_id) || null;
