@@ -80,11 +80,6 @@ const serializePayLine = (data) => {
       ? Number(data.cost_center5_id)
       : null,
     column_order: data?.column_order ? Number(data.column_order) : null,
-    createdate: data?.createdate ? new Date(data.createdate) : new Date(),
-    createdby: Number(data?.createdby),
-    updatedate: data?.updatedate ? new Date(data.updatedate) : null,
-    updatedby: data?.updatedby ? Number(data.updatedby) : null,
-    log_inst: data?.log_inst ? Number(data.log_inst) : null,
   };
 };
 
@@ -309,8 +304,6 @@ const updateBasicPay = async (id, data) => {
     }
     const updatedData = {
       ...headerDatas,
-      updatedby: data.updatedby || 1,
-      updatedate: new Date(),
     };
     const serializedData = serializeHeaders(updatedData);
 
@@ -323,6 +316,8 @@ const updateBasicPay = async (id, data) => {
       newAddresses?.map((addr) => ({
         ...serializePayLine(addr),
         parent_id: parseInt(id),
+        createdate: new Date(),
+        createdby: data.createdby || 1,
       })) || [];
 
     // Use transaction for atomicity
