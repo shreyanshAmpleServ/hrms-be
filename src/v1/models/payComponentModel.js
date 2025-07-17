@@ -17,6 +17,8 @@ const serializePayComponentData = (data) => ({
   is_worklife_related: data.is_worklife_related || "N",
   is_grossable: data.is_grossable || "N",
   is_advance: data.is_advance || "N",
+  contribution_of_employee: data.contribution_of_employee,
+  employer_default_formula: data.employer_default_formula,
   tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : null,
   gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : null,
   factor: data.factor ? Number(data.factor) : null,
