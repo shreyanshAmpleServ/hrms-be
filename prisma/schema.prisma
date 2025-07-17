@@ -1271,6 +1271,8 @@ model hrms_m_pay_component {
   is_taxable                            String                                          @default("Y", map: "DF_hrms_m_pay_component_is_taxable") @db.Char(1)
   is_statutory                          String                                          @default("N", map: "DF_hrms_m_pay_component_is_statutory") @db.Char(1)
   is_active                             String                                          @default("Y", map: "DF_hrms_m_pay_component_is_active") @db.Char(1)
+  contribution_of_employee              String                                          @default("N") @db.Char(1)
+  employer_default_formula              String?                                         @db.VarChar(50)
   createdate                            DateTime?                                       @default(now(), map: "DF__hrms_m_pa__creat__44CA3770") @db.DateTime
   createdby                             Int
   updatedate                            DateTime?                                       @db.DateTime
