@@ -56,4 +56,10 @@ router.post(
   monthlyPayrollController.createOrUpdateMonthlyPayroll
 );
 
+router.get(
+  "/get-generate-monthly-payroll",
+  authenticateToken,
+  monthlyPayrollController.getGeneratedMonthlyPayroll
+);
+
 module.exports = router;

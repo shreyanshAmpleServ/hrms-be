@@ -67,6 +67,21 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
   return await monthlyPayrollModel.createOrUpdatePayrollBulk(rows, user);
 };
 
+const getGeneratedMonthlyPayroll = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
+  return await monthlyPayrollModel.getGeneratedMonthlyPayroll(
+    search,
+    page,
+    size,
+    startDate,
+    endDate
+  );
+};
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
@@ -77,4 +92,5 @@ module.exports = {
   getComponentNames,
   triggerMonthlyPayrollCalculationSP,
   createOrUpdatePayrollBulk,
+  getGeneratedMonthlyPayroll,
 };

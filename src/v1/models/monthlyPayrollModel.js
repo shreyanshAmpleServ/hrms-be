@@ -690,6 +690,60 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
     );
   }
 };
+
+const getGeneratedMonthlyPayroll = async (
+  search,
+  page = 1,
+  size = 10,
+  startDate,
+  endDate
+) => {
+  try {
+    const offset = (page - 1) * size;
+    let whereClause = `WHERE 1=1`;
+
+    // Search filter
+    if (search) {
+      const term = search.toLowerCase().replace(/'/g, "''");
+      whereClause += `
+        AND (
+          LOWER(emp.full_name) LIKE '%${term}%'
+          OR LOWER(mp.status) LIKE '%${term}%'
+          OR CAST(mp.payroll_month AS TEXT) LIKE '%${term}%'
+          OR CAST(mp.payroll_year AS TEXT) LIKE '%${term}%'
+          OR LOWER(mp.remarks) LIKE '%${term}%'
+        )
+      `;
+    }
+
+    // Date range filter
+    if (startDate && endDate) {
+      const start = new Date(startDate).toISOString();
+      const end = new Date(endDate).toISOString();
+      whereClause += ` AND mp.createdate BETWEEN '${start}' AND '${end}'`;
+    }
+
+    const query = `
+      SELECT *
+      FROM hrms_d_monthly_payroll_processing
+      ORDER BY updatedate DESC
+    `;
+
+    const result = await prisma.$queryRawUnsafe(query);
+
+    return {
+      data: result,
+      currentPage: page,
+      size,
+      // totalPages: Math.ceil(totalCount / size),
+    };
+  } catch (error) {
+    console.log("Payroll retreival error", error);
+
+    throw new CustomError("Error retrieving payroll entries", 503);
+  }
+};
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
@@ -700,4 +754,5 @@ module.exports = {
   getComponentNames,
   triggerMonthlyPayrollCalculationSP,
   createOrUpdatePayrollBulk,
+  getGeneratedMonthlyPayroll,
 };

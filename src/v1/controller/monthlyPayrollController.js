@@ -127,6 +127,22 @@ const createOrUpdateMonthlyPayroll = async (req, res, next) => {
   }
 };
 
+const getGeneratedMonthlyPayroll = async (req, res, next) => {
+  try {
+    const { page, size, search, startDate, endDate } = req.query;
+    const data = await monthlyPayrollService.getGeneratedMonthlyPayroll(
+      search,
+      Number(page),
+      Number(size),
+      startDate && moment(startDate),
+      endDate && moment(endDate)
+    );
+    res.status(200).success(null, data);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayroll,
@@ -137,4 +153,5 @@ module.exports = {
   getComponentNames,
   triggerMonthlyPayrollCalculationSP,
   createOrUpdateMonthlyPayroll,
+  getGeneratedMonthlyPayroll,
 };
