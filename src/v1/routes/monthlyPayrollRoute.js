@@ -50,4 +50,10 @@ router.delete(
   monthlyPayrollController.deleteMonthlyPayroll
 );
 
+router.post(
+  "/generate-monthly-payroll",
+  authenticateToken,
+  monthlyPayrollController.createOrUpdateMonthlyPayroll
+);
+
 module.exports = router;

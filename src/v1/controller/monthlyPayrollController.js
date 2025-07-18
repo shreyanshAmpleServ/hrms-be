@@ -110,6 +110,23 @@ const getComponentNames = async (req, res, next) => {
     next(error);
   }
 };
+
+const createOrUpdateMonthlyPayroll = async (req, res, next) => {
+  try {
+    const rows = req.body;
+    const user = req.user;
+    console.log("Request body:", req.body);
+
+    const result = await monthlyPayrollService.createOrUpdatePayrollBulk(
+      rows,
+      user
+    );
+    res.status(200).success("Monthly payroll processed successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayroll,
@@ -119,4 +136,5 @@ module.exports = {
   triggerMonthlyPayrollSP,
   getComponentNames,
   triggerMonthlyPayrollCalculationSP,
+  createOrUpdateMonthlyPayroll,
 };
