@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { record } = require("zod/v4");
 const prisma = new PrismaClient();
 
 // Serialize payroll data
@@ -560,6 +561,138 @@ const getComponentNames = async () => {
 // };
 //change
 
+// const createOrUpdatePayrollBulk = async (rows, user) => {
+//   const processed = [];
+
+//   const safeDate = (val) => {
+//     if (!val) return "NULL";
+//     const d = new Date(val);
+//     return isNaN(d) ? "NULL" : `'${d.toISOString()}'`;
+//   };
+
+//   const safeString = (val) => (val ? `'${val.replace(/'/g, "''")}'` : "NULL");
+
+//   const safeNumber = (val, def = 0) => {
+//     const num = Number(val);
+//     return isNaN(num) ? def : num;
+//   };
+
+//   const safeDecimal = (val, def = 0) => {
+//     const num = Number(val);
+//     return isNaN(num) ? def.toFixed(2) : num.toFixed(2);
+//   };
+
+//   try {
+//     for (const row of rows) {
+//       const employee_id = safeNumber(row.employee_id);
+//       const payroll_month = safeNumber(
+//         row.payroll_month,
+//         new Date().getMonth() + 1
+//       );
+//       const payroll_year = safeNumber(
+//         row.payroll_year,
+//         new Date().getFullYear()
+//       );
+
+//       const staticCols = {
+//         employee_id,
+//         payroll_month,
+//         payroll_year,
+//         payroll_week: safeNumber(row.payroll_week, 0),
+//         payroll_start_date: safeDate(row.payroll_start_date),
+//         payroll_end_date: safeDate(row.payroll_end_date),
+//         payroll_paid_days: safeNumber(row.payroll_paid_days),
+//         pay_currency: safeString(row.Currency),
+//         total_earnings: safeDecimal(row.total_earnings),
+//         taxable_earnings: safeDecimal(row.TaxableIncome),
+//         tax_amount: safeDecimal(row.TaxPayee),
+//         total_deductions: safeDecimal(row.total_deductions),
+//         net_pay: safeDecimal(row.net_pay),
+//         status: safeString(row.status || "N"),
+//         execution_date: safeDate(row.execution_date),
+//         pay_date: safeDate(row.pay_date),
+//         doc_date: safeDate(row.doc_date),
+//         processed: safeString(row.processed || "N"),
+//         je_transid: safeNumber(row.je_transid),
+//         project_id: safeNumber(row.project_id),
+//         cost_center1_id: safeNumber(row.cost_center1_id),
+//         cost_center2_id: safeNumber(row.cost_center2_id),
+//         cost_center3_id: safeNumber(row.cost_center3_id),
+//         cost_center4_id: safeNumber(row.cost_center4_id),
+//         cost_center5_id: safeNumber(row.cost_center5_id),
+//         approved1: safeString(row.approved1 || "N"),
+//         approver1_id: safeNumber(row.approver1_id),
+//         employee_email: safeString(row.employee_email),
+//         remarks: safeString(row.remarks),
+//         log_inst: safeString(user.log_inst),
+//         createdby: user.id,
+//         createdate: "GETDATE()",
+//         updatedby: user.id,
+//         updatedate: "GETDATE()",
+//       };
+
+//       const componentCols = {};
+//       for (const key in row) {
+//         if (/^\d+$/.test(key)) {
+//           componentCols[key] = safeNumber(row[key]);
+//         }
+//       }
+
+//       const allCols = {};
+//       Object.entries({ ...staticCols, ...componentCols }).forEach(([k, v]) => {
+//         allCols[`[${k}]`] = v;
+//       });
+
+//       const exists = await prisma.$queryRawUnsafe(`
+//         SELECT id FROM hrms_d_monthly_payroll_processing
+//         WHERE employee_id = ${employee_id}
+//         AND payroll_month = ${payroll_month}
+//         AND payroll_year = ${payroll_year}
+//       `);
+
+//       let sql;
+//       if (exists.length > 0) {
+//         const setClause = Object.entries(allCols)
+//           .map(([key, val]) => `${key} = ${val}`)
+//           .join(", ");
+//         sql = `
+//           UPDATE hrms_d_monthly_payroll_processing
+//           SET ${setClause}
+//           WHERE employee_id = ${employee_id}
+//             AND payroll_month = ${payroll_month}
+//             AND payroll_year = ${payroll_year}
+//         `;
+//       } else {
+//         const columns = Object.keys(allCols).join(", ");
+//         const values = Object.values(allCols)
+//           .map((v) => (v === "GETDATE()" ? v : v))
+//           .join(", ");
+//         sql = `
+//           INSERT INTO hrms_d_monthly_payroll_processing (${columns})
+//           VALUES (${values})
+//         `;
+//       }
+
+//       await prisma.$executeRawUnsafe(sql);
+
+//       processed.push({
+//         employee_id,
+//         payroll_month,
+//         payroll_year,
+//         action: exists.length > 0 ? "updated" : "inserted",
+//         record: fullRecord || null,
+//       });
+//     }
+
+//     return processed;
+//   } catch (error) {
+//     console.error("Raw payroll error:", error);
+//     throw new Error(
+//       `Failed to process payroll bulk operation: ${error.message}`
+//     );
+//   }
+// };
+
 const createOrUpdatePayrollBulk = async (rows, user) => {
   const processed = [];
 
@@ -601,7 +734,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         payroll_start_date: safeDate(row.payroll_start_date),
         payroll_end_date: safeDate(row.payroll_end_date),
         payroll_paid_days: safeNumber(row.payroll_paid_days),
-        pay_currency: safeString(row.Currency),
+        pay_currency: row.Currency,
         total_earnings: safeDecimal(row.total_earnings),
         taxable_earnings: safeDecimal(row.TaxableIncome),
         tax_amount: safeDecimal(row.TaxPayee),
@@ -650,6 +783,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
       `);
 
       let sql;
+      let action;
       if (exists.length > 0) {
         const setClause = Object.entries(allCols)
           .map(([key, val]) => `${key} = ${val}`)
@@ -661,6 +795,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
             AND payroll_month = ${payroll_month}
             AND payroll_year = ${payroll_year}
         `;
+        action = "updated";
       } else {
         const columns = Object.keys(allCols).join(", ");
         const values = Object.values(allCols)
@@ -670,15 +805,25 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
           INSERT INTO hrms_d_monthly_payroll_processing (${columns})
           VALUES (${values})
         `;
+        action = "inserted";
       }
 
       await prisma.$executeRawUnsafe(sql);
+
+      // Fetch the full record after insert/update
+      const [fullRecord] = await prisma.$queryRawUnsafe(`
+        SELECT * FROM hrms_d_monthly_payroll_processing
+        WHERE employee_id = ${employee_id}
+        AND payroll_month = ${payroll_month}
+        AND payroll_year = ${payroll_year}
+      `);
 
       processed.push({
         employee_id,
         payroll_month,
         payroll_year,
-        action: exists.length > 0 ? "updated" : "inserted",
+        action,
+        record: fullRecord || null,
       });
     }
 
