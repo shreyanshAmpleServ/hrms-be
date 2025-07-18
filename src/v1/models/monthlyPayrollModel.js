@@ -198,7 +198,15 @@ const deleteMonthlyPayroll = async (id) => {
 };
 
 // Get all payroll entries
-const getAllMonthlyPayroll = async (search, page, size, startDate, endDate) => {
+const getAllMonthlyPayroll = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  payroll_month,
+  payroll_year
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -735,6 +743,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         payroll_end_date: safeDate(row.payroll_end_date),
         payroll_paid_days: safeNumber(row.payroll_paid_days),
         pay_currency: row.Currency,
+
         total_earnings: safeDecimal(row.total_earnings),
         taxable_earnings: safeDecimal(row.TaxableIncome),
         tax_amount: safeDecimal(row.TaxPayee),
@@ -835,12 +844,219 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
   }
 };
 
+// const getGeneratedMonthlyPayroll = async (
+//   search,
+//   page = 1,
+//   size = 10,
+//   startDate,
+//   endDate
+// ) => {
+//   try {
+//     page = parseInt(page) || 1;
+//     size = parseInt(size) || 10;
+//     const offset = (page - 1) * size;
+
+//     let whereClause = `WHERE 1=1`;
+
+//     if (search) {
+//       const term = search.toLowerCase().replace(/'/g, "''");
+//       whereClause += `
+//         AND (
+//           LOWER(mp.status) LIKE '%${term}%'
+//           OR CAST(mp.payroll_month AS VARCHAR) LIKE '%${term}%'
+//           OR CAST(mp.payroll_year AS VARCHAR) LIKE '%${term}%'
+//           OR LOWER(mp.remarks) LIKE '%${term}%'
+//           OR LOWER(mp.employee_email) LIKE '%${term}%'
+//           OR LOWER(emp.full_name) LIKE '%${term}%'
+//           OR LOWER(emp.employee_code) LIKE '%${term}%'
+//         )
+//       `;
+//     }
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate).toISOString();
+//       const end = new Date(endDate).toISOString();
+//       whereClause += ` AND mp.createdate BETWEEN '${start}' AND '${end}'`;
+//     }
+
+//     const query = `
+//       SELECT
+//         mp.*,
+//         emp.id AS employee_id,
+//         emp.full_name AS employee_full_name,
+//         emp.employee_code AS employee_code
+//       FROM hrms_d_monthly_payroll_processing mp
+//       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+//       ${whereClause}
+//       ORDER BY mp.updatedate DESC
+//       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY;
+//     `;
+
+//     const rawData = await prisma.$queryRawUnsafe(query);
+
+//     const data = rawData.map((row) => {
+//       const { employee_id, employee_full_name, employee_code, ...payrollData } =
+//         row;
+
+//       return {
+//         ...payrollData,
+//         hrms_monthly_payroll_employee: {
+//           id: employee_id,
+//           full_name: employee_full_name,
+//           employee_code,
+//         },
+//       };
+//     });
+
+//     const countQuery = `
+//       SELECT COUNT(*) AS count
+//       FROM hrms_d_monthly_payroll_processing mp
+//       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+//       ${whereClause};
+//     `;
+
+//     const countResult = await prisma.$queryRawUnsafe(countQuery);
+//     const totalCount = parseInt(countResult[0].count, 10);
+//     const totalPages = Math.ceil(totalCount / size);
+
+//     return {
+//       data,
+//       currentPage: page,
+//       size,
+//       totalPages,
+//       totalCount,
+//     };
+//   } catch (error) {
+//     console.error("Payroll retrieval error", error);
+//     throw new CustomError("Error retrieving payroll entries", 503);
+//   }
+// };
+
+// const getGeneratedMonthlyPayroll = async (
+//   search,
+//   page = 1,
+//   size = 10,
+//   startDate,
+//   endDate,
+//   employee_id,
+//   payroll_month,
+//   payroll_year
+// ) => {
+//   try {
+//     page = parseInt(page) || 1;
+//     size = parseInt(size) || 10;
+//     const offset = (page - 1) * size;
+
+//     let whereClause = `WHERE 1=1`;
+
+//     if (search) {
+//       const term = search.toLowerCase().replace(/'/g, "''");
+//       whereClause += `
+//         AND (
+//           LOWER(mp.status) LIKE '%${term}%'
+//           OR CAST(mp.payroll_month AS VARCHAR) LIKE '%${term}%'
+//           OR CAST(mp.payroll_year AS VARCHAR) LIKE '%${term}%'
+//           OR LOWER(mp.remarks) LIKE '%${term}%'
+//           OR LOWER(mp.employee_email) LIKE '%${term}%'
+//           OR LOWER(emp.full_name) LIKE '%${term}%'
+//           OR LOWER(emp.employee_code) LIKE '%${term}%'
+//         )
+//       `;
+//     }
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate).toISOString();
+//       const end = new Date(endDate).toISOString();
+//       whereClause += ` AND mp.createdate BETWEEN '${start}' AND '${end}'`;
+//     }
+
+//     if (
+//       employee_id !== undefined &&
+//       employee_id !== null &&
+//       employee_id !== ""
+//     ) {
+//       whereClause += ` AND mp.employee_id = ${Number(employee_id)}`;
+//     }
+
+//     if (
+//       payroll_month !== undefined &&
+//       payroll_month !== null &&
+//       payroll_month !== ""
+//     ) {
+//       whereClause += ` AND mp.payroll_month = ${Number(payroll_month)}`;
+//     }
+
+//     if (
+//       payroll_year !== undefined &&
+//       payroll_year !== null &&
+//       payroll_year !== ""
+//     ) {
+//       whereClause += ` AND CAST(mp.payroll_year AS VARCHAR) = '${payroll_year}'`;
+//     }
+
+//     const query = `
+//       SELECT
+//         mp.*,
+//         emp.id AS employee_id,
+//         emp.full_name AS employee_full_name,
+//         emp.employee_code AS employee_code
+//       FROM hrms_d_monthly_payroll_processing mp
+//       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+//       LEFT JOIN hrms_
+//       ${whereClause}
+//       ORDER BY mp.updatedate DESC
+//       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY;
+//     `;
+
+//     const rawData = await prisma.$queryRawUnsafe(query);
+
+//     const data = rawData.map((row) => {
+//       const { employee_id, employee_full_name, employee_code, ...payrollData } =
+//         row;
+
+//       return {
+//         ...payrollData,
+//         hrms_monthly_payroll_employee: {
+//           id: employee_id,
+//           full_name: employee_full_name,
+//           employee_code,
+//         },
+//       };
+//     });
+
+//     const countQuery = `
+//       SELECT COUNT(*) AS count
+//       FROM hrms_d_monthly_payroll_processing mp
+//       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+//       ${whereClause};
+//     `;
+
+//     const countResult = await prisma.$queryRawUnsafe(countQuery);
+//     const totalCount = parseInt(countResult[0].count, 10);
+//     const totalPages = Math.ceil(totalCount / size);
+
+//     return {
+//       data,
+//       currentPage: page,
+//       size,
+//       totalPages,
+//       totalCount,
+//     };
+//   } catch (error) {
+//     console.error("Payroll retrieval error", error);
+//     throw new CustomError("Error retrieving payroll entries", 503);
+//   }
+// };
+
 const getGeneratedMonthlyPayroll = async (
   search,
   page = 1,
   size = 10,
   startDate,
-  endDate
+  endDate,
+  employee_id,
+  payroll_month,
+  payroll_year
 ) => {
   try {
     page = parseInt(page) || 1;
@@ -860,6 +1076,8 @@ const getGeneratedMonthlyPayroll = async (
           OR LOWER(mp.employee_email) LIKE '%${term}%'
           OR LOWER(emp.full_name) LIKE '%${term}%'
           OR LOWER(emp.employee_code) LIKE '%${term}%'
+          OR LOWER(cur.currency_name) LIKE '%${term}%'
+          OR LOWER(cur.currency_code) LIKE '%${term}%'
         )
       `;
     }
@@ -870,14 +1088,42 @@ const getGeneratedMonthlyPayroll = async (
       whereClause += ` AND mp.createdate BETWEEN '${start}' AND '${end}'`;
     }
 
+    if (
+      employee_id !== undefined &&
+      employee_id !== null &&
+      employee_id !== ""
+    ) {
+      whereClause += ` AND mp.employee_id = ${Number(employee_id)}`;
+    }
+
+    if (
+      payroll_month !== undefined &&
+      payroll_month !== null &&
+      payroll_month !== ""
+    ) {
+      whereClause += ` AND mp.payroll_month = ${Number(payroll_month)}`;
+    }
+
+    if (
+      payroll_year !== undefined &&
+      payroll_year !== null &&
+      payroll_year !== ""
+    ) {
+      whereClause += ` AND CAST(mp.payroll_year AS VARCHAR) = '${payroll_year}'`;
+    }
+
     const query = `
       SELECT 
         mp.*,
         emp.id AS employee_id,
         emp.full_name AS employee_full_name,
-        emp.employee_code AS employee_code
+        emp.employee_code AS employee_code,
+        cur.id AS id,
+        cur.currency_code AS currency_code,
+        cur.currency_name AS currency_name
       FROM hrms_d_monthly_payroll_processing mp
       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+      LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.id
       ${whereClause}
       ORDER BY mp.updatedate DESC
       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY;
@@ -886,8 +1132,15 @@ const getGeneratedMonthlyPayroll = async (
     const rawData = await prisma.$queryRawUnsafe(query);
 
     const data = rawData.map((row) => {
-      const { employee_id, employee_full_name, employee_code, ...payrollData } =
-        row;
+      const {
+        employee_id,
+        employee_full_name,
+        employee_code,
+        id,
+        currency_code,
+        currency_name,
+        ...payrollData
+      } = row;
 
       return {
         ...payrollData,
@@ -896,6 +1149,11 @@ const getGeneratedMonthlyPayroll = async (
           full_name: employee_full_name,
           employee_code,
         },
+        hrms_monthly_payroll_currency: {
+          id: id,
+          currency_code,
+          currency_name,
+        },
       };
     });
 
@@ -903,6 +1161,7 @@ const getGeneratedMonthlyPayroll = async (
       SELECT COUNT(*) AS count
       FROM hrms_d_monthly_payroll_processing mp
       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+      LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.id
       ${whereClause};
     `;
 
