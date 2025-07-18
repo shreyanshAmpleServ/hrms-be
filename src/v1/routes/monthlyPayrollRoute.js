@@ -57,7 +57,7 @@ router.post(
 );
 
 router.get(
-  "/get-generate-monthly-payroll",
+  "/generated-monthly-payroll",
   authenticateToken,
   monthlyPayrollController.getGeneratedMonthlyPayroll
 );
