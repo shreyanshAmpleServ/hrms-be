@@ -810,7 +810,6 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
 
       await prisma.$executeRawUnsafe(sql);
 
-      // Fetch the full record after insert/update
       const [fullRecord] = await prisma.$queryRawUnsafe(`
         SELECT * FROM hrms_d_monthly_payroll_processing
         WHERE employee_id = ${employee_id}
@@ -844,24 +843,27 @@ const getGeneratedMonthlyPayroll = async (
   endDate
 ) => {
   try {
+    page = parseInt(page) || 1;
+    size = parseInt(size) || 10;
     const offset = (page - 1) * size;
+
     let whereClause = `WHERE 1=1`;
 
-    // Search filter
     if (search) {
       const term = search.toLowerCase().replace(/'/g, "''");
       whereClause += `
         AND (
-          LOWER(emp.full_name) LIKE '%${term}%'
-          OR LOWER(mp.status) LIKE '%${term}%'
-          OR CAST(mp.payroll_month AS TEXT) LIKE '%${term}%'
-          OR CAST(mp.payroll_year AS TEXT) LIKE '%${term}%'
+          LOWER(mp.status) LIKE '%${term}%'
+          OR CAST(mp.payroll_month AS VARCHAR) LIKE '%${term}%'
+          OR CAST(mp.payroll_year AS VARCHAR) LIKE '%${term}%'
           OR LOWER(mp.remarks) LIKE '%${term}%'
+          OR LOWER(mp.employee_email) LIKE '%${term}%'
+          OR LOWER(emp.full_name) LIKE '%${term}%'
+          OR LOWER(emp.employee_code) LIKE '%${term}%'
         )
       `;
     }
 
-    // Date range filter
     if (startDate && endDate) {
       const start = new Date(startDate).toISOString();
       const end = new Date(endDate).toISOString();
@@ -869,22 +871,54 @@ const getGeneratedMonthlyPayroll = async (
     }
 
     const query = `
-      SELECT *
-      FROM hrms_d_monthly_payroll_processing
-      ORDER BY updatedate DESC
+      SELECT 
+        mp.*,
+        emp.id AS employee_id,
+        emp.full_name AS employee_full_name,
+        emp.employee_code AS employee_code
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+      ${whereClause}
+      ORDER BY mp.updatedate DESC
+      OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY;
     `;
 
-    const result = await prisma.$queryRawUnsafe(query);
+    const rawData = await prisma.$queryRawUnsafe(query);
+
+    const data = rawData.map((row) => {
+      const { employee_id, employee_full_name, employee_code, ...payrollData } =
+        row;
+
+      return {
+        ...payrollData,
+        hrms_monthly_payroll_employee: {
+          id: employee_id,
+          full_name: employee_full_name,
+          employee_code,
+        },
+      };
+    });
+
+    const countQuery = `
+      SELECT COUNT(*) AS count
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+      ${whereClause};
+    `;
+
+    const countResult = await prisma.$queryRawUnsafe(countQuery);
+    const totalCount = parseInt(countResult[0].count, 10);
+    const totalPages = Math.ceil(totalCount / size);
 
     return {
-      data: result,
+      data,
       currentPage: page,
       size,
-      // totalPages: Math.ceil(totalCount / size),
+      totalPages,
+      totalCount,
     };
   } catch (error) {
-    console.log("Payroll retreival error", error);
-
+    console.error("Payroll retrieval error", error);
     throw new CustomError("Error retrieving payroll entries", 503);
   }
 };
