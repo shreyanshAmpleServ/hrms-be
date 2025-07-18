@@ -734,7 +734,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         payroll_start_date: safeDate(row.payroll_start_date),
         payroll_end_date: safeDate(row.payroll_end_date),
         payroll_paid_days: safeNumber(row.payroll_paid_days),
-        pay_currency: safeString(row.Currency),
+        pay_currency: row.Currency,
         total_earnings: safeDecimal(row.total_earnings),
         taxable_earnings: safeDecimal(row.TaxableIncome),
         tax_amount: safeDecimal(row.TaxPayee),
