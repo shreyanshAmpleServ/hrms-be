@@ -14,82 +14,6 @@ const serializeTaxData = (data) => ({
   effective_to: data.effective_to || "",
   is_active: data.is_active || "Y",
 });
-// Create a new tax
-// const createTaxSlab = async (data) => {
-//   try {
-//     const tax = await prisma.hrms_m_tax_slab_rule.create({
-//       data: {
-//         ...serializeTaxData(data),
-//         log_inst: data.log_inst || 1,
-//         createdate: new Date(),
-//         updatedate: new Date(),
-//         updatedby: data.createdby || 1,
-//         createdby: data.createdby || 1,
-//       },
-//       include: {
-//         pay_component_line_tax_slab: true,
-//         tax_slab_pay_component: true,
-//       },
-//     });
-//     return tax;
-//   } catch (error) {
-//     console.log("Error tax Slab Modal Create : ", error);
-//     throw new CustomError(`Error creating tax: ${error.message}`, 500);
-//   }
-// };
-
-// const createTaxSlab = async (data) => {
-//   try {
-//     const parentTax = await prisma.hrms_m_tax_slab_rule.create({
-//       data: {
-//         code: data.code,
-//         name: data.name,
-//         pay_component_id: parseInt(data.pay_component_id) || null,
-//         formula_text: data.formula_text || "",
-//         is_active: data.is_active || "Y",
-//         createdate: new Date(),
-//         updatedate: new Date(),
-//         createdby: data.createdby || 1,
-//         updatedby: data.createdby || 1,
-//         log_inst: data.log_inst || 1,
-//       },
-//     });
-
-//     const childTaxSlabs = data.childTaxSlabs.map((child) => ({
-//       parent_id: parentTax.id,
-//       rule_type: child.rule_type || "",
-//       slab_min: Number(child.slab_min) || 0,
-//       slab_max: Number(child.slab_max) || 0,
-//       rate: Number(child.rate) || 0,
-//       flat_amount: Number(child.flat_amount) || 0,
-//       effective_from: new Date(child.effective_from),
-//       effective_to: child.effective_to ? new Date(child.effective_to) : null,
-//       createdate: new Date(),
-//       updatedate: new Date(),
-//       createdby: data.createdby || 1,
-//       updatedby: data.createdby || 1,
-//       log_inst: data.log_inst || 1,
-//     }));
-
-//     await prisma.hrms_m_tax_slab_rule1.createMany({
-//       data: childTaxSlabs,
-//     });
-
-//     const createdChildTaxSlabs = await prisma.hrms_m_tax_slab_rule1.findMany({
-//       where: {
-//         parent_id: parentTax.id,
-//       },
-//     });
-
-//     return {
-//       ...data,
-//       children: createdChildTaxSlabs,
-//     };
-//   } catch (error) {
-//     console.error("Error creating tax slabs: ", error);
-//     throw new CustomError(`Error creating tax slabs: ${error.message}`, 500);
-//   }
-// };
 
 const createTaxSlab = async (data) => {
   try {
@@ -398,9 +322,11 @@ const createTaxSlab = async (data) => {
 //   }
 // };
 
+// ...existing code...
 const updateTaxSlab = async (id, data) => {
   try {
-    // 1. Update parent
+    console.log("Updating parent tax slab with id:", id, "and data:", data);
+
     const taxRule = await prisma.hrms_m_tax_slab_rule.update({
       where: { id: parseInt(id) },
       data: {
@@ -416,29 +342,17 @@ const updateTaxSlab = async (id, data) => {
       },
     });
 
-    // 2. Sync children
+    console.log("Updated parent tax slab:", taxRule);
+
     const parentId = taxRule.id;
-    const incoming = Array.isArray(data.childSlabs) ? data.childSlabs : [];
+    const incoming = Array.isArray(data.childTaxSlabs)
+      ? data.childTaxSlabs
+      : [];
+    console.log("Incoming child slabs:", incoming);
 
-    // Get all existing child ids for this parent
-    const existingChildren = await prisma.hrms_m_tax_slab_rule1.findMany({
-      where: { parent_id: parentId },
-      select: { id: true },
-    });
-    const existingIds = existingChildren.map((c) => c.id);
-    const incomingIds = incoming.filter((c) => c.id).map((c) => c.id);
-
-    // Delete children not present in incoming
-    const toDelete = existingIds.filter((id) => !incomingIds.includes(id));
-    if (toDelete.length > 0) {
-      await prisma.hrms_m_tax_slab_rule1.deleteMany({
-        where: { id: { in: toDelete } },
-      });
-    }
-
-    // Update or create children
     for (const child of incoming) {
       if (child.id) {
+        console.log("Updating child slab:", child.id, child);
         await prisma.hrms_m_tax_slab_rule1.update({
           where: { id: child.id },
           data: {
@@ -456,12 +370,10 @@ const updateTaxSlab = async (id, data) => {
           },
         });
       } else {
-        if (!child.code)
-          throw new Error("Child slab 'code' is required for creation.");
+        console.log("Creating new child slab:", child);
         await prisma.hrms_m_tax_slab_rule1.create({
           data: {
             parent_id: parentId,
-            code: child.code,
             rule_type: child.rule_type,
             slab_min: child.slab_min,
             slab_max: child.slab_max,
@@ -480,13 +392,15 @@ const updateTaxSlab = async (id, data) => {
       }
     }
 
-    // 3. Return parent with all children
     const result = await prisma.hrms_m_tax_slab_rule.findUnique({
       where: { id: parentId },
       include: {
         hrms_m_tax_slab_rule1: true,
+        tax_slab_pay_component: true,
       },
     });
+
+    console.log("Final result after update:", result);
 
     return result;
   } catch (error) {
