@@ -100,6 +100,8 @@ const findLoanRequestById = async (id) => {
           select: {
             full_name: true,
             id: true,
+            employee_code: true,
+            account_number: true,
           },
         },
         loan_types: {
@@ -312,6 +314,8 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
           select: {
             full_name: true,
             id: true,
+            employee_code: true,
+            account_number: true,
           },
         },
         loan_types: {
