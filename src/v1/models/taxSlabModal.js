@@ -419,7 +419,7 @@ const findTaxSlabById = async (id) => {
   }
 };
 
-// Delete a tax
+// Delete a taxs
 const deleteTaxSlab = async (id) => {
   try {
     await prisma.hrms_m_tax_slab_rule1.deleteMany({
