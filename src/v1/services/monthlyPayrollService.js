@@ -17,13 +17,23 @@ const deleteMonthlyPayroll = async (id) => {
   return await monthlyPayrollModel.deleteMonthlyPayroll(id);
 };
 
-const getAllMonthlyPayroll = async (search, page, size, startDate, endDate) => {
+const getAllMonthlyPayroll = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  payroll_month,
+  payroll_year
+) => {
   return await monthlyPayrollModel.getAllMonthlyPayroll(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    payroll_month,
+    payroll_year
   );
 };
 
@@ -72,14 +82,18 @@ const getGeneratedMonthlyPayroll = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  payroll_month,
+  payroll_year
 ) => {
   return await monthlyPayrollModel.getGeneratedMonthlyPayroll(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    payroll_month,
+    payroll_year
   );
 };
 module.exports = {

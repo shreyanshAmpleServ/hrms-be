@@ -129,13 +129,23 @@ const createOrUpdateMonthlyPayroll = async (req, res, next) => {
 
 const getGeneratedMonthlyPayroll = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const {
+      page,
+      size,
+      search,
+      startDate,
+      endDate,
+      payroll_month,
+      payroll_year,
+    } = req.query;
     const data = await monthlyPayrollService.getGeneratedMonthlyPayroll(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      payroll_month,
+      payroll_year
     );
     res.status(200).success(null, data);
   } catch (error) {
