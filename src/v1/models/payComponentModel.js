@@ -209,56 +209,68 @@ const createPayComponent = async (data) => {
           createdate: new Date(),
           log_inst: data.log_inst || 1,
         },
+        // include: {
+        //   pay_component_tax: {
+        //     select: {
+        //       id: true,
+        //       pay_component_id: true,
+        //       rule_type: true,
+        //     },
+        //   },
+        //   pay_component_project: {
+        //     select: {
+        //       id: true,
+        //       code: true,
+        //       name: true,
+        //     },
+        //   },
+        //   pay_component_cost_center1: {
+        //     select: {
+        //       id: true,
+        //       name: true,
+        //       dimension_id: true,
+        //     },
+        //   },
+        //   pay_component_cost_center2: {
+        //     select: {
+        //       id: true,
+        //       name: true,
+        //       dimension_id: true,
+        //     },
+        //   },
+        //   pay_component_cost_center3: {
+        //     select: {
+        //       id: true,
+        //       name: true,
+        //       dimension_id: true,
+        //     },
+        //   },
+        //   pay_component_cost_center4: {
+        //     select: {
+        //       id: true,
+        //       name: true,
+        //       dimension_id: true,
+        //     },
+        //   },
+        //   pay_component_cost_center5: {
+        //     select: {
+        //       id: true,
+        //       name: true,
+        //       dimension_id: true,
+        //     },
+        //   },
+        // },
+
         include: {
-          pay_component_tax: {
-            select: {
-              id: true,
-              pay_component_id: true,
-              rule_type: true,
-            },
-          },
-          pay_component_project: {
-            select: {
-              id: true,
-              code: true,
-              name: true,
-            },
-          },
-          pay_component_cost_center1: {
-            select: {
-              id: true,
-              name: true,
-              dimension_id: true,
-            },
-          },
-          pay_component_cost_center2: {
-            select: {
-              id: true,
-              name: true,
-              dimension_id: true,
-            },
-          },
-          pay_component_cost_center3: {
-            select: {
-              id: true,
-              name: true,
-              dimension_id: true,
-            },
-          },
-          pay_component_cost_center4: {
-            select: {
-              id: true,
-              name: true,
-              dimension_id: true,
-            },
-          },
-          pay_component_cost_center5: {
-            select: {
-              id: true,
-              name: true,
-              dimension_id: true,
-            },
-          },
+          pay_component_tax: true,
+          pay_component_project: true,
+          pay_component_cost_center1: true,
+          pay_component_cost_center2: true,
+          pay_component_cost_center3: true,
+          pay_component_cost_center4: true,
+          pay_component_cost_center5: true,
+          pay_component_for_line: true,
+          hrms_m_pay_component_formula: true,
         },
       });
 
@@ -331,62 +343,74 @@ const updatePayComponent = async (id, data) => {
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
+      // include: {
+      //   pay_component_tax: {
+      //     select: {
+      //       id: true,
+      //       pay_component_id: true,
+      //       rule_type: true,
+      //     },
+      //   },
+      //   pay_component_project: {
+      //     select: {
+      //       id: true,
+      //       code: true,
+      //       name: true,
+      //     },
+      //   },
+      //   pay_component_for_line: {
+      //     select: {
+      //       id: true,
+      //       component_type: true,
+      //     },
+      //   },
+      //   pay_component_cost_center1: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      //   pay_component_cost_center2: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      //   pay_component_cost_center3: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      //   pay_component_cost_center4: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      //   pay_component_cost_center5: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      // },
+
       include: {
-        pay_component_tax: {
-          select: {
-            id: true,
-            pay_component_id: true,
-            rule_type: true,
-          },
-        },
-        pay_component_project: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        },
-        pay_component_for_line: {
-          select: {
-            id: true,
-            component_type: true,
-          },
-        },
-        pay_component_cost_center1: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center2: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center3: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center4: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center5: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
+        pay_component_tax: true,
+        pay_component_project: true,
+        pay_component_cost_center1: true,
+        pay_component_cost_center2: true,
+        pay_component_cost_center3: true,
+        pay_component_cost_center4: true,
+        pay_component_cost_center5: true,
+        pay_component_for_line: true,
+        hrms_m_pay_component_formula: true,
       },
     });
     return updatedEntry;

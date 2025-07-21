@@ -15,25 +15,141 @@ const serializeTaxData = (data) => ({
   is_active: data.is_active || "Y",
 });
 // Create a new tax
+// const createTaxSlab = async (data) => {
+//   try {
+//     const tax = await prisma.hrms_m_tax_slab_rule.create({
+//       data: {
+//         ...serializeTaxData(data),
+//         log_inst: data.log_inst || 1,
+//         createdate: new Date(),
+//         updatedate: new Date(),
+//         updatedby: data.createdby || 1,
+//         createdby: data.createdby || 1,
+//       },
+//       include: {
+//         pay_component_line_tax_slab: true,
+//         tax_slab_pay_component: true,
+//       },
+//     });
+//     return tax;
+//   } catch (error) {
+//     console.log("Error tax Slab Modal Create : ", error);
+//     throw new CustomError(`Error creating tax: ${error.message}`, 500);
+//   }
+// };
+
+// const createTaxSlab = async (data) => {
+//   try {
+//     const parentTax = await prisma.hrms_m_tax_slab_rule.create({
+//       data: {
+//         code: data.code,
+//         name: data.name,
+//         pay_component_id: parseInt(data.pay_component_id) || null,
+//         formula_text: data.formula_text || "",
+//         is_active: data.is_active || "Y",
+//         createdate: new Date(),
+//         updatedate: new Date(),
+//         createdby: data.createdby || 1,
+//         updatedby: data.createdby || 1,
+//         log_inst: data.log_inst || 1,
+//       },
+//     });
+
+//     const childTaxSlabs = data.childTaxSlabs.map((child) => ({
+//       parent_id: parentTax.id,
+//       rule_type: child.rule_type || "",
+//       slab_min: Number(child.slab_min) || 0,
+//       slab_max: Number(child.slab_max) || 0,
+//       rate: Number(child.rate) || 0,
+//       flat_amount: Number(child.flat_amount) || 0,
+//       effective_from: new Date(child.effective_from),
+//       effective_to: child.effective_to ? new Date(child.effective_to) : null,
+//       createdate: new Date(),
+//       updatedate: new Date(),
+//       createdby: data.createdby || 1,
+//       updatedby: data.createdby || 1,
+//       log_inst: data.log_inst || 1,
+//     }));
+
+//     await prisma.hrms_m_tax_slab_rule1.createMany({
+//       data: childTaxSlabs,
+//     });
+
+//     const createdChildTaxSlabs = await prisma.hrms_m_tax_slab_rule1.findMany({
+//       where: {
+//         parent_id: parentTax.id,
+//       },
+//     });
+
+//     return {
+//       ...data,
+//       children: createdChildTaxSlabs,
+//     };
+//   } catch (error) {
+//     console.error("Error creating tax slabs: ", error);
+//     throw new CustomError(`Error creating tax slabs: ${error.message}`, 500);
+//   }
+// };
+
 const createTaxSlab = async (data) => {
   try {
-    const tax = await prisma.hrms_m_tax_slab_rule.create({
+    const parentTax = await prisma.hrms_m_tax_slab_rule.create({
       data: {
-        ...serializeTaxData(data),
-        log_inst: data.log_inst || 1,
+        code: data.code,
+        name: data.name,
+        pay_component_id: parseInt(data.pay_component_id) || null,
+        formula_text: data.formula_text || "",
+        is_active: data.is_active || "Y",
         createdate: new Date(),
         updatedate: new Date(),
-        updatedby: data.createdby || 1,
         createdby: data.createdby || 1,
+        updatedby: data.createdby || 1,
+        log_inst: data.log_inst || 1,
       },
       include: {
-        pay_component_line_tax_slab: true,
+        hrms_m_tax_slab_rule1: true,
       },
     });
-    return tax;
+
+    const childTaxSlabs = data.childTaxSlabs.map((child) => ({
+      parent_id: parentTax.id,
+      rule_type: child.rule_type || "",
+      slab_min: Number(child.slab_min) || 0,
+      slab_max: Number(child.slab_max) || 0,
+      rate: Number(child.rate) || 0,
+      flat_amount: Number(child.flat_amount) || 0,
+      effective_from: new Date(child.effective_from),
+      effective_to: child.effective_to ? new Date(child.effective_to) : null,
+      createdate: new Date(),
+      updatedate: new Date(),
+      createdby: data.createdby || 1,
+      updatedby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
+    }));
+
+    console.log("Child Tax Slabs Data:", childTaxSlabs);
+
+    const createdChildren = await prisma.hrms_m_tax_slab_rule1.createMany({
+      data: childTaxSlabs,
+    });
+
+    console.log("Created Child Tax Slabs:", createdChildren);
+
+    const createdChildTaxSlabs = await prisma.hrms_m_tax_slab_rule1.findMany({
+      where: {
+        parent_id: parentTax.id,
+      },
+    });
+
+    console.log("Fetched Child Tax Slabs:", createdChildTaxSlabs);
+
+    return {
+      ...parentTax,
+      hrms_m_tax_slab_rule1: createdChildTaxSlabs,
+    };
   } catch (error) {
-    console.log("Error tax Slab Modal Create : ", error);
-    throw new CustomError(`Error creating tax: ${error.message}`, 500);
+    console.error("Error creating tax slabs: ", error);
+    throw new CustomError(`Error creating tax slabs: ${error.message}`, 500);
   }
 };
 
@@ -44,6 +160,12 @@ const updateTaxSlab = async (id, data) => {
       where: { id: parseInt(id) },
       include: {
         pay_component_line_tax_slab: true,
+        tax_slab_pay_component: {
+          include: {
+            id: true,
+            component_name: true,
+          },
+        },
       },
       data: {
         ...serializeTaxData(data),

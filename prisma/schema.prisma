@@ -1318,6 +1318,8 @@ model hrms_m_pay_component {
   pay_component_cost_center5            hrms_m_costcenters?                             @relation("CostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_project                 hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
+  pay_component_tax                     hrms_m_tax_slab_rule?                           @relation("TaxSlabRule", fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  tax_slab_pay_component                hrms_m_tax_slab_rule[]
 }
 
 model hrms_m_provident_fund {
@@ -1509,18 +1511,20 @@ model hrms_m_country_tax_rule_template {
 }
 
 model hrms_m_tax_slab_rule {
-  id                    Int                     @id(map: "PK__hrms_m_t__3213E83FFB20C3D1") @default(autoincrement())
-  code                  String                  @db.NVarChar(50)
-  name                  String                  @db.NVarChar(50)
-  pay_component_id      Int
-  formula_text          String?                 @db.NVarChar(500)
-  is_active             String                  @default("Y", map: "DF__hrms_m_ta__is_ac__78BEDCC2") @db.Char(1)
-  createdate            DateTime?               @default(now(), map: "DF__hrms_m_ta__creat__79B300FB") @db.DateTime
-  createdby             Int
-  updatedate            DateTime?               @db.DateTime
-  updatedby             Int?
-  log_inst              Int?
-  hrms_m_tax_slab_rule1 hrms_m_tax_slab_rule1 []
+  id                     Int                     @id(map: "PK__hrms_m_t__3213E83FFB20C3D1") @default(autoincrement())
+  code                   String                  @db.NVarChar(50)
+  name                   String                  @db.NVarChar(50)
+  pay_component_id       Int
+  formula_text           String?                 @db.NVarChar(500)
+  is_active              String                  @default("Y", map: "DF__hrms_m_ta__is_ac__78BEDCC2") @db.Char(1)
+  createdate             DateTime?               @default(now(), map: "DF__hrms_m_ta__creat__79B300FB") @db.DateTime
+  createdby              Int
+  updatedate             DateTime?               @db.DateTime
+  updatedby              Int?
+  log_inst               Int?
+  hrms_m_tax_slab_rule1  hrms_m_tax_slab_rule1[]
+  tax_slab_pay_component hrms_m_pay_component?   @relation(fields: [pay_component_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  pay_component_tax      hrms_m_pay_component[]  @relation("TaxSlabRule")
 }
 
 model m_mobile_notification_template {
