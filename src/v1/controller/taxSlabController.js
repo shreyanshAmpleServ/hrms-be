@@ -13,9 +13,17 @@ const createTaxSlab = async (req, res, next) => {
 
 const findTaxSlabById = async (req, res, next) => {
   try {
-    const tax = await taxSlabService.findTaxSlabById(req.params.id);
-    if (!tax) throw new CustomError("tax slab not found", 404);
-    res.status(200).success(null, tax);
+    const result = await taxSlabService.getAllTaxSlab(
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      req.params.id
+    );
+    if (!result.data) throw new CustomError("tax slab not found", 404);
+    res.status(200).success(null, result.data);
   } catch (error) {
     next(error);
   }
@@ -42,7 +50,7 @@ const deleteTaxSlab = async (req, res, next) => {
 
 const getAllTaxSlab = async (req, res, next) => {
   try {
-    const { search, page, size, startDate, endDate, is_active } = req.query;
+    const { search, page, size, startDate, endDate, is_active, id } = req.query;
 
     const taxs = await taxSlabService.getAllTaxSlab(
       search,
@@ -50,7 +58,8 @@ const getAllTaxSlab = async (req, res, next) => {
       Number(size),
       startDate && moment(startDate),
       endDate && moment(endDate),
-      is_active
+      is_active,
+      id || req.params.id
     );
     res.status(200).success(null, taxs);
   } catch (error) {

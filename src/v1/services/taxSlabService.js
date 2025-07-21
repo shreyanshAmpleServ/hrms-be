@@ -22,7 +22,8 @@ const getAllTaxSlab = async (
   size,
   startDate,
   endDate,
-  is_active
+  is_active,
+  id
 ) => {
   return await taxSlabModal.getAllTaxSlab(
     search,
@@ -30,7 +31,8 @@ const getAllTaxSlab = async (
     size,
     startDate,
     endDate,
-    is_active
+    is_active,
+    id
   );
 };
 
