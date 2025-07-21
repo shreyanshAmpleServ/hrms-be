@@ -320,108 +320,6 @@ const findPayComponentById = async (id) => {
 };
 
 // Update pay component
-// const updatePayComponent = async (id, data) => {
-//   try {
-//     const totalCount = await prisma.hrms_m_pay_component.count({
-//       where: {
-//         OR: [
-//           { component_name: toLowerCase(data.component_name) },
-//           { component_code: toLowerCase(data.component_code) },
-//         ],
-//       },
-//     });
-//     if (totalCount > 0) {
-//       throw new CustomError(
-//         "Pay component with the same name or code already exists",
-//         400
-//       );
-//     }
-//     const updatedEntry = await prisma.hrms_m_pay_component.update({
-//       where: { id: parseInt(id) },
-//       data: {
-//         ...serializePayComponentData(data),
-//         updatedby: data.updatedby || 1,
-//         updatedate: new Date(),
-//       },
-//       // include: {
-//       //   pay_component_tax: {
-//       //     select: {
-//       //       id: true,
-//       //       pay_component_id: true,
-//       //       rule_type: true,
-//       //     },
-//       //   },
-//       //   pay_component_project: {
-//       //     select: {
-//       //       id: true,
-//       //       code: true,
-//       //       name: true,
-//       //     },
-//       //   },
-//       //   pay_component_for_line: {
-//       //     select: {
-//       //       id: true,
-//       //       component_type: true,
-//       //     },
-//       //   },
-//       //   pay_component_cost_center1: {
-//       //     select: {
-//       //       id: true,
-//       //       name: true,
-//       //       dimension_id: true,
-//       //     },
-//       //   },
-//       //   pay_component_cost_center2: {
-//       //     select: {
-//       //       id: true,
-//       //       name: true,
-//       //       dimension_id: true,
-//       //     },
-//       //   },
-//       //   pay_component_cost_center3: {
-//       //     select: {
-//       //       id: true,
-//       //       name: true,
-//       //       dimension_id: true,
-//       //     },
-//       //   },
-//       //   pay_component_cost_center4: {
-//       //     select: {
-//       //       id: true,
-//       //       name: true,
-//       //       dimension_id: true,
-//       //     },
-//       //   },
-//       //   pay_component_cost_center5: {
-//       //     select: {
-//       //       id: true,
-//       //       name: true,
-//       //       dimension_id: true,
-//       //     },
-//       //   },
-//       // },
-
-//       include: {
-//         pay_component_tax: true,
-//         pay_component_project: true,
-//         pay_component_cost_center1: true,
-//         pay_component_cost_center2: true,
-//         pay_component_cost_center3: true,
-//         pay_component_cost_center4: true,
-//         pay_component_cost_center5: true,
-//         pay_component_for_line: true,
-//         hrms_m_pay_component_formula: true,
-//       },
-//     });
-//     return updatedEntry;
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error updating pay component: ${error.message}`,
-//       500
-//     );
-//   }
-// };
-
 const updatePayComponent = async (id, data) => {
   try {
     const totalCount = await prisma.hrms_m_pay_component.count({
@@ -432,37 +330,11 @@ const updatePayComponent = async (id, data) => {
         ],
       },
     });
-
     if (totalCount > 0) {
       throw new CustomError(
         "Pay component with the same name or code already exists",
         400
       );
-    }
-
-    if (!/^\d+$/.test(data.component_code)) {
-      throw new CustomError("Invalid component code. Must be numeric.", 400);
-    }
-
-    try {
-      await prisma.$executeRawUnsafe(`
-        ALTER TABLE hrms_d_monthly_payroll_processing
-        ADD [${data.component_code}] DECIMAL(18,4) NULL
-      `);
-      console.log(`Successfully created column ${data.component_code}`);
-    } catch (sqlError) {
-      console.error("SQL Error:", sqlError.message);
-      if (
-        sqlError.message.includes("duplicate") ||
-        sqlError.message.includes("already exists")
-      ) {
-        console.log(`Column ${data.component_code} already exists`);
-      } else {
-        throw new CustomError(
-          `Failed to alter payroll processing table: ${sqlError.message}`,
-          500
-        );
-      }
     }
     const updatedEntry = await prisma.hrms_m_pay_component.update({
       where: { id: parseInt(id) },
@@ -471,65 +343,76 @@ const updatePayComponent = async (id, data) => {
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
+      // include: {
+      //   pay_component_tax: {
+      //     select: {
+      //       id: true,
+      //       pay_component_id: true,
+      //       rule_type: true,
+      //     },
+      //   },
+      //   pay_component_project: {
+      //     select: {
+      //       id: true,
+      //       code: true,
+      //       name: true,
+      //     },
+      //   },
+      //   pay_component_for_line: {
+      //     select: {
+      //       id: true,
+      //       component_type: true,
+      //     },
+      //   },
+      //   pay_component_cost_center1: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      //   pay_component_cost_center2: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      //   pay_component_cost_center3: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      //   pay_component_cost_center4: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      //   pay_component_cost_center5: {
+      //     select: {
+      //       id: true,
+      //       name: true,
+      //       dimension_id: true,
+      //     },
+      //   },
+      // },
+
       include: {
-        pay_component_tax: {
-          select: {
-            id: true,
-            pay_component_id: true,
-            rule_type: true,
-          },
-        },
-        pay_component_project: {
-          select: {
-            id: true,
-            code: true,
-            name: true,
-          },
-        },
-        pay_component_for_line: {
-          select: {
-            id: true,
-            component_type: true,
-          },
-        },
-        pay_component_cost_center1: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center2: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center3: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center4: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
-        pay_component_cost_center5: {
-          select: {
-            id: true,
-            name: true,
-            dimension_id: true,
-          },
-        },
+        pay_component_tax: true,
+        pay_component_project: true,
+        pay_component_cost_center1: true,
+        pay_component_cost_center2: true,
+        pay_component_cost_center3: true,
+        pay_component_cost_center4: true,
+        pay_component_cost_center5: true,
+        pay_component_for_line: true,
+        hrms_m_pay_component_formula: true,
       },
     });
-
     return updatedEntry;
   } catch (error) {
     throw new CustomError(
@@ -538,6 +421,123 @@ const updatePayComponent = async (id, data) => {
     );
   }
 };
+
+// const updatePayComponent = async (id, data) => {
+//   try {
+//     const totalCount = await prisma.hrms_m_pay_component.count({
+//       where: {
+//         OR: [
+//           { component_name: toLowerCase(data.component_name) },
+//           { component_code: toLowerCase(data.component_code) },
+//         ],
+//       },
+//     });
+
+//     if (totalCount > 0) {
+//       throw new CustomError(
+//         "Pay component with the same name or code already exists",
+//         400
+//       );
+//     }
+
+//     if (!/^\d+$/.test(data.component_code)) {
+//       throw new CustomError("Invalid component code. Must be numeric.", 400);
+//     }
+
+//     try {
+//       await prisma.$executeRawUnsafe(`
+//         ALTER TABLE hrms_d_monthly_payroll_processing
+//         ADD [${data.component_code}] DECIMAL(18,4) NULL
+//       `);
+//       console.log(`Successfully created column ${data.component_code}`);
+//     } catch (sqlError) {
+//       console.error("SQL Error:", sqlError.message);
+//       if (
+//         sqlError.message.includes("duplicate") ||
+//         sqlError.message.includes("already exists")
+//       ) {
+//         console.log(`Column ${data.component_code} already exists`);
+//       } else {
+//         throw new CustomError(
+//           `Failed to alter payroll processing table: ${sqlError.message}`,
+//           500
+//         );
+//       }
+//     }
+//     const updatedEntry = await prisma.hrms_m_pay_component.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         ...serializePayComponentData(data),
+//         updatedby: data.updatedby || 1,
+//         updatedate: new Date(),
+//       },
+//       include: {
+//         pay_component_tax: {
+//           select: {
+//             id: true,
+//             pay_component_id: true,
+//             rule_type: true,
+//           },
+//         },
+//         pay_component_project: {
+//           select: {
+//             id: true,
+//             code: true,
+//             name: true,
+//           },
+//         },
+//         pay_component_for_line: {
+//           select: {
+//             id: true,
+//             component_type: true,
+//           },
+//         },
+//         pay_component_cost_center1: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//         pay_component_cost_center2: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//         pay_component_cost_center3: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//         pay_component_cost_center4: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//         pay_component_cost_center5: {
+//           select: {
+//             id: true,
+//             name: true,
+//             dimension_id: true,
+//           },
+//         },
+//       },
+//     });
+
+//     return updatedEntry;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error updating pay component: ${error.message}`,
+//       500
+//     );
+//   }
+// };
 
 // const updatePayComponent = async (id, data) => {
 //   const componentId = parseInt(id);
