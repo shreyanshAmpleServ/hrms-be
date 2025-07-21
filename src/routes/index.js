@@ -133,6 +133,7 @@ const employeeDashboarRoute = require("../v1/routes/employeeDashboardRoute");
 const loanEmiScheduleRoute = require("../v1/routes/loanEmiScheduleRoute");
 const loanMasterRoute = require("../v1/routes/loanMasterRoute.js");
 const overtimeSetupRoute = require("../v1/routes/overtimeSetupRoute.js");
+const loanCashPayementRoute = require("../v1/routes/loanCashPayementRoute.js");
 
 const router = express.Router();
 
@@ -271,6 +272,7 @@ router.use("/v1", BasicPayRoute);
 router.use("/v1", loanEmiScheduleRoute);
 router.use("/v1", loanMasterRoute);
 router.use("/v1", overtimeSetupRoute);
+router.use("/v1", loanCashPayementRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
