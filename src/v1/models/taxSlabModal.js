@@ -320,7 +320,9 @@ const getAllTaxSlab = async (
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
-        pay_component_line_tax_slab: true,
+        hrms_m_tax_slab_rule1: true,
+        tax_slab_pay_component: true,
+        pay_component_tax: true,
       },
     });
 
