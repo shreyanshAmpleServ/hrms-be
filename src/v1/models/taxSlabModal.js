@@ -422,6 +422,9 @@ const findTaxSlabById = async (id) => {
 // Delete a tax
 const deleteTaxSlab = async (id) => {
   try {
+    await prisma.hrms_m_tax_slab_rule1.deleteMany({
+      where: { parent_id: parseInt(id) },
+    });
     await prisma.hrms_m_tax_slab_rule.delete({
       where: { id: parseInt(id) },
     });
@@ -492,9 +495,30 @@ const getAllTaxSlab = async (
   size,
   startDate,
   endDate,
-  is_active
+  is_active,
+  id // <-- add id as an optional parameter
 ) => {
   try {
+    // If id is provided, fetch and return that record with relations
+    if (id) {
+      const tax = await prisma.hrms_m_tax_slab_rule.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          hrms_m_tax_slab_rule1: true,
+          tax_slab_pay_component: true,
+          pay_component_tax: true,
+        },
+      });
+      return {
+        data: tax,
+        currentPage: 1,
+        size: 1,
+        totalPages: 1,
+        totalCount: tax ? 1 : 0,
+      };
+    }
+
+    // Otherwise, fetch paginated list
     page = !page || page <= 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size;
