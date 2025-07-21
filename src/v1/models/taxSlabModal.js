@@ -433,152 +433,6 @@ const deleteTaxSlab = async (id) => {
   }
 };
 
-// Get all taxs and include their roles
-// const getAllTaxSlab = async (
-//   search,
-//   page,
-//   size,
-//   startDate,
-//   endDate,
-//   is_active
-// ) => {
-//   try {
-//     page = !page || page <= 0 ? 1 : page;
-//     size = size || 10;
-//     const skip = (page - 1) * size;
-
-//     const filters = {};
-
-//     if (search) {
-//       filters.OR = [
-//         { pay_component_id: { contains: search.toLowerCase() } },
-//         { rule_type: { contains: search.toLowerCase() } },
-//         { formula_text: { contains: search.toLowerCase() } },
-//       ];
-//     }
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-//       filters.request_date = { gte: start, lte: end };
-//     }
-//     if (typeof is_active === "boolean") {
-//       filters.is_active = is_active ? "Y" : "N";
-//     } else if (typeof is_active === "string") {
-//       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
-//       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
-//     }
-//     if (typeof is_active === "boolean") {
-//       filters.is_active = is_active ? "Y" : "N";
-//     } else if (typeof is_active === "string") {
-//       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
-//       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
-//     }
-//     const taxs = await prisma.hrms_m_tax_slab_rule.findMany({
-//       where: filters,
-//       skip,
-//       take: size,
-//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-//       include: {
-//         pay_component_line_tax_slab: true,
-//       },
-//     });
-
-//     return taxs;
-//   } catch (error) {
-//     throw new CustomError("Error retrieving Taxs", 503);
-//   }
-// };
-
-// const getAllTaxSlab = async (
-//   search,
-//   page,
-//   size,
-//   startDate,
-//   endDate,
-//   is_active,
-//   id
-// ) => {
-//   try {
-//     if (id) {
-//       const tax = await prisma.hrms_m_tax_slab_rule.findUnique({
-//         where: { id: parseInt(id) },
-//         include: {
-//           hrms_m_tax_slab_rule1: true,
-//           tax_slab_pay_component: true,
-//           pay_component_tax: true,
-//         },
-//       });
-//       return {
-//         data: tax,
-//         currentPage: 1,
-//         size: 1,
-//         totalPages: 1,
-//         totalCount: tax ? 1 : 0,
-//       };
-//     }
-
-//     page = !page || page <= 0 ? 1 : page;
-//     size = size || 10;
-//     const skip = (page - 1) * size;
-
-//     const filters = {};
-
-//     if (search) {
-//       filters.OR = [
-//         { rule_type: { contains: search.toLowerCase() } },
-//         { formula_text: { contains: search.toLowerCase() } },
-//         isNaN(Number(search))
-//           ? undefined
-//           : { pay_component_id: { equals: Number(search) } },
-//       ].filter(Boolean);
-//     }
-
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       start.setUTCHours(0, 0, 0, 0);
-
-//       const end = new Date(endDate);
-//       end.setUTCHours(23, 59, 59, 999);
-
-//       filters.request_date = { gte: start, lte: end };
-//     }
-
-//     if (typeof is_active === "boolean") {
-//       filters.is_active = is_active ? "Y" : "N";
-//     } else if (typeof is_active === "string") {
-//       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
-//       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
-//     }
-
-//     const taxs = await prisma.hrms_m_tax_slab_rule.findMany({
-//       where: filters,
-//       skip,
-//       take: size,
-//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-//       include: {
-//         hrms_m_tax_slab_rule1: true,
-//         tax_slab_pay_component: true,
-//         pay_component_tax: true,
-//       },
-//     });
-
-//     const totalCount = await prisma.hrms_m_tax_slab_rule.count({
-//       where: filters,
-//     });
-
-//     return {
-//       data: taxs,
-//       currentPage: page,
-//       size,
-//       totalPages: Math.ceil(totalCount / size),
-//       totalCount,
-//     };
-//   } catch (error) {
-//     console.error("Error in getAllTaxSlab:", error);
-//     throw new CustomError("Error retrieving Tax Slabs", 503);
-//   }
-// };
-
 const getAllTaxSlab = async (
   search,
   page,
@@ -593,9 +447,8 @@ const getAllTaxSlab = async (
       const tax = await prisma.hrms_m_tax_slab_rule.findUnique({
         where: { id: parseInt(id) },
         include: {
-          hrms_m_tax_slab_rule1: true, // child slabs
-          tax_slab_pay_component: true, // pay component relation
-          pay_component_tax: true, // pay component tax relation
+          hrms_m_tax_slab_rule1: true,
+          tax_slab_pay_component: true,
         },
       });
       return {
@@ -649,7 +502,6 @@ const getAllTaxSlab = async (
       include: {
         hrms_m_tax_slab_rule1: true,
         tax_slab_pay_component: true,
-        pay_component_tax: true,
       },
     });
 
