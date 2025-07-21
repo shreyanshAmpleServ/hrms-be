@@ -1271,8 +1271,6 @@ model hrms_m_pay_component {
   is_taxable                            String                                          @default("Y", map: "DF_hrms_m_pay_component_is_taxable") @db.Char(1)
   is_statutory                          String                                          @default("N", map: "DF_hrms_m_pay_component_is_statutory") @db.Char(1)
   is_active                             String                                          @default("Y", map: "DF_hrms_m_pay_component_is_active") @db.Char(1)
-  contribution_of_employee              String                                          @default("N") @db.Char(1)
-  employer_default_formula              String?                                         @db.VarChar(50)
   createdate                            DateTime?                                       @default(now(), map: "DF__hrms_m_pa__creat__44CA3770") @db.DateTime
   createdby                             Int
   updatedate                            DateTime?                                       @db.DateTime
@@ -1305,6 +1303,8 @@ model hrms_m_pay_component {
   visible_in_payslip                    String                                          @default("Y", map: "DF__hrms_m_pa__visib__2FBA0BF1") @db.Char(1)
   execution_order                       Int?
   is_loan                               String?                                         @default("N", map: "DF__hrms_m_pa__is_lo__6C5905DD") @db.NVarChar(1)
+  contribution_of_employee              String                                          @default("N") @db.Char(1)
+  employer_default_formula              String?                                         @db.VarChar(50)
   pay_component_for_line                hrms_d_employee_pay_component_assignment_line[]
   employee_payroll_adjustment_component hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentComponent")
   employee_payroll_deduction_component  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeduction")
@@ -1317,7 +1317,6 @@ model hrms_m_pay_component {
   pay_component_cost_center4            hrms_m_costcenters?                             @relation("CostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_cost_center5            hrms_m_costcenters?                             @relation("CostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_project                 hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  pay_component_tax                     hrms_m_tax_slab_rule?                           @relation(fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
 }
 
@@ -1510,24 +1509,18 @@ model hrms_m_country_tax_rule_template {
 }
 
 model hrms_m_tax_slab_rule {
-  id                          Int                                             @id(map: "PK__hrms_m_t__3213E83F87085EAE") @default(autoincrement())
-  pay_component_id            Int
-  rule_type                   String?                                         @db.VarChar(20)
-  slab_min                    Decimal?                                        @db.Decimal(12, 2)
-  slab_max                    Decimal?                                        @db.Decimal(12, 2)
-  rate                        Decimal?                                        @db.Decimal(5, 2)
-  flat_amount                 Decimal?                                        @db.Decimal(12, 2)
-  formula_text                String?                                         @db.NVarChar(500)
-  effective_from              DateTime                                        @db.Date
-  effective_to                DateTime?                                       @db.Date
-  is_active                   String                                          @default("Y", map: "DF__hrms_m_ta__is_ac__7167D3BD") @db.Char(1)
-  createdate                  DateTime?                                       @default(now(), map: "DF__hrms_m_ta__creat__725BF7F6") @db.DateTime
-  createdby                   Int
-  updatedate                  DateTime?                                       @db.DateTime
-  updatedby                   Int?
-  log_inst                    Int?
-  pay_component_line_tax_slab hrms_d_employee_pay_component_assignment_line[]
-  pay_component_tax           hrms_m_pay_component[]
+  id                    Int                     @id(map: "PK__hrms_m_t__3213E83FFB20C3D1") @default(autoincrement())
+  code                  String                  @db.NVarChar(50)
+  name                  String                  @db.NVarChar(50)
+  pay_component_id      Int
+  formula_text          String?                 @db.NVarChar(500)
+  is_active             String                  @default("Y", map: "DF__hrms_m_ta__is_ac__78BEDCC2") @db.Char(1)
+  createdate            DateTime?               @default(now(), map: "DF__hrms_m_ta__creat__79B300FB") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?               @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  hrms_m_tax_slab_rule1 hrms_m_tax_slab_rule1 []
 }
 
 model m_mobile_notification_template {
@@ -1670,76 +1663,125 @@ model hrms_d_daily_attendance_entry {
 }
 
 model hrms_d_monthly_payroll_processing {
-  id Int @id @default(autoincrement())
-
-  employee_id Int
-
-  payroll_month Int @db.SmallInt
-
-  payroll_year Int @db.SmallInt
-
-  payroll_week Int @db.SmallInt
-
-  payroll_start_date DateTime? @db.Date
-
-  payroll_end_date DateTime? @db.Date
-
-  payroll_paid_days Int?
-
-  pay_currency Int?
-
-  total_earnings Decimal @db.Decimal(18, 4)
-
-  taxable_earnings Decimal @db.Decimal(18, 4)
-
-  tax_amount Decimal @db.Decimal(18, 4)
-
-  total_deductions Decimal @db.Decimal(18, 4)
-
-  net_pay Decimal @db.Decimal(18, 2)
-
-  status String @db.NVarChar(20)
-
-  execution_date DateTime? @db.Date
-
-  pay_date DateTime? @db.DateTime
-
-  doc_date DateTime? @db.Date
-
-  processed String @default("N", map: "DF__hrms_d_mo__proce__09946309") @db.Char(1)
-
-  je_transid Int?
-
-  project_id Int?
-
-  cost_center1_id Int?
-
-  cost_center2_id Int?
-
-  cost_center3_id Int?
-
-  cost_center4_id Int?
-
-  cost_center5_id Int?
-
-  approved1 String @default("N", map: "DF__hrms_d_mo__appro__0A888742") @db.Char(1)
-
-  approver1_id Int?
-
-  employee_email String? @db.NVarChar(100)
-
-  remarks String? @db.NVarChar(250)
-
-  createdate DateTime @db.DateTime
-
-  createdby Int
-
-  updatedate DateTime? @db.DateTime
-
-  updatedby Int?
-
-  log_inst Int?
-
+  id                            Int             @id @default(autoincrement())
+  employee_id                   Int
+  payroll_month                 Int             @db.SmallInt
+  payroll_year                  Int             @db.SmallInt
+  payroll_week                  Int             @db.SmallInt
+  payroll_start_date            DateTime?       @db.Date
+  payroll_end_date              DateTime?       @db.Date
+  payroll_paid_days             Int?
+  pay_currency                  Int?
+  total_earnings                Decimal         @db.Decimal(18, 4)
+  taxable_earnings              Decimal         @db.Decimal(18, 4)
+  tax_amount                    Decimal         @db.Decimal(18, 4)
+  total_deductions              Decimal         @db.Decimal(18, 4)
+  net_pay                       Decimal         @db.Decimal(18, 2)
+  status                        String          @db.NVarChar(20)
+  execution_date                DateTime?       @db.Date
+  pay_date                      DateTime?       @db.DateTime
+  doc_date                      DateTime?       @db.Date
+  processed                     String          @default("N", map: "DF__hrms_d_mo__proce__09946309") @db.Char(1)
+  je_transid                    Int?
+  project_id                    Int?
+  cost_center1_id               Int?
+  cost_center2_id               Int?
+  cost_center3_id               Int?
+  cost_center4_id               Int?
+  cost_center5_id               Int?
+  approved1                     String          @default("N", map: "DF__hrms_d_mo__appro__0A888742") @db.Char(1)
+  approver1_id                  Int?
+  employee_email                String?         @db.NVarChar(100)
+  remarks                       String?         @db.NVarChar(250)
+  createdate                    DateTime        @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?       @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1022 Decimal? @map("1022") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1001 Decimal? @map("1001") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1035 Decimal? @map("1035") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1030 Decimal? @map("1030") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9099 Decimal? @map("9099") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9080 Decimal? @map("9080") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1024 Decimal? @map("1024") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1021 Decimal? @map("1021") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1020 Decimal? @map("1020") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1002 Decimal? @map("1002") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1004 Decimal? @map("1004") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1005 Decimal? @map("1005") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1006 Decimal? @map("1006") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1007 Decimal? @map("1007") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1010 Decimal? @map("1010") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1013 Decimal? @map("1013") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1012 Decimal? @map("1012") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1015 Decimal? @map("1015") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1016 Decimal? @map("1016") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1017 Decimal? @map("1017") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1018 Decimal? @map("1018") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1037 Decimal? @map("1037") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1111115 Decimal? @map("1111115") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1039 Decimal? @map("1039") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1222 Decimal? @map("1222") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9988 Decimal? @map("9988") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1036 Decimal? @map("1036") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 8890 Decimal? @map("8890") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1034 Decimal? @map("1034") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1033 Decimal? @map("1033") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1032 Decimal? @map("1032") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1031 Decimal? @map("1031") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1027 Decimal? @map("1027") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9026 Decimal? @map("9026") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1025 Decimal? @map("1025") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1014 Decimal? @map("1014") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9003 Decimal? @map("9003") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 8019 Decimal? @map("8019") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 7023 Decimal? @map("7023") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 8111119 Decimal? @map("8111119") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1008 Decimal? @map("1008") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1009 Decimal? @map("1009") @db.Decimal(18, 4)
   hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0")
 
   @@ignore
@@ -1921,9 +1963,8 @@ model hrms_d_employee_pay_component_assignment_line {
   pay_component_line_cost_center4                 hrms_m_costcenters?                             @relation("LineCostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_line_cost_center5                 hrms_m_costcenters?                             @relation("LineCostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_line_currency                     hrms_m_currency_master?                         @relation(fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  pay_component_for_line                          hrms_m_pay_component                            @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  pay_component_for_line                          hrms_m_pay_component                            @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
   pay_component_line_project                      hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  pay_component_line_tax_slab                     hrms_m_tax_slab_rule?                           @relation(fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_employee_payroll_adjustment {
@@ -2078,7 +2119,7 @@ model hrms_d_finalsettlement_processing {
   updatedate                DateTime?            @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
-  finalsettlement_component hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, onDelete: NoAction, map: "FK__hrms_d_fi__compo__17E28260")
+  finalsettlement_component hrms_m_pay_component @relation(fields: [component_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_fi__compo__17E28260")
   final_settlement_employee hrms_d_employee      @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_fi__emplo__16EE5E27")
 }
 
@@ -2374,4 +2415,22 @@ model hrms_m_overtime_setup {
   log_inst                 Int?
   updatedate               DateTime?
   updatedby                Int?
+}
+
+model hrms_m_tax_slab_rule1 {
+  id                   Int                  @id(map: "PK__hrms_m_t__3213E83F32540D17") @default(autoincrement())
+  parent_id            Int
+  rule_type            String?              @db.VarChar(20)
+  slab_min             Decimal?             @db.Decimal(12, 2)
+  slab_max             Decimal?             @db.Decimal(12, 2)
+  rate                 Decimal?             @db.Decimal(5, 2)
+  flat_amount          Decimal?             @db.Decimal(12, 2)
+  effective_from       DateTime             @db.Date
+  effective_to         DateTime?            @db.Date
+  createdate           DateTime?            @default(now(), map: "DF__hrms_m_ta__creat__015422C3") @db.DateTime
+  createdby            Int
+  updatedate           DateTime?            @db.DateTime
+  updatedby            Int?
+  log_inst             Int?
+  hrms_m_tax_slab_rule hrms_m_tax_slab_rule @relation(fields: [parent_id], references: [id], onUpdate: NoAction, map: "FK__hrms_m_tax_slab_rule__2EFAF1E2")
 }
