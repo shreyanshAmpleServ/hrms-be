@@ -189,9 +189,9 @@ const updateLoanEmiScheduleStatus = async (id, data) => {
       updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
-    if (data.status === "Approved") {
+    if (data.status === "Paid") {
       updateData.status = data.status || "";
-    } else if (data.status === "Rejected") {
+    } else if (data.status === "Unpaid") {
       updateData.status = data.status || "";
     } else {
       updateData.status = "";
