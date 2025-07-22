@@ -74,9 +74,11 @@ const updateLoanEmiScheduleStatus = async (req, res, next) => {
   try {
     console.log("Approver ID from token:", req.user.employee_id);
     const status = req.body.status;
+    const emi_amount = req.body.emi_amount;
 
     const data = {
       status,
+      emi_amount,
       updatedby: req.user.employee_id,
       updatedate: new Date(),
     };

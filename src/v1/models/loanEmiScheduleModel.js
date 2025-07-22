@@ -185,7 +185,7 @@ const updateLoanEmiScheduleStatus = async (id, data) => {
       throw new CustomError(`Loan Emi with ID ${loanEmiId} not found`, 404);
     }
     const updateData = {
-      status: data.status,
+      ...data,
       updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
