@@ -89,23 +89,28 @@ const deleteLoanCashPayement = async (id) => {
   }
 };
 
-// Get all loan cash payments
 const getAllLoanCashPayement = async (
   search,
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  loan_request_id
 ) => {
   try {
-    page = !page || page == 0 ? 1 : page;
-    size = size || 10;
-    const skip = (page - 1) * size || 0;
-
     const filters = {};
-    if (search) {
+
+    if (loan_request_id) {
+      const parsedId = parseInt(loan_request_id, 10);
+      if (!isNaN(parsedId)) {
+        filters.loan_request_id = parsedId;
+      }
+    }
+
+    if (search && !loan_request_id) {
       filters.OR = [{ due_year: { contains: search.toLowerCase() } }];
     }
+
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -114,25 +119,39 @@ const getAllLoanCashPayement = async (
       }
     }
 
+    const pagination = !loan_request_id
+      ? {
+          skip:
+            (page && parseInt(page)) > 0
+              ? (parseInt(page) - 1) * (parseInt(size) || 10)
+              : 0,
+          take: parseInt(size) || 10,
+        }
+      : {};
+
     const datas = await prisma.hrms_d_loan_cash_payment.findMany({
       where: filters,
-      skip,
-      take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
         hrms_d_loan_request: true,
       },
+      ...pagination,
     });
+
     const totalCount = await prisma.hrms_d_loan_cash_payment.count({
       where: filters,
     });
 
     return {
       data: datas,
-      currentPage: page,
-      size,
-      totalPages: Math.ceil(totalCount / size),
-      totalCount,
+      ...(loan_request_id
+        ? {}
+        : {
+            currentPage: parseInt(page) || 1,
+            size: parseInt(size) || 10,
+            totalPages: Math.ceil(totalCount / (parseInt(size) || 10)),
+            totalCount,
+          }),
     };
   } catch (error) {
     throw new CustomError("Error retrieving loan cash payments", 503);

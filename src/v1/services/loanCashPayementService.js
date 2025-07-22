@@ -21,14 +21,16 @@ const getAllLoanCashPayement = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  loan_request_id
 ) => {
   return await loanCashPayementModel.getAllLoanCashPayement(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    loan_request_id
   );
 };
 

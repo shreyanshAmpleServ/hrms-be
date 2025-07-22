@@ -59,13 +59,15 @@ const deleteLoanCashPayement = async (req, res, next) => {
 
 const getAllLoanCashPayement = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, loan_request_id } =
+      req.query;
     const data = await loanCashPayementService.getAllLoanCashPayement(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      loan_request_id
     );
     res.status(200).success(null, data);
   } catch (error) {
