@@ -250,6 +250,7 @@ WHERE lr.id = ${parseInt(id)}
       ...reqData,
       total_received_amount: totalReceivedAmount,
       total_pending_amount: totalPendingAmount,
+      total_received_amount_with_emi: totalReceivedAmountWithEMI,
     };
   } catch (error) {
     throw new CustomError(
