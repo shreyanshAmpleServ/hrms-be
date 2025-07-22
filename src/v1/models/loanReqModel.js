@@ -120,6 +120,12 @@ const createLoanRequest = async (data) => {
 //         },
 //         loan_emi_loan_request: {
 //           select: {
+//             status: true,
+//             emi_amount: true,
+//           },
+//         },
+//         loan_emi_loan_request: {
+//           select: {
 //             id: true,
 //             due_month: true,
 //             due_year: true,
@@ -135,26 +141,27 @@ const createLoanRequest = async (data) => {
 //       throw new CustomError("Loan request not found", 404);
 //     }
 
-//     const summary = await prisma.$queryRaw`
+//     const [summary] = await prisma.$queryRaw`
 //       SELECT
-//         SUM(cp.pending_amount) AS total_pending_amount,
-//         SUM(cp.amount) AS total_amount_received
-//       FROM hrms_d_loan_cash_payment cp
-//       JOIN hrms_d_loan_emi_schedule emi
-//         ON cp.loan_request_id = emi.loan_request_id
-//       WHERE cp.loan_request_id = ${parseInt(id)}
-//         AND emi.status = 'P'
+//         ISNULL(SUM(DISTINCT CASE WHEN emi.status = 'P' THEN emi.emi_amount ELSE 0 END), 0) AS paid_emi_amount,
+//         ISNULL(SUM(DISTINCT cp.amount), 0) AS paid_cash_amount
+//       FROM hrms_d_loan_request lr
+//       LEFT JOIN hrms_d_loan_emi_schedule emi ON emi.loan_request_id = lr.id
+//       LEFT JOIN hrms_d_loan_cash_payment cp ON cp.loan_request_id = lr.id
+//       WHERE lr.id = ${parseInt(id)}
 //     `;
 
-//     const totals = summary?.[0] || {
-//       total_pending_amount: 0,
-//       total_amount_received: 0,
-//     };
+//     const loanAmount = parseFloat(reqData.amount || 0);
+//     const paidEmiAmount = parseFloat(summary?.paid_emi_amount || 0);
+//     const paidCashAmount = parseFloat(summary?.paid_cash_amount || 0);
+
+//     const totalAmountReceived = paidEmiAmount + paidCashAmount;
+//     const totalPendingAmount = loanAmount - totalAmountReceived;
 
 //     return {
 //       ...reqData,
-//       total_pending_amount: totals.total_pending_amount,
-//       total_amount_received: totals.total_amount_received,
+//       total_amount_received: totalAmountReceived,
+//       total_pending_amount: totalPendingAmount,
 //     };
 //   } catch (error) {
 //     throw new CustomError(
@@ -192,12 +199,6 @@ const findLoanRequestById = async (id) => {
         },
         loan_emi_loan_request: {
           select: {
-            status: true,
-            emi_amount: true,
-          },
-        },
-        loan_emi_loan_request: {
-          select: {
             id: true,
             due_month: true,
             due_year: true,
@@ -214,25 +215,39 @@ const findLoanRequestById = async (id) => {
     }
 
     const [summary] = await prisma.$queryRaw`
-      SELECT 
-        ISNULL(SUM(DISTINCT CASE WHEN emi.status = 'P' THEN emi.emi_amount ELSE 0 END), 0) AS paid_emi_amount,
-        ISNULL(SUM(DISTINCT cp.amount), 0) AS paid_cash_amount
-      FROM hrms_d_loan_request lr
-      LEFT JOIN hrms_d_loan_emi_schedule emi ON emi.loan_request_id = lr.id
-      LEFT JOIN hrms_d_loan_cash_payment cp ON cp.loan_request_id = lr.id
-      WHERE lr.id = ${parseInt(id)}
-    `;
+ SELECT 
+  lr.id AS loan_request_id,
+  ISNULL(lr.amount, 0) AS total_loan_amount,
 
-    const loanAmount = parseFloat(reqData.amount || 0);
-    const paidEmiAmount = parseFloat(summary?.paid_emi_amount || 0);
+  -- Subquery for cash payments
+  (
+    SELECT ISNULL(SUM(cp.amount), 0)
+    FROM hrms_d_loan_cash_payment cp
+    WHERE cp.loan_request_id = lr.id
+  ) AS paid_cash_amount,
+
+  -- Subquery for paid EMIs
+  (
+    SELECT ISNULL(SUM(emi.emi_amount), 0)
+    FROM hrms_d_loan_emi_schedule emi
+    WHERE emi.loan_request_id = lr.id AND emi.status = 'P'
+  ) AS paid_emi_amount
+
+FROM hrms_d_loan_request lr
+WHERE lr.id = ${parseInt(id)}
+
+  GROUP BY lr.id, lr.amount
+`;
+
     const paidCashAmount = parseFloat(summary?.paid_cash_amount || 0);
-
-    const totalAmountReceived = paidEmiAmount + paidCashAmount;
-    const totalPendingAmount = loanAmount - totalAmountReceived;
+    const paidEmiAmount = parseFloat(summary?.paid_emi_amount || 0);
+    const totalReceivedAmount = paidCashAmount + paidEmiAmount;
+    const totalLoanAmount = parseFloat(summary?.total_loan_amount || 0);
+    const totalPendingAmount = totalLoanAmount - totalReceivedAmount;
 
     return {
       ...reqData,
-      total_amount_received: totalAmountReceived,
+      total_received_amount: totalReceivedAmount,
       total_pending_amount: totalPendingAmount,
     };
   } catch (error) {

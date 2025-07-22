@@ -325,7 +325,7 @@ model hrms_d_employee {
   loan_req_employee                               hrms_d_loan_request[]
   medical_employee_id                             hrms_d_medical_record[]
   midmonth_payroll_processing_employee            hrms_d_midmonth_payroll_processing[]
-  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation") @ignore
+  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")   @ignore
   notification_log_employee                       hrms_d_notification_log[]
   overtime_payroll_processing_employee            hrms_d_overtime_payroll_processing[]
   payslip_employee                                hrms_d_payslip[]
@@ -593,23 +593,24 @@ model hrms_d_leave_encashment {
 }
 
 model hrms_d_loan_request {
-  id                    Int                        @id(map: "PK__hrms_d_l__3213E83FF14CF674") @default(autoincrement())
-  employee_id           Int?
-  loan_type_id          Int?
-  amount                Decimal?                   @db.Decimal(10, 2)
-  emi_months            Int?
-  status                String?                    @db.VarChar(20)
-  createdate            DateTime?                  @default(now(), map: "DF__hrms_d_lo__creat__04AFB25B") @db.DateTime
-  createdby             Int
-  updatedate            DateTime?                  @db.DateTime
-  updatedby             Int?
-  log_inst              Int?
-  currency              Int?
-  start_date            String?
-  loan_emi_loan_request hrms_d_loan_emi_schedule[]
-  loan_req_currency     hrms_m_currency_master?    @relation(fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  loan_req_employee     hrms_d_employee?           @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  loan_types            hrms_m_loan_type?          @relation(fields: [loan_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                       Int                        @id(map: "PK__hrms_d_l__3213E83FF14CF674") @default(autoincrement())
+  employee_id              Int?
+  loan_type_id             Int?
+  amount                   Decimal?                   @db.Decimal(10, 2)
+  emi_months               Int?
+  status                   String?                    @db.VarChar(20)
+  createdate               DateTime?                  @default(now(), map: "DF__hrms_d_lo__creat__04AFB25B") @db.DateTime
+  createdby                Int
+  updatedate               DateTime?                  @db.DateTime
+  updatedby                Int?
+  log_inst                 Int?
+  currency                 Int?
+  start_date               String?
+  hrms_d_loan_cash_payment hrms_d_loan_cash_payment[]
+  loan_emi_loan_request    hrms_d_loan_emi_schedule[]
+  loan_req_currency        hrms_m_currency_master?    @relation(fields: [currency], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  loan_req_employee        hrms_d_employee?           @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  loan_types               hrms_m_loan_type?          @relation(fields: [loan_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_medical_record {
@@ -1317,8 +1318,8 @@ model hrms_m_pay_component {
   pay_component_cost_center4            hrms_m_costcenters?                             @relation("CostCenter4", fields: [cost_center4_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_cost_center5            hrms_m_costcenters?                             @relation("CostCenter5", fields: [cost_center5_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_project                 hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
   pay_component_tax                     hrms_m_tax_slab_rule?                           @relation("TaxSlabRule", fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
   tax_slab_pay_component                hrms_m_tax_slab_rule[]
 }
 
@@ -1522,9 +1523,9 @@ model hrms_m_tax_slab_rule {
   updatedate             DateTime?               @db.DateTime
   updatedby              Int?
   log_inst               Int?
-  hrms_m_tax_slab_rule1  hrms_m_tax_slab_rule1[]
-  tax_slab_pay_component hrms_m_pay_component?   @relation(fields: [pay_component_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_tax      hrms_m_pay_component[]  @relation("TaxSlabRule")
+  tax_slab_pay_component hrms_m_pay_component    @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
+  hrms_m_tax_slab_rule1  hrms_m_tax_slab_rule1[]
 }
 
 model m_mobile_notification_template {
@@ -1703,89 +1704,13 @@ model hrms_d_monthly_payroll_processing {
   updatedby                     Int?
   log_inst                      Int?
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1022 Decimal? @map("1022") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1001 Decimal? @map("1001") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1035 Decimal? @map("1035") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1030 Decimal? @map("1030") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 9099 Decimal? @map("9099") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 9080 Decimal? @map("9080") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1024 Decimal? @map("1024") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1021 Decimal? @map("1021") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1020 Decimal? @map("1020") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1002 Decimal? @map("1002") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1004 Decimal? @map("1004") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1005 Decimal? @map("1005") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1006 Decimal? @map("1006") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1007 Decimal? @map("1007") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1010 Decimal? @map("1010") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1013 Decimal? @map("1013") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1012 Decimal? @map("1012") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1015 Decimal? @map("1015") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1016 Decimal? @map("1016") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1017 Decimal? @map("1017") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1018 Decimal? @map("1018") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1037 Decimal? @map("1037") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1111115 Decimal? @map("1111115") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1039 Decimal? @map("1039") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1222 Decimal? @map("1222") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 9988 Decimal? @map("9988") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1036 Decimal? @map("1036") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 8890 Decimal? @map("8890") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1034 Decimal? @map("1034") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1033 Decimal? @map("1033") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1032 Decimal? @map("1032") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1031 Decimal? @map("1031") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1027 Decimal? @map("1027") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 9026 Decimal? @map("9026") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1025 Decimal? @map("1025") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1014 Decimal? @map("1014") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 9003 Decimal? @map("9003") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 8019 Decimal? @map("8019") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 7023 Decimal? @map("7023") @db.Decimal(18, 4)
-  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 8111119 Decimal? @map("8111119") @db.Decimal(18, 4)
+  // 1009 Decimal? @map("1009") @db.Decimal(18, 4)
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
   // 1008 Decimal? @map("1008") @db.Decimal(18, 4)
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1009 Decimal? @map("1009") @db.Decimal(18, 4)
+  // 7023 Decimal? @map("7023") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 8019 Decimal? @map("8019") @db.Decimal(18, 4)
   hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0")
 
   @@ignore
@@ -2437,4 +2362,19 @@ model hrms_m_tax_slab_rule1 {
   updatedby            Int?
   log_inst             Int?
   hrms_m_tax_slab_rule hrms_m_tax_slab_rule @relation(fields: [parent_id], references: [id], onUpdate: NoAction, map: "FK__hrms_m_tax_slab_rule__2EFAF1E2")
+}
+
+model hrms_d_loan_cash_payment {
+  id                  Int                 @id(map: "PK__hrms_d_loan_cash_payment") @default(autoincrement())
+  loan_request_id     Int
+  balance_amount      Decimal             @db.Decimal(18, 2)
+  amount              Decimal             @db.Decimal(18, 2)
+  pending_amount      Decimal             @db.Decimal(18, 2)
+  createdate          DateTime?           @default(now(), map: "DF__hrms_d_loan_cash_payment__creat__542C7691") @db.DateTime
+  createdby           Int
+  updatedate          DateTime?           @db.DateTime
+  updatedby           Int?
+  log_inst            Int?
+  due_year            String?
+  hrms_d_loan_request hrms_d_loan_request @relation(fields: [loan_request_id], references: [id], onUpdate: NoAction, map: "hrms_d_loan_cash_payment_id_fkey")
 }
