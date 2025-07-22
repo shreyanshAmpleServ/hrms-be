@@ -241,9 +241,10 @@ WHERE lr.id = ${parseInt(id)}
 
     const paidCashAmount = parseFloat(summary?.paid_cash_amount || 0);
     const paidEmiAmount = parseFloat(summary?.paid_emi_amount || 0);
-    const totalReceivedAmount = paidCashAmount + paidEmiAmount;
+    const totalReceivedAmount = paidCashAmount;
+    const totalReceivedAmountWithEMI = paidCashAmount + paidEmiAmount;
     const totalLoanAmount = parseFloat(summary?.total_loan_amount || 0);
-    const totalPendingAmount = totalLoanAmount - totalReceivedAmount;
+    const totalPendingAmount = totalLoanAmount - totalReceivedAmountWithEMI;
 
     return {
       ...reqData,
