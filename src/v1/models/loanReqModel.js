@@ -312,6 +312,25 @@ const updateLoanRequest = async (id, data) => {
   }
 };
 
+// const deleteLoanRequest = async (id) => {
+//   try {
+//     await prisma.$transaction(async (tx) => {
+//       const loanId = parseInt(id);
+
+//       await tx.hrms_d_loan_emi_schedule.deleteMany({
+//         where: { loan_request_id: loanId },
+//       });
+
+//       await tx.hrms_d_loan_request.delete({
+//         where: { id: loanId },
+//       });
+//     });
+//   } catch (error) {
+//     console.error("Error deleting loan request and EMI schedule:", error);
+//     throw new CustomError(`Error deleting loan request: ${error.message}`, 500);
+//   }
+// };
+
 const deleteLoanRequest = async (id) => {
   try {
     await prisma.$transaction(async (tx) => {
@@ -321,12 +340,16 @@ const deleteLoanRequest = async (id) => {
         where: { loan_request_id: loanId },
       });
 
+      await tx.hrms_d_loan_cash_payment.deleteMany({
+        where: { loan_request_id: loanId },
+      });
+
       await tx.hrms_d_loan_request.delete({
         where: { id: loanId },
       });
     });
   } catch (error) {
-    console.error("Error deleting loan request and EMI schedule:", error);
+    console.error("Error deleting loan request and dependencies:", error);
     throw new CustomError(`Error deleting loan request: ${error.message}`, 500);
   }
 };
@@ -426,6 +449,131 @@ const deleteLoanRequest = async (id) => {
 //   }
 // };
 
+// const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         {
+//           loan_req_employee: {
+//             full_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         {
+//           loan_types: {
+//             loan_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         {
+//           status: { contains: search.toLowerCase() },
+//         },
+//       ];
+//     }
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = {
+//           gte: start,
+//           lte: end,
+//         };
+//       }
+//     }
+
+//     const loanRequests = await prisma.hrms_d_loan_request.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       include: {
+//         loan_req_employee: {
+//           select: {
+//             full_name: true,
+//             id: true,
+//             employee_code: true,
+//             account_number: true,
+//           },
+//         },
+//         loan_types: {
+//           select: {
+//             loan_name: true,
+//             id: true,
+//           },
+//         },
+//         loan_req_currency: {
+//           select: {
+//             id: true,
+//             currency_code: true,
+//             currency_name: true,
+//           },
+//         },
+//       },
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//     });
+
+//     const loanRequestIds = loanRequests.map((item) => item.id);
+
+//     let totalReceivedMap = {};
+//     let totalPendingMap = {};
+
+//     if (loanRequestIds.length > 0) {
+//       const receivedTotals = await prisma.$queryRaw`
+//         SELECT loan_request_id, SUM(amount) AS total_received_amount
+//         FROM hrms_d_loan_cash_payment
+//         WHERE loan_request_id IN (${Prisma.join(loanRequestIds)})
+//         GROUP BY loan_request_id
+//       `;
+
+//       const pendingTotals = await prisma.$queryRaw`
+//         SELECT cp.loan_request_id, SUM(cp.pending_amount) AS total_pending_amount
+//         FROM hrms_d_loan_cash_payment cp
+//         JOIN hrms_d_loan_emi_schedule emi
+//           ON cp.loan_request_id = emi.loan_request_id
+//         WHERE emi.status = 'P'
+//           AND cp.loan_request_id IN (${Prisma.join(loanRequestIds)})
+//         GROUP BY cp.loan_request_id;
+//       `;
+
+//       receivedTotals.forEach((row) => {
+//         totalReceivedMap[row.loan_request_id] = Number(
+//           row.total_received_amount || 0
+//         );
+//       });
+
+//       pendingTotals.forEach((row) => {
+//         totalPendingMap[row.loan_request_id] = Number(
+//           row.total_pending_amount || 0
+//         );
+//       });
+//     }
+
+//     const enrichedData = loanRequests.map((item) => ({
+//       ...item,
+//       total_received_amount: totalReceivedMap[item.id] || 0,
+//       total_pending_amount: totalPendingMap[item.id] || 0,
+//     }));
+
+//     const totalCount = await prisma.hrms_d_loan_request.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: enrichedData,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     console.error("Error retrieving loan requests:", error);
+//     throw new CustomError("Error retrieving loan requests", 503);
+//   }
+// };
+
 const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -475,6 +623,12 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
             account_number: true,
           },
         },
+        loan_emi_loan_request: {
+          select: {
+            status: true,
+            emi_amount: true,
+          },
+        },
         loan_types: {
           select: {
             loan_name: true,
@@ -505,15 +659,41 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
         GROUP BY loan_request_id
       `;
 
+      // const pendingTotals = await prisma.$queryRaw`
+      //   SELECT cp.loan_request_id, SUM(cp.pending_amount) AS total_pending_amount
+      //   FROM hrms_d_loan_cash_payment cp
+      //   JOIN hrms_d_loan_emi_schedule emi
+      //     ON cp.loan_request_id = emi.loan_request_id
+      //   WHERE emi.status = 'P'
+      //     AND cp.loan_request_id IN (${Prisma.join(loanRequestIds)})
+      //   GROUP BY cp.loan_request_id;
+      // `;
+
       const pendingTotals = await prisma.$queryRaw`
-        SELECT cp.loan_request_id, SUM(cp.pending_amount) AS total_pending_amount
-        FROM hrms_d_loan_cash_payment cp
-        JOIN hrms_d_loan_emi_schedule emi
-          ON cp.loan_request_id = emi.loan_request_id
-        WHERE emi.status = 'P'
-          AND cp.loan_request_id IN (${Prisma.join(loanRequestIds)})
-        GROUP BY cp.loan_request_id;
-      `;
+  SELECT 
+    lr.id AS loan_request_id,
+    lr.amount AS total_loan_amount,
+    
+    ISNULL(SUM(DISTINCT cp.amount), 0) AS paid_cash_amount,
+    ISNULL(SUM(DISTINCT CASE WHEN emi.status = 'P' THEN emi.emi_amount ELSE 0 END), 0) AS paid_emi_amount,
+
+    ISNULL(lr.amount, 0)
+      - ISNULL(SUM(DISTINCT cp.amount), 0)
+      - ISNULL(SUM(DISTINCT CASE WHEN emi.status = 'P' THEN emi.emi_amount ELSE 0 END), 0) 
+      AS total_pending_amount
+
+  FROM hrms_d_loan_request lr
+
+  LEFT JOIN hrms_d_loan_cash_payment cp 
+    ON cp.loan_request_id = lr.id
+
+  LEFT JOIN hrms_d_loan_emi_schedule emi 
+    ON emi.loan_request_id = lr.id
+
+  WHERE lr.id IN (${Prisma.join(loanRequestIds)})
+
+  GROUP BY lr.id, lr.amount
+`;
 
       receivedTotals.forEach((row) => {
         totalReceivedMap[row.loan_request_id] = Number(
