@@ -325,7 +325,7 @@ model hrms_d_employee {
   loan_req_employee                               hrms_d_loan_request[]
   medical_employee_id                             hrms_d_medical_record[]
   midmonth_payroll_processing_employee            hrms_d_midmonth_payroll_processing[]
-  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")  @ignore
+  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")   @ignore
   notification_log_employee                       hrms_d_notification_log[]
   overtime_payroll_processing_employee            hrms_d_overtime_payroll_processing[]
   payslip_employee                                hrms_d_payslip[]

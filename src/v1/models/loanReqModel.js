@@ -459,7 +459,6 @@ const updateLoanRequest = async (id, data) => {
       }
     });
 
-    // ✅ Fetch final data and summary *after* transaction completes
     const finalData = await prisma.hrms_d_loan_request.findUnique({
       where: { id: loanId },
       include: {

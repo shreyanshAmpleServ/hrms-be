@@ -697,13 +697,13 @@ const getAllBasicPay = async (
                   currency_code: true,
                 },
               },
-              pay_component_line_tax_slab: {
-                select: {
-                  id: true,
-                  pay_component_id: true,
-                  rule_type: true,
-                },
-              },
+              // pay_component_line_tax_slab: {
+              //   select: {
+              //     id: true,
+              //     pay_component_id: true,
+              //     rule_type: true,
+              //   },
+              // },
               pay_component_line_project: {
                 select: {
                   id: true,
