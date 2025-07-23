@@ -20,6 +20,13 @@ router.put(
   authenticateToken,
   payComponentController.updatePayComponent
 );
+
+// router.put(
+//   "/update-all",
+//   authenticateToken,
+//   payComponentController.updatePayComponent
+// );
+
 router.delete(
   "/pay-component/:id",
   authenticateToken,
