@@ -188,13 +188,13 @@ const createBasicPay = async (data) => {
                   currency_code: true,
                 },
               },
-              pay_component_line_tax_slab: {
-                select: {
-                  id: true,
-                  pay_component_id: true,
-                  rule_type: true,
-                },
-              },
+              // pay_component_line_tax_slab: {
+              //   select: {
+              //     id: true,
+              //     pay_component_id: true,
+              //     rule_type: true,
+              //   },
+              // },
               pay_component_line_project: {
                 select: {
                   id: true,
@@ -410,13 +410,13 @@ const updateBasicPay = async (id, data) => {
                         currency_code: true,
                       },
                     },
-                    pay_component_line_tax_slab: {
-                      select: {
-                        id: true,
-                        pay_component_id: true,
-                        rule_type: true,
-                      },
-                    },
+                    // pay_component_line_tax_slab: {
+                    //   select: {
+                    //     id: true,
+                    //     pay_component_id: true,
+                    //     rule_type: true,
+                    //   },
+                    // },
                     pay_component_line_project: {
                       select: {
                         id: true,
@@ -534,13 +534,13 @@ const findBasicPayById = async (id) => {
                   pay_or_deduct: true,
                 },
               },
-              pay_component_line_tax_slab: {
-                select: {
-                  id: true,
-                  pay_component_id: true,
-                  rule_type: true,
-                },
-              },
+              // pay_component_line_tax_slab: {
+              //   select: {
+              //     id: true,
+              //     pay_component_id: true,
+              //     rule_type: true,
+              //   },
+              // },
               pay_component_line_project: {
                 select: {
                   id: true,
