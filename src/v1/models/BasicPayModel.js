@@ -697,53 +697,11 @@ const getAllBasicPay = async (
                   currency_code: true,
                 },
               },
-              // pay_component_line_tax_slab: {
-              //   select: {
-              //     id: true,
-              //     pay_component_id: true,
-              //     rule_type: true,
-              //   },
-              // },
-              pay_component_line_project: {
+              pay_component_for_line: {
                 select: {
                   id: true,
-                  code: true,
-                  name: true,
-                },
-              },
-              pay_component_line_cost_center1: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
-              pay_component_line_cost_center2: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
-              pay_component_line_cost_center3: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
-              pay_component_line_cost_center4: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
-              pay_component_line_cost_center5: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
+                  component_name: true,
+                  component_code: true,
                 },
               },
             },
@@ -800,7 +758,7 @@ const getAllBasicPay = async (
     };
   } catch (error) {
     console.log("Error basic pay get : ", error);
-    throw new CustomError("Error retrieving basic pays", error.status || 503);
+    throw new CustomError("Error retrieving basic pays", error || 503);
   }
 };
 
