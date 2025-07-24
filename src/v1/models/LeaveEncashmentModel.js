@@ -27,6 +27,39 @@ const serializeLeaveEncashmentData = (data) => ({
 const createLeaveEncashment = async (data) => {
   try {
     const serializedData = serializeLeaveEncashmentData(data);
+    const employeeId = serializedData.employee_id;
+    const encashmentDate = serializedData.encashment_date;
+
+    if (!employeeId || !encashmentDate || isNaN(encashmentDate.getTime())) {
+      throw new CustomError("Invalid employee id or encashment date", 400);
+    }
+
+    const startOfMonth = new Date(
+      encashmentDate.getFullYear(),
+      encashmentDate.getMonth(),
+      1
+    );
+    const endOfMonth = new Date(
+      encashmentDate.getFullYear(),
+      encashmentDate.getMonth() + 1,
+      0
+    );
+    const existingRecord = await prisma.hrms_d_leave_encashment.findFirst({
+      where: {
+        employee_id: employeeId,
+        encashment_date: {
+          gte: startOfMonth,
+          lte: endOfMonth,
+        },
+      },
+    });
+
+    if (existingRecord) {
+      throw new CustomError(
+        "Leave encashment already exists for this employee in the selected month.",
+        409
+      );
+    }
 
     const createData = {
       ...serializedData,
