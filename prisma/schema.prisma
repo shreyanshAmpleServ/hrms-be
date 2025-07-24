@@ -1306,7 +1306,7 @@ model hrms_m_pay_component {
   is_loan                               String?                                         @default("N", map: "DF__hrms_m_pa__is_lo__6C5905DD") @db.NVarChar(1)
   contribution_of_employee              String                                          @default("N") @db.Char(1)
   employer_default_formula              String?                                         @db.VarChar(50)
-  is_basic                              Boolean?
+  is_basic                              String?                                         @db.VarChar(50)
   relief_amount                         String?                                         @db.VarChar(50)
   relief_type                           String?                                         @db.VarChar(50)
   pay_component_for_line                hrms_d_employee_pay_component_assignment_line[]
@@ -1788,6 +1788,10 @@ model hrms_d_monthly_payroll_processing {
   // 1039 Decimal? @map("1039") @db.Decimal(18, 4)
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
   // 4012 Decimal? @map("4012") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 40121 Decimal? @map("40121") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 401212 Decimal? @map("401212") @db.Decimal(18, 4)
   hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0")
 
   @@ignore
