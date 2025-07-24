@@ -8,6 +8,7 @@ const {
   deleteLeaveBalanceController,
   getAllLeaveBalancesController,
   findLeaveBalanceByIdController,
+  findLeaveBalanceByEmployeeIdController,
 } = require("../controller/leaveBalanceController");
 
 router.post("/leave-balance", authenticateToken, createLeaveBalanceController);
@@ -32,6 +33,12 @@ router.get(
   "/leave-balance-by-employee",
   authenticateToken,
   getLeaveBalanceController
+);
+
+router.get(
+  "/leave-balance-by-employee/:employeeId",
+  authenticateToken,
+  findLeaveBalanceByEmployeeIdController
 );
 
 module.exports = router;

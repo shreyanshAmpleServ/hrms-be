@@ -22,6 +22,7 @@ const normalizeDetails = (details, parentId) =>
     expired: item.expired || 0,
     unit: item.unit || "",
     closed: item.closed || "",
+    leave_type_name: item.leave_type_name || "",
   }));
 
 /**
@@ -145,6 +146,41 @@ const findLeaveBalanceById = async (id) => {
     });
     const details = await prisma.hrms_d_leave_balance_details.findMany({
       where: { parent_id: Number(id) },
+      include: {
+        leave_balance_details_LeaveType: {
+          select: { id: true, leave_type: true },
+        },
+      },
+    });
+
+    if (!leaveBalance) throw new CustomError("Leave balance not found", 404);
+
+    return { ...leaveBalance, leaveBalances: details };
+  } catch (error) {
+    throw new CustomError(
+      `Error finding leave balance by ID: ${error.message}`,
+      503
+    );
+  }
+};
+
+/**
+ * Finds a leave balance record by ID.
+ * @param {number|string} id - The leave balance ID.
+ * @returns {Promise<Object>} The leave balance record and its details.
+ */
+const findLeaveBalanceByEmployeeId = async (employeeId) => {
+  try {
+    const leaveBalance = await prisma.hrms_d_leave_balance.findUnique({
+      where: { employee_id: Number(employeeId) },
+    });
+    const details = await prisma.hrms_d_leave_balance_details.findMany({
+      where: { parent_id: Number(leaveBalance?.id) },
+      include: {
+        leave_balance_details_LeaveType: {
+          select: { id: true, leave_type: true },
+        },
+      },
     });
 
     if (!leaveBalance) throw new CustomError("Leave balance not found", 404);
@@ -302,4 +338,5 @@ module.exports = {
   deleteLeaveBalance,
   getAllLeaveBalances,
   getLeaveBalanceByEmployee,
+  findLeaveBalanceByEmployeeId,
 };

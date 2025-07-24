@@ -5,6 +5,7 @@ const {
   getAllLeaveBalances,
   createLeaveBalance,
   findLeaveBalanceById,
+  findLeaveBalanceByEmployeeId,
 } = require("../models/leaveBalanceModel");
 const CustomError = require("../../utils/CustomError");
 
@@ -120,6 +121,26 @@ const getLeaveBalanceController = async (req, res, next) => {
   }
 };
 
+/**
+ * Controller for getting leave balance by employee ID and leave type ID
+ * @param {Object} req - Express request object
+ * @param {Object} res - Express response object
+ * @param {Function} next - Express next middleware function
+ * @returns {Promise<void>}
+ */
+const findLeaveBalanceByEmployeeIdController = async (req, res, next) => {
+  try {
+    const { employeeId } = req.params;
+    if (!employeeId) {
+      throw new CustomError("Employee ID is required", 400);
+    }
+    const result = await findLeaveBalanceByEmployeeId(employeeId);
+    res.status(200).success("Leave balance retrieved successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createLeaveBalanceController,
   updateLeaveBalanceController,
@@ -127,4 +148,5 @@ module.exports = {
   getAllLeaveBalancesController,
   getLeaveBalanceController,
   findLeaveBalanceByIdController,
+  findLeaveBalanceByEmployeeIdController,
 };
