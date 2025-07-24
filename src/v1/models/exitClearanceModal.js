@@ -46,9 +46,26 @@ const createExitClearance = async (data) => {
     const parent = await prisma.hrms_d_exit_clearance.create({
       data: {
         employee_id: Number(data.employee_id) || null,
-        clearance_date: Number(),
+        clearance_date: data.clearance_date
+          ? new Date(data.clearance_date)
+          : null,
+        cleared_by: Number(data.cleared_by) || null,
+        remarks: data.remarks || "",
+        createdby: Number(data.createdby) || 1,
+        createdate: new Date(),
+        updatedby: data.createdby || 1,
+        log_inst: data.log_inst || 1,
       },
     });
+
+    const childDetails = (data.details || []).map((item) => ({
+      parent_id: parent.id,
+      pay_component_id: Number(item.pay_component_id) || null,
+      payment_or_deduction: Number(item.payment_or_deduction) || null,
+      amount: parseFloat(item.amount) || null,
+      remarks: item.remarks || "",
+      pay_component_name: item.pay_component_name || "",
+    }));
   } catch (error) {
     console.log("Error in creating exit cleareaance", error);
     next(error);
