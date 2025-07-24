@@ -13,14 +13,9 @@ const serializePayComponentData = (data) => ({
   is_statutory: data.is_statutory || "N",
   is_active: data.is_active || "Y",
   is_loan: data.is_loan || "N",
-  is_basic:
-    data.is_basic === "true" || data.is_basic === true
-      ? true
-      : data.is_basic === "false" || data.is_basic === false
-      ? false
-      : null,
-  relief_amount: data.relief_amount || null,
-  relief_type: data.relief_type || null,
+  is_basic: data.is_basic || "N",
+  relief_amount: data.relief_amount || "N",
+  relief_type: data.relief_type || "N",
   pay_or_deduct: data.pay_or_deduct || "P",
   is_worklife_related: data.is_worklife_related || "N",
   is_grossable: data.is_grossable || "N",
