@@ -222,13 +222,13 @@ const getAllLeaveEncashment = async (
         },
       ];
     }
-
     if (startDate && endDate) {
       const start = new Date(startDate);
+      start.setUTCHours(0, 0, 0, 0);
+
       const end = new Date(endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.encashment_date = { gte: start, lte: end };
-      }
+      end.setUTCHours(23, 59, 59, 999);
+      filters.createdate = { gte: start, lte: end };
     }
 
     const datas = await prisma.hrms_d_leave_encashment.findMany({
