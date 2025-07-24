@@ -34,17 +34,35 @@ const createLeaveEncashment = async (data) => {
       throw new CustomError("Invalid employee id or encashment date", 400);
     }
 
-    const startOfMonth = new Date(
-      encashmentDate.getFullYear(),
-      encashmentDate.getMonth(),
-      1
-    );
-    const endOfMonth = new Date(
-      encashmentDate.getFullYear(),
-      encashmentDate.getMonth() + 1,
-      0
-    );
-    const existingRecord = await prisma.hrms_d_leave_encashment.findFirst({
+    const month = encashmentDate.getMonth() + 1;
+    const year = encashmentDate.getFullYear();
+
+    const payrollExists = await prisma.$queryRawUnsafe(`
+  SELECT TOP 1 1
+  FROM hrms_d_monthly_payroll_processing
+  WHERE employee_id = ${employeeId}
+    AND payroll_month = ${month}
+    AND payroll_year = ${year}
+`);
+
+    if (payrollExists.length > 0) {
+      throw new CustomError(
+        `Monthly payroll already generated for this employee in ${month}/${year}. Leave encashment not allowed.`,
+        400
+      );
+    }
+
+    console.log("Checking payroll conflict for:", {
+      employeeId,
+      encashmentDate,
+      month,
+      year,
+    });
+
+    const startOfMonth = new Date(year, month - 1, 1);
+    const endOfMonth = new Date(year, month, 0);
+
+    const existingEncashment = await prisma.hrms_d_leave_encashment.findFirst({
       where: {
         employee_id: employeeId,
         encashment_date: {
@@ -54,7 +72,7 @@ const createLeaveEncashment = async (data) => {
       },
     });
 
-    if (existingRecord) {
+    if (existingEncashment) {
       throw new CustomError(
         "Leave encashment already exists for this employee in the selected month.",
         409
@@ -88,7 +106,7 @@ const createLeaveEncashment = async (data) => {
 
     return reqData;
   } catch (error) {
-    console.error("Prisma error details:", error);
+    console.error("Leave encashment error:", error);
     throw new CustomError(
       `Error creating leave encashment: ${error.message}`,
       500
