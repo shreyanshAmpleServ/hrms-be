@@ -171,7 +171,7 @@ const findLeaveBalanceById = async (id) => {
  */
 const findLeaveBalanceByEmployeeId = async (employeeId) => {
   try {
-    const leaveBalance = await prisma.hrms_d_leave_balance.findUnique({
+    const leaveBalance = await prisma.hrms_d_leave_balance.findFirst({
       where: { employee_id: Number(employeeId) },
     });
     const details = await prisma.hrms_d_leave_balance_details.findMany({
