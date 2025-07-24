@@ -45,6 +45,20 @@ const updatePayComponent = async (req, res, next) => {
   }
 };
 
+// update all pay component -New made for emergengency(Test by shivang)
+// const updatePayComponent = async (req, res, next) => {
+//   try {
+//     const result = await payComponentService.updatePayComponent();
+//     res.status(200).json({
+//       success: true,
+//       message: "All pay components updated successfully",
+//       data: result,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const deletePayComponent = async (req, res, next) => {
   try {
     await payComponentService.deletePayComponent(req.params.id);
@@ -72,6 +86,7 @@ const getAllPayComponent = async (req, res, next) => {
     next(error);
   }
 };
+
 const getPayComponentOptions = async (req, res, next) => {
   try {
     const { is_advance: isAdvance, is_overtime_related: isOvertimeRelated } =
