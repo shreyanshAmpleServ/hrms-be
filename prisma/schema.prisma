@@ -408,18 +408,22 @@ model hrms_d_employment_contract {
 }
 
 model hrms_d_exit_clearance {
-  id                      Int              @id(map: "PK__hrms_d_e__3213E83FD2EA570F") @default(autoincrement())
+  id                      Int                      @id(map: "PK__hrms_d_e__3213E83F6E5C594D") @default(autoincrement())
   employee_id             Int?
-  clearance_date          DateTime?        @db.Date
+  start_date              DateTime?                @db.DateTime
+  reason                  String?                  @db.NVarChar(50)
+  employee_name           String?                  @db.NVarChar(100)
+  clearance_date          DateTime?                @db.Date
   cleared_by              Int?
-  remarks                 String?          @db.NVarChar(255)
-  createdate              DateTime?        @default(now(), map: "DF__hrms_d_ex__creat__7C1A6C5A") @db.DateTime
+  remarks                 String?                  @db.NVarChar(255)
+  createdate              DateTime?                @default(now(), map: "DF__hrms_d_ex__creat__310335E5") @db.DateTime
   createdby               Int
-  updatedate              DateTime?        @db.DateTime
+  updatedate              DateTime?                @db.DateTime
   updatedby               Int?
   log_inst                Int?
-  exit_clearance_by_user  hrms_d_employee? @relation("UserCleared", fields: [cleared_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  exit_clearance_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exit_clearance_by_user  hrms_d_employee?         @relation("UserCleared", fields: [cleared_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exit_clearance_employee hrms_d_employee?         @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hrms_d_exit_clearance1  hrms_d_exit_clearance1[]
 }
 
 model hrms_d_exit_interview {
@@ -1792,6 +1796,8 @@ model hrms_d_monthly_payroll_processing {
   // 40121 Decimal? @map("40121") @db.Decimal(18, 4)
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
   // 401212 Decimal? @map("401212") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 4012121 Decimal? @map("4012121") @db.Decimal(18, 4)
   hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0")
 
   @@ignore
@@ -2458,4 +2464,20 @@ model hrms_d_loan_cash_payment {
   log_inst            Int?
   due_year            String?
   hrms_d_loan_request hrms_d_loan_request @relation(fields: [loan_request_id], references: [id], onUpdate: NoAction, map: "hrms_d_loan_cash_payment_id_fkey")
+}
+
+model hrms_d_exit_clearance1 {
+  id                    Int                    @id(map: "PK__hrms_d_e__3213E83F605785EC") @default(autoincrement())
+  parent_id             Int?
+  pay_component_id      Int?
+  payment_or_dedcution  String?                @db.NVarChar(10)
+  no_of_days            Int?
+  amount                Decimal?               @db.Decimal(19, 6)
+  remarks               String?                @db.NVarChar(255)
+  createdate            DateTime?              @default(now(), map: "DF__hrms_d_ex__creat__35C7EB02") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?              @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  hrms_d_exit_clearance hrms_d_exit_clearance? @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK__hrms_d_exit_clearance1__2EFAF1E2")
 }
