@@ -13,7 +13,14 @@ const serializePayComponentData = (data) => ({
   is_statutory: data.is_statutory || "N",
   is_active: data.is_active || "Y",
   is_loan: data.is_loan || "N",
-  is_basic: data.is_basic || "N",
+  is_basic:
+    data.is_basic === "true" || data.is_basic === true
+      ? true
+      : data.is_basic === "false" || data.is_basic === false
+      ? false
+      : null,
+  relief_amount: data.relief_amount || null,
+  relief_type: data.relief_type || null,
   pay_or_deduct: data.pay_or_deduct || "P",
   is_worklife_related: data.is_worklife_related || "N",
   is_grossable: data.is_grossable || "N",
@@ -433,7 +440,7 @@ const updatePayComponent = async (id, data) => {
 //   }
 // };
 
-// level 3 -  Fo updating all(Only for emegency puropose - Dont useit)
+// level 3 -  For updating all(Only for emegency puropose - Dont useit)
 // const updatePayComponent = async () => {
 //   try {
 //     const allComponents = await prisma.hrms_m_pay_component.findMany({
@@ -476,7 +483,7 @@ const updatePayComponent = async (id, data) => {
 //             ALTER TABLE hrms_d_monthly_payroll_processing
 //             ADD [${code}] DECIMAL(18,4) NULL
 //           `);
-//           console.log(` Created column ${code}`);
+//           console.log(`Created column ${code}`);
 //         } catch (sqlError) {
 //           throw new CustomError(
 //             `Failed to alter table for component ${componentId}: ${sqlError.message}`,
@@ -484,7 +491,7 @@ const updatePayComponent = async (id, data) => {
 //           );
 //         }
 //       } else {
-//         console.log(`Column ${code} already exists`);
+//         console.log(` Column ${code} already exists`);
 //       }
 
 //       try {
@@ -535,7 +542,7 @@ const updatePayComponent = async (id, data) => {
 //       }
 //     }
 
-//     console.log(`Finished processing ${updatedComponents.length} components.`);
+//     console.log(` Finished processing ${updatedComponents.length} components.`);
 //     return updatedComponents;
 //   } catch (error) {
 //     console.error(" Error in updatePayComponent:", error.message);

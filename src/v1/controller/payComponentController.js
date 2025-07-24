@@ -27,6 +27,7 @@ const findPayComponentById = async (req, res, next) => {
   }
 };
 
+// update all pay component
 const updatePayComponent = async (req, res, next) => {
   try {
     // const attachmentPath = req.file ? req.file.path : null;
