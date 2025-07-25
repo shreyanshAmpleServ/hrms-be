@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { number } = require("zod/v4");
 const prisma = new PrismaClient();
 
 // Serialize exit clearance data
@@ -51,35 +52,58 @@ const createExitClearance = async (data) => {
           : null,
         cleared_by: Number(data.cleared_by) || null,
         remarks: data.remarks || "",
-        createdby: Number(data.createdby) || 1,
+        createdby: data.createdby || 1,
         createdate: new Date(),
         updatedby: data.createdby || 1,
+        updatedate: new Date(),
         log_inst: data.log_inst || 1,
       },
     });
 
-    const childDetails = (data.details || []).map((item) => ({
+    const children = (data.children || []).map((item) => ({
       parent_id: parent.id,
       pay_component_id: Number(item.pay_component_id) || null,
-      payment_or_deduction: Number(item.payment_or_deduction) || null,
-      amount: parseFloat(item.amount) || null,
+      payment_or_dedcution: item.payment_or_dedcution || "",
+      no_of_days: Number(item.no_of_days) || 0,
+      amount: parseFloat(item.amount) || 0,
       remarks: item.remarks || "",
-      pay_component_name: item.pay_component_name || "",
+      createdate: new Date(),
+      createdby: data.createdby || 1,
+      updatedate: new Date(),
+      updatedby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
     }));
+
+    await prisma.hrms_d_exit_clearance1.createMany({ data: children });
+
+    const fullData = await prisma.hrms_d_exit_clearance.findUnique({
+      where: { id: parent.id },
+      include: {
+        exit_clearance_employee: { select: { id: true, full_name: true } },
+        // exit_clearance_by_user: { select: { id: true, full_name: true } }, // Optional
+        hrms_d_exit_clearance1: {
+          include: {
+            exit_clearance_pay: true,
+          },
+        },
+      },
+    });
+
+    return fullData;
   } catch (error) {
-    console.log("Error in creating exit cleareaance", error);
-    next(error);
+    throw new CustomError(
+      `Error creating exit clearance: ${error.message}`,
+      500
+    );
   }
 };
 
-// Find an exit clearance by ID
 const findExitClearanceById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_exit_clearance.findUnique({
       where: { id: parseInt(id) },
       include: {
         exit_clearance_employee: { select: { id: true, full_name: true } },
-        exit_clearance_by_user: { select: { id: true, full_name: true } },
       },
     });
 
@@ -100,38 +124,111 @@ const findExitClearanceById = async (id) => {
 };
 
 // Update an exit clearance
+// const updateExitClearance = async (id, data) => {
+//   try {
+//     const updatedClearance = await prisma.hrms_d_exit_clearance.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         ...serializeExitClearance(data),
+//         updatedby: data.updatedby || 1,
+//         updatedate: new Date(),
+//       },
+//       include: {
+//         exit_clearance_by_user: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//           },
+//         },
+//         exit_clearance_employee: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//           },
+//         },
+//       },
+//     });
+
+//     return {
+//       success: true,
+//       data: updatedClearance,
+//       message: "Exit clearance updated successfully",
+//       status: 200,
+//     };
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error updating exit clearance: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const updateExitClearance = async (id, data) => {
   try {
-    const updatedClearance = await prisma.hrms_d_exit_clearance.update({
-      where: { id: parseInt(id) },
+    const parentId = parseInt(id);
+    await prisma.hrms_d_exit_clearance.update({
+      where: { id: parentId },
       data: {
-        ...serializeExitClearance(data),
+        employee_id: Number(data.employee_id) || null,
+        clearance_date: data.clearance_date
+          ? new Date(data.clearance_date)
+          : null,
+        cleared_by: Number(data.cleared_by) || null,
+        remarks: data.remarks || "",
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
-      include: {
-        exit_clearance_by_user: {
-          select: {
-            id: true,
-            full_name: true,
+    });
+
+    for (const item of data.children || []) {
+      if (item.id) {
+        const updated = await prisma.hrms_d_exit_clearance1.update({
+          where: { id: item.id },
+          data: {
+            pay_component_id: Number(item.pay_component_id) || null,
+            payment_or_dedcution: item.payment_or_dedcution || "",
+            no_of_days: Number(item.no_of_days) || 0,
+            amount: parseFloat(item.amount) || 0,
+            remarks: item.remarks || "",
+            updatedby: data.updatedby || 1,
+            updatedate: new Date(),
           },
-        },
-        exit_clearance_employee: {
-          select: {
-            id: true,
-            full_name: true,
+        });
+        console.log("Updated record:", updated);
+      } else {
+        await prisma.hrms_d_exit_clearance1.create({
+          data: {
+            parent_id: parentId,
+            pay_component_id: Number(item.pay_component_id) || null,
+            payment_or_dedcution: item.payment_or_dedcution || "",
+            no_of_days: Number(item.no_of_days) || 0,
+            amount: parseFloat(item.amount) || 0,
+            remarks: item.remarks || "",
+            createdate: new Date(),
+            createdby: data.updatedby || 1,
+            updatedate: new Date(),
+            updatedby: data.updatedby || 1,
+            log_inst: data.log_inst || 1,
+          },
+        });
+      }
+    }
+
+    const updatedData = await prisma.hrms_d_exit_clearance.findUnique({
+      where: { id: parentId },
+      include: {
+        exit_clearance_employee: { select: { id: true, full_name: true } },
+        hrms_d_exit_clearance1: {
+          include: {
+            exit_clearance_pay: true,
           },
         },
       },
     });
 
-    return {
-      success: true,
-      data: updatedClearance,
-      message: "Exit clearance updated successfully",
-      status: 200,
-    };
+    return updatedData;
   } catch (error) {
+    console.log("Error updating exit clearance ", error);
     throw new CustomError(
       `Error updating exit clearance: ${error.message}`,
       500

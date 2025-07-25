@@ -325,7 +325,7 @@ model hrms_d_employee {
   loan_req_employee                               hrms_d_loan_request[]
   medical_employee_id                             hrms_d_medical_record[]
   midmonth_payroll_processing_employee            hrms_d_midmonth_payroll_processing[]
-  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")  @ignore
+  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation") @ignore
   notification_log_employee                       hrms_d_notification_log[]
   overtime_payroll_processing_employee            hrms_d_overtime_payroll_processing[]
   payslip_employee                                hrms_d_payslip[]
@@ -1328,6 +1328,7 @@ model hrms_m_pay_component {
   pay_component_tax                     hrms_m_tax_slab_rule?                           @relation("TaxSlabRule", fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
   tax_slab_pay_component                hrms_m_tax_slab_rule[]
+  exit_clearance_references             hrms_d_exit_clearance1[]                        @relation("ExitClearancePayComponent")
 }
 
 model hrms_m_provident_fund {
@@ -2480,4 +2481,5 @@ model hrms_d_exit_clearance1 {
   updatedby             Int?
   log_inst              Int?
   hrms_d_exit_clearance hrms_d_exit_clearance? @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK__hrms_d_exit_clearance1__2EFAF1E2")
+  exit_clearance_pay    hrms_m_pay_component?  @relation("ExitClearancePayComponent", fields: [pay_component_id], references: [id])
 }
