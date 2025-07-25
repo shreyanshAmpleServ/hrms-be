@@ -201,6 +201,7 @@ const getAllMonthlyPayroll = async (
   }
 };
 
+// Mothly payroll stored procedure
 const callMonthlyPayrollSP = async (params) => {
   try {
     const {
@@ -244,6 +245,7 @@ const callMonthlyPayrollSP = async (params) => {
   }
 };
 
+// Monthly payroll calculation Stored  procedure
 const triggerMonthlyPayrollCalculationSP = async ({
   employee_id,
   taxable_amount,
@@ -323,7 +325,6 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         payroll_end_date: safeDate(row.payroll_end_date),
         payroll_paid_days: safeNumber(row.payroll_paid_days),
         pay_currency: row.Currency,
-
         total_earnings: safeDecimal(row.total_earnings),
         taxable_earnings: safeDecimal(row.TaxableIncome),
         tax_amount: safeDecimal(row.TaxPayee),
@@ -424,6 +425,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
   }
 };
 
+// Generate
 const getGeneratedMonthlyPayroll = async (
   search,
   page = 1,
