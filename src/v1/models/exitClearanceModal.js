@@ -104,6 +104,11 @@ const findExitClearanceById = async (id) => {
       where: { id: parseInt(id) },
       include: {
         exit_clearance_employee: { select: { id: true, full_name: true } },
+        hrms_d_exit_clearance1: {
+          include: {
+            exit_clearance_pay: true,
+          },
+        },
       },
     });
 
@@ -259,7 +264,7 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
 
     const filterConditions = [];
 
-    // Search OR condition on remarks
+    // Search
     if (search) {
       filterConditions.push({
         OR: [
@@ -275,7 +280,7 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
       });
     }
 
-    // Date range condition
+    // Date filter
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -300,6 +305,11 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
       include: {
         exit_clearance_employee: { select: { id: true, full_name: true } },
         exit_clearance_by_user: { select: { id: true, full_name: true } },
+        hrms_d_exit_clearance1: {
+          include: {
+            exit_clearance_pay: true,
+          },
+        },
       },
     });
 
@@ -316,7 +326,9 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
       log_inst: item.log_inst,
       exit_clearance_by_user: item.exit_clearance_by_user,
       exit_clearance_employee: item.exit_clearance_employee,
+      hrms_d_exit_clearance1: item.hrms_d_exit_clearance1,
     }));
+
     const totalCount = await prisma.hrms_d_exit_clearance.count({
       where: filters,
     });
@@ -329,6 +341,7 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
       totalCount,
     };
   } catch (error) {
+    console.error("Error in getAllExitClearance:", error);
     throw new CustomError("Error retrieving exit clearances", 400);
   }
 };
