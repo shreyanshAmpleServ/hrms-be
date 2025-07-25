@@ -20,67 +20,10 @@ const serializePayrollData = (data) => ({
   remarks: data.remarks || "",
 });
 
-// const createMonthlyPayroll = async (data) => {
-//   try {
-//     const serializedData = serializePayrollData(data);
-//     const { employee_id, payroll_month } = serializedData;
-
-//     // Check if payroll already exists for the same employee and month
-//     const existing = await prisma.hrms_d_monthly_payroll_processing.findFirst({
-//       where: {
-//         hrms_monthly_payroll_employee: { id: employee_id },
-//         payroll_month: payroll_month,
-//       },
-//     });
-
-//     if (existing) {
-//       throw new CustomError(
-//         `Payroll already exists for employee ID ${employee_id} in month ${payroll_month}`,
-//         400
-//       );
-//     }
-
-//     const reqData = await prisma.hrms_d_monthly_payroll_processing.create({
-//       data: {
-//         ...serializedData,
-//         createdby: data.createdby || 1,
-//         createdate: new Date(),
-//         log_inst: data.log_inst || 1,
-//         hrms_monthly_payroll_employee: {
-//           connect: { id: employee_id },
-//         },
-//       },
-//       include: {
-//         hrms_monthly_payroll_employee: {
-//           select: {
-//             id: true,
-//             employee_code: true,
-//             full_name: true,
-//           },
-//         },
-//       },
-//     });
-
-//     return reqData;
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error creating payroll entry: ${error.message}`,
-//       500
-//     );
-//   }
-// };
 const createMonthlyPayroll = async (data) => {
   try {
     const serializedData = serializePayrollData(data);
     const { employee_id, payroll_month } = serializedData;
-
-    // Check if payroll already exists for the same employee and month
-    // const existing = await prisma.hrms_d_monthly_payroll_processing.findFirst({
-    //   where: {
-    //     hrms_monthly_payroll_employee: { id: employee_id },
-    //     payroll_month: payroll_month,
-    //   },
-    // });
     try {
       if (!employee_id || !payroll_month) {
         throw new CustomError("Missing employee_id or payroll_month", 400);
@@ -225,14 +168,6 @@ const getAllMonthlyPayroll = async (
         { remarks: { contains: search.toLowerCase() } },
       ];
     }
-    // if (startDate && endDate) {
-    //   const start = new Date(startDate);
-    //   const end = new Date(endDate);
-    //   if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-    //     filters.createdate = { gte: start, lte: end };
-    //   }
-    // }
-
     const datas = await prisma.hrms_d_monthly_payroll_processing.findMany({
       where: filters,
       skip,
@@ -265,47 +200,6 @@ const getAllMonthlyPayroll = async (
     throw new CustomError("Error retrieving payroll entries", 503);
   }
 };
-
-// const callMonthlyPayrollSP = async (params) => {
-//   try {
-//     const {
-//       paymonth,
-//       payyear,
-//       empidfrom,
-//       empidto,
-//       // depidfrom,
-//       // depidto,
-//       positionidfrom,
-//       positionidto,
-//       loanflag,
-//       grade,
-//     } = params;
-//     console.log("Model calling SP with params:", params);
-
-//     const sanitize = (val) => {
-//       const num = Number(val);
-//       return isNaN(num) ? 0 : num;
-//     };
-
-//     const result = await prisma.$queryRawUnsafe(`
-//       EXEC sp_hrms_monthly_payroll_processing
-//        @paymonth = ${sanitize(paymonth)},
-//        @payyear = ${sanitize(payyear)},
-//        @empidfrom = ${sanitize(empidfrom)},
-//        @empidto = ${sanitize(empidto)},
-//        @positionidfrom = ${sanitize(positionidfrom)},
-//        @positionidto = ${sanitize(positionidto)},
-//        @loanflag = ${sanitize(loanflag)},
-//        @grade = grade
-//     `);
-
-//     console.log("SP Result:", result);
-//     return result;
-//   } catch (error) {
-//     console.error("SP Execution Failed:", error);
-//     throw new CustomError("Monthly payroll processing failed", 500);
-//   }
-// };
 
 const callMonthlyPayrollSP = async (params) => {
   try {

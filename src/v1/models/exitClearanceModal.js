@@ -11,39 +11,11 @@ const serializeExitClearance = (data) => ({
   remarks: data.remarks || "",
 });
 
-// Create a new exit clearance
-// const createExitClearance = async (data) => {
-//   try {
-//     const reqData = await prisma.hrms_d_exit_clearance.create({
-//       data: {
-//         ...serializeExitClearance(data),
-//         createdby: Number(data.createdby) || 1,
-//         createdate: new Date(),
-//         log_inst: data.log_inst || 1,
-//       },
-//       include: {
-//         exit_clearance_by_user: {
-//           // <-- include the user who cleared
-//           select: { id: true, full_name: true },
-//         },
-//         exit_clearance_employee: {
-//           // still include the employee
-//           select: { id: true, full_name: true },
-//         },
-//       },
-//     });
-
-//     return reqData;
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error creating exit clearance: ${error.message}`,
-//       500
-//     );
-//   }
-// };
-
 const createExitClearance = async (data) => {
   try {
+    if (!Array.isArray(data.children) || data.children.length === 0) {
+      throw new CustomError("Children field is required", 400);
+    }
     const parent = await prisma.hrms_d_exit_clearance.create({
       data: {
         employee_id: Number(data.employee_id) || null,
