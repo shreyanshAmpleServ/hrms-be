@@ -703,6 +703,7 @@ const getAllBasicPay = async (
                   component_name: true,
                   component_code: true,
                   is_basic: true,
+                  pay_or_deduct: true,
                 },
               },
             },
