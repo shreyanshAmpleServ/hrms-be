@@ -63,7 +63,7 @@ const createLeaveEncashment = async (data) => {
 
     if (payrollExists.length > 0) {
       throw new CustomError(
-        `Monthly payroll already generated for this employee in ${monthName} ${year}. Leave encashment not allowed.`,
+        `Payroll for ${monthName} ${year} has already been processed for this employee. Leave encashment is not permitted.`,
         400
       );
     }
@@ -91,7 +91,7 @@ const createLeaveEncashment = async (data) => {
     if (existingEncashment) {
       throw new CustomError(
         `Leave encashment already exists for this employee in ${monthName} ${year}.`,
-        409
+        400
       );
     }
 
