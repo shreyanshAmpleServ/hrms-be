@@ -16,6 +16,40 @@ const createExitClearance = async (data) => {
     if (!Array.isArray(data.children) || data.children.length === 0) {
       throw new CustomError("Children field is required", 400);
     }
+
+    const existingEmployee = await prisma.hrms_d_exit_clearance.findFirst({
+      where: {
+        employee_id: Number(data.employee_id),
+      },
+    });
+    if (existingEmployee) {
+      throw new CustomError("Employee already has an exit clearance", 400);
+    }
+
+    for (const [index, item] of data.children.entries()) {
+      if (!item.pay_component_id || isNaN(Number(item.pay_component_id))) {
+        throw new CustomError(
+          `Child #${
+            index + 1
+          }: Pay component Id is required and must be a number.`,
+          400
+        );
+      }
+
+      if (item.no_of_days === undefined || isNaN(Number(item.no_of_days))) {
+        throw new CustomError(
+          `Child #${index + 1}: No of days is required and must be a number.`,
+          400
+        );
+      }
+      const amount = parseFloat(item.amount);
+      if (isNaN(amount) || amount === 0) {
+        throw new CustomError(
+          `Child #${index + 1}: Amount is required and must not be zero.`,
+          400
+        );
+      }
+    }
     const parent = await prisma.hrms_d_exit_clearance.create({
       data: {
         employee_id: Number(data.employee_id) || null,
@@ -52,7 +86,6 @@ const createExitClearance = async (data) => {
       where: { id: parent.id },
       include: {
         exit_clearance_employee: { select: { id: true, full_name: true } },
-        // exit_clearance_by_user: { select: { id: true, full_name: true } }, // Optional
         hrms_d_exit_clearance1: {
           include: {
             exit_clearance_pay: true,
@@ -63,10 +96,7 @@ const createExitClearance = async (data) => {
 
     return fullData;
   } catch (error) {
-    throw new CustomError(
-      `Error creating exit clearance: ${error.message}`,
-      500
-    );
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
