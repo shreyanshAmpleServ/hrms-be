@@ -328,16 +328,22 @@ const checkBulkClearance = async (employeeIds, month, year) => {
         employee_id: { in: employeeIds.map(Number) },
       },
       include: {
-        exit_clearance_employee: { select: { id: true, full_name: true } },
-        exit_clearance_by_user: { select: { id: true, full_name: true } },
+        exit_clearance_employee: {
+          select: { id: true, full_name: true },
+        },
+        exit_clearance_by_user: {
+          select: { id: true, full_name: true },
+        },
         hrms_d_exit_clearance1: {
           include: {
-            select: {
-              id: true,
-              component_code: true,
-              component_name: true,
-              component_type: true,
-              pay_or_deduct: true,
+            exit_clearance_pay: {
+              select: {
+                id: true,
+                component_code: true,
+                component_name: true,
+                component_type: true,
+                pay_or_deduct: true,
+              },
             },
           },
         },

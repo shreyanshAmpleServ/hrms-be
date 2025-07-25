@@ -1328,7 +1328,7 @@ model hrms_m_pay_component {
   pay_component_tax                     hrms_m_tax_slab_rule?                           @relation("TaxSlabRule", fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
   tax_slab_pay_component                hrms_m_tax_slab_rule[]
-  exit_clearance_references             hrms_d_exit_clearance1[]                        @relation("ExitClearancePayComponent")
+  exit_clearance_pay                    hrms_d_exit_clearance1[]                        @relation("ExitClearancePayComponent")
 }
 
 model hrms_m_provident_fund {
