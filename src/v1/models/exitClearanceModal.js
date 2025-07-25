@@ -130,46 +130,6 @@ const findExitClearanceById = async (id) => {
   }
 };
 
-// Update an exit clearance
-// const updateExitClearance = async (id, data) => {
-//   try {
-//     const updatedClearance = await prisma.hrms_d_exit_clearance.update({
-//       where: { id: parseInt(id) },
-//       data: {
-//         ...serializeExitClearance(data),
-//         updatedby: data.updatedby || 1,
-//         updatedate: new Date(),
-//       },
-//       include: {
-//         exit_clearance_by_user: {
-//           select: {
-//             id: true,
-//             full_name: true,
-//           },
-//         },
-//         exit_clearance_employee: {
-//           select: {
-//             id: true,
-//             full_name: true,
-//           },
-//         },
-//       },
-//     });
-
-//     return {
-//       success: true,
-//       data: updatedClearance,
-//       message: "Exit clearance updated successfully",
-//       status: 200,
-//     };
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error updating exit clearance: ${error.message}`,
-//       500
-//     );
-//   }
-// };
-
 const updateExitClearance = async (id, data) => {
   try {
     const parentId = parseInt(id);
@@ -246,6 +206,10 @@ const updateExitClearance = async (id, data) => {
 // Delete an exit clearance
 const deleteExitClearance = async (id) => {
   try {
+    await prisma.hrms_d_exit_clearance1.deleteMany({
+      where: { parent_id: parseInt(id) },
+    });
+
     await prisma.hrms_d_exit_clearance.delete({
       where: { id: parseInt(id) },
     });
