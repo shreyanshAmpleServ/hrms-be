@@ -86,6 +86,8 @@ const createExitClearance = async (data) => {
       where: { id: parent.id },
       include: {
         exit_clearance_employee: { select: { id: true, full_name: true } },
+        exit_clearance_by_user: { select: { id: true, full_name: true } },
+
         hrms_d_exit_clearance1: {
           include: {
             exit_clearance_pay: true,
@@ -185,6 +187,8 @@ const updateExitClearance = async (id, data) => {
       where: { id: parentId },
       include: {
         exit_clearance_employee: { select: { id: true, full_name: true } },
+        exit_clearance_by_user: { select: { id: true, full_name: true } },
+
         hrms_d_exit_clearance1: {
           include: {
             exit_clearance_pay: true,
