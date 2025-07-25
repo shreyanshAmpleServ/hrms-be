@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { number } = require("zod/v4");
+const { id } = require("date-fns/locale");
 const prisma = new PrismaClient();
 
 // Serialize exit clearance data
@@ -74,6 +75,7 @@ const createExitClearance = async (data) => {
       no_of_days: Number(item.no_of_days) || 0,
       amount: parseFloat(item.amount) || 0,
       remarks: item.remarks || "",
+      payment_or_dedcution: item.payment_or_dedcution || "",
       createdate: new Date(),
       createdby: data.createdby || 1,
       updatedate: new Date(),
@@ -174,6 +176,7 @@ const updateExitClearance = async (id, data) => {
             no_of_days: Number(item.no_of_days) || 0,
             amount: parseFloat(item.amount) || 0,
             remarks: item.remarks || "",
+            payment_or_dedcution: item.payment_or_dedcution || "",
             createdate: new Date(),
             createdby: data.updatedby || 1,
             updatedate: new Date(),
@@ -292,6 +295,7 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
       remarks: item.remarks,
       createdate: item.createdate,
       createdby: item.createdby,
+      payment_or_dedcution: item.payment_or_dedcution || "",
       updatedate: item.updatedate,
       updatedby: item.updatedby,
       log_inst: item.log_inst,
@@ -328,7 +332,13 @@ const checkBulkClearance = async (employeeIds, month, year) => {
         exit_clearance_by_user: { select: { id: true, full_name: true } },
         hrms_d_exit_clearance1: {
           include: {
-            exit_clearance_pay: true,
+            select: {
+              id: true,
+              component_code: true,
+              component_name: true,
+              component_type: true,
+              pay_or_deduct: true,
+            },
           },
         },
       },
