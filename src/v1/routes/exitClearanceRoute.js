@@ -39,4 +39,9 @@ router.delete(
   exitClearanceController.deleteExitClearance
 );
 
+router.post(
+  "/exit-clearance/exit-clearance-bulk",
+  authenticateToken,
+  exitClearanceController.checkBulkClearance
+);
 module.exports = router;

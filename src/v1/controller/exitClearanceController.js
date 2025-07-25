@@ -70,10 +70,49 @@ const getAllExitClearance = async (req, res, next) => {
   }
 };
 
+const checkBulkClearance = async (req, res, next) => {
+  try {
+    console.log("Request Body:", req.body);
+
+    const { employee_ids, month, year } = req.body;
+    console.log("employee_ids type:", typeof employee_ids);
+    console.log("employee_ids isArray:", Array.isArray(employee_ids));
+    console.log("employee_ids:", employee_ids);
+
+    if (!Array.isArray(employee_ids) || employee_ids.length === 0) {
+      throw new CustomError("Employee Id must be non empty array", 400);
+    }
+
+    const monthNum = parseInt(month);
+    const yearNum = parseInt(year);
+
+    if (
+      isNaN(monthNum) ||
+      isNaN(yearNum) ||
+      monthNum < 1 ||
+      monthNum > 12 ||
+      yearNum < 1900
+    ) {
+      throw new CustomError("Invalid month or year", 400);
+    }
+
+    const result = await exitClearanceService.checkBulkClearance(
+      employee_ids,
+      parseInt(month),
+      parseInt(year)
+    );
+
+    res.status(200).success("Exit clearance fetched successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createExitClearance,
   findExitClearance,
   updateExitClearance,
   deleteExitClearance,
   getAllExitClearance,
+  checkBulkClearance,
 };

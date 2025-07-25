@@ -88,7 +88,6 @@ const createExitClearance = async (data) => {
       include: {
         exit_clearance_employee: { select: { id: true, full_name: true } },
         exit_clearance_by_user: { select: { id: true, full_name: true } },
-
         hrms_d_exit_clearance1: {
           include: {
             exit_clearance_pay: true,
@@ -318,10 +317,42 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
   }
 };
 
+const checkBulkClearance = async (employeeIds, month, year) => {
+  try {
+    const all = await prisma.hrms_d_exit_clearance.findMany({
+      where: {
+        employee_id: { in: employeeIds.map(Number) },
+      },
+      include: {
+        exit_clearance_employee: { select: { id: true, full_name: true } },
+        exit_clearance_by_user: { select: { id: true, full_name: true } },
+        hrms_d_exit_clearance1: {
+          include: {
+            exit_clearance_pay: true,
+          },
+        },
+      },
+      orderBy: { createdate: "desc" },
+    });
+
+    const filtered = all.filter((item) => {
+      if (!item.clearance_date) return false;
+      const date = new Date(item.clearance_date);
+      return date.getMonth() + 1 === month && date.getFullYear() === year;
+    });
+
+    return filtered;
+  } catch (error) {
+    console.error("Error in checkBulkClearance:", error);
+    throw new CustomError("Error checking bulk clearance", 400);
+  }
+};
+
 module.exports = {
   createExitClearance,
   findExitClearanceById,
   updateExitClearance,
   deleteExitClearance,
   getAllExitClearance,
+  checkBulkClearance,
 };

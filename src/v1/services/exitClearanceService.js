@@ -26,10 +26,15 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
   );
 };
 
+const checkBulkClearance = async (employeeIds, month, year) => {
+  return await exitClearanceModel.checkBulkClearance(employeeIds, month, year);
+};
+
 module.exports = {
   createExitClearance,
   findExitClearanceById,
   updateExitClearance,
   deleteExitClearance,
   getAllExitClearance,
+  checkBulkClearance,
 };
