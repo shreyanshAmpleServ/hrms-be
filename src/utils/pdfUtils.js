@@ -1,169 +1,3 @@
-// // const PDFDocument = require("pdfkit");
-// // const fs = require("fs");
-// // const path = require("path");
-
-// // const generatePayslipPDF = (data, filePath) => {
-// //   return new Promise((resolve, reject) => {
-// //     const doc = new PDFDocument({ margin: 50 });
-// //     const stream = fs.createWriteStream(filePath);
-// //     doc.pipe(stream);
-
-// //     doc.fontSize(20).text("PAY SLIP", { align: "center" });
-// //     doc
-// //       .moveDown()
-// //       .fontSize(12)
-// //       .text(`For the Month Of ${data.payroll_month}, ${data.payroll_year}`, {
-// //         align: "center",
-// //       });
-// //     doc.moveDown();
-
-// //     doc.fontSize(10);
-
-// //     const excludeKeys = new Set([
-// //       "earnings",
-// //       "deductions",
-// //       "full_name",
-// //       "designation",
-// //       "bank_name",
-// //       "bank_account",
-// //       "pay_point",
-// //       "pf_hr_id",
-// //     ]);
-
-// //     Object.keys(data).forEach((key) => {
-// //       if (!excludeKeys.has(key) && typeof data[key] !== "object") {
-// //         const label = key
-// //           .replace(/_/g, " ")
-// //           .replace(/\b\w/g, (l) => l.toUpperCase());
-// //         doc.text(`${label} : ${data[key]}`);
-// //       }
-// //     });
-
-// //     doc.text(`Full Name : ${data.full_name}`);
-// //     doc.text(`Designation : ${data.designation}`);
-// //     doc.text(`PF HR ID : ${data.pf_hr_id}`);
-
-// //     doc.moveDown();
-// //     doc.fontSize(12).text("Earnings", { underline: true });
-// //     (data.earnings || []).forEach((e) => doc.text(`${e.label} : ${e.amount}`));
-
-// //     doc.moveDown();
-// //     doc.fontSize(12).text("Deductions", { underline: true });
-// //     (data.deductions || []).forEach((d) =>
-// //       doc.text(`${d.label} : ${d.amount}`)
-// //     );
-
-// //     doc.moveDown();
-// //     doc.text(`Net Amount : ${data.net_pay}`);
-
-// //     doc.moveDown();
-// //     doc.fontSize(12).text("Salary Transfer", { underline: true });
-// //     doc.text(`Bank Name : ${data.bank_name}`);
-// //     doc.text(`Pay Point : ${data.pay_point}`);
-// //     doc.text(`Bank A/c No. : ${data.bank_account}`);
-// //     doc.text(`Amount : ${data.net_pay}`);
-
-// //     doc.moveDown();
-// //     doc.text(
-// //       "The net pay is accepted and I the undersigned shall have no further claim related to my employment up to date of __/__/____"
-// //     );
-// //     doc.text("Signature ________________________");
-
-// //     doc.end();
-
-// //     stream.on("finish", () => resolve(filePath));
-// //     stream.on("error", reject);
-// //   });
-// // };
-
-// // module.exports = { generatePayslipPDF };
-
-// const PDFDocument = require("pdfkit");
-// const fs = require("fs");
-// const path = require("path");
-
-// const generatePayslipPDF = (data, filePath) => {
-//   return new Promise((resolve, reject) => {
-//     const doc = new PDFDocument({ margin: 50 });
-//     const stream = fs.createWriteStream(filePath);
-//     doc.pipe(stream);
-
-//     doc.fontSize(20).text("PAY SLIP", { align: "center" });
-//     doc
-//       .moveDown()
-//       .fontSize(12)
-//       .text(`For the Month Of ${data.payroll_month}, ${data.payroll_year}`, {
-//         align: "center",
-//       });
-//     doc.moveDown();
-
-//     const field = (label, value) => doc.text(`${label} : ${value ?? ""}`);
-
-//     doc.fontSize(10);
-//     field("Id", data.id);
-//     field("Employee Id", data.employee_id);
-//     field("Payroll Month", data.payroll_month);
-//     field("Payroll Year", data.payroll_year);
-//     field("Payroll Week", data.payroll_week);
-//     field("Payroll Paid Days", data.payroll_paid_days);
-//     field("Pay Currency", data.pay_currency);
-//     field("Status", data.status);
-//     field("Processed", data.processed);
-//     field("Je Transid", data.je_transid);
-//     field("Project Id", data.project_id);
-//     field("Cost Center1 Id", data.cost_center1_id);
-//     field("Cost Center2 Id", data.cost_center2_id);
-//     field("Cost Center3 Id", data.cost_center3_id);
-//     field("Cost Center4 Id", data.cost_center4_id);
-//     field("Cost Center5 Id", data.cost_center5_id);
-//     field("Approved1", data.approved1);
-//     field("Approver1 Id", data.approver1_id);
-//     field("Employee Email", data.employee_email);
-//     field("Createdby", data.createdby);
-//     field("Updatedby", data.updatedby);
-//     field("Location", data.location);
-//     field("Nrc No", data.nrc_no);
-//     field("Tpin No", data.tpin_no);
-//     field("Cost Center", data.cost_center);
-//     field("Bank Id", data.bank_id);
-//     field("Napsa No", data.napsa_no);
-//     field("Nhis No", data.nhis_no);
-//     field("Full Name", data.full_name);
-//     field("Designation", data.designation);
-//     field("PF HR ID", data.pf_hr_id);
-
-//     doc.moveDown().fontSize(12).text("Earnings", { underline: true });
-//     data.earnings?.forEach((e) => field(e.label, e.amount));
-//     doc.moveDown();
-
-//     doc.fontSize(12).text("Deductions", { underline: true });
-//     data.deductions?.forEach((d) => field(d.label, d.amount));
-//     doc.moveDown();
-
-//     field("Net Amount", data.net_pay);
-//     doc.moveDown();
-
-//     doc.fontSize(12).text("Salary Transfer", { underline: true });
-//     field("Bank Name", data.bank_name);
-//     field("Pay Point", data.pay_point);
-//     field("Bank A/c No.", data.bank_account);
-//     field("Amount", data.net_pay);
-
-//     doc.moveDown();
-//     doc.text(
-//       "The net pay is accepted and I the undersigned shall have no further claim related to my"
-//     );
-//     doc.text("employment up to date of __/__/____");
-//     doc.text("Signature ________________________");
-
-//     doc.end();
-//     stream.on("finish", () => resolve(filePath));
-//     stream.on("error", reject);
-//   });
-// };
-
-// module.exports = { generatePayslipPDF };
-
 const fs = require("fs");
 const path = require("path");
 
@@ -192,13 +26,39 @@ const payslipTemplate = `<!DOCTYPE html>
             min-height: 29.7cm;
             background: white;
             margin: 0 auto;
-            padding: 40px;
+            padding: 20px;
             box-shadow: 0 0 10px rgba(0,0,0,0.1);
         }
 
         .header {
-            text-align: center;
-            margin-bottom: 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #000;
+        }
+
+        .logo-section {
+            flex: 0 0 200px;
+        }
+
+        .logo {
+            width: 150px;
+            height: 80px;
+            background: #000;
+            color: #ffd700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 18px;
+            border: 2px dashed #ccc;
+        }
+
+        .payslip-header {
+            flex: 1;
+            text-align: right;
         }
 
         .gross-summary {
@@ -210,32 +70,35 @@ const payslipTemplate = `<!DOCTYPE html>
         }
 
         .payslip-title {
-            font-size: 24px;
+            font-size: 28px;
             font-weight: bold;
             margin: 10px 0;
         }
 
         .month-year {
             font-size: 14px;
-            margin-bottom: 30px;
+            margin-bottom: 10px;
         }
 
         .employee-info {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 5px 40px;
-            font-size: 12px;
-            line-height: 1.6;
-            margin-bottom: 30px;
+            gap: 10px;
+            margin-bottom: 20px;
+            border: 2px dashed #ccc;
+            padding: 15px;
         }
 
         .info-row {
             display: flex;
-            align-items: flex-start;
+            align-items: center;
+            font-size: 12px;
+            line-height: 1.4;
+            padding: 2px 0;
         }
 
         .info-label {
-            font-weight: bold;
+            font-weight: normal;
             min-width: 120px;
             flex-shrink: 0;
         }
@@ -246,69 +109,123 @@ const payslipTemplate = `<!DOCTYPE html>
 
         .info-value {
             flex: 1;
+            font-weight: normal;
         }
 
         .earnings-deductions {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 40px;
-            margin-bottom: 30px;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .earnings, .deductions {
+            background-color: #f9f9f9;
+            padding: 10px;
         }
 
         .section-title {
             font-size: 14px;
             font-weight: bold;
             margin-bottom: 10px;
-            text-decoration: underline;
+            background-color: #e6e6e6;
+            padding: 5px;
+            text-align: center;
         }
 
         .amount-row {
             display: flex;
             justify-content: space-between;
             font-size: 12px;
-            line-height: 1.4;
-            margin-bottom: 2px;
+            line-height: 1.6;
+            padding: 2px 5px;
+            border-bottom: 1px solid #ddd;
         }
 
-        .net-amount {
-            font-size: 14px;
+        .amount-row:last-child {
+            border-bottom: none;
+        }
+
+        .total-row {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
             font-weight: bold;
-            margin: 20px 0;
-            text-align: left;
+            padding: 5px;
+            background-color: #e6e6e6;
+            margin-top: 5px;
+        }
+
+        .net-pay-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+            font-size: 12px;
+        }
+
+        .paye-section, .net-amount-section {
+            background-color: #f9f9f9;
+            padding: 10px;
+            text-align: center;
         }
 
         .salary-transfer {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+
+        .salary-transfer-title {
+            font-size: 14px;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 10px;
+            background-color: #e6e6e6;
+            padding: 5px;
         }
 
         .bank-info {
-            display: flex;
-            font-size: 12px;
-            line-height: 1.6;
-            margin-top: 10px;
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr 1fr;
+            background-color: #f9f9f9;
         }
 
-        .bank-column {
-            flex: 1;
-            text-align: center;
+        .bank-header {
+            font-size: 12px;
             font-weight: bold;
+            padding: 8px;
+            text-align: center;
+            background-color: #e6e6e6;
+            border: 1px solid #ccc;
+        }
+
+        .bank-value {
+            font-size: 12px;
+            padding: 8px;
+            text-align: center;
+            border: 1px solid #ccc;
         }
 
         .ot-hours {
-            margin-bottom: 30px;
+            margin-bottom: 20px;
+        }
+
+        .ot-hours-title {
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 10px;
         }
 
         .ot-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 5px 20px;
+            gap: 10px;
             font-size: 12px;
             line-height: 1.6;
-            margin-top: 10px;
         }
 
         .ot-row {
             display: flex;
+            align-items: center;
         }
 
         .ot-label {
@@ -322,12 +239,21 @@ const payslipTemplate = `<!DOCTYPE html>
         .declaration {
             font-size: 12px;
             line-height: 1.6;
-            margin-bottom: 20px;
+            margin-bottom: 30px;
         }
 
-        .signature {
+        .signature-section {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
             font-size: 12px;
-            margin-top: 20px;
+            margin-top: 40px;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            width: 200px;
+            height: 20px;
         }
 
         @media print {
@@ -338,6 +264,7 @@ const payslipTemplate = `<!DOCTYPE html>
             .payslip {
                 box-shadow: none;
                 margin: 0;
+                padding: 15px;
             }
         }
     </style>
@@ -345,12 +272,15 @@ const payslipTemplate = `<!DOCTYPE html>
 <body>
     <div class="payslip">
         <div class="header">
-            <div class="gross-summary">
-                <span>Gross Earning {{grossEarning}}</span>
-                <span>Gross Deduction {{grossDeduction}}</span>
+            <div class="logo-section">
+                <div class="logo">
+                    XYZ<br>CARGO
+                </div>
             </div>
-            <div class="payslip-title">PAY SLIP</div>
-            <div class="month-year">For the Month Of {{payrollMonth}}, {{payrollYear}}</div>
+            <div class="payslip-header">
+                <div class="payslip-title">PAY SLIP</div>
+                <div class="month-year">For the Month Of {{payrollMonth}}, {{payrollYear}}</div>
+            </div>
         </div>
 
         <div class="employee-info">
@@ -360,44 +290,14 @@ const payslipTemplate = `<!DOCTYPE html>
                 <span class="info-value">{{employeeId}}</span>
             </div>
             <div class="info-row">
-                <span class="info-label">PF HR ID</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{pfHrId}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Employee Name</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{fullName}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Designation</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{designation}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Location</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{location}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Cost Center</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{costCenter}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">NAPSA No.</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{napsaNo}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Taxable Pay YTD</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{taxablePayYtd}}</span>
-            </div>
-            <div class="info-row">
                 <span class="info-label">Basic</span>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{basicPay}}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">PF HR ID</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{pfHrId}}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">TPIN NO.</span>
@@ -405,9 +305,19 @@ const payslipTemplate = `<!DOCTYPE html>
                 <span class="info-value">{{tpinNo}}</span>
             </div>
             <div class="info-row">
+                <span class="info-label">Employee Name</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{fullName}}</span>
+            </div>
+            <div class="info-row">
                 <span class="info-label">NRC NO.</span>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{nrcNo}}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Designation</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{designation}}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">NHIS NO.</span>
@@ -415,9 +325,19 @@ const payslipTemplate = `<!DOCTYPE html>
                 <span class="info-value">{{nhisNo}}</span>
             </div>
             <div class="info-row">
+                <span class="info-label">Location</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{location}}</span>
+            </div>
+            <div class="info-row">
                 <span class="info-label">Leave Days</span>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{leaveDays}}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Cost Center</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{costCenter}}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Leave Value</span>
@@ -425,9 +345,19 @@ const payslipTemplate = `<!DOCTYPE html>
                 <span class="info-value">{{leaveValue}}</span>
             </div>
             <div class="info-row">
+                <span class="info-label">NAPSA No.</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{napsaNo}}</span>
+            </div>
+            <div class="info-row">
                 <span class="info-label">ENG Date</span>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{engDate}}</span>
+            </div>
+            <div class="info-row">
+                <span class="info-label">Taxable Pay YTD</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{taxablePayYtd}}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Tax Year To Date</span>
@@ -440,35 +370,48 @@ const payslipTemplate = `<!DOCTYPE html>
             <div class="earnings">
                 <div class="section-title">Earnings Amount</div>
                 {{earningsRows}}
+                <div class="total-row">
+                    <span>Gross Earning</span>
+                    <span>{{grossEarning}}</span>
+                </div>
             </div>
             <div class="deductions">
                 <div class="section-title">Deductions Amount</div>
                 {{deductionsRows}}
+                <div class="total-row">
+                    <span>Gross Deduction</span>
+                    <span>{{grossDeduction}}</span>
+                </div>
             </div>
         </div>
 
-        <div class="net-amount">
-            Net Amount: {{netPay}}
+        <div class="net-pay-section">
+            <div class="paye-section">
+                <strong>Paye</strong><br>
+                {{paye}}
+            </div>
+            <div class="net-amount-section">
+                <strong>Net Amount</strong><br>
+                {{netPay}}
+            </div>
         </div>
 
         <div class="salary-transfer">
-            <div class="section-title">Salary Transfer</div>
+            <div class="salary-transfer-title">Salary Transfer</div>
             <div class="bank-info">
-                <div class="bank-column">Bank Name</div>
-                <div class="bank-column">Pay Point</div>
-                <div class="bank-column">Bank A/c No.</div>
-                <div class="bank-column">Amount</div>
-            </div>
-            <div class="bank-info">
-                <div class="bank-column">{{bankName}}</div>
-                <div class="bank-column">{{payPoint}}</div>
-                <div class="bank-column">{{bankAccount}}</div>
-                <div class="bank-column">{{netPay}}</div>
+                <div class="bank-header">Bank Name</div>
+                <div class="bank-header">Pay Point</div>
+                <div class="bank-header">Bank A/c No.</div>
+                <div class="bank-header">Amount</div>
+                <div class="bank-value">{{bankName}}</div>
+                <div class="bank-value">{{payPoint}}</div>
+                <div class="bank-value">{{bankAccount}}</div>
+                <div class="bank-value">{{netPay}}</div>
             </div>
         </div>
 
         <div class="ot-hours">
-            <div class="section-title">OT HOURS</div>
+            <div class="ot-hours-title">OT HOURS</div>
             <div class="ot-grid">
                 <div class="ot-row">
                     <span class="ot-label">Actual Worked Hours</span>
@@ -476,24 +419,24 @@ const payslipTemplate = `<!DOCTYPE html>
                     <span>{{actualWorkedHours}}</span>
                 </div>
                 <div class="ot-row">
-                    <span class="ot-label">Work Day OT</span>
-                    <span class="ot-colon">:</span>
-                    <span>{{workDayOt}}</span>
-                </div>
-                <div class="ot-row">
-                    <span class="ot-label">Night Hours</span>
-                    <span class="ot-colon">:</span>
-                    <span>{{nightHours}}</span>
-                </div>
-                <div class="ot-row">
                     <span class="ot-label">Expected Worked Hours</span>
                     <span class="ot-colon">:</span>
                     <span>{{expectedWorkedHours}}</span>
                 </div>
                 <div class="ot-row">
+                    <span class="ot-label">Work Day OT</span>
+                    <span class="ot-colon">:</span>
+                    <span>{{workDayOt}}</span>
+                </div>
+                <div class="ot-row">
                     <span class="ot-label">Sunday & Public Holiday OT</span>
                     <span class="ot-colon">:</span>
                     <span>{{sundayPublicHolidayOt}}</span>
+                </div>
+                <div class="ot-row">
+                    <span class="ot-label">Night Hours</span>
+                    <span class="ot-colon">:</span>
+                    <span>{{nightHours}}</span>
                 </div>
                 <div class="ot-row">
                     <span class="ot-label">Leave Days Taken</span>
@@ -507,8 +450,9 @@ const payslipTemplate = `<!DOCTYPE html>
             The net pay is accepted and I the undersigned shall have no further claim related to my employment up to date of _ _/_ _/_ _ _ _
         </div>
 
-        <div class="signature">
-            Signature ________________________
+        <div class="signature-section">
+            <span>Signature</span>
+            <div class="signature-line"></div>
         </div>
     </div>
 </body>
@@ -559,6 +503,13 @@ const generatePayslipHTML = (data, filePath = null) => {
       );
       const basicPay = basicPayEarning ? basicPayEarning.amount : "0.00";
 
+      // Find PAYE from deductions
+      const payeDeduction = (data.deductions || []).find(
+        (d) => d.label && d.label.toLowerCase().includes("paye")
+      );
+      const paye = payeDeduction ? payeDeduction.tax_amount : "0.00";
+
+      console.log("paye", data);
       // Prepare template data
       const templateData = {
         grossEarning,
@@ -584,6 +535,7 @@ const generatePayslipHTML = (data, filePath = null) => {
         earningsRows,
         deductionsRows,
         netPay: data.net_pay || "0.00",
+        paye,
         bankName: data.bank_name || "",
         payPoint: data.pay_point || "",
         bankAccount: data.bank_account || "",
@@ -626,7 +578,10 @@ const generatePayslipPDF = async (data, filePath) => {
 
     const htmlContent = await generatePayslipHTML(data);
 
-    const browser = await puppeteer.launch();
+    const browser = await puppeteer.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
     const page = await browser.newPage();
 
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
@@ -655,58 +610,3 @@ module.exports = {
   generatePayslipHTML,
   generatePayslipPDF,
 };
-
-// Usage Example:
-/*
-const payrollData = {
-  employee_id: "1",
-  pf_hr_id: "1-006",
-  full_name: "LAWRENCE CHINTU",
-  designation: "OFFICE ORDERLY",
-  location: "ZAMBIA",
-  cost_center: "CHINTU LAWRENCE",
-  napsa_no: "303111919",
-  tpin_no: "2205909953",
-  nrc_no: "370008/61/1",
-  nhis_no: "5392129110127",
-  payroll_month: "February",
-  payroll_year: "2025",
-  net_pay: "7,450.58",
-  bank_name: "NMB",
-  pay_point: "NDOLA",
-  bank_account: "E WALLET",
-  leave_days: "32.00",
-  leave_value: "2,826.94",
-  eng_date: "01/11/1999",
-  tax_year_to_date: "8,733.78",
-  leave_days_taken: "10.00",
-  earnings: [
-    { label: "BASIC PAY", amount: "2,296.89" },
-    { label: "HOUSING ALLOWANCE", amount: "689.07" },
-    { label: "LUNCH ALLOWANCE", amount: "220.00" },
-    { label: "TRANSPORT ALLOWANCE", amount: "200.00" },
-    { label: "EX-GRATIA PAYMENT", amount: "960.93" },
-    { label: "GRATUITY", amount: "3,500.00" }
-  ],
-  deductions: [
-    { label: "NAPSA", amount: "393.34" },
-    { label: "NHIMA", amount: "22.97" },
-    { label: "Paye", amount: "0.00" }
-  ]
-};
-
-// Generate HTML file
-generatePayslipHTML(payrollData, './payslip.html')
-  .then(filePath => console.log('HTML generated:', filePath))
-  .catch(error => console.error('Error:', error));
-
-// Generate PDF file (requires puppeteer)
-generatePayslipPDF(payrollData, './payslip.pdf')
-  .then(filePath => console.log('PDF generated:', filePath))
-  .catch(error => console.error('Error:', error));
-
-// Get HTML content as string
-generatePayslipHTML(payrollData)
-  .then(htmlContent => console.log('HTML content generated'))
-  .catch(error => console.error('Error:', error));
-*/
