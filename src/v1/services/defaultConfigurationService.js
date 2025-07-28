@@ -32,10 +32,17 @@ const getAllDefaultConfiguration = async (
   );
 };
 
+const updateDefaultConfigurationService = async (id, data) => {
+  return await defaultConfigurationModel.updateDefaultConfigurationModel(
+    id,
+    data
+  );
+};
 module.exports = {
   createDefaultConfiguration,
   findDefaultConfiguration,
   updateDefaultConfiguration,
   getAllDefaultConfiguration,
   deleteDefaultConfiguration,
+  updateDefaultConfigurationService,
 };

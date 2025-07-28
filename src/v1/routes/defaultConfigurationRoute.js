@@ -41,4 +41,15 @@ router.delete(
   authenticateToken,
   defaultConfigurationController.deleteDefaultConfiguration
 );
+
+router.post(
+  "/default-configuration-upsert",
+  upload.fields([
+    { name: "company_logo", maxCount: 1 },
+    { name: "company_signature", maxCount: 1 },
+  ]),
+  authenticateToken,
+  defaultConfigurationController.createOrUpdateDefaultConfiguration
+);
+
 module.exports = router;

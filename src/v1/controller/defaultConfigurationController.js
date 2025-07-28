@@ -153,10 +153,79 @@ const getAllDefaultConfiguration = async (req, res, next) => {
   }
 };
 
+const createOrUpdateDefaultConfiguration = async (req, res, next) => {
+  try {
+    const id = req.body.id;
+    const isUpdate = id && !isNaN(Number(id));
+    let existingData = null;
+
+    if (isUpdate) {
+      existingData = await defaultConfigurationService.findDefaultConfiguration(
+        id
+      );
+    }
+
+    let companyLogoUrl = existingData?.company_logo || null;
+    let companySignatureUrl = existingData?.company_signature || null;
+
+    // Upload company logo if sent
+    if (req.files?.company_logo) {
+      const file = req.files.company_logo[0];
+      companyLogoUrl = await uploadToBackblaze(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        "company_logo"
+      );
+
+      if (isUpdate && existingData?.company_logo) {
+        await deleteFromBackblaze(existingData.company_logo);
+      }
+    }
+
+    // Upload signature if sent
+    if (req.files?.company_signature) {
+      const file = req.files.company_signature[0];
+      companySignatureUrl = await uploadToBackblaze(
+        file.buffer,
+        file.originalname,
+        file.mimetype,
+        "company_signature"
+      );
+
+      if (isUpdate && existingData?.company_signature) {
+        await deleteFromBackblaze(existingData.company_signature);
+      }
+    }
+
+    const data = {
+      ...req.body,
+      id: isUpdate ? Number(id) : undefined,
+      employee_id: Number(req.body.employee_id),
+      company_logo: companyLogoUrl,
+      company_signature: companySignatureUrl,
+      updatedby: Number(req.user.employee_id),
+      createdby: Number(req.user.employee_id),
+      log_inst: req.user.log_inst || Number(req.user.employee_id),
+    };
+
+    const result =
+      await defaultConfigurationService.updateDefaultConfigurationService(
+        id,
+        data
+      );
+
+    res.status(200).success("Default Configuration saved successfully", result);
+  } catch (err) {
+    next(err);
+  }
+};
+
 module.exports = {
   createDefaultConfiguration,
   getAllDefaultConfiguration,
   updateDefaultConfiguration,
   deleteDefaultConfiguration,
   findDefaultConfiguration,
+  createOrUpdateDefaultConfiguration,
 };
