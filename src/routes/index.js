@@ -134,7 +134,7 @@ const loanEmiScheduleRoute = require("../v1/routes/loanEmiScheduleRoute");
 const loanMasterRoute = require("../v1/routes/loanMasterRoute.js");
 const overtimeSetupRoute = require("../v1/routes/overtimeSetupRoute.js");
 const loanCashPayementRoute = require("../v1/routes/loanCashPayementRoute.js");
-
+const defaultConfigurationRoute = require("../v1/routes/defaultConfigurationRoute.js");
 const router = express.Router();
 
 // Version 1 API
@@ -273,6 +273,7 @@ router.use("/v1", loanEmiScheduleRoute);
 router.use("/v1", loanMasterRoute);
 router.use("/v1", overtimeSetupRoute);
 router.use("/v1", loanCashPayementRoute);
+router.use("/v1", defaultConfigurationRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;

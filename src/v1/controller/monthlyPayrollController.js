@@ -2,6 +2,8 @@ const monthlyPayrollService = require("../services/monthlyPayrollService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const { success } = require("zod/v4");
+const fs = require("fs");
+const path = require("path");
 
 const createMonthlyPayroll = async (req, res, next) => {
   try {
@@ -168,7 +170,25 @@ const downloadPayslipPDF = async (req, res, next) => {
       payroll_year
     );
 
-    return res.download(filePath);
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="payslip.pdf"');
+
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("Error sending PDF file:", err);
+        return next(err);
+      }
+
+      setTimeout(() => {
+        fs.unlink(filePath, (unlinkErr) => {
+          if (unlinkErr) {
+            console.error("Error deleting PDF file:", unlinkErr);
+          } else {
+            console.log(`Deleted temporary PDF: ${filePath}`);
+          }
+        });
+      }, 5 * 60 * 1000);
+    });
   } catch (error) {
     next(error);
   }

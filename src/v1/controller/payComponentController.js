@@ -28,37 +28,37 @@ const findPayComponentById = async (req, res, next) => {
 };
 
 // update all pay component
-const updatePayComponent = async (req, res, next) => {
-  try {
-    // const attachmentPath = req.file ? req.file.path : null;
-    let departmentData = { ...req.body };
-    // if (attachmentPath) departmentData.attachment = generateFullUrl(req, attachmentPath);
-
-    // departmentData = sanitizedepartmentData(departmentData);
-
-    const department = await payComponentService.updatePayComponent(
-      req.params.id,
-      departmentData
-    );
-    res.status(200).success("Pay component updated successfully", department);
-  } catch (error) {
-    next(error);
-  }
-};
-
-// update all pay component -New made for emergengency(Test by shivang)
 // const updatePayComponent = async (req, res, next) => {
 //   try {
-//     const result = await payComponentService.updatePayComponent();
-//     res.status(200).json({
-//       success: true,
-//       message: "All pay components updated successfully",
-//       data: result,
-//     });
+//     // const attachmentPath = req.file ? req.file.path : null;
+//     let departmentData = { ...req.body };
+//     // if (attachmentPath) departmentData.attachment = generateFullUrl(req, attachmentPath);
+
+//     // departmentData = sanitizedepartmentData(departmentData);
+
+//     const department = await payComponentService.updatePayComponent(
+//       req.params.id,
+//       departmentData
+//     );
+//     res.status(200).success("Pay component updated successfully", department);
 //   } catch (error) {
 //     next(error);
 //   }
 // };
+
+// update all pay component -New made for emergengency(Test by shivang)
+const updatePayComponent = async (req, res, next) => {
+  try {
+    const result = await payComponentService.updatePayComponent();
+    res.status(200).json({
+      success: true,
+      message: "All pay components updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const deletePayComponent = async (req, res, next) => {
   try {
