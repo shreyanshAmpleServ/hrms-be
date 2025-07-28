@@ -62,4 +62,16 @@ router.get(
   monthlyPayrollController.getGeneratedMonthlyPayroll
 );
 
+router.post(
+  "/monthly-payroll/generate-pdf",
+  authenticateToken,
+  monthlyPayrollController.createOrUpdateMonthlyPayroll
+);
+
+router.get(
+  "/monthly-payroll-download/download",
+  authenticateToken,
+  monthlyPayrollController.downloadPayslipPDF
+);
+
 module.exports = router;

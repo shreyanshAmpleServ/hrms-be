@@ -102,6 +102,7 @@ const triggerMonthlyPayrollCalculationSP = async (req, res, next) => {
     next(error);
   }
 };
+
 const getComponentNames = async (req, res, next) => {
   try {
     const data = await monthlyPayrollService.getComponentNames();
@@ -153,6 +154,26 @@ const getGeneratedMonthlyPayroll = async (req, res, next) => {
   }
 };
 
+const downloadPayslipPDF = async (req, res, next) => {
+  try {
+    const { employee_id, payroll_month, payroll_year } = req.query;
+
+    if (!employee_id || !payroll_month || !payroll_year) {
+      throw new CustomError("Missing required parameters", 400);
+    }
+
+    const filePath = await monthlyPayrollService.downloadPayslipPDF(
+      employee_id,
+      payroll_month,
+      payroll_year
+    );
+
+    return res.download(filePath);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayroll,
@@ -164,4 +185,5 @@ module.exports = {
   triggerMonthlyPayrollCalculationSP,
   createOrUpdateMonthlyPayroll,
   getGeneratedMonthlyPayroll,
+  downloadPayslipPDF,
 };

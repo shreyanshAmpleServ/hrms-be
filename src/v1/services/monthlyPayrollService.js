@@ -1,6 +1,8 @@
 const monthlyPayrollModel = require("../models/monthlyPayrollModel.js");
 const CustomError = require("../../utils/CustomError");
-
+const { generatePayslipPDF } = require("../../utils/pdfUtils.js");
+const fs = require("fs");
+const path = require("path");
 const createMonthlyPayroll = async (data) => {
   return await monthlyPayrollModel.createMonthlyPayroll(data);
 };
@@ -73,6 +75,7 @@ const triggerMonthlyPayrollCalculationSP = async (params) => {
 const getComponentNames = async () => {
   return await monthlyPayrollModel.getComponentNames();
 };
+
 const createOrUpdatePayrollBulk = async (rows, user) => {
   return await monthlyPayrollModel.createOrUpdatePayrollBulk(rows, user);
 };
@@ -96,6 +99,30 @@ const getGeneratedMonthlyPayroll = async (
     payroll_year
   );
 };
+
+const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
+  const data = await monthlyPayrollModel.downloadPayslipPDF(
+    employee_id,
+    payroll_month,
+    payroll_year
+  );
+
+  if (!data) {
+    throw new CustomError("Payslip not found", 404);
+  }
+
+  const fileName = `payslip_${employee_id}_${payroll_month}_${payroll_year}.pdf`;
+  const filePath = path.join(__dirname, `../../pdfs/${fileName}`);
+
+  if (!fs.existsSync(path.dirname(filePath))) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  }
+
+  await generatePayslipPDF(data, filePath);
+
+  return filePath;
+};
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
@@ -107,4 +134,5 @@ module.exports = {
   triggerMonthlyPayrollCalculationSP,
   createOrUpdatePayrollBulk,
   getGeneratedMonthlyPayroll,
+  downloadPayslipPDF,
 };

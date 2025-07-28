@@ -560,6 +560,194 @@ const getGeneratedMonthlyPayroll = async (
   }
 };
 
+// const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
+//   try {
+//     const payroll = await prisma.$queryRawUnsafe(`
+//       SELECT
+//   mp.*,
+//   emp.full_name,
+//   emp.employee_code AS pf_hr_id,
+//   emp.account_number AS bank_account,
+//   emp.work_location AS location,
+//   emp.join_date AS engagement_date,
+//   emp.national_id_number AS nrc_no,
+//   emp.identification_number AS tpin_no,
+//   emp.cost_center_id AS cost_center,
+//   emp.email AS employee_email,
+//   emp.bank_id,
+//   emp.payment_mode,
+//   d.designation_name AS designation,
+//   b.bank_name AS bank_name
+// FROM hrms_d_monthly_payroll_processing mp
+// LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+// LEFT JOIN hrms_m_designation_master d ON d.id = emp.designation_id
+// LEFT JOIN hrms_m_bank_master b ON b.id = emp.bank_id
+// WHERE mp.employee_id = ${employee_id}
+//   AND mp.payroll_month = ${payroll_month}
+//   AND mp.payroll_year = ${payroll_year}
+
+//     `);
+
+//     if (!payroll || payroll.length === 0) return null;
+
+//     const record = payroll[0];
+
+//     const componentLabels = {
+//       1111001: "BASIC PAY",
+//       1111002: "HOUSING ALLOWANCE",
+//       1111003: "LUNCH ALLOWANCE",
+//       1111004: "TRANSPORT ALLOWANCE",
+//       1111005: "EX-GRATIA PAYMENT",
+//       1111006: "GRATUITY",
+//       1112001: "NAPSA",
+//       1112002: "NHIMA",
+//       1112003: "Paye",
+//     };
+
+//     const earnings = [];
+//     const deductions = [];
+
+//     for (const key in record) {
+//       if (/^\d{7}$/.test(key) && Number(record[key]) !== 0) {
+//         const label = componentLabels[key] || `Component ${key}`;
+//         if (parseInt(key) < 1112000) {
+//           earnings.push({ label, amount: Number(record[key]) });
+//         } else {
+//           deductions.push({ label, amount: Number(record[key]) });
+//         }
+//       }
+//     }
+
+//     return {
+//       employee_id: record.employee_id,
+//       pf_hr_id: record.pf_hr_id || "",
+//       full_name: record.full_name || "",
+//       designation: record.designation || "",
+//       location: record.location || "",
+//       cost_center1_id: record.cost_center1_id || "",
+//       cost_center2_id: record.cost_center2_id || "",
+//       cost_center3_id: record.cost_center3_id || "",
+//       cost_center4_id: record.cost_center4_id || "",
+//       cost_center5_id: record.cost_center5_id || "",
+//       napsa_no: record.napsa_no || "",
+//       tpin_no: record.tpin_no || "",
+//       nrc_no: record.nrc_no || "",
+//       nhis_no: record.nhis_no || "",
+
+//       engagement_date: record.engagement_date
+//         ? new Date(record.engagement_date).toDateString()
+//         : "",
+
+//       leave_days: record.leave_days || 0,
+//       leave_value: record.leave_value || 0,
+
+//       taxable_ytd: record.taxable_earnings || 0,
+//       tax_ytd: record.tax_amount || 0,
+
+//       earnings,
+//       deductions,
+//       net_pay: record.net_pay || 0,
+
+//       bank_name: record.bank_name || "NMB",
+//       pay_point: record.pay_point || "NDOLA E WALLET",
+//       bank_account: record.bank_account || "********",
+
+//       leave_taken: record.leave_taken || 0,
+//       actual_hours: record.actual_hours || "",
+//       workday_ot: record.workday_ot || "",
+//       night_hours: record.night_hours || "",
+//       sunday_ot: record.sunday_ot || "",
+
+//       month: record.payroll_month || "",
+//       year: record.payroll_year || "",
+//     };
+//   } catch (error) {
+//     console.error("Raw payslip fetch error:", error);
+//     throw new CustomError("Error fetching payslip data", 500);
+//   }
+// };
+
+const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
+  try {
+    const payroll = await prisma.$queryRawUnsafe(`
+  SELECT 
+    mp.*,  
+    emp.full_name,
+    emp.employee_code AS pf_hr_id,
+    emp.account_number AS bank_account,
+    emp.work_location AS location,
+    emp.join_date AS engagement_date,
+    emp.national_id_number AS nrc_no,
+    emp.identification_number AS tpin_no,
+    emp.cost_center_id AS cost_center,
+    emp.email AS employee_email,
+    emp.bank_id,
+    emp.payment_mode,
+    d.designation_name AS designation,
+    b.bank_name AS bank_name
+  FROM hrms_d_monthly_payroll_processing mp
+  LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+  LEFT JOIN hrms_m_designation_master d ON d.id = emp.designation_id
+  LEFT JOIN hrms_m_bank_master b ON b.id = emp.bank_id
+  WHERE mp.employee_id = ${Number(employee_id)}
+    AND mp.payroll_month = ${Number(payroll_month)}
+    AND mp.payroll_year = ${Number(payroll_year)}
+`);
+
+    const record = payroll[0];
+
+    const componentLabels = {
+      1111001: "BASIC PAY",
+      1111002: "HOUSING ALLOWANCE",
+      1111003: "LUNCH ALLOWANCE",
+      1111004: "TRANSPORT ALLOWANCE",
+      1111005: "EX-GRATIA PAYMENT",
+      1111006: "GRATUITY",
+      1112001: "NAPSA",
+      1112002: "NHIMA",
+      1112003: "Paye",
+    };
+
+    const earnings = [];
+    const deductions = [];
+
+    for (const key in record) {
+      if (/^\d+$/.test(key) && Number(record[key]) !== 0) {
+        const label = componentLabels[key] || `Component ${key}`;
+        if (parseInt(key) < 1112000) {
+          earnings.push({ label, amount: Number(record[key]) });
+        } else {
+          deductions.push({ label, amount: Number(record[key]) });
+        }
+      }
+    }
+
+    return {
+      ...record,
+      pf_hr_id: record.pf_hr_id || "",
+      full_name: record.full_name || "",
+      designation: record.designation || "",
+      location: record.location || "",
+      cost_center: record.cost_center || "",
+
+      napsa_no: record.napsa_no || "",
+      tpin_no: record.tpin_no || "",
+      nrc_no: record.nrc_no || "",
+      nhis_no: record.nhis_no || "",
+
+      engagement_date: record.engagement_date || "",
+      bank_account: record.bank_account || "********",
+      bank_name: record.bank_name || "NMB",
+
+      earnings,
+      deductions,
+    };
+  } catch (error) {
+    console.error("Raw payslip fetch error:", error);
+    throw new CustomError("Error fetching payslip data", 500);
+  }
+};
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
@@ -571,4 +759,5 @@ module.exports = {
   triggerMonthlyPayrollCalculationSP,
   createOrUpdatePayrollBulk,
   getGeneratedMonthlyPayroll,
+  downloadPayslipPDF,
 };
