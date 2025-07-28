@@ -670,54 +670,73 @@ const getGeneratedMonthlyPayroll = async (
 const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
   try {
     const payroll = await prisma.$queryRawUnsafe(`
-  SELECT 
-    mp.*,  
-    emp.full_name,
-    emp.employee_code AS pf_hr_id,
-    emp.account_number AS bank_account,
-    emp.work_location AS location,
-    emp.join_date AS engagement_date,
-    emp.national_id_number AS nrc_no,
-    emp.identification_number AS tpin_no,
-    emp.cost_center_id AS cost_center,
-    emp.email AS employee_email,
-    emp.bank_id,
-    emp.payment_mode,
-    d.designation_name AS designation,
-    b.bank_name AS bank_name
-  FROM hrms_d_monthly_payroll_processing mp
-  LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
-  LEFT JOIN hrms_m_designation_master d ON d.id = emp.designation_id
-  LEFT JOIN hrms_m_bank_master b ON b.id = emp.bank_id
-  WHERE mp.employee_id = ${Number(employee_id)}
-    AND mp.payroll_month = ${Number(payroll_month)}
-    AND mp.payroll_year = ${Number(payroll_year)}
-`);
+      SELECT 
+        mp.*,  
+        emp.full_name,
+        emp.employee_code AS pf_hr_id,
+        emp.account_number AS bank_account,
+        emp.work_location AS location,
+        emp.join_date AS engagement_date,
+        emp.national_id_number AS nrc_no,
+        emp.identification_number AS tpin_no,
+        emp.cost_center_id AS cost_center,
+        emp.email AS employee_email,
+        emp.bank_id,
+        emp.payment_mode,
+        d.designation_name AS designation,
+        b.bank_name AS bank_name
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+      LEFT JOIN hrms_m_designation_master d ON d.id = emp.designation_id
+      LEFT JOIN hrms_m_bank_master b ON b.id = emp.bank_id
+      WHERE mp.employee_id = ${Number(employee_id)}
+        AND mp.payroll_month = ${Number(payroll_month)}
+        AND mp.payroll_year = ${Number(payroll_year)}
+    `);
 
     const record = payroll[0];
 
-    const componentLabels = {
-      1111001: "BASIC PAY",
-      1111002: "HOUSING ALLOWANCE",
-      1111003: "LUNCH ALLOWANCE",
-      1111004: "TRANSPORT ALLOWANCE",
-      1111005: "EX-GRATIA PAYMENT",
-      1111006: "GRATUITY",
-      1112001: "NAPSA",
-      1112002: "NHIMA",
-      1112003: "Paye",
-    };
+    const result = await prisma.$queryRawUnsafe(`
+      SELECT * FROM vw_hrms_get_component_names
+    `);
+
+    const componentCodeToName = {};
+    const componentCodeToPayType = {};
+
+    if (result && Array.isArray(result)) {
+      result.forEach((component) => {
+        if (component.component_code && component.component_name) {
+          componentCodeToName[component.component_code] =
+            component.component_name;
+          componentCodeToPayType[component.component_code] =
+            component.pay_or_deduct;
+        }
+      });
+    }
+
+    const numericKeys = [];
+    for (const key in record) {
+      if (/^\d+$/.test(key)) {
+        numericKeys.push({ key, value: record[key], type: typeof record[key] });
+      }
+    }
 
     const earnings = [];
     const deductions = [];
 
     for (const key in record) {
-      if (/^\d+$/.test(key) && Number(record[key]) !== 0) {
-        const label = componentLabels[key] || `Component ${key}`;
-        if (parseInt(key) < 1112000) {
-          earnings.push({ label, amount: Number(record[key]) });
-        } else {
-          deductions.push({ label, amount: Number(record[key]) });
+      if (/^\d+$/.test(key)) {
+        const value = record[key];
+
+        if (value !== null && value !== 0 && value !== "0.00") {
+          const label = componentCodeToName[key] || key;
+          const payType = componentCodeToPayType[key];
+
+          if (payType === "P" && Number(value) !== 0) {
+            earnings.push({ label, amount: Number(value) });
+          } else if (payType === "D" && Number(value) !== 0) {
+            deductions.push({ label, amount: Number(value) });
+          }
         }
       }
     }
@@ -729,16 +748,13 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
       designation: record.designation || "",
       location: record.location || "",
       cost_center: record.cost_center || "",
-
       napsa_no: record.napsa_no || "",
       tpin_no: record.tpin_no || "",
       nrc_no: record.nrc_no || "",
       nhis_no: record.nhis_no || "",
-
       engagement_date: record.engagement_date || "",
       bank_account: record.bank_account || "********",
       bank_name: record.bank_name || "NMB",
-
       earnings,
       deductions,
     };
