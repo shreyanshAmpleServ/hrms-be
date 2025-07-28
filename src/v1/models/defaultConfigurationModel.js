@@ -89,42 +89,22 @@ const updateDefaultConfiguration = async (id, data) => {
     if (data.state === undefined) delete payload.state;
     if (data.country === undefined) delete payload.country;
 
-    let result;
-    if (id) {
-      result = await prisma.hrms_d_default_configurations.update({
-        where: { id: parseInt(id) },
-        data: payload,
-        include: {
-          default_configuration_state: {
-            select: { id: true, name: true },
-          },
-          default_configuration_country: {
-            select: { id: true, name: true },
-          },
+    const updatedConfig = await prisma.hrms_d_default_configurations.update({
+      where: { id: parseInt(id) },
+      data: payload,
+      include: {
+        default_configuration_state: {
+          select: { id: true, name: true },
         },
-      });
-    } else {
-      // Create if id is not provided
-      result = await prisma.hrms_d_default_configurations.create({
-        data: {
-          ...serializeDefaultConfig(data),
-          createdby: Number(data.createdby) || 1,
-          createdate: new Date(),
+        default_configuration_country: {
+          select: { id: true, name: true },
         },
-        include: {
-          default_configuration_state: {
-            select: { id: true, name: true },
-          },
-          default_configuration_country: {
-            select: { id: true, name: true },
-          },
-        },
-      });
-    }
-    return result;
+      },
+    });
+    return updatedConfig;
   } catch (error) {
     throw new CustomError(
-      `Error updating/creating default configuration: ${error.message}`,
+      `Error updating default configuration: ${error.message}`,
       500
     );
   }
