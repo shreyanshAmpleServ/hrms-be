@@ -125,52 +125,9 @@ const deleteDefaultConfiguration = async (id) => {
 };
 
 // Get all default configurations (with optional search, pagination, date filter)
-const getAllDefaultConfiguration = async (
-  search,
-  page,
-  size,
-  startDate,
-  endDate
-) => {
+const getAllDefaultConfiguration = async () => {
   try {
-    page = !page || page == 0 ? 1 : page;
-    size = size || 10;
-    const skip = (page - 1) * size || 0;
-
-    const filterConditions = [];
-
-    if (search) {
-      filterConditions.push({
-        OR: [
-          { company_name: { contains: search.toLowerCase() } },
-          { email: { contains: search.toLowerCase() } },
-          { website: { contains: search.toLowerCase() } },
-          { phone_number: { contains: search.toLowerCase() } },
-          { description: { contains: search.toLowerCase() } },
-        ],
-      });
-    }
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filterConditions.push({
-          createdate: {
-            gte: start,
-            lte: end,
-          },
-        });
-      }
-    }
-
-    const filters =
-      filterConditions.length > 0 ? { AND: filterConditions } : {};
-
-    const datas = await prisma.hrms_d_default_configurations.findMany({
-      where: filters,
-      skip,
-      take: size,
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+    const data = await prisma.hrms_d_default_configurations.findFirst({
       include: {
         default_configuration_state: {
           select: { id: true, name: true },
@@ -180,18 +137,7 @@ const getAllDefaultConfiguration = async (
         },
       },
     });
-
-    const totalCount = await prisma.hrms_d_default_configurations.count({
-      where: filters,
-    });
-
-    return {
-      data: datas,
-      currentPage: page,
-      size,
-      totalPages: Math.ceil(totalCount / size),
-      totalCount,
-    };
+    return { data };
   } catch (error) {
     throw new CustomError("Error retrieving default configurations", 400);
   }
