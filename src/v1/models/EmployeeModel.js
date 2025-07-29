@@ -56,7 +56,8 @@ const serializeTags = (data) => {
       : null;
   if ("national_id_number" in data)
     serialized.national_id_number = data.national_id_number;
-  if ("currency_id" in data) serialized.currency_id = data.currency_id;
+  if ("currency_id" in data)
+    serialized.currency_id = Number(data.currency_id || 23);
   if ("nationality" in data) serialized.nationality = data.nationality;
   if ("passport_issue_date" in data)
     serialized.passport_issue_date = data.passport_issue_date;
@@ -270,6 +271,13 @@ const createEmployee = async (data) => {
     const fullData = await prisma.hrms_d_employee.findFirst({
       where: { id: employee.id },
       include: {
+        employee_currency: {
+          select: {
+            id: true,
+            currency_name: true,
+            currency_code: true,
+          },
+        },
         hrms_employee_address: {
           include: {
             employee_state: {
@@ -422,6 +430,13 @@ const updateEmployee = async (id, data) => {
     const updatedEmp = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(id) },
       include: {
+        employee_currency: {
+          select: {
+            id: true,
+            currency_name: true,
+            currency_code: true,
+          },
+        },
         hrms_employee_address: {
           include: {
             employee_state: {
@@ -497,6 +512,13 @@ const findEmployeeById = async (id) => {
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(id) },
       include: {
+        employee_currency: {
+          select: {
+            id: true,
+            currency_name: true,
+            currency_code: true,
+          },
+        },
         hrms_employee_address: {
           include: {
             employee_state: {
@@ -613,6 +635,13 @@ const getAllEmployee = async (
       skip,
       take: size,
       include: {
+        employee_currency: {
+          select: {
+            id: true,
+            currency_name: true,
+            currency_code: true,
+          },
+        },
         hrms_employee_address: {
           include: {
             employee_state: { select: { id: true, name: true } },
@@ -674,6 +703,7 @@ const employeeOptions = async () => {
         employee_code: true,
         department_id: true,
         designation_id: true,
+        currency_id: true,
         email: true,
       },
     });
@@ -684,11 +714,17 @@ const employeeOptions = async () => {
         employee_code,
         department_id,
         designation_id,
+        currency_id,
         email,
       }) => ({
         value: id,
         label: `${full_name} (${employee_code})`,
-        meta: { department_id, designation_id, email },
+        meta: {
+          department_id,
+          designation_id,
+          currency_id: currency_id || 23,
+          email,
+        },
       })
     );
   } catch (error) {
