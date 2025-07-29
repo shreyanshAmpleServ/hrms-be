@@ -1,5 +1,5 @@
 const fs = require("fs");
-const path = require("path");
+const logger = require("../Comman/logger");
 
 // HTML Template with placeholders
 const payslipTemplate = `<!DOCTYPE html>
@@ -281,61 +281,45 @@ const payslipTemplate = `<!DOCTYPE html>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{basicPay}}</span>
             </div>
-            <div class="info-row">
-                <span class="info-label">PF HR ID</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{pfHrId}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">TPIN NO.</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{tpinNo}}</span>
-            </div>
+         
             <div class="info-row">
                 <span class="info-label">Employee Name</span>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{fullName}}</span>
             </div>
-            <div class="info-row">
+             <div class="info-row">
                 <span class="info-label">NRC NO.</span>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{nrcNo}}</span>
+            </div>
+               <div class="info-row">
+                <span class="info-label">Employee Code</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{pfHrId}}</span>
+            </div>
+           
+             <div class="info-row">
+                <span class="info-label">Leave Days</span>
+                <span class="info-colon">:</span>
+                <span class="info-value">{{leaveDays}}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Designation</span>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{designation}}</span>
             </div>
-            <div class="info-row">
-                <span class="info-label">NHIS NO.</span>
+              <div class="info-row">
+                <span class="info-label">Leave Value</span>
                 <span class="info-colon">:</span>
-                <span class="info-value">{{nhisNo}}</span>
+                <span class="info-value">{{leaveValue}}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Location</span>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{location}}</span>
             </div>
-            <div class="info-row">
-                <span class="info-label">Leave Days</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{leaveDays}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Cost Center</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{costCenter}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">Leave Value</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{leaveValue}}</span>
-            </div>
-            <div class="info-row">
-                <span class="info-label">NAPSA No.</span>
-                <span class="info-colon">:</span>
-                <span class="info-value">{{napsaNo}}</span>
-            </div>
+           
+          
             <div class="info-row">
                 <span class="info-label">ENG Date</span>
                 <span class="info-colon">:</span>
@@ -540,6 +524,8 @@ const generatePayslipHTML = (data, filePath = null) => {
         const placeholder = new RegExp(`{{${key}}}`, "g");
         htmlContent = htmlContent.replace(placeholder, templateData[key]);
       });
+
+      logger.debug("HTML content generated successfully");
 
       // If file path is provided, write to file
       if (filePath) {
