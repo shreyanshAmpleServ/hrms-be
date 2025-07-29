@@ -501,7 +501,7 @@ const getGeneratedMonthlyPayroll = async (
         cur.currency_name AS currency_name
       FROM hrms_d_monthly_payroll_processing mp
       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
-      LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.id
+      LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
       ${whereClause}
       ORDER BY mp.updatedate DESC
       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY;
@@ -539,7 +539,7 @@ const getGeneratedMonthlyPayroll = async (
       SELECT COUNT(*) AS count
       FROM hrms_d_monthly_payroll_processing mp
       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
-      LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.id
+      LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
       ${whereClause};
     `;
 
@@ -684,11 +684,14 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
         emp.bank_id,
         emp.payment_mode,
         d.designation_name AS designation,
-        b.bank_name AS bank_name
+        b.bank_name AS bank_name,
+        cur.currency_name AS currency_name,
+        cur.currency_code AS currency_code
       FROM hrms_d_monthly_payroll_processing mp
       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
       LEFT JOIN hrms_m_designation_master d ON d.id = emp.designation_id
       LEFT JOIN hrms_m_bank_master b ON b.id = emp.bank_id
+      LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
       WHERE mp.employee_id = ${Number(employee_id)}
         AND mp.payroll_month = ${Number(payroll_month)}
         AND mp.payroll_year = ${Number(payroll_year)}
