@@ -328,12 +328,12 @@ const payslipTemplate = `<!DOCTYPE html>
             <div class="info-row">
                 <span class="info-label">Taxable Pay YTD</span>
                 <span class="info-colon">:</span>
-                <span class="info-value">{{taxablePayYtd}}</span>
+                <span class="info-value"> {{currencyCode}} {{taxablePayYtd}}</span>
             </div>
             <div class="info-row">
                 <span class="info-label">Tax Year To Date</span>
                 <span class="info-colon">:</span>
-                <span class="info-value">{{taxYearToDate}}</span>
+                <span class="info-value"> {{currencyCode}} {{taxYearToDate}}</span>
             </div>
         </div>
 
@@ -343,7 +343,7 @@ const payslipTemplate = `<!DOCTYPE html>
                 {{earningsRows}}
                 <div class="total-row">
                     <span>Gross Earning</span>
-                    <span>{{grossEarning}}</span>
+                    <span>{{currencyCode}} {{grossEarning}}</span>
                 </div>
             </div>
             <div class="deductions">
@@ -351,7 +351,7 @@ const payslipTemplate = `<!DOCTYPE html>
                 {{deductionsRows}}
                 <div class="total-row">
                     <span>Gross Deduction</span>
-                    <span>{{grossDeduction}}</span>
+                    <span>{{currencyCode}} {{grossDeduction}}</span>
                 </div>
             </div>
         </div>
@@ -363,7 +363,7 @@ const payslipTemplate = `<!DOCTYPE html>
             </div>
             <div class="net-amount-section">
                 <strong>Net Amount</strong><br>
-                {{netPay}}
+                {{currencyCode}} {{netPay}}
             </div>
         </div>
 
@@ -377,7 +377,7 @@ const payslipTemplate = `<!DOCTYPE html>
                 <div class="bank-value">{{bankName}}</div>
                 <div class="bank-value">{{payPoint}}</div>
                 <div class="bank-value">{{bankAccount}}</div>
-                <div class="bank-value">{{netPay}}</div>
+                <div class="bank-value">{{currencyCode}} {{netPay}}</div>
             </div>
         </div>
 
@@ -516,6 +516,8 @@ const generatePayslipHTML = (data, filePath = null) => {
         leaveDaysTaken: data.leave_days_taken || "0",
         companyLogo: data.company_logo || "",
         companySignature: data.company_signature || "",
+        currencyName: data.currency_name || "",
+        currencyCode: data.currency_code || "",
       };
 
       // Replace placeholders in template
