@@ -6,6 +6,7 @@ const {
   uploadToBackblaze,
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
+const { url } = require("inspector");
 
 const createDefaultConfiguration = async (req, res, next) => {
   try {
@@ -227,23 +228,71 @@ const createOrUpdateDefaultConfiguration = async (req, res, next) => {
     const isUpdate = id && !isNaN(Number(id));
     let existingData = null;
 
-    // Utility to extract file path from Backblaze URL
     const extractFileNameFromUrl = (url) => {
+      if (!url) return null;
       try {
-        const parsed = new URL(url);
-        return decodeURIComponent(
-          parsed.pathname.replace(/^\/file\/[^/]+\//, "")
+        // Handle different URL formats
+        if (url.includes("/file/")) {
+          // Format: /file/bucket/filename
+          const parsed = new URL(url);
+          return decodeURIComponent(
+            parsed.pathname.replace(/^\/file\/[^/]+\//, "")
+          );
+        } else if (
+          url.includes("company_logo/") ||
+          url.includes("company_signature/")
+        ) {
+          // Format: company_logo/filename.ext
+          const parts = url.split("/");
+          return parts[parts.length - 1];
+        } else {
+          // Try to get filename from URL path
+          const parsed = new URL(url);
+          const pathParts = parsed.pathname.split("/");
+          return pathParts[pathParts.length - 1];
+        }
+      } catch (error) {
+        console.warn(
+          `Failed to extract filename from URL: ${url}`,
+          error.message
         );
-      } catch {
         return null;
       }
     };
+    console.log("Url", url);
 
-    // Fetch existing data if updating
+    // Helper function to safely delete file from Backblaze
+    const safeDeleteFromBackblaze = async (fileUrl, fileType) => {
+      if (!fileUrl) return;
+
+      try {
+        const fileName = extractFileNameFromUrl(fileUrl);
+        if (!fileName) {
+          console.warn(`Could not extract filename from URL: ${fileUrl}`);
+          return;
+        }
+
+        console.log(`Attempting to delete ${fileType}: ${fileName}`);
+        await deleteFromBackblaze(fileUrl);
+        console.log(`Successfully deleted ${fileType}: ${fileName}`);
+      } catch (error) {
+        // Log the error but don't throw - file might already be deleted
+        console.warn(`Failed to delete old ${fileType}:`, error.message);
+
+        // Log additional details for debugging
+        console.warn(`File URL: ${fileUrl}`);
+        console.warn(`Error details:`, error);
+      }
+    };
+
+    // Get existing data if updating
     if (isUpdate) {
       existingData = await defaultConfigurationService.findDefaultConfiguration(
         id
       );
+      if (!existingData) {
+        return res.status(404).error("Configuration not found");
+      }
     }
 
     let companyLogoUrl = existingData?.company_logo || null;
@@ -252,52 +301,66 @@ const createOrUpdateDefaultConfiguration = async (req, res, next) => {
     // Handle company logo upload
     if (req.files?.company_logo?.[0]) {
       const file = req.files.company_logo[0];
-      companyLogoUrl = await uploadToBackblaze(
-        file.buffer,
-        file.originalname,
-        file.mimetype,
-        "company_logo"
-      );
 
-      if (isUpdate && existingData?.company_logo) {
-        const logoFileName = extractFileNameFromUrl(existingData.company_logo);
-        if (logoFileName) {
-          try {
-            await deleteFromBackblaze(logoFileName);
-          } catch (err) {
-            console.warn("Failed to delete old company logo:", err.message);
-          }
+      try {
+        // Upload new file first
+        companyLogoUrl = await uploadToBackblaze(
+          file.buffer,
+          file.originalname,
+          file.mimetype,
+          "company_logo"
+        );
+        console.log(`New company logo uploaded: ${companyLogoUrl}`);
+
+        // Delete old file only after successful upload
+        if (
+          isUpdate &&
+          existingData?.company_logo &&
+          existingData.company_logo !== companyLogoUrl
+        ) {
+          await safeDeleteFromBackblaze(
+            existingData.company_logo,
+            "company logo"
+          );
         }
+      } catch (error) {
+        console.error("Failed to upload company logo:", error.message);
+        throw new Error("Failed to upload company logo");
       }
     }
 
     // Handle company signature upload
     if (req.files?.company_signature?.[0]) {
       const file = req.files.company_signature[0];
-      companySignatureUrl = await uploadToBackblaze(
-        file.buffer,
-        file.originalname,
-        file.mimetype,
-        "company_signature"
-      );
 
-      if (isUpdate && existingData?.company_signature) {
-        const signatureFileName = extractFileNameFromUrl(
-          existingData.company_signature
+      try {
+        // Upload new file first
+        companySignatureUrl = await uploadToBackblaze(
+          file.buffer,
+          file.originalname,
+          file.mimetype,
+          "company_signature"
         );
-        if (signatureFileName) {
-          try {
-            await deleteFromBackblaze(signatureFileName);
-          } catch (err) {
-            console.warn(
-              "Failed to delete old company signature:",
-              err.message
-            );
-          }
+        console.log(`New company signature uploaded: ${companySignatureUrl}`);
+
+        // Delete old file only after successful upload
+        if (
+          isUpdate &&
+          existingData?.company_signature &&
+          existingData.company_signature !== companySignatureUrl
+        ) {
+          await safeDeleteFromBackblaze(
+            existingData.company_signature,
+            "company signature"
+          );
         }
+      } catch (error) {
+        console.error("Failed to upload company signature:", error.message);
+        throw new Error("Failed to upload company signature");
       }
     }
 
+    // Prepare data for database
     const data = {
       ...req.body,
       id: isUpdate ? Number(id) : undefined,
@@ -309,6 +372,7 @@ const createOrUpdateDefaultConfiguration = async (req, res, next) => {
       log_inst: req.user.log_inst || Number(req.user.employee_id),
     };
 
+    // Save to database
     const result =
       await defaultConfigurationService.updateDefaultConfigurationService(
         id,
@@ -317,6 +381,7 @@ const createOrUpdateDefaultConfiguration = async (req, res, next) => {
 
     res.status(200).success("Default Configuration saved successfully", result);
   } catch (err) {
+    console.error("Error in createOrUpdateDefaultConfiguration:", err);
     next(err);
   }
 };
