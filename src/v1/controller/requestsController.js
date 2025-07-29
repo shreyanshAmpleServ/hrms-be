@@ -18,7 +18,7 @@ const createRequest = async (req, res, next) => {
 
 const findRequests = async (req, res, next) => {
   try {
-    const reqData = await requestsService.findRequests(req.params.id);
+    const reqData = await requestsService.findRequests(req.params.id); // FIXED
     if (!reqData) throw new CustomError("Requests not found", 404);
     res.status(200).success(null, reqData);
   } catch (error) {

@@ -136,6 +136,8 @@ const overtimeSetupRoute = require("../v1/routes/overtimeSetupRoute.js");
 const loanCashPayementRoute = require("../v1/routes/loanCashPayementRoute.js");
 const defaultConfigurationRoute = require("../v1/routes/defaultConfigurationRoute.js");
 const requestsRoute = require("../v1/routes/requestsRoute.js");
+const requestApprovalRoute = require("../v1/routes/requestApprovalRoute.js");
+const approvalWorkFlowRoute = require("../v1/routes/approvalWorkFlowRoute.js");
 
 const router = express.Router();
 
@@ -277,6 +279,9 @@ router.use("/v1", overtimeSetupRoute);
 router.use("/v1", loanCashPayementRoute);
 router.use("/v1", defaultConfigurationRoute);
 router.use("/v1", requestsRoute);
+router.use("/v1", requestApprovalRoute);
+router.use("/v1", approvalWorkFlowRoute);
+
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
