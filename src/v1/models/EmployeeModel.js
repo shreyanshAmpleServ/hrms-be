@@ -56,6 +56,7 @@ const serializeTags = (data) => {
       : null;
   if ("national_id_number" in data)
     serialized.national_id_number = data.national_id_number;
+  if ("currency_id" in data) serialized.currency_id = data.currency_id;
   if ("nationality" in data) serialized.nationality = data.nationality;
   if ("passport_issue_date" in data)
     serialized.passport_issue_date = data.passport_issue_date;
