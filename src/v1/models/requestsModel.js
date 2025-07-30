@@ -159,12 +159,18 @@ const deleteRequests = async (id) => {
     });
 
     await prisma.hrms_d_requests.delete({
-      where: { request_id: parseInt(id) },
+      where: { id: parseInt(id) }, // ✅ fixed here
     });
+
+    return {
+      success: true,
+      message: "Request and its approvals deleted successfully",
+    };
   } catch (error) {
     throw new CustomError(`Error deleting requets: ${error.message}`, 500);
   }
 };
+
 const getAllRequests = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
