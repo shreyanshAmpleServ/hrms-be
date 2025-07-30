@@ -2548,10 +2548,10 @@ model hrms_d_requests_approval {
   status                    String           @default("Pending")
   action_at                 DateTime?
   createdate                DateTime         @default(now()) @db.DateTime
-  createdby                 Int
-  updatedate               DateTime?        @db.DateTime
-  updatedby                Int?
-  log_inst                 Int?
+  createdby                  Int
+  updatedate                DateTime?        @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
   request_approval_request  hrms_d_requests? @relation(fields: [request_id], references: [request_id], onDelete: NoAction, onUpdate: NoAction)
   request_approval_approver hrms_d_employee? @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

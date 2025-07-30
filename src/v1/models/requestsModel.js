@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { log } = require("winston");
 const prisma = new PrismaClient();
 
 const serializeRequestsData = (data) => ({
@@ -8,27 +9,79 @@ const serializeRequestsData = (data) => ({
   request_data: data.request_data || null,
 });
 
+// const createRequest = async (data) => {
+//   try {
+//     const reqData = await prisma.hrms_d_requests.create({
+//       data: {
+//         ...serializeRequestsData(data),
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst || 1,
+//       },
+//       include: {
+//         requests_employee: {
+//           select: { id: true, full_name: true, employee_code: true },
+//         },
+//       },
+//     });
+//     return reqData;
+//   } catch (error) {
+//     throw new CustomError(`Error creating request model ${error.message}`, 500);
+//   }
+// };
+
 const createRequest = async (data) => {
+  const { children = [], ...parentData } = data;
   try {
     const reqData = await prisma.hrms_d_requests.create({
       data: {
-        ...serializeRequestsData(data),
-        createdby: data.createdby || 1,
+        ...serializeRequestsData(parentData),
+        createdby: parentData.createdby || 1,
         createdate: new Date(),
-        log_inst: data.log_inst || 1,
-      },
-      include: {
-        requests_employee: {
-          select: { id: true, full_name: true, employee_code: true },
-        },
+        log_inst: parentData.log_inst || 1,
       },
     });
-    return reqData;
+
+    if (children.length > 0) {
+      const approvalsToInsert = children.map((child, index) => ({
+        request_id: reqData.request_id,
+        approver_id: Number(child.approver_id),
+        sequence: Number(child.sequence) || index + 1,
+        status: child.status || "N",
+        createdby: parentData.createdby || 1,
+        createdate: new Date(),
+        updatedby: parentData.updatedby || null,
+        updatedate: new Date(),
+        log_inst: parentData.log_inst || 1,
+      }));
+      await prisma.hrms_d_requests_approval.createMany({
+        data: approvalsToInsert,
+      });
+    }
+
+    const fullData = await prisma.hrms_d_requests.findUnique({
+      where: { request_id: reqData.request_id },
+      include: {
+        requests_employee: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+          },
+        },
+        request_approval_request: true,
+      },
+    });
+
+    return {
+      success: true,
+      message: "Request and approvals created successfully",
+      data: fullData,
+    };
   } catch (error) {
     throw new CustomError(`Error creating request model ${error.message}`, 500);
   }
 };
-
 const updateRequests = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_requests.update({
