@@ -36,6 +36,7 @@ const serializeRequestsData = (data) => ({
 const createRequest = async (data) => {
   const { children = [], ...parentData } = data;
   try {
+    // Check if request_type already exists
     if (parentData.request_type) {
       const existingRequest = await prisma.hrms_d_requests.findFirst({
         where: { request_type: parentData.request_type },
@@ -90,6 +91,7 @@ const createRequest = async (data) => {
         request_approval_request: {
           select: {
             id: true,
+            request_id: true,
             approver_id: true,
             sequence: true,
             status: true,

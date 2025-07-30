@@ -100,6 +100,13 @@ const logActivity = async ({
         description,
       },
     });
+    console.log("📥 logActivity called with:", {
+      employee_id,
+      module,
+      action_type,
+      activity,
+      reference_id,
+    });
   } catch (error) {
     console.error("Activity Logger Error:", error.message);
   }
