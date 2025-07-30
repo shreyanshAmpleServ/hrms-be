@@ -122,23 +122,94 @@ const createRequest = async (data) => {
 
 const updateRequests = async (id, data) => {
   try {
+    const { children = [], ...parentData } = data;
+
+    const existing = await prisma.hrms_d_requests.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!existing) {
+      throw new CustomError(`Request with ID ${id} not found`, 404);
+    }
+
     const updatedEntry = await prisma.hrms_d_requests.update({
-      where: { request_id: parseInt(id) },
-      include: {
-        requests_employee: {
-          select: { id: true, full_name: true, employee_code: true },
-        },
-      },
+      where: { id: parseInt(id) },
       data: {
-        ...serializeRequestsData(data),
-        updatedby: data.updatedby || 1,
+        ...serializeRequestsData(parentData),
+        updatedby: parentData.updatedby || 1,
         updatedate: new Date(),
       },
     });
 
-    return updatedEntry;
+    for (const child of children) {
+      if (child.id) {
+        await prisma.hrms_d_requests_approval.update({
+          where: { id: Number(child.id) },
+          data: {
+            approver_id: Number(child.approver_id),
+            sequence: Number(child.sequence),
+            status: child.status || "Pending",
+            action_at: child.action_at ? new Date(child.action_at) : null,
+            updatedby: parentData.updatedby || 1,
+            updatedate: new Date(),
+          },
+        });
+      } else {
+        await prisma.hrms_d_requests_approval.create({
+          data: {
+            request_id: parseInt(id),
+            approver_id: Number(child.approver_id),
+            sequence: Number(child.sequence),
+            status: child.status || "Pending",
+            action_at: child.action_at ? new Date(child.action_at) : null,
+            createdby: parentData.createdby || 1,
+            createdate: new Date(),
+            updatedby: parentData.updatedby || null,
+            updatedate: new Date(),
+            log_inst: parentData.log_inst || 1,
+          },
+        });
+      }
+    }
+
+    const fullData = await prisma.hrms_d_requests.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        requests_employee: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+          },
+        },
+        request_approval_request: {
+          select: {
+            id: true,
+            request_id: true,
+            approver_id: true,
+            sequence: true,
+            status: true,
+            action_at: true,
+            createdate: true,
+            createdby: true,
+            updatedate: true,
+            updatedby: true,
+            log_inst: true,
+            request_approval_approver: {
+              select: {
+                id: true,
+                full_name: true,
+                employee_code: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    return fullData;
   } catch (error) {
-    throw new CustomError(`Error updating requets: ${error.message}`, 500);
+    throw new CustomError(`Error updating request: ${error.message}`, 500);
   }
 };
 
@@ -243,7 +314,6 @@ const getAllRequests = async (search, page, size, startDate, endDate) => {
     throw new CustomError("Error retrieving requests", 503);
   }
 };
-
 const findRequests = async (request_id) => {
   try {
     const reqData = await prisma.hrms_d_requests.findUnique({
