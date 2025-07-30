@@ -161,6 +161,7 @@ const getAllRequests = async (search, page, size, startDate, endDate) => {
         filters.createdate = { gte: start, lte: end };
       }
     }
+
     const datas = await prisma.hrms_d_requests.findMany({
       where: filters,
       skip,
@@ -170,11 +171,32 @@ const getAllRequests = async (search, page, size, startDate, endDate) => {
         requests_employee: {
           select: { id: true, full_name: true, employee_code: true },
         },
+        request_approval_request: {
+          select: {
+            id: true,
+            approver_id: true,
+            sequence: true,
+            status: true,
+            action_at: true,
+            createdate: true,
+            createdby: true,
+            updatedate: true,
+            updatedby: true,
+            log_inst: true,
+            request_approval_approver: {
+              select: {
+                id: true,
+                full_name: true,
+                employee_code: true,
+              },
+            },
+          },
+        },
       },
     });
-    const totalCount = await prisma.hrms_d_requests.count({
-      where: filters,
-    });
+
+    const totalCount = await prisma.hrms_d_requests.count({ where: filters });
+
     return {
       data: datas,
       currentPage: page,
@@ -183,7 +205,7 @@ const getAllRequests = async (search, page, size, startDate, endDate) => {
       totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving requets", 503);
+    throw new CustomError("Error retrieving requests", 503);
   }
 };
 
