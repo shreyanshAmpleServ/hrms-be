@@ -119,6 +119,116 @@ const createRequest = async (data) => {
     throw new CustomError(`Error creating request model ${error.message}`, 500);
   }
 };
+// const updateRequests = async (id, data) => {
+//   try {
+//     const { children = [], ...parentData } = data;
+
+//     const existing = await prisma.hrms_d_requests.findUnique({
+//       where: { id: parseInt(id) },
+//     });
+
+//     if (!existing) {
+//       throw new CustomError(`Request with ID ${id} not found`, 404);
+//     }
+
+//     if (
+//       parentData.request_type &&
+//       parentData.request_type !== existing.request_type
+//     ) {
+//       const duplicate = await prisma.hrms_d_requests.findFirst({
+//         where: {
+//           request_type: parentData.request_type,
+//           NOT: { id: parseInt(id) },
+//         },
+//       });
+//       if (duplicate) {
+//         throw new CustomError(
+//           `Request type '${parentData.request_type}' already exists`,
+//           400
+//         );
+//       }
+//     }
+
+//     const updatedEntry = await prisma.hrms_d_requests.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         ...serializeRequestsData(parentData),
+//         updatedby: parentData.updatedby || 1,
+//         updatedate: new Date(),
+//       },
+//     });
+
+//     for (const child of children) {
+//       if (child.id) {
+//         await prisma.hrms_d_requests_approval.update({
+//           where: { id: Number(child.id) },
+//           data: {
+//             approver_id: Number(child.approver_id),
+//             sequence: Number(child.sequence),
+//             status: child.status || "Pending",
+//             action_at: child.action_at ? new Date(child.action_at) : null,
+//             updatedby: parentData.updatedby || 1,
+//             updatedate: new Date(),
+//           },
+//         });
+//       } else {
+//         await prisma.hrms_d_requests_approval.create({
+//           data: {
+//             request_id: parseInt(id),
+//             approver_id: Number(child.approver_id),
+//             sequence: Number(child.sequence),
+//             status: child.status || "Pending",
+//             action_at: child.action_at ? new Date(child.action_at) : null,
+//             createdby: parentData.createdby || 1,
+//             createdate: new Date(),
+//             updatedby: parentData.updatedby || null,
+//             updatedate: new Date(),
+//             log_inst: parentData.log_inst || 1,
+//           },
+//         });
+//       }
+//     }
+
+//     const fullData = await prisma.hrms_d_requests.findUnique({
+//       where: { id: parseInt(id) },
+//       include: {
+//         requests_employee: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//             employee_code: true,
+//           },
+//         },
+//         request_approval_request: {
+//           select: {
+//             id: true,
+//             request_id: true,
+//             approver_id: true,
+//             sequence: true,
+//             status: true,
+//             action_at: true,
+//             createdate: true,
+//             createdby: true,
+//             updatedate: true,
+//             updatedby: true,
+//             log_inst: true,
+//             request_approval_approver: {
+//               select: {
+//                 id: true,
+//                 full_name: true,
+//                 employee_code: true,
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     return fullData;
+//   } catch (error) {
+//     throw new CustomError(`Error updating request: ${error.message}`, 500);
+//   }
+// };
 
 const updateRequests = async (id, data) => {
   try {
@@ -130,6 +240,25 @@ const updateRequests = async (id, data) => {
 
     if (!existing) {
       throw new CustomError(`Request with ID ${id} not found`, 404);
+    }
+
+    if (
+      parentData.request_type &&
+      parentData.request_type.trim() !== "" &&
+      parentData.request_type !== existing.request_type
+    ) {
+      const duplicate = await prisma.hrms_d_requests.findFirst({
+        where: {
+          request_type: parentData.request_type,
+          NOT: { id: parseInt(id) },
+        },
+      });
+      if (duplicate) {
+        throw new CustomError(
+          `Request type '${parentData.request_type}' already exists`,
+          400
+        );
+      }
     }
 
     const updatedEntry = await prisma.hrms_d_requests.update({
@@ -212,16 +341,6 @@ const updateRequests = async (id, data) => {
     throw new CustomError(`Error updating request: ${error.message}`, 500);
   }
 };
-
-// const deleteRequests = async (id) => {
-//   try {
-//     await prisma.hrms_d_requests.delete({
-//       where: { request_id: parseInt(id) },
-//     });
-//   } catch (error) {
-//     throw new CustomError(`Error deleting requets: ${error.message}`, 500);
-//   }
-// };
 
 const deleteRequests = async (id) => {
   try {
