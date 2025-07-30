@@ -2512,7 +2512,7 @@ model hrms_d_default_configurations {
 }
 
 model hrms_d_requests {
-  request_id               Int                        @id @default(autoincrement())
+  id                       Int                        @id @default(autoincrement())
   requester_id             Int
   request_type             String?                    @db.VarChar(100)
   request_data             String?                    @db.Text
@@ -2527,7 +2527,7 @@ model hrms_d_requests {
 }
 
 model hrms_d_approval_work_flow {
-  workflow_id            Int              @id @default(autoincrement())
+  id                     Int              @id @default(autoincrement())
   request_type           String?
   sequence               Int
   approver_id            Int
@@ -2541,17 +2541,17 @@ model hrms_d_approval_work_flow {
 }
 
 model hrms_d_requests_approval {
-  approval_id               Int              @id @default(autoincrement())
+  id                        Int              @id @default(autoincrement())
   request_id                Int
   approver_id               Int
   sequence                  Int
   status                    String           @default("Pending")
   action_at                 DateTime?
   createdate                DateTime         @default(now()) @db.DateTime
-  createdby                  Int
+  createdby                 Int
   updatedate                DateTime?        @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
-  request_approval_request  hrms_d_requests? @relation(fields: [request_id], references: [request_id], onDelete: NoAction, onUpdate: NoAction)
+  request_approval_request  hrms_d_requests? @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   request_approval_approver hrms_d_employee? @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

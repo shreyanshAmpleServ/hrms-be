@@ -44,23 +44,26 @@ const createRequest = async (data) => {
 
     if (children.length > 0) {
       const approvalsToInsert = children.map((child, index) => ({
-        request_id: reqData.request_id,
+        request_id: reqData.id,
         approver_id: Number(child.approver_id),
         sequence: Number(child.sequence) || index + 1,
-        status: child.status || "N",
+        status: child.status || "Pending",
+        action_at: child.action_at ? new Date(child.action_at) : null,
         createdby: parentData.createdby || 1,
         createdate: new Date(),
         updatedby: parentData.updatedby || null,
         updatedate: new Date(),
         log_inst: parentData.log_inst || 1,
       }));
+      console.log("reqData =>", reqData);
+
       await prisma.hrms_d_requests_approval.createMany({
         data: approvalsToInsert,
       });
     }
 
     const fullData = await prisma.hrms_d_requests.findUnique({
-      where: { request_id: reqData.request_id },
+      where: { id: reqData.id },
       include: {
         requests_employee: {
           select: {
@@ -69,7 +72,27 @@ const createRequest = async (data) => {
             employee_code: true,
           },
         },
-        request_approval_request: true,
+        request_approval_request: {
+          select: {
+            id: true,
+            approver_id: true,
+            sequence: true,
+            status: true,
+            action_at: true,
+            createdate: true,
+            createdby: true,
+            updatedate: true,
+            updatedby: true,
+            log_inst: true,
+            request_approval_approver: {
+              select: {
+                id: true,
+                full_name: true,
+                employee_code: true,
+              },
+            },
+          },
+        },
       },
     });
 
@@ -82,6 +105,7 @@ const createRequest = async (data) => {
     throw new CustomError(`Error creating request model ${error.message}`, 500);
   }
 };
+
 const updateRequests = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_requests.update({
