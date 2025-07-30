@@ -7,6 +7,9 @@ const serializeRequestsData = (data) => ({
   requester_id: Number(data.requester_id),
   request_type: data.request_type || null,
   request_data: data.request_data || null,
+  status: data.status || "N",
+  title: data.title || null,
+  no_of_approvers: Number(data.no_of_approvers) || 0,
 });
 
 // const createRequest = async (data) => {
