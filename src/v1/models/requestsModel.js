@@ -36,6 +36,18 @@ const serializeRequestsData = (data) => ({
 const createRequest = async (data) => {
   const { children = [], ...parentData } = data;
   try {
+    if (parentData.request_type) {
+      const existingRequest = await prisma.hrms_d_requests.findFirst({
+        where: { request_type: parentData.request_type },
+      });
+      if (existingRequest) {
+        throw new CustomError(
+          `Request type '${parentData.request_type}' already exists`,
+          400
+        );
+      }
+    }
+
     const reqData = await prisma.hrms_d_requests.create({
       data: {
         ...serializeRequestsData(parentData),
@@ -100,9 +112,7 @@ const createRequest = async (data) => {
     });
 
     return {
-      success: true,
-      message: "Request and approvals created successfully",
-      data: fullData,
+      ...fullData,
     };
   } catch (error) {
     throw new CustomError(`Error creating request model ${error.message}`, 500);
@@ -131,8 +141,22 @@ const updateRequests = async (id, data) => {
   }
 };
 
+// const deleteRequests = async (id) => {
+//   try {
+//     await prisma.hrms_d_requests.delete({
+//       where: { request_id: parseInt(id) },
+//     });
+//   } catch (error) {
+//     throw new CustomError(`Error deleting requets: ${error.message}`, 500);
+//   }
+// };
+
 const deleteRequests = async (id) => {
   try {
+    await prisma.hrms_d_requests_approval.deleteMany({
+      where: { request_id: parseInt(id) },
+    });
+
     await prisma.hrms_d_requests.delete({
       where: { request_id: parseInt(id) },
     });
@@ -140,7 +164,6 @@ const deleteRequests = async (id) => {
     throw new CustomError(`Error deleting requets: ${error.message}`, 500);
   }
 };
-
 const getAllRequests = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;

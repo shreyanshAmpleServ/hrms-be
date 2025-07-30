@@ -20,14 +20,21 @@ router.get(
 
 router.get(
   "/monthly-payroll/run-sp",
+  authenticateToken,
   monthlyPayrollController.triggerMonthlyPayrollSP
 );
 
 router.get(
   "/tax-calculation",
+  authenticateToken,
+
   monthlyPayrollController.triggerMonthlyPayrollCalculationSP
 );
-router.get("/components", monthlyPayrollController.getComponentNames);
+router.get(
+  "/components",
+  authenticateToken,
+  monthlyPayrollController.getComponentNames
+);
 
 // Get a single monthly payroll by ID routes
 router.get(

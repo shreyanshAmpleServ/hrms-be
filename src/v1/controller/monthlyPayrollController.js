@@ -4,6 +4,7 @@ const moment = require("moment");
 const { success } = require("zod/v4");
 const fs = require("fs");
 const path = require("path");
+const { logActivity } = require("../../utils/ActivityLogger.js");
 
 const createMonthlyPayroll = async (req, res, next) => {
   try {
@@ -108,6 +109,7 @@ const triggerMonthlyPayrollCalculationSP = async (req, res, next) => {
 const getComponentNames = async (req, res, next) => {
   try {
     const data = await monthlyPayrollService.getComponentNames();
+
     res.status(200).success("Component names fetched successfully", data);
   } catch (error) {
     next(error);
