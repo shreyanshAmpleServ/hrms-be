@@ -523,6 +523,7 @@ const findRequestByRequestTypeAndReferenceId = async (request) => {
     }
     return reqData;
   } catch (error) {
+    logger.error(error);
     throw new CustomError(`Error finding Request by ID: ${error.message}`, 503);
   }
 };
