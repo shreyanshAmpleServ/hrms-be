@@ -514,16 +514,15 @@ const findRequestByRequestTypeAndReferenceId = async (request) => {
   try {
     const reqData = await prisma.hrms_d_requests.findFirst({
       where: {
-        request_type: parseInt(request.requestType),
-        reference_id: parseInt(request.referenceId),
+        request_type: request.request_type,
+        reference_id: parseInt(request.reference_id),
+      },
+      include: {
+        request_approval_request: true,
       },
     });
-    if (!reqData) {
-      throw new CustomError("Request not found", 404);
-    }
-    return reqData;
+    return reqData || {};
   } catch (error) {
-    logger.error(error);
     throw new CustomError(`Error finding Request by ID: ${error.message}`, 503);
   }
 };

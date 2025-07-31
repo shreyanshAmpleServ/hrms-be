@@ -1,6 +1,7 @@
 const requestsService = require("../services/requestsService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const logger = require("../../Comman/logger/index.js");
 
 const createRequest = async (req, res, next) => {
   try {
@@ -84,6 +85,7 @@ const findRequestByRequestTypeAndReferenceId = async (req, res, next) => {
     );
     res.status(200).success("Request found successfully", result);
   } catch (error) {
+    logger.debug(error);
     next(error);
   }
 };

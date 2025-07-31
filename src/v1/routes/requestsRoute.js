@@ -24,7 +24,7 @@ router.post(
 );
 
 router.get(
-  "/requests/request-type-reference",
+  "/request-by-request-type-reference",
   authenticateToken,
   requestsController.findRequestByRequestTypeAndReferenceId
 );
