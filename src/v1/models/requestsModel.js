@@ -13,79 +13,154 @@ const serializeRequestsData = (data) => ({
 });
 
 // const createRequest = async (data) => {
+//   const { children = [], ...parentData } = data;
 //   try {
+//     if (parentData.request_type) {
+//       const existingRequest = await prisma.hrms_d_requests.findFirst({
+//         where: { request_type: parentData.request_type },
+//       });
+//       if (existingRequest) {
+//         throw new CustomError(
+//           `Request type '${parentData.request_type}' already exists`,
+//           400
+//         );
+//       }
+//     }
+
 //     const reqData = await prisma.hrms_d_requests.create({
 //       data: {
-//         ...serializeRequestsData(data),
-//         createdby: data.createdby || 1,
+//         ...serializeRequestsData(parentData),
+//         createdby: parentData.createdby || 1,
 //         createdate: new Date(),
-//         log_inst: data.log_inst || 1,
+//         log_inst: parentData.log_inst || 1,
 //       },
+//     });
+
+//     if (children.length > 0) {
+//       const approvalsToInsert = children.map((child, index) => ({
+//         request_id: reqData.id,
+//         approver_id: Number(child.approver_id),
+//         sequence: Number(child.sequence) || index + 1,
+//         status: child.status || "Pending",
+//         action_at: child.action_at ? new Date(child.action_at) : null,
+//         createdby: parentData.createdby || 1,
+//         createdate: new Date(),
+//         updatedby: parentData.updatedby || null,
+//         updatedate: new Date(),
+//         log_inst: parentData.log_inst || 1,
+//       }));
+//       console.log("reqData =>", reqData);
+
+//       await prisma.hrms_d_requests_approval.createMany({
+//         data: approvalsToInsert,
+//       });
+//     }
+
+//     const fullData = await prisma.hrms_d_requests.findUnique({
+//       where: { id: reqData.id },
 //       include: {
 //         requests_employee: {
-//           select: { id: true, full_name: true, employee_code: true },
+//           select: {
+//             id: true,
+//             full_name: true,
+//             employee_code: true,
+//           },
+//         },
+//         request_approval_request: {
+//           select: {
+//             id: true,
+//             request_id: true,
+//             approver_id: true,
+//             sequence: true,
+//             status: true,
+//             action_at: true,
+//             createdate: true,
+//             createdby: true,
+//             updatedate: true,
+//             updatedby: true,
+//             log_inst: true,
+//             request_approval_approver: {
+//               select: {
+//                 id: true,
+//                 full_name: true,
+//                 employee_code: true,
+//               },
+//             },
+//           },
 //         },
 //       },
 //     });
-//     return reqData;
+
+//     return {
+//       ...fullData,
+//     };
 //   } catch (error) {
 //     throw new CustomError(`Error creating request model ${error.message}`, 500);
 //   }
 // };
 
 const createRequest = async (data) => {
-  const { children = [], ...parentData } = data;
+  const { request_type, ...parentData } = data;
   try {
-    if (parentData.request_type) {
-      const existingRequest = await prisma.hrms_d_requests.findFirst({
-        where: { request_type: parentData.request_type },
-      });
-      if (existingRequest) {
-        throw new CustomError(
-          `Request type '${parentData.request_type}' already exists`,
-          400
-        );
-      }
+    if (!request_type) throw new CustomError("request_type is required", 400);
+
+    const existingRequest = await prisma.hrms_d_requests.findFirst({
+      where: { request_type },
+    });
+
+    if (existingRequest) {
+      throw new CustomError(
+        `Request type '${request_type}' already exists`,
+        400
+      );
     }
 
     const reqData = await prisma.hrms_d_requests.create({
       data: {
-        ...serializeRequestsData(parentData),
+        ...serializeRequestsData({ request_type, ...parentData }),
         createdby: parentData.createdby || 1,
         createdate: new Date(),
         log_inst: parentData.log_inst || 1,
       },
     });
 
-    if (children.length > 0) {
-      const approvalsToInsert = children.map((child, index) => ({
-        request_id: reqData.id,
-        approver_id: Number(child.approver_id),
-        sequence: Number(child.sequence) || index + 1,
-        status: child.status || "Pending",
-        action_at: child.action_at ? new Date(child.action_at) : null,
-        createdby: parentData.createdby || 1,
-        createdate: new Date(),
-        updatedby: parentData.updatedby || null,
-        updatedate: new Date(),
-        log_inst: parentData.log_inst || 1,
-      }));
-      console.log("reqData =>", reqData);
+    const workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+      where: { request_type },
+      orderBy: { sequence: "asc" },
+    });
 
-      await prisma.hrms_d_requests_approval.createMany({
-        data: approvalsToInsert,
-      });
+    if (!workflowSteps || workflowSteps.length === 0) {
+      throw new CustomError(
+        `No approval workflow defined for '${request_type}'`,
+        400
+      );
     }
 
+    const approvalsToInsert = workflowSteps.map((step) => ({
+      request_id: Number(reqData.id),
+      approver_id: Number(step.approver_id),
+      sequence: Number(step.sequence) || 1,
+      status: "Pending",
+      createdby: Number(parentData.createdby) || 1,
+      createdate: new Date(),
+      log_inst: Number(parentData.log_inst) || 1,
+    }));
+    if (
+      approvalsToInsert.some((a) => isNaN(a.request_id) || isNaN(a.approver_id))
+    ) {
+      throw new CustomError("Approval step has invalid data (NaN values)", 400);
+    }
+
+    await prisma.hrms_d_requests_approval.createMany({
+      data: approvalsToInsert,
+    });
+
+    // Fetch full result with joins
     const fullData = await prisma.hrms_d_requests.findUnique({
       where: { id: reqData.id },
       include: {
         requests_employee: {
-          select: {
-            id: true,
-            full_name: true,
-            employee_code: true,
-          },
+          select: { id: true, full_name: true, employee_code: true },
         },
         request_approval_request: {
           select: {
@@ -101,22 +176,22 @@ const createRequest = async (data) => {
             updatedby: true,
             log_inst: true,
             request_approval_approver: {
-              select: {
-                id: true,
-                full_name: true,
-                employee_code: true,
-              },
+              select: { id: true, full_name: true, employee_code: true },
             },
           },
         },
       },
     });
 
-    return {
-      ...fullData,
-    };
+    return fullData;
   } catch (error) {
-    throw new CustomError(`Error creating request model ${error.message}`, 500);
+    // console.log("Error", error);
+    console.log(error);
+
+    throw new CustomError(
+      `Error creating request model: ${error.message}`,
+      500
+    );
   }
 };
 // const updateRequests = async (id, data) => {
@@ -433,6 +508,7 @@ const getAllRequests = async (search, page, size, startDate, endDate) => {
     throw new CustomError("Error retrieving requests", 503);
   }
 };
+
 const findRequests = async (request_id) => {
   try {
     const reqData = await prisma.hrms_d_requests.findUnique({
@@ -446,10 +522,87 @@ const findRequests = async (request_id) => {
     throw new CustomError(`Error finding Request by ID: ${error.message}`, 503);
   }
 };
+
+const takeActionOnRequest = async ({
+  request_id,
+  approver_id,
+  action,
+  remarks,
+  acted_by,
+}) => {
+  try {
+    const approval = await prisma.hrms_d_requests_approval.findFirst({
+      where: {
+        request_id: Number(request_id),
+        approver_id: Number(approver_id),
+        status: "Pending",
+      },
+    });
+
+    if (!approval) {
+      throw new CustomError("No pending approval found for this approver", 404);
+    }
+
+    await prisma.hrms_d_requests_approval.update({
+      where: { id: approval.id },
+      data: {
+        status: action === "approve" ? "Approved" : "Rejected",
+        action_at: new Date(),
+        updatedby: acted_by || approver_id,
+        updatedate: new Date(),
+        remarks: remarks || "",
+      },
+    });
+
+    if (action === "reject") {
+      await prisma.hrms_d_requests.update({
+        where: { id: request_id },
+        data: {
+          status: "Rejected",
+          updatedate: new Date(),
+          updatedby: acted_by || approver_id,
+        },
+      });
+
+      return { message: "Request rejected and closed." };
+    }
+
+    const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
+      where: {
+        request_id: Number(request_id),
+        status: "Pending",
+      },
+      orderBy: { sequence: "asc" },
+    });
+
+    if (!nextApprover) {
+      await prisma.hrms_d_requests.update({
+        where: { id: request_id },
+        data: {
+          status: "Approved",
+          updatedate: new Date(),
+          updatedby: acted_by || approver_id,
+        },
+      });
+
+      return {
+        message: "All approvers have approved. Request is fully approved.",
+      };
+    }
+
+    return {
+      message: `Approval recorded. Notified next approver (ID: ${nextApprover.approver_id}).`,
+    };
+  } catch (error) {
+    throw new CustomError(`Error in approval flow: ${error.message}`, 500);
+  }
+};
+
 module.exports = {
   createRequest,
   deleteRequests,
   updateRequests,
   findRequests,
   getAllRequests,
+  takeActionOnRequest,
 };

@@ -26,10 +26,14 @@ const getAllRequests = async (search, page, size, startDate, endDate) => {
   );
 };
 
+const takeActionOnRequest = async (data) => {
+  return await requestsModel.takeActionOnRequest(data);
+};
 module.exports = {
   createRequest,
   findRequests,
   updateRequests,
   deleteRequests,
   getAllRequests,
+  takeActionOnRequest,
 };

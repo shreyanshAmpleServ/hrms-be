@@ -49,6 +49,7 @@ const updateRequests = async (req, res, next) => {
       updatedby: req.user.id,
       log_inst: req.user.log_inst,
     };
+
     const reqData = await requestsService.updateRequests(req.params.id, data);
     res.status(200).success("Requests updated successfully", reqData);
   } catch (error) {
@@ -65,10 +66,31 @@ const deleteRequests = async (req, res, next) => {
   }
 };
 
+// const takeActionOnRequest = async (req, res) => {
+//   try {
+//     const result = await requestsService.takeActionOnRequest(req.body);
+//     res.status(200).json({ success: true, data: result });
+//   } catch (err) {
+//     res
+//       .status(err.status || 500)
+//       .json({ success: false, message: err.message });
+//   }
+// };
+
+const takeActionOnRequest = async (req, res) => {
+  try {
+    const result = await requestsService.takeActionOnRequest(req.body);
+
+    res.status(200).success("Action done successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   createRequest,
   getAllRequests,
   findRequests,
   updateRequests,
   deleteRequests,
+  takeActionOnRequest,
 };

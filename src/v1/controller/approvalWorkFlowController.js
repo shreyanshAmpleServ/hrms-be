@@ -4,13 +4,23 @@ const moment = require("moment");
 
 const createApprovalWorkFlow = async (req, res, next) => {
   try {
-    const data = {
-      ...req.body,
-      createdby: req.user.id,
-      log_inst: req.user.log_inst,
-    };
-    const reqData = await approvalWorkFlowService.createApprovalWorkFlow(data);
-    res.status(201).success(" Approval workflow created successfully", reqData);
+    let dataArray = req.body;
+
+    if (!Array.isArray(dataArray)) {
+      dataArray = [dataArray];
+    }
+
+    dataArray = dataArray.map((item) => ({
+      ...item,
+      createdby: req.user?.id || 1,
+      log_inst: req.user?.log_inst || 1,
+    }));
+
+    const reqData = await approvalWorkFlowService.createApprovalWorkFlow(
+      dataArray
+    );
+
+    res.status(201).success("Approval workflow created successfully", reqData);
   } catch (error) {
     next(error);
   }

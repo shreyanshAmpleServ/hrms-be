@@ -11,29 +11,73 @@ const serializeApprovalWorkFlowData = (data) => ({
 });
 
 // Create a new approval workflow
-const createApprovalWorkFlow = async (data) => {
+// const createApprovalWorkFlow = async (data) => {
+//   try {
+//     const reqData = await prisma.hrms_d_approval_work_flow.create({
+//       data: {
+//         ...serializeApprovalWorkFlowData(data),
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst ? Number(data.log_inst) : 1,
+//       },
+//       include: {
+//         approval_work_approver: {
+//           select: {
+//             id: true,
+//             employee_code: true,
+//             full_name: true,
+//           },
+//         },
+//       },
+//     });
+//     return reqData;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error creating approval workflow: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
+const createApprovalWorkFlow = async (dataArray) => {
   try {
-    const reqData = await prisma.hrms_d_approval_work_flow.create({
-      data: {
-        ...serializeApprovalWorkFlowData(data),
-        createdby: data.createdby || 1,
-        createdate: new Date(),
-        log_inst: data.log_inst ? Number(data.log_inst) : 1,
-      },
-      include: {
-        approval_work_approver: true, // include related employee (approver)
-      },
-    });
-    return reqData;
+    if (!Array.isArray(dataArray)) {
+      throw new CustomError("Input must be an array of data objects", 400);
+    }
+
+    const results = [];
+
+    for (const data of dataArray) {
+      const result = await prisma.hrms_d_approval_work_flow.create({
+        data: {
+          ...serializeApprovalWorkFlowData(data),
+          createdby: data.createdby || 1,
+          createdate: new Date(),
+          log_inst: data.log_inst ? Number(data.log_inst) : 1,
+        },
+        include: {
+          approval_work_approver: {
+            select: {
+              id: true,
+              employee_code: true,
+              full_name: true,
+            },
+          },
+        },
+      });
+
+      results.push(result);
+    }
+
+    return results;
   } catch (error) {
     throw new CustomError(
-      `Error creating approval workflow: ${error.message}`,
+      `Error creating approval workflows: ${error.message}`,
       500
     );
   }
 };
 
-// Find approval workflow by ID
 const findApprovalWorkFlow = async (id) => {
   try {
     const reqData = await prisma.hrms_d_approval_work_flow.findUnique({
@@ -54,7 +98,6 @@ const findApprovalWorkFlow = async (id) => {
   }
 };
 
-// Update approval workflow
 const updateApprovalWorkFlow = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_approval_work_flow.update({
@@ -77,7 +120,6 @@ const updateApprovalWorkFlow = async (id, data) => {
   }
 };
 
-// Delete approval workflow
 const deleteApprovalWorkFlow = async (id) => {
   try {
     await prisma.hrms_d_approval_work_flow.delete({
@@ -91,7 +133,6 @@ const deleteApprovalWorkFlow = async (id) => {
   }
 };
 
-// Get all approval workflows with relation
 const getAllApprovalWorkFlow = async (
   search,
   page,
@@ -119,21 +160,60 @@ const getAllApprovalWorkFlow = async (
       }
     }
 
-    const datas = await prisma.hrms_d_approval_work_flow.findMany({
+    const workflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: filters,
       skip,
       take: size,
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      orderBy: [{ request_type: "asc" }, { sequence: "asc" }],
       include: {
-        approval_work_approver: true,
+        approval_work_approver: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
       },
     });
+
     const totalCount = await prisma.hrms_d_approval_work_flow.count({
       where: filters,
     });
 
+    // Group by request_type
+    const grouped = {};
+    for (const wf of workflows) {
+      const type = wf.request_type;
+      if (!grouped[type]) {
+        grouped[type] = {
+          request_type: type,
+          no_of_approvers: 0,
+          is_active: wf.is_active,
+          request_approval_request: [],
+        };
+      }
+
+      grouped[type].request_approval_request.push({
+        id: wf.id,
+        request_type: wf.request_type,
+        sequence: wf.sequence,
+        approver_id: wf.approver_id,
+        is_active: wf.is_active,
+        createdate: wf.createdate,
+        createdby: wf.createdby,
+        updatedate: wf.updatedate,
+        updatedby: wf.updatedby,
+        log_inst: wf.log_inst,
+        approval_work_approver: {
+          id: wf.approval_work_approver?.id || null,
+          name: wf.approval_work_approver?.full_name || null,
+        },
+      });
+
+      grouped[type].no_of_approvers += 1;
+    }
+
     return {
-      data: datas,
+      data: Object.values(grouped),
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
