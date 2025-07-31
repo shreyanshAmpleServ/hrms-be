@@ -17,5 +17,5 @@ router.delete(
   requestsController.deleteRequests
 );
 
-router.post("requests/action", requestsController.takeActionOnRequest);
+router.post("/requests/action", requestsController.takeActionOnRequest);
 module.exports = router;

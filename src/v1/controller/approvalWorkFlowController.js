@@ -81,6 +81,33 @@ const deleteApprovalWorkFlow = async (req, res, next) => {
     next(error);
   }
 };
+const approvalWorkFlowModel = require("../models/approvalWorkFlowModel");
+
+const getAllApprovalWorkFlowByRequest = async (req, res) => {
+  try {
+    const { request_type } = req.query;
+
+    if (!request_type) {
+      return res.status(400).json({
+        success: false,
+        message: "Request type is required",
+      });
+    }
+
+    const data = await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
+      request_type
+    );
+    return res.status(200).json({
+      success: true,
+      data,
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 module.exports = {
   createApprovalWorkFlow,
@@ -88,4 +115,5 @@ module.exports = {
   findApprovalWorkFlow,
   updateApprovalWorkFlow,
   deleteApprovalWorkFlow,
+  getAllApprovalWorkFlowByRequest,
 };

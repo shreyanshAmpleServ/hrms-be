@@ -29,4 +29,9 @@ router.delete(
   approvalWorkFlowController.deleteApprovalWorkFlow
 );
 
+router.get(
+  "/approval/get-all-workflow",
+  authenticateToken,
+  approvalWorkFlowController.getAllApprovalWorkFlowByRequest
+);
 module.exports = router;

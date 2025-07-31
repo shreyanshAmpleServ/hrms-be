@@ -77,7 +77,7 @@ const deleteRequests = async (req, res, next) => {
 //   }
 // };
 
-const takeActionOnRequest = async (req, res) => {
+const takeActionOnRequest = async (req, res, next) => {
   try {
     const result = await requestsService.takeActionOnRequest(req.body);
 
