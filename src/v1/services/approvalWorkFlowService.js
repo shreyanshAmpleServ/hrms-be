@@ -16,6 +16,16 @@ const deleteApprovalWorkFlow = async (requestType) => {
   return await approvalWorkFlowModel.deleteApprovalWorkFlow(requestType);
 };
 
+const deleteApprovalWorkFlows = async (ids) => {
+  return await approvalWorkFlowModel.deleteApprovalWorkFlows(ids);
+};
+
+const getAllApprovalWorkFlowByRequest = async (requestType) => {
+  return await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
+    requestType
+  );
+};
+
 const getAllApprovalWorkFlow = async (
   search,
   page,
@@ -37,5 +47,7 @@ module.exports = {
   findApprovalWorkFlow,
   updateApprovalWorkFlow,
   deleteApprovalWorkFlow,
+  deleteApprovalWorkFlows,
   getAllApprovalWorkFlow,
+  getAllApprovalWorkFlowByRequest,
 };
