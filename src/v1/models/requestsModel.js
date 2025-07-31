@@ -102,17 +102,6 @@ const createRequest = async (data) => {
   try {
     if (!request_type) throw new CustomError("request_type is required", 400);
 
-    const existingRequest = await prisma.hrms_d_requests.findFirst({
-      where: { request_type },
-    });
-
-    if (existingRequest) {
-      throw new CustomError(
-        `Request type '${request_type}' already exists`,
-        400
-      );
-    }
-
     const reqData = await prisma.hrms_d_requests.create({
       data: {
         ...serializeRequestsData({ request_type, ...parentData }),
