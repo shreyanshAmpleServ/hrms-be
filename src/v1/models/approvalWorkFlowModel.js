@@ -170,6 +170,7 @@ const getAllApprovalWorkFlow = async (
           select: {
             id: true,
             full_name: true,
+            employee_code: true,
           },
         },
       },
@@ -206,6 +207,7 @@ const getAllApprovalWorkFlow = async (
         approval_work_approver: {
           id: wf.approval_work_approver?.id || null,
           name: wf.approval_work_approver?.full_name || null,
+          employee_code: wf.approval_work_approver?.employee_code || null,
         },
       });
 
