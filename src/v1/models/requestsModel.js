@@ -7,7 +7,8 @@ const serializeRequestsData = (data) => ({
   requester_id: Number(data.requester_id),
   request_type: data.request_type || null,
   request_data: data.request_data || null,
-  status: data.status || "N",
+  status: data.status || "P",
+  reference_id: data.reference_id ? Number(data.reference_id) : null,
 });
 
 // const createRequest = async (data) => {
@@ -127,7 +128,7 @@ const createRequest = async (data) => {
       request_id: Number(reqData.id),
       approver_id: Number(step.approver_id),
       sequence: Number(step.sequence) || 1,
-      status: "Pending",
+      status: "P",
       createdby: Number(parentData.createdby) || 1,
       createdate: new Date(),
       log_inst: Number(parentData.log_inst) || 1,
@@ -142,7 +143,6 @@ const createRequest = async (data) => {
       data: approvalsToInsert,
     });
 
-    // Fetch full result with joins
     const fullData = await prisma.hrms_d_requests.findUnique({
       where: { id: reqData.id },
       include: {
@@ -510,6 +510,98 @@ const findRequests = async (request_id) => {
   }
 };
 
+// const takeActionOnRequest = async ({
+//   request_id,
+//   approver_id,
+//   action,
+//   acted_by,
+// }) => {
+//   try {
+//     const approval = await prisma.hrms_d_requests_approval.findFirst({
+//       where: {
+//         request_id: Number(request_id),
+//         approver_id: Number(approver_id),
+//         status: "P",
+//       },
+//     });
+
+//     if (!approval) {
+//       throw new CustomError("No pending approval found for this approver", 404);
+//     }
+
+//     await prisma.hrms_d_requests_approval.update({
+//       where: { id: approval.id },
+//       data: {
+//         status: action === "A" ? "A" : "R",
+//         action_at: new Date(),
+//         updatedby: acted_by || approver_id,
+//         updatedate: new Date(),
+//       },
+//     });
+
+//     if (action === "R") {
+//       await prisma.hrms_d_requests.update({
+//         where: { id: request_id },
+//         data: {
+//           status: "R",
+//           updatedate: new Date(),
+//           updatedby: acted_by || approver_id,
+//         },
+//       });
+//       if (request.request_type === "leave_request" && request.reference_id) {
+//         await prisma.hrms_d_leave_application.update({
+//           where: { id: request.reference_id },
+//           data: {
+//             status: "R",
+//             updatedby: acted_by || approver_id,
+//             updatedate: new Date(),
+//           },
+//         });
+//       }
+
+//       return { message: "Request rejected and closed." };
+//     }
+
+//     const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
+//       where: {
+//         request_id: Number(request_id),
+//         status: "P",
+//       },
+//       orderBy: { sequence: "asc" },
+//     });
+
+//     if (!nextApprover) {
+//       await prisma.hrms_d_requests.update({
+//         where: { id: request_id },
+//         data: {
+//           status: "A",
+//           updatedate: new Date(),
+//           updatedby: acted_by || approver_id,
+//         },
+//       });
+//       if (request.request_type === "leave_request" && request.reference_id) {
+//         await prisma.hrms_d_leave_application.update({
+//           where: { id: request.reference_id },
+//           data: {
+//             status: "A",
+//             updatedby: acted_by || approver_id,
+//             updatedate: new Date(),
+//           },
+//         });
+//       }
+//       return {
+//         message: "All approvers have approved. Request is fully approved.",
+//       };
+//     }
+
+//     return {
+//       message: `Approval recorded. Notified next approver (ID: ${nextApprover.approver_id}).`,
+//     };
+//   } catch (error) {
+//     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
+//   }
+// };
+
 const takeActionOnRequest = async ({
   request_id,
   approver_id,
@@ -521,7 +613,7 @@ const takeActionOnRequest = async ({
       where: {
         request_id: Number(request_id),
         approver_id: Number(approver_id),
-        status: "Pending",
+        status: "P",
       },
     });
 
@@ -532,84 +624,78 @@ const takeActionOnRequest = async ({
     await prisma.hrms_d_requests_approval.update({
       where: { id: approval.id },
       data: {
-        status: action === "approve" ? "Approved" : "Rejected",
+        status: action === "A" ? "A" : "R",
         action_at: new Date(),
         updatedby: acted_by || approver_id,
         updatedate: new Date(),
       },
     });
 
-    // Get reference_id from the request
+    // Fetch the main request to get request_type and reference_id
     const request = await prisma.hrms_d_requests.findUnique({
       where: { id: Number(request_id) },
     });
 
-    const reference_id = request?.reference_id;
-
-    if (action === "reject") {
-      // Update request
+    if (action === "R") {
       await prisma.hrms_d_requests.update({
-        where: { id: Number(request_id) },
+        where: { id: request_id },
         data: {
-          status: "Rejected",
-          updatedby: acted_by || approver_id,
+          status: "R",
           updatedate: new Date(),
+          updatedby: acted_by || approver_id,
         },
       });
-
-      // Update linked leave
-      if (reference_id) {
+      if (
+        request &&
+        request.request_type === "leave_request" &&
+        request.reference_id
+      ) {
         await prisma.hrms_d_leave_application.update({
-          where: { id: reference_id },
+          where: { id: request.reference_id },
           data: {
-            status: "R", // Rejected
-            approval_date: new Date(),
-            approver_id: approver_id,
+            status: "R",
             updatedby: acted_by || approver_id,
             updatedate: new Date(),
           },
         });
       }
 
-      return { message: "Request rejected and leave marked as rejected." };
+      return { message: "Request rejected and closed." };
     }
 
-    // Check if there are more pending approvers
     const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
       where: {
         request_id: Number(request_id),
-        status: "Pending",
+        status: "P",
       },
       orderBy: { sequence: "asc" },
     });
 
     if (!nextApprover) {
-      // Final approval
       await prisma.hrms_d_requests.update({
-        where: { id: Number(request_id) },
+        where: { id: request_id },
         data: {
-          status: "Approved",
-          updatedby: acted_by || approver_id,
+          status: "A",
           updatedate: new Date(),
+          updatedby: acted_by || approver_id,
         },
       });
-
-      // Update linked leave
-      if (reference_id) {
+      if (
+        request &&
+        request.request_type === "leave_request" &&
+        request.reference_id
+      ) {
         await prisma.hrms_d_leave_application.update({
-          where: { id: reference_id },
+          where: { id: request.reference_id },
           data: {
-            status: "A", // Approved
-            approval_date: new Date(),
-            approver_id: approver_id,
+            status: "A",
             updatedby: acted_by || approver_id,
             updatedate: new Date(),
           },
         });
       }
-
       return {
-        message: "All approvers have approved. Request and leave are approved.",
+        message: "All approvers have approved. Request is fully approved.",
       };
     }
 
@@ -620,7 +706,6 @@ const takeActionOnRequest = async ({
     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
   }
 };
-
 module.exports = {
   createRequest,
   deleteRequests,
