@@ -648,20 +648,20 @@ const takeActionOnRequest = async ({
       },
     });
 
-    // Fetch the main request to get request_type and reference_id
     const request = await prisma.hrms_d_requests.findUnique({
       where: { id: Number(request_id) },
     });
 
     if (action === "R") {
       await prisma.hrms_d_requests.update({
-        where: { id: request_id },
+        where: { id: Number(request_id) },
         data: {
           status: "R",
           updatedate: new Date(),
           updatedby: acted_by || approver_id,
         },
       });
+
       if (
         request &&
         request.request_type === "leave_request" &&
@@ -680,23 +680,16 @@ const takeActionOnRequest = async ({
       return { message: "Request rejected and closed." };
     }
 
-    const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
-      where: {
-        request_id: Number(request_id),
-        status: "P",
-      },
-      orderBy: { sequence: "asc" },
-    });
-
-    if (!nextApprover) {
+    if (action === "A") {
       await prisma.hrms_d_requests.update({
-        where: { id: request_id },
+        where: { id: Number(request_id) },
         data: {
           status: "A",
           updatedate: new Date(),
           updatedby: acted_by || approver_id,
         },
       });
+
       if (
         request &&
         request.request_type === "leave_request" &&
@@ -711,6 +704,17 @@ const takeActionOnRequest = async ({
           },
         });
       }
+    }
+
+    const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
+      where: {
+        request_id: Number(request_id),
+        status: "P",
+      },
+      orderBy: { sequence: "asc" },
+    });
+
+    if (!nextApprover) {
       return {
         message: "All approvers have approved. Request is fully approved.",
       };
@@ -720,6 +724,7 @@ const takeActionOnRequest = async ({
       message: `Approval recorded. Notified next approver (ID: ${nextApprover.approver_id}).`,
     };
   } catch (error) {
+    console.error("Error in takeActionOnRequest:", error);
     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
   }
 };
