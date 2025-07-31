@@ -249,6 +249,7 @@ model hrms_d_employee {
   mother_name                                     String?
   no_of_child                                     Int?
   spouse_name                                     String?
+  currency_id                                     Int?
   account_holder_name                             String?                                           @db.VarChar(100)
   address                                         String?
   ifsc                                            String?
@@ -325,7 +326,7 @@ model hrms_d_employee {
   loan_req_employee                               hrms_d_loan_request[]
   medical_employee_id                             hrms_d_medical_record[]
   midmonth_payroll_processing_employee            hrms_d_midmonth_payroll_processing[]
-  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation")   @ignore
+  hrms_monthly_payroll_employee                   hrms_d_monthly_payroll_processing[]               @relation("MonthlyPayrollRelation") @ignore
   notification_log_employee                       hrms_d_notification_log[]
   overtime_payroll_processing_employee            hrms_d_overtime_payroll_processing[]
   payslip_employee                                hrms_d_payslip[]
@@ -355,6 +356,10 @@ model hrms_d_employee {
   interview_stage_employee_id                     hrms_m_interview_stage_remark[]
   projects_employee_detail                        hrms_m_projects[]
   user_employee                                   hrms_m_user[]
+  requests_employee                               hrms_d_requests[]
+  employee_currency                               hrms_m_currency_master?                           @relation("EmployeeCurrency", fields: [currency_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  approval_work_approver                          hrms_d_approval_work_flow[]
+  request_approval_approver                       hrms_d_requests_approval[]
 }
 
 model hrms_d_employee_address {
@@ -408,18 +413,22 @@ model hrms_d_employment_contract {
 }
 
 model hrms_d_exit_clearance {
-  id                      Int              @id(map: "PK__hrms_d_e__3213E83FD2EA570F") @default(autoincrement())
+  id                      Int                      @id(map: "PK__hrms_d_e__3213E83F6E5C594D") @default(autoincrement())
   employee_id             Int?
-  clearance_date          DateTime?        @db.Date
+  start_date              DateTime?                @db.DateTime
+  reason                  String?                  @db.NVarChar(50)
+  employee_name           String?                  @db.NVarChar(100)
+  clearance_date          DateTime?                @db.Date
   cleared_by              Int?
-  remarks                 String?          @db.NVarChar(255)
-  createdate              DateTime?        @default(now(), map: "DF__hrms_d_ex__creat__7C1A6C5A") @db.DateTime
+  remarks                 String?                  @db.NVarChar(255)
+  createdate              DateTime?                @default(now(), map: "DF__hrms_d_ex__creat__310335E5") @db.DateTime
   createdby               Int
-  updatedate              DateTime?        @db.DateTime
+  updatedate              DateTime?                @db.DateTime
   updatedby               Int?
   log_inst                Int?
-  exit_clearance_by_user  hrms_d_employee? @relation("UserCleared", fields: [cleared_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  exit_clearance_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exit_clearance_by_user  hrms_d_employee?         @relation("UserCleared", fields: [cleared_by], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  exit_clearance_employee hrms_d_employee?         @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hrms_d_exit_clearance1  hrms_d_exit_clearance1[]
 }
 
 model hrms_d_exit_interview {
@@ -1078,6 +1087,7 @@ model hrms_m_currency_master {
   overtime_payroll_processing_currency hrms_d_overtime_payroll_processing[]            @relation("OvertimeCurrency")
   travel_expense_currency              hrms_d_travel_expense[]
   loan_master_amount_currency          hrms_m_loan_master[]
+  employee_currency                    hrms_d_employee[]                               @relation("EmployeeCurrency")
 }
 
 model hrms_m_department_master {
@@ -1306,9 +1316,13 @@ model hrms_m_pay_component {
   is_loan                               String?                                         @default("N", map: "DF__hrms_m_pa__is_lo__6C5905DD") @db.NVarChar(1)
   contribution_of_employee              String                                          @default("N") @db.Char(1)
   employer_default_formula              String?                                         @db.VarChar(50)
+  is_basic                              String?                                         @db.VarChar(50)
+  relief_amount                         String?                                         @db.VarChar(50)
+  relief_type                           String?                                         @db.VarChar(50)
   pay_component_for_line                hrms_d_employee_pay_component_assignment_line[]
   employee_payroll_adjustment_component hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentComponent")
   employee_payroll_deduction_component  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeduction")
+  exit_clearance_pay                    hrms_d_exit_clearance1[]                        @relation("ExitClearancePayComponent")
   finalsettlement_component             hrms_d_finalsettlement_processing[]
   midmonth_payroll_processing_component hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProcessingComponent")
   overtime_payroll_processing_component hrms_d_overtime_payroll_processing[]
@@ -1475,19 +1489,20 @@ model hrms_m_work_schedule_template {
 }
 
 model hrms_m_country_master {
-  id               Int                       @id(map: "PK__hrms_m_c__3213E83F1EDF4224") @default(autoincrement())
-  is_active        String?                   @default("Y", map: "DF__hrms_m_co__is_ac__67DE6983") @db.Char(1)
-  createdate       DateTime?                 @default(now(), map: "DF__hrms_m_co__creat__68D28DBC") @db.DateTime
-  createdby        Int
-  updatedate       DateTime?                 @db.DateTime
-  updatedby        Int?
-  log_inst         Int?
-  code             String?                   @db.VarChar(5)
-  name             String?                   @db.NVarChar(100)
-  country_details  crms_m_states[]
-  employee_country hrms_d_employee_address[]
-  company_country  hrms_m_company_master[]
-  regime_country   hrms_m_tax_regime[]
+  id                            Int                             @id(map: "PK__hrms_m_c__3213E83F1EDF4224") @default(autoincrement())
+  is_active                     String?                         @default("Y", map: "DF__hrms_m_co__is_ac__67DE6983") @db.Char(1)
+  createdate                    DateTime?                       @default(now(), map: "DF__hrms_m_co__creat__68D28DBC") @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?                       @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  code                          String?                         @db.VarChar(5)
+  name                          String?                         @db.NVarChar(100)
+  country_details               crms_m_states[]
+  default_configuration_country hrms_d_default_configurations[]
+  employee_country              hrms_d_employee_address[]
+  company_country               hrms_m_company_master[]
+  regime_country                hrms_m_tax_regime[]
 }
 
 model hrms_m_country_tax_rule_template {
@@ -1542,17 +1557,18 @@ model m_mobile_notification_template {
 }
 
 model crms_m_states {
-  id              Int                       @id(map: "PK_crms__states") @default(autoincrement())
-  country_code    Int
-  name            String                    @db.NVarChar(100)
-  is_active       String                    @default("Y", map: "DF__crms_m_st__is_ac__361203C5") @db.Char(1)
-  createdate      DateTime                  @default(now()) @db.DateTime
-  createdby       Int
-  log_inst        Int?
-  updatedate      DateTime?                 @db.DateTime
-  updatedby       Int?
-  country_details hrms_m_country_master     @relation(fields: [country_code], references: [id], onUpdate: NoAction)
-  employee_state  hrms_d_employee_address[]
+  id                          Int                             @id(map: "PK_crms__states") @default(autoincrement())
+  country_code                Int
+  name                        String                          @db.NVarChar(100)
+  is_active                   String                          @default("Y", map: "DF__crms_m_st__is_ac__361203C5") @db.Char(1)
+  createdate                  DateTime                        @default(now()) @db.DateTime
+  createdby                   Int
+  log_inst                    Int?
+  updatedate                  DateTime?                       @db.DateTime
+  updatedby                   Int?
+  country_details             hrms_m_country_master           @relation(fields: [country_code], references: [id], onUpdate: NoAction)
+  default_configuration_state hrms_d_default_configurations[]
+  employee_state              hrms_d_employee_address[]
 }
 
 model Country {
@@ -1704,13 +1720,85 @@ model hrms_d_monthly_payroll_processing {
   updatedby                     Int?
   log_inst                      Int?
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 1009 Decimal? @map("1009") @db.Decimal(18, 4)
+  // 1002 Decimal? @map("1002") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9003 Decimal? @map("9003") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1004 Decimal? @map("1004") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1005 Decimal? @map("1005") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1006 Decimal? @map("1006") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1007 Decimal? @map("1007") @db.Decimal(18, 4)
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
   // 1008 Decimal? @map("1008") @db.Decimal(18, 4)
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
-  // 7023 Decimal? @map("7023") @db.Decimal(18, 4)
+  // 1009 Decimal? @map("1009") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1010 Decimal? @map("1010") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1012 Decimal? @map("1012") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1013 Decimal? @map("1013") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1014 Decimal? @map("1014") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1015 Decimal? @map("1015") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1016 Decimal? @map("1016") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1017 Decimal? @map("1017") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1018 Decimal? @map("1018") @db.Decimal(18, 4)
   /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
   // 8019 Decimal? @map("8019") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1020 Decimal? @map("1020") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1021 Decimal? @map("1021") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1022 Decimal? @map("1022") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 7023 Decimal? @map("7023") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1024 Decimal? @map("1024") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1025 Decimal? @map("1025") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9026 Decimal? @map("9026") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1027 Decimal? @map("1027") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9080 Decimal? @map("9080") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 9099 Decimal? @map("9099") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1030 Decimal? @map("1030") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1031 Decimal? @map("1031") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1032 Decimal? @map("1032") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1033 Decimal? @map("1033") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1034 Decimal? @map("1034") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1035 Decimal? @map("1035") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1036 Decimal? @map("1036") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1001 Decimal? @map("1001") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1222 Decimal? @map("1222") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 8890 Decimal? @map("8890") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1037 Decimal? @map("1037") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1111 Decimal? @map("1111") @db.Decimal(18, 4)
+  /// This field was commented out because of an invalid name. Please provide a valid one that matches [a-zA-Z][a-zA-Z0-9_]*
+  // 1039 Decimal? @map("1039") @db.Decimal(18, 4)
   hrms_monthly_payroll_employee hrms_d_employee @relation("MonthlyPayrollRelation", fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_mo__emplo__08A03ED0")
 
   @@ignore
@@ -2377,4 +2465,94 @@ model hrms_d_loan_cash_payment {
   log_inst            Int?
   due_year            String?
   hrms_d_loan_request hrms_d_loan_request @relation(fields: [loan_request_id], references: [id], onUpdate: NoAction, map: "hrms_d_loan_cash_payment_id_fkey")
+}
+
+model hrms_d_exit_clearance1 {
+  id                    Int                    @id(map: "PK__hrms_d_e__3213E83F605785EC") @default(autoincrement())
+  parent_id             Int?
+  pay_component_id      Int?
+  payment_or_dedcution  String?                @db.NVarChar(10)
+  no_of_days            Int?
+  amount                Decimal?               @db.Decimal(19, 6)
+  remarks               String?                @db.NVarChar(255)
+  createdate            DateTime?              @default(now(), map: "DF__hrms_d_ex__creat__35C7EB02") @db.DateTime
+  createdby             Int
+  updatedate            DateTime?              @db.DateTime
+  updatedby             Int?
+  log_inst              Int?
+  hrms_d_exit_clearance hrms_d_exit_clearance? @relation(fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK__hrms_d_exit_clearance1__2EFAF1E2")
+  exit_clearance_pay    hrms_m_pay_component?  @relation("ExitClearancePayComponent", fields: [pay_component_id], references: [id])
+}
+
+model hrms_d_default_configurations {
+  id                            Int                    @id @default(autoincrement())
+  company_logo                  String?                @db.VarChar(255)
+  company_name                  String                 @db.NVarChar(150)
+  email                         String                 @db.VarChar(100)
+  website                       String?                @db.VarChar(150)
+  phone_number                  String?                @db.VarChar(20)
+  description                   String?
+  street_address                String?                @db.NVarChar(200)
+  city                          String?                @db.NVarChar(100)
+  state                         Int?
+  province                      String?                @db.NVarChar(100)
+  zip_code                      String?                @db.VarChar(20)
+  country                       Int?
+  gst_number                    String?                @db.VarChar(30)
+  pan_number                    String?                @db.VarChar(30)
+  tax_id                        String?                @db.VarChar(30)
+  createdate                    DateTime               @default(now()) @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?              @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  company_signature             String?                @db.VarChar(255)
+  default_configuration_country hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
+  default_configuration_state   crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
+}
+
+model hrms_d_requests {
+  id                       Int                        @id @default(autoincrement())
+  requester_id             Int
+  request_type             String?                    @db.VarChar(100)
+  request_data             String?                    @db.Text
+  status                   String                     @default("Pending")
+  reference_id             Int?
+  createdate               DateTime                   @default(now()) @db.DateTime
+  createdby                Int
+  updatedate               DateTime?                  @db.DateTime
+  updatedby                Int?
+  log_inst                 Int?
+  requests_employee        hrms_d_employee?           @relation(fields: [requester_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  request_approval_request hrms_d_requests_approval[]
+}
+
+model hrms_d_approval_work_flow {
+  id                     Int              @id @default(autoincrement())
+  request_type           String?
+  sequence               Int
+  approver_id            Int
+  is_active              String?
+  createdate             DateTime         @default(now()) @db.DateTime
+  createdby              Int
+  updatedate             DateTime?        @db.DateTime
+  updatedby              Int?
+  log_inst               Int?
+  approval_work_approver hrms_d_employee? @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model hrms_d_requests_approval {
+  id                        Int              @id @default(autoincrement())
+  request_id                Int
+  approver_id               Int
+  sequence                  Int
+  status                    String           @default("Pending")
+  action_at                 DateTime?
+  createdate                DateTime         @default(now()) @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?        @db.DateTime
+  updatedby                 Int?
+  log_inst                  Int?
+  request_approval_request  hrms_d_requests? @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  request_approval_approver hrms_d_employee? @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

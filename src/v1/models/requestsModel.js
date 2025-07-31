@@ -8,8 +8,6 @@ const serializeRequestsData = (data) => ({
   request_type: data.request_type || null,
   request_data: data.request_data || null,
   status: data.status || "N",
-  title: data.title || null,
-  no_of_approvers: Number(data.no_of_approvers) || 0,
 });
 
 // const createRequest = async (data) => {
@@ -552,19 +550,42 @@ const takeActionOnRequest = async ({
       },
     });
 
+    // Get reference_id from the request
+    const request = await prisma.hrms_d_requests.findUnique({
+      where: { id: Number(request_id) },
+    });
+
+    const reference_id = request?.reference_id;
+
     if (action === "reject") {
+      // Update request
       await prisma.hrms_d_requests.update({
-        where: { id: request_id },
+        where: { id: Number(request_id) },
         data: {
           status: "Rejected",
-          updatedate: new Date(),
           updatedby: acted_by || approver_id,
+          updatedate: new Date(),
         },
       });
 
-      return { message: "Request rejected and closed." };
+      // Update linked leave
+      if (reference_id) {
+        await prisma.hrms_d_leave_application.update({
+          where: { id: reference_id },
+          data: {
+            status: "R", // Rejected
+            approval_date: new Date(),
+            approver_id: approver_id,
+            updatedby: acted_by || approver_id,
+            updatedate: new Date(),
+          },
+        });
+      }
+
+      return { message: "Request rejected and leave marked as rejected." };
     }
 
+    // Check if there are more pending approvers
     const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
       where: {
         request_id: Number(request_id),
@@ -574,17 +595,32 @@ const takeActionOnRequest = async ({
     });
 
     if (!nextApprover) {
+      // Final approval
       await prisma.hrms_d_requests.update({
-        where: { id: request_id },
+        where: { id: Number(request_id) },
         data: {
           status: "Approved",
-          updatedate: new Date(),
           updatedby: acted_by || approver_id,
+          updatedate: new Date(),
         },
       });
 
+      // Update linked leave
+      if (reference_id) {
+        await prisma.hrms_d_leave_application.update({
+          where: { id: reference_id },
+          data: {
+            status: "A", // Approved
+            approval_date: new Date(),
+            approver_id: approver_id,
+            updatedby: acted_by || approver_id,
+            updatedate: new Date(),
+          },
+        });
+      }
+
       return {
-        message: "All approvers have approved. Request is fully approved.",
+        message: "All approvers have approved. Request and leave are approved.",
       };
     }
 

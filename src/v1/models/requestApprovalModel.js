@@ -9,6 +9,7 @@ const serializeRequestApprovalData = (data) => ({
   sequence: Number(data.sequence),
   status: data.status || "Pending",
   action_at: data.action_at ? new Date(data.action_at) : null,
+  reference_id: data.reference_id ? Number(data.reference_id) : null,
 });
 
 // Create approval entry
