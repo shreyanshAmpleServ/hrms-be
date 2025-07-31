@@ -708,6 +708,13 @@ const employeeOptions = async () => {
         designation_id: true,
         currency_id: true,
         email: true,
+        profile_pic: true,
+        hrms_employee_department: {
+          select: {
+            id: true,
+            department_name: true,
+          },
+        },
       },
     });
     return employees.map(
@@ -719,6 +726,8 @@ const employeeOptions = async () => {
         designation_id,
         currency_id,
         email,
+        profile_pic,
+        hrms_employee_department,
       }) => ({
         value: id,
         label: `${full_name} (${employee_code})`,
@@ -727,6 +736,8 @@ const employeeOptions = async () => {
           designation_id,
           currency_id: currency_id || 23,
           email,
+          profile_pic,
+          department: hrms_employee_department?.department_name,
         },
       })
     );

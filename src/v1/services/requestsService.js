@@ -26,6 +26,10 @@ const getAllRequests = async (search, page, size, startDate, endDate) => {
   );
 };
 
+const findRequestByRequestTypeAndReferenceId = async (request) => {
+  return await requestsModel.findRequestByRequestTypeAndReferenceId(request);
+};
+
 const takeActionOnRequest = async (data) => {
   return await requestsModel.takeActionOnRequest(data);
 };
@@ -35,5 +39,6 @@ module.exports = {
   updateRequests,
   deleteRequests,
   getAllRequests,
+  findRequestByRequestTypeAndReferenceId,
   takeActionOnRequest,
 };

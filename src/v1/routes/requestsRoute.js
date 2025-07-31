@@ -17,5 +17,16 @@ router.delete(
   requestsController.deleteRequests
 );
 
-router.post("/requests/action", requestsController.takeActionOnRequest);
+router.post(
+  "/requests/action",
+  authenticateToken,
+  requestsController.takeActionOnRequest
+);
+
+router.get(
+  "/requests/request-type-reference",
+  authenticateToken,
+  requestsController.findRequestByRequestTypeAndReferenceId
+);
+
 module.exports = router;

@@ -77,6 +77,17 @@ const deleteRequests = async (req, res, next) => {
 //   }
 // };
 
+const findRequestByRequestTypeAndReferenceId = async (req, res, next) => {
+  try {
+    const result = await requestsService.findRequestByRequestTypeAndReferenceId(
+      req.query
+    );
+    res.status(200).success("Request found successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const takeActionOnRequest = async (req, res, next) => {
   try {
     const result = await requestsService.takeActionOnRequest(req.body);
@@ -92,5 +103,6 @@ module.exports = {
   findRequests,
   updateRequests,
   deleteRequests,
+  findRequestByRequestTypeAndReferenceId,
   takeActionOnRequest,
 };

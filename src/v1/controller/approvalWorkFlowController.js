@@ -1,4 +1,5 @@
 const approvalWorkFlowService = require("../services/approvalWorkFlowService.js");
+const approvalWorkFlowModel = require("../models/approvalWorkFlowModel.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
 
@@ -67,6 +68,26 @@ const updateApprovalWorkFlow = async (req, res, next) => {
 
     const result = [];
 
+    // Step 1: Get all current workflow IDs for the same request_type (assumption)
+    const requestType = dataArray[0]?.request_type;
+    const existingWorkflows =
+      await approvalWorkFlowService.getAllApprovalWorkFlowByRequest(
+        requestType
+      );
+    const existingIds = new Set(existingWorkflows.map((w) => w.id));
+
+    // Step 2: Collect incoming IDs
+    const incomingIds = new Set(
+      dataArray.map((item) => item.id).filter(Boolean)
+    );
+
+    // Step 3: Delete workflows not in incoming list
+    const idsToDelete = [...existingIds].filter((id) => !incomingIds.has(id));
+    if (idsToDelete.length > 0) {
+      await approvalWorkFlowService.deleteApprovalWorkFlows(idsToDelete);
+    }
+
+    // Step 4: Upsert workflows (update or create)
     for (const item of dataArray) {
       const data = {
         ...item,
@@ -84,7 +105,6 @@ const updateApprovalWorkFlow = async (req, res, next) => {
         );
         result.push(updated);
       } else {
-        // ✅ CREATE if ID is not present
         const created = await approvalWorkFlowService.createApprovalWorkFlow([
           {
             ...data,
@@ -97,7 +117,7 @@ const updateApprovalWorkFlow = async (req, res, next) => {
 
     res.status(200).success("Approval workflows upserted successfully", result);
   } catch (error) {
-    next(error); // <- where your error `"next is not a function"` came from earlier
+    next(error);
   }
 };
 

@@ -143,6 +143,13 @@ const updateApprovalWorkFlow = async (id, data) => {
             id: true,
             employee_code: true,
             full_name: true,
+            profile_pic: true,
+            hrms_employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
           },
         },
       },
@@ -164,6 +171,19 @@ const deleteApprovalWorkFlow = async (requestType) => {
   } catch (error) {
     throw new CustomError(
       `Error deleting approval workflow: ${error.message}`,
+      500
+    );
+  }
+};
+
+const deleteApprovalWorkFlows = async (ids) => {
+  try {
+    await prisma.hrms_d_approval_work_flow.deleteMany({
+      where: { id: { in: ids } },
+    });
+  } catch (error) {
+    throw new CustomError(
+      `Error deleting approval workflows: ${error.message}`,
       500
     );
   }
@@ -207,6 +227,13 @@ const getAllApprovalWorkFlow = async (
             id: true,
             full_name: true,
             employee_code: true,
+            profile_pic: true,
+            hrms_employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
           },
         },
       },
@@ -244,6 +271,10 @@ const getAllApprovalWorkFlow = async (
           id: wf.approval_work_approver?.id || null,
           name: wf.approval_work_approver?.full_name || null,
           employee_code: wf.approval_work_approver?.employee_code || null,
+          profile_pic: wf.approval_work_approver?.profile_pic || null,
+          department:
+            wf.approval_work_approver?.hrms_employee_department
+              ?.department_name || null,
         },
       });
 
@@ -273,6 +304,13 @@ const getAllApprovalWorkFlowByRequest = async (request_type) => {
             id: true,
             full_name: true,
             employee_code: true,
+            profile_pic: true,
+            hrms_employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
           },
         },
       },
@@ -292,6 +330,7 @@ module.exports = {
   findApprovalWorkFlow,
   updateApprovalWorkFlow,
   deleteApprovalWorkFlow,
+  deleteApprovalWorkFlows,
   getAllApprovalWorkFlow,
   getAllApprovalWorkFlowByRequest,
 };

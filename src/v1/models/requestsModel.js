@@ -502,7 +502,24 @@ const findRequests = async (request_id) => {
       where: { request_id: parseInt(request_id) },
     });
     if (!reqData) {
-      throw new CustomError("Request  not found", 404);
+      throw new CustomError("Request not found", 404);
+    }
+    return reqData;
+  } catch (error) {
+    throw new CustomError(`Error finding Request by ID: ${error.message}`, 503);
+  }
+};
+
+const findRequestByRequestTypeAndReferenceId = async (request) => {
+  try {
+    const reqData = await prisma.hrms_d_requests.findFirst({
+      where: {
+        request_type: parseInt(request.requestType),
+        reference_id: parseInt(request.referenceId),
+      },
+    });
+    if (!reqData) {
+      throw new CustomError("Request not found", 404);
     }
     return reqData;
   } catch (error) {
@@ -713,4 +730,5 @@ module.exports = {
   findRequests,
   getAllRequests,
   takeActionOnRequest,
+  findRequestByRequestTypeAndReferenceId,
 };
