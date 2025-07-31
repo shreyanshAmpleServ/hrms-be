@@ -104,10 +104,34 @@ const findApprovalWorkFlow = async (id) => {
   }
 };
 
+// const updateApprovalWorkFlow = async (id, data) => {
+//   return await prisma.hrms_d_approval_work_flow.update({
+//     where: { workflow_id: parseInt(id) },
+//     data: {
+//       ...serializeApprovalWorkFlowData(data),
+//       updatedby: data.updatedby || 1,
+//       updatedate: new Date(),
+//     },
+//     include: {
+//       approval_work_approver: {
+//         select: {
+//           id: true,
+//           employee_code: true,
+//           full_name: true,
+//         },
+//       },
+//     },
+//   });
+// };
+
 const updateApprovalWorkFlow = async (id, data) => {
   try {
+    if (!id || isNaN(Number(id))) {
+      throw new CustomError("Invalid or missing ID for update", 400);
+    }
+
     const updatedEntry = await prisma.hrms_d_approval_work_flow.update({
-      where: { workflow_id: parseInt(id) },
+      where: { id: parseInt(id) },
       data: {
         ...serializeApprovalWorkFlowData(data),
         updatedby: data.updatedby || 1,
@@ -123,6 +147,7 @@ const updateApprovalWorkFlow = async (id, data) => {
         },
       },
     });
+
     return updatedEntry;
   } catch (error) {
     throw new CustomError(
@@ -131,7 +156,6 @@ const updateApprovalWorkFlow = async (id, data) => {
     );
   }
 };
-
 const deleteApprovalWorkFlow = async (requestType) => {
   try {
     await prisma.hrms_d_approval_work_flow.deleteMany({

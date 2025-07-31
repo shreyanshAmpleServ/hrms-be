@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { id } = require("zod/v4/locales");
 const prisma = new PrismaClient();
+const { createRequest } = require("./requestsModel");
 
 // Serialize leave application data
 const serializeLeaveApplicationData = (data) => ({
@@ -48,6 +49,7 @@ const createLeaveApplication = async (data) => {
       400
     );
   }
+
   try {
     const reqData = await prisma.hrms_d_leave_application.create({
       data: {
@@ -80,6 +82,18 @@ const createLeaveApplication = async (data) => {
         leave_types: true,
       },
     });
+
+    await createRequest({
+      requester_id: reqData.employee_id,
+      request_type: "leave_request",
+      reference_id: reqData.id,
+      request_data:
+        reqData.reason ||
+        `Leave from ${reqData.start_date} to ${reqData.end_date}`,
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
+    });
+
     return reqData;
   } catch (error) {
     throw new CustomError(

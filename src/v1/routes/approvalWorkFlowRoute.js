@@ -18,8 +18,8 @@ router.get(
   authenticateToken,
   approvalWorkFlowController.getAllApprovalWorkFlow
 );
-router.put(
-  "/approval-workflow/:id",
+router.post(
+  "/approval-workflow-upsert",
   authenticateToken,
   approvalWorkFlowController.updateApprovalWorkFlow
 );
@@ -34,4 +34,7 @@ router.get(
   authenticateToken,
   approvalWorkFlowController.getAllApprovalWorkFlowByRequest
 );
+
+// Route for upsert (create or update based on presence of ID in body)
+
 module.exports = router;

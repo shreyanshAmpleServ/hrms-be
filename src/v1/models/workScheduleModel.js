@@ -97,14 +97,23 @@ const findWorkScheduleById = async (id) => {
 
 const updateWorkSchedule = async (id, data) => {
   try {
-    const updatedData = await prisma.hrms_m_work_schedule_template.update({
+    const upsertedData = await prisma.hrms_m_work_schedule.upsert({
       where: { id: parseInt(id) },
-      data: {
+      update: {
         ...data,
         updatedate: new Date(),
       },
+      create: {
+        ...data,
+        createdate: new Date(),
+        updatedate: new Date(),
+        createdby: data.createdby || 1,
+        updatedby: data.updatedby || 1,
+        is_active: data.is_active || "Y",
+        log_inst: data.log_inst || 1,
+      },
     });
-    return updatedData;
+    return upsertedData;
   } catch (error) {
     throw new CustomError(
       `Error updating work schedule: ${error.message}`,

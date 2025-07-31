@@ -527,7 +527,6 @@ const takeActionOnRequest = async ({
   request_id,
   approver_id,
   action,
-  remarks,
   acted_by,
 }) => {
   try {
@@ -550,7 +549,6 @@ const takeActionOnRequest = async ({
         action_at: new Date(),
         updatedby: acted_by || approver_id,
         updatedate: new Date(),
-        remarks: remarks || "",
       },
     });
 

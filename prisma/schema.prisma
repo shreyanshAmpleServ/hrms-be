@@ -2517,8 +2517,7 @@ model hrms_d_requests {
   request_type             String?                    @db.VarChar(100)
   request_data             String?                    @db.Text
   status                   String                     @default("Pending")
-  title                    String?                    @db.VarChar(100)
-  no_of_approvers          Int?
+  reference_id             Int?
   createdate               DateTime                   @default(now()) @db.DateTime
   createdby                Int
   updatedate               DateTime?                  @db.DateTime

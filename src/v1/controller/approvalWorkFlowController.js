@@ -56,18 +56,48 @@ const getAllApprovalWorkFlow = async (req, res, next) => {
 
 const updateApprovalWorkFlow = async (req, res, next) => {
   try {
-    const data = {
-      ...req.body,
-      updatedby: req.user.id,
-      log_inst: req.user.log_inst,
-    };
-    const reqData = await approvalWorkFlowService.updateApprovalWorkFlow(
-      req.params.id,
-      data
-    );
-    res.status(200).success("Approval workflow updated successfully", reqData);
+    let dataArray = req.body;
+
+    if (!Array.isArray(dataArray)) {
+      dataArray = [dataArray];
+    }
+
+    const userId = req.user?.id || 1;
+    const logInst = req.user?.log_inst || 1;
+
+    const result = [];
+
+    for (const item of dataArray) {
+      const data = {
+        ...item,
+        log_inst: logInst,
+      };
+
+      if (item.id || item.workflow_id) {
+        const id = item.id || item.workflow_id;
+        const updated = await approvalWorkFlowService.updateApprovalWorkFlow(
+          id,
+          {
+            ...data,
+            updatedby: userId,
+          }
+        );
+        result.push(updated);
+      } else {
+        // ✅ CREATE if ID is not present
+        const created = await approvalWorkFlowService.createApprovalWorkFlow([
+          {
+            ...data,
+            createdby: userId,
+          },
+        ]);
+        result.push(...created);
+      }
+    }
+
+    res.status(200).success("Approval workflows upserted successfully", result);
   } catch (error) {
-    next(error);
+    next(error); // <- where your error `"next is not a function"` came from earlier
   }
 };
 
@@ -81,7 +111,6 @@ const deleteApprovalWorkFlow = async (req, res, next) => {
     next(error);
   }
 };
-const approvalWorkFlowModel = require("../models/approvalWorkFlowModel");
 
 const getAllApprovalWorkFlowByRequest = async (req, res) => {
   try {
