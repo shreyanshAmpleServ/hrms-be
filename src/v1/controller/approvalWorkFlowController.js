@@ -65,7 +65,7 @@ const updateApprovalWorkFlow = async (req, res, next) => {
       req.params.id,
       data
     );
-    res.status(200).success("Approval workflow  updated successfully", reqData);
+    res.status(200).success("Approval workflow updated successfully", reqData);
   } catch (error) {
     next(error);
   }
@@ -73,7 +73,9 @@ const updateApprovalWorkFlow = async (req, res, next) => {
 
 const deleteApprovalWorkFlow = async (req, res, next) => {
   try {
-    await approvalWorkFlowService.deleteApprovalWorkFlow(req.params.id);
+    await approvalWorkFlowService.deleteApprovalWorkFlow(
+      req.params.requestType
+    );
     res.status(200).success("Approval workflow deleted successfully");
   } catch (error) {
     next(error);

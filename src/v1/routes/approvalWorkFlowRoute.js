@@ -24,7 +24,7 @@ router.put(
   approvalWorkFlowController.updateApprovalWorkFlow
 );
 router.delete(
-  "/approval-workflow/:id",
+  "/approval-workflow/:requestType",
   authenticateToken,
   approvalWorkFlowController.deleteApprovalWorkFlow
 );
