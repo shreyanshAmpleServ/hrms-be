@@ -238,10 +238,36 @@ const getAllApprovalWorkFlow = async (
   }
 };
 
+const getAllApprovalWorkFlowByRequest = async (request_type) => {
+  try {
+    const workflows = await prisma.hrms_d_approval_work_flow.findMany({
+      where: { request_type },
+      orderBy: { sequence: "asc" },
+      include: {
+        approval_work_approver: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+          },
+        },
+      },
+    });
+
+    return workflows;
+  } catch (error) {
+    throw new CustomError(
+      `Error fetching workflows for request_type '${request_type}': ${error.message}`,
+      500
+    );
+  }
+};
+
 module.exports = {
   createApprovalWorkFlow,
   findApprovalWorkFlow,
   updateApprovalWorkFlow,
   deleteApprovalWorkFlow,
   getAllApprovalWorkFlow,
+  getAllApprovalWorkFlowByRequest,
 };
