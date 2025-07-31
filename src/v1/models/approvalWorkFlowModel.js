@@ -83,7 +83,13 @@ const findApprovalWorkFlow = async (id) => {
     const reqData = await prisma.hrms_d_approval_work_flow.findUnique({
       where: { workflow_id: parseInt(id) },
       include: {
-        approval_work_approver: true,
+        approval_work_approver: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
       },
     });
     if (!reqData) {
@@ -108,7 +114,13 @@ const updateApprovalWorkFlow = async (id, data) => {
         updatedate: new Date(),
       },
       include: {
-        approval_work_approver: true,
+        approval_work_approver: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+          },
+        },
       },
     });
     return updatedEntry;
@@ -120,10 +132,10 @@ const updateApprovalWorkFlow = async (id, data) => {
   }
 };
 
-const deleteApprovalWorkFlow = async (id) => {
+const deleteApprovalWorkFlow = async (requestType) => {
   try {
-    await prisma.hrms_d_approval_work_flow.delete({
-      where: { workflow_id: parseInt(id) },
+    await prisma.hrms_d_approval_work_flow.deleteMany({
+      where: { request_type: requestType },
     });
   } catch (error) {
     throw new CustomError(
