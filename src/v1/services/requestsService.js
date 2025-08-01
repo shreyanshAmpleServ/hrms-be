@@ -44,9 +44,13 @@ const findRequestByRequestUsers = async (employee_id) => {
   return await requestsModel.findRequestByRequestUsers(employee_id);
 };
 
+// const takeActionOnRequest = async (data) => {
+//   const { io, ...rest } = data;
+//   return await requestsModel.takeActionOnRequest({ ...rest, io });
+// };
+
 const takeActionOnRequest = async (data) => {
-  const { io, ...rest } = data;
-  return await requestsModel.takeActionOnRequest({ ...rest, io });
+  return await requestsModel.takeActionOnRequest(data);
 };
 module.exports = {
   createRequest,

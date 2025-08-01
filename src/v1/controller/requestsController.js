@@ -70,16 +70,16 @@ const deleteRequests = async (req, res, next) => {
   }
 };
 
-// const takeActionOnRequest = async (req, res) => {
-//   try {
-//     const result = await requestsService.takeActionOnRequest(req.body);
-//     res.status(200).json({ success: true, data: result });
-//   } catch (err) {
-//     res
-//       .status(err.status || 500)
-//       .json({ success: false, message: err.message });
-//   }
-// };
+const takeActionOnRequest = async (req, res) => {
+  try {
+    const result = await requestsService.takeActionOnRequest(req.body);
+    res.status(200).json({ success: true, data: result });
+  } catch (err) {
+    res
+      .status(err.status || 500)
+      .json({ success: false, message: err.message });
+  }
+};
 
 const findRequestByRequestTypeAndReferenceId = async (req, res, next) => {
   try {
@@ -105,19 +105,19 @@ const findRequestByRequestUsers = async (req, res, next) => {
   }
 };
 
-const takeActionOnRequest = async (req, res, next) => {
-  try {
-    const io = req.app.get("io");
-    const result = await requestsService.takeActionOnRequest({
-      ...req.body,
-      io,
-    });
+// const takeActionOnRequest = async (req, res, next) => {
+//   try {
+//     const io = req.app.get("io");
+//     const result = await requestsService.takeActionOnRequest({
+//       ...req.body,
+//       io,
+//     });
 
-    res.status(200).success("Action done successfully", result);
-  } catch (error) {
-    next(error);
-  }
-};
+//     res.status(200).success("Action done successfully", result);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 module.exports = {
   createRequest,
