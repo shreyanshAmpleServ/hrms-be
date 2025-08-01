@@ -532,6 +532,14 @@ const findRequestByRequestUsers = async (employee_id) => {
   try {
     const reqData = await prisma.hrms_d_requests.findMany({
       include: {
+        requests_employee: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            profile_pic: true,
+          },
+        },
         request_approval_request: {
           orderBy: { sequence: "asc" },
           select: {
@@ -567,6 +575,9 @@ const findRequestByRequestUsers = async (employee_id) => {
                 id: true,
                 status: true,
                 leave_type_id: true,
+                start_date: true,
+                end_date: true,
+                reason: true,
                 leave_types: {
                   select: {
                     id: true,
