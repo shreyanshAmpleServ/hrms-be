@@ -615,6 +615,115 @@ const findRequestByRequestUsers = async (employee_id) => {
 // };
 
 // IInd  - new modified
+//II.1
+// const takeActionOnRequest = async ({
+//   request_id,
+//   request_approval_id,
+//   action,
+//   acted_by,
+//   remarks,
+// }) => {
+//   try {
+//     const approval = await prisma.hrms_d_requests_approval.findFirst({
+//       where: {
+//         request_id: Number(request_id),
+//         id: Number(request_approval_id),
+//         status: "P",
+//       },
+//     });
+
+//     if (!approval) {
+//       throw new CustomError("No pending approval found for this approver", 404);
+//     }
+
+//     await prisma.hrms_d_requests_approval.update({
+//       where: { id: approval.id },
+//       data: {
+//         status: action === "A" ? "A" : "R",
+//         remarks: remarks || null,
+//         action_at: new Date(),
+//         updatedby: acted_by,
+//         updatedate: new Date(),
+//       },
+//     });
+
+//     const request = await prisma.hrms_d_requests.update({
+//       where: { id: Number(request_id) },
+//       data: {
+//         remarks: remarks || null,
+//         updatedate: new Date(),
+//         updatedby: acted_by,
+//       },
+//     });
+
+//     if (action === "R") {
+//       if (
+//         request &&
+//         request.request_type === "leave_request" &&
+//         request.reference_id
+//       ) {
+//         await prisma.hrms_d_leave_application.update({
+//           where: { id: request.reference_id },
+//           data: {
+//             status: "R",
+//             rejection_reason: remarks || null,
+//             updatedby: acted_by,
+//             updatedate: new Date(),
+//           },
+//         });
+//       }
+
+//       return { message: "Request rejected and closed." };
+//     }
+
+//     const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
+//       where: {
+//         request_id: Number(request_id),
+//         status: "P",
+//       },
+//       orderBy: { sequence: "asc" },
+//     });
+
+//     if (!nextApprover) {
+//       await prisma.hrms_d_requests.update({
+//         where: { id: request_id },
+//         data: {
+//           status: "A",
+//           updatedate: new Date(),
+//           updatedby: acted_by,
+//         },
+//       });
+
+//       if (
+//         request &&
+//         request.request_type === "leave_request" &&
+//         request.reference_id
+//       ) {
+//         await prisma.hrms_d_leave_application.update({
+//           where: { id: request.reference_id },
+//           data: {
+//             status: "A",
+//             rejection_reason: remarks || null,
+//             updatedby: acted_by,
+//             updatedate: new Date(),
+//           },
+//         });
+//       }
+
+//       return {
+//         message: "All approvers have approved. Request is fully approved.",
+//       };
+//     }
+
+//     return {
+//       // message: `Approval recorded. Notified next approver (ID: ${nextApprover.approver_id}).`,
+//       message: `Approval recorded successfully`,
+//     };
+//   } catch (error) {
+//     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
+//   }
+// };
+//II.2
 const takeActionOnRequest = async ({
   request_id,
   request_approval_id,
@@ -655,7 +764,31 @@ const takeActionOnRequest = async ({
       },
     });
 
+    if (
+      request &&
+      request.request_type === "leave_request" &&
+      request.reference_id
+    ) {
+      await prisma.hrms_d_leave_application.update({
+        where: { id: request.reference_id },
+        data: {
+          rejection_reason: remarks || null,
+          updatedby: acted_by,
+          updatedate: new Date(),
+        },
+      });
+    }
+
     if (action === "R") {
+      await prisma.hrms_d_requests.update({
+        where: { id: Number(request_id) },
+        data: {
+          status: "R",
+          updatedate: new Date(),
+          updatedby: acted_by,
+        },
+      });
+
       if (
         request &&
         request.request_type === "leave_request" &&
@@ -665,7 +798,6 @@ const takeActionOnRequest = async ({
           where: { id: request.reference_id },
           data: {
             status: "R",
-            rejection_reason: remarks || null,
             updatedby: acted_by,
             updatedate: new Date(),
           },
@@ -685,7 +817,7 @@ const takeActionOnRequest = async ({
 
     if (!nextApprover) {
       await prisma.hrms_d_requests.update({
-        where: { id: request_id },
+        where: { id: Number(request_id) },
         data: {
           status: "A",
           updatedate: new Date(),
@@ -702,7 +834,6 @@ const takeActionOnRequest = async ({
           where: { id: request.reference_id },
           data: {
             status: "A",
-            rejection_reason: remarks || null,
             updatedby: acted_by,
             updatedate: new Date(),
           },
@@ -715,13 +846,13 @@ const takeActionOnRequest = async ({
     }
 
     return {
-      // message: `Approval recorded. Notified next approver (ID: ${nextApprover.approver_id}).`,
       message: `Approval recorded successfully`,
     };
   } catch (error) {
     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
   }
 };
+
 // III with socket
 // const takeActionOnRequest = async ({
 //   request_id,
