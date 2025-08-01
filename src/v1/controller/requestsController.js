@@ -104,13 +104,18 @@ const findRequestByRequestUsers = async (req, res, next) => {
 
 const takeActionOnRequest = async (req, res, next) => {
   try {
-    const result = await requestsService.takeActionOnRequest(req.body);
+    const io = req.app.get("io");
+    const result = await requestsService.takeActionOnRequest({
+      ...req.body,
+      io,
+    });
 
     res.status(200).success("Action done successfully", result);
   } catch (error) {
     next(error);
   }
 };
+
 module.exports = {
   createRequest,
   getAllRequests,
