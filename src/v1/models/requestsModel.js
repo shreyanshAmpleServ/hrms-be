@@ -715,7 +715,8 @@ const takeActionOnRequest = async ({
     }
 
     return {
-      message: `Approval recorded. Notified next approver (ID: ${nextApprover.approver_id}).`,
+      // message: `Approval recorded. Notified next approver (ID: ${nextApprover.approver_id}).`,
+      message: `Approval recorded successfully`,
     };
   } catch (error) {
     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
