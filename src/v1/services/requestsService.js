@@ -35,7 +35,8 @@ const findRequestByRequestUsers = async (employee_id) => {
 };
 
 const takeActionOnRequest = async (data) => {
-  return await requestsModel.takeActionOnRequest(data);
+  const { io, ...rest } = data;
+  return await requestsModel.takeActionOnRequest({ ...rest, io });
 };
 module.exports = {
   createRequest,
