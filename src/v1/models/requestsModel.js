@@ -662,7 +662,6 @@ const takeActionOnRequest = async ({
       },
     });
 
-    // Notify if rejected
     if (action === "R") {
       if (
         request &&
@@ -680,7 +679,6 @@ const takeActionOnRequest = async ({
         });
       }
 
-      // 🔴 Notify requester about rejection
       global.io.to(`user_${request.requester_id}`).emit("request_update", {
         request_id,
         status: "Rejected",
@@ -690,7 +688,6 @@ const takeActionOnRequest = async ({
       return { message: "Request rejected and closed." };
     }
 
-    // Check if any next approver
     const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
       where: {
         request_id: Number(request_id),
@@ -725,7 +722,6 @@ const takeActionOnRequest = async ({
         });
       }
 
-      // ✅ Notify requester about full approval
       global.io.to(`user_${request.requester_id}`).emit("request_update", {
         request_id,
         status: "Approved",
@@ -737,7 +733,6 @@ const takeActionOnRequest = async ({
       };
     }
 
-    // 🔔 Notify next approver
     global.io
       .to(`user_${nextApprover.approver_id}`)
       .emit("request_approval_pending", {
