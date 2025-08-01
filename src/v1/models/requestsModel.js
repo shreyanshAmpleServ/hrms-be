@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { log } = require("winston");
+const logger = require("../../Comman/logger");
 const prisma = new PrismaClient();
 
 const serializeRequestsData = (data) => ({
@@ -527,6 +528,81 @@ const findRequestByRequestTypeAndReferenceId = async (request) => {
   }
 };
 
+const findRequestByRequestUsers = async (employee_id) => {
+  try {
+    const reqData = await prisma.hrms_d_requests.findMany({
+      include: {
+        request_approval_request: {
+          orderBy: { sequence: "asc" },
+          select: {
+            id: true,
+            request_id: true,
+            approver_id: true,
+            sequence: true,
+            status: true,
+            action_at: true,
+            request_approval_approver: {
+              select: {
+                id: true,
+                full_name: true,
+                employee_code: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    let data = [];
+
+    await Promise.all(
+      reqData.map(async (request) => {
+        const requestType = request.request_type;
+        const referenceId = request.reference_id;
+        if (requestType === "leave_request" && referenceId) {
+          const leaveRequest = await prisma.hrms_d_leave_application.findUnique(
+            {
+              where: { id: parseInt(referenceId) },
+              select: {
+                id: true,
+                status: true,
+                leave_type_id: true,
+                leave_types: {
+                  select: {
+                    id: true,
+                    leave_type: true,
+                  },
+                },
+              },
+            }
+          );
+          if (leaveRequest) {
+            data.push({
+              ...request,
+              reference: leaveRequest,
+            });
+          }
+        }
+      })
+    );
+
+    const filteredData = data.filter((request) => {
+      const approvals = request.request_approval_request;
+      const approverIndex = approvals.findIndex(
+        (approval) =>
+          approval.approver_id === employee_id && approval.status === "P"
+      );
+      if (approverIndex === -1) return false;
+      if (approverIndex === 0) return true;
+      const prevApproval = approvals[approverIndex - 1];
+      return prevApproval?.status === "A";
+    });
+    return filteredData;
+  } catch (error) {
+    throw new CustomError(`Error finding Request by ID: ${error.message}`, 503);
+  }
+};
+
 // const takeActionOnRequest = async ({
 //   request_id,
 //   approver_id,
@@ -840,5 +916,6 @@ module.exports = {
   findRequests,
   getAllRequests,
   takeActionOnRequest,
+  findRequestByRequestUsers,
   findRequestByRequestTypeAndReferenceId,
 };

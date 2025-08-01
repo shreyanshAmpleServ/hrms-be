@@ -90,6 +90,18 @@ const findRequestByRequestTypeAndReferenceId = async (req, res, next) => {
   }
 };
 
+const findRequestByRequestUsers = async (req, res, next) => {
+  try {
+    const result = await requestsService.findRequestByRequestUsers(
+      req?.user?.employee_id
+    );
+    res.status(200).success("Request found successfully", result);
+  } catch (error) {
+    logger.debug(error);
+    next(error);
+  }
+};
+
 const takeActionOnRequest = async (req, res, next) => {
   try {
     const result = await requestsService.takeActionOnRequest(req.body);
@@ -106,5 +118,6 @@ module.exports = {
   updateRequests,
   deleteRequests,
   findRequestByRequestTypeAndReferenceId,
+  findRequestByRequestUsers,
   takeActionOnRequest,
 };

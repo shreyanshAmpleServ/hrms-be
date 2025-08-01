@@ -30,6 +30,10 @@ const findRequestByRequestTypeAndReferenceId = async (request) => {
   return await requestsModel.findRequestByRequestTypeAndReferenceId(request);
 };
 
+const findRequestByRequestUsers = async (employee_id) => {
+  return await requestsModel.findRequestByRequestUsers(employee_id);
+};
+
 const takeActionOnRequest = async (data) => {
   return await requestsModel.takeActionOnRequest(data);
 };
@@ -41,4 +45,5 @@ module.exports = {
   getAllRequests,
   findRequestByRequestTypeAndReferenceId,
   takeActionOnRequest,
+  findRequestByRequestUsers,
 };

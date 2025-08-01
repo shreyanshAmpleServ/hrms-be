@@ -28,5 +28,10 @@ router.get(
   authenticateToken,
   requestsController.findRequestByRequestTypeAndReferenceId
 );
+router.get(
+  "/requests-by-users",
+  authenticateToken,
+  requestsController.findRequestByRequestUsers
+);
 
 module.exports = router;
