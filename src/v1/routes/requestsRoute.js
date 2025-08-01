@@ -17,6 +17,8 @@ router.delete(
   requestsController.deleteRequests
 );
 
+router.get("/requests", authenticateToken, requestsController.getAllRequests);
+
 router.post(
   "/requests/action",
   authenticateToken,

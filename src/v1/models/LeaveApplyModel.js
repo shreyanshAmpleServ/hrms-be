@@ -89,9 +89,9 @@ const createLeaveApplication = async (data) => {
       requester_id: reqData.employee_id,
       request_type: "leave_request",
       reference_id: reqData.id,
-      request_data:
-        reqData.reason ||
-        `Leave from ${reqData.start_date} to ${reqData.end_date}`,
+      // request_data:
+      //   reqData.reason ||
+      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });
