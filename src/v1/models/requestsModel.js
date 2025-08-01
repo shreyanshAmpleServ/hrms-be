@@ -665,7 +665,7 @@ const takeActionOnRequest = async ({
           where: { id: request.reference_id },
           data: {
             status: "R",
-            remarks: remarks || null,
+            rejection_reason: remarks || null,
             updatedby: acted_by,
             updatedate: new Date(),
           },
@@ -702,7 +702,7 @@ const takeActionOnRequest = async ({
           where: { id: request.reference_id },
           data: {
             status: "A",
-            reason: remarks || null,
+            rejection_reason: remarks || null,
             updatedby: acted_by,
             updatedate: new Date(),
           },
@@ -721,7 +721,6 @@ const takeActionOnRequest = async ({
     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
   }
 };
-
 // III with socket
 // const takeActionOnRequest = async ({
 //   request_id,

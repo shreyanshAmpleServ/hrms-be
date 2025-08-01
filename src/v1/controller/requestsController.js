@@ -73,7 +73,7 @@ const deleteRequests = async (req, res, next) => {
 const takeActionOnRequest = async (req, res) => {
   try {
     const result = await requestsService.takeActionOnRequest(req.body);
-    res.status(200).json({ success: true, data: result });
+    res.status(200).json({ success: true, message: result.message }); // ✅ flattened message
   } catch (err) {
     res
       .status(err.status || 500)

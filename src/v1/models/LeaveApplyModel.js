@@ -129,7 +129,6 @@ const updateLeaveApplication = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_leave_application.update({
       where: { id: parseInt(id) },
-
       data: {
         ...serializeLeaveApplicationData(data),
         updatedby: data.updatedby || 1,
