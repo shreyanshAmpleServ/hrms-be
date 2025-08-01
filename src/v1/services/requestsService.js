@@ -16,13 +16,23 @@ const deleteRequests = async (id) => {
   return await requestsModel.deleteRequests(id);
 };
 
-const getAllRequests = async (search, page, size, startDate, endDate) => {
+const getAllRequests = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  requestType,
+  status
+) => {
   return await requestsModel.getAllRequests(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    requestType,
+    status
   );
 };
 

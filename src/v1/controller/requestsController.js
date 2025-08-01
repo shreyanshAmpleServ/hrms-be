@@ -29,13 +29,16 @@ const findRequests = async (req, res, next) => {
 
 const getAllRequests = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, requestType, status } =
+      req.query;
     const data = await requestsService.getAllRequests(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      requestType,
+      status
     );
     res.status(200).success(null, data);
   } catch (error) {
