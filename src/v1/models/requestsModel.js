@@ -488,6 +488,54 @@ const findRequestByRequestUsers = async (employee_id) => {
             });
           }
         }
+        if (requestType === "loan_request" && referenceId) {
+          const loanRequest = await prisma.hrms_d_loan_request.findUnique({
+            where: { id: parseInt(referenceId) },
+            select: {
+              id: true,
+              status: true,
+              amount: true,
+              emi_months: true,
+              currency: true,
+              loan_req_employee: {
+                select: {
+                  id: true,
+                  full_name: true,
+                  employee_code: true,
+                },
+              },
+              loan_req_currency: {
+                select: {
+                  id: true,
+                  currency_code: true,
+                  currency_name: true,
+                },
+              },
+              loan_emi_loan_request: {
+                select: {
+                  id: true,
+                  due_month: true,
+                  due_year: true,
+                  emi_amount: true,
+                  status: true,
+                  payslip_id: true,
+                },
+              },
+              loan_types: {
+                select: {
+                  id: true,
+                  loan_name: true,
+                },
+              },
+            },
+          });
+          if (loanRequest) {
+            data.push({
+              ...request,
+              reference: loanRequest,
+            });
+          }
+        }
       })
     );
 
@@ -803,6 +851,20 @@ const takeActionOnRequest = async ({
           },
         });
       }
+      if (
+        request &&
+        request.request_type === "loan_request" &&
+        request.reference_id
+      ) {
+        await prisma.hrms_d_loan_request.update({
+          where: { id: request.reference_id },
+          data: {
+            status: "R",
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      }
 
       return { message: "Request rejected and closed." };
     }
@@ -831,6 +893,20 @@ const takeActionOnRequest = async ({
         request.reference_id
       ) {
         await prisma.hrms_d_leave_application.update({
+          where: { id: request.reference_id },
+          data: {
+            status: "A",
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      }
+      if (
+        request &&
+        request.request_type === "loan_request" &&
+        request.reference_id
+      ) {
+        await prisma.hrms_d_loan_request.update({
           where: { id: request.reference_id },
           data: {
             status: "A",

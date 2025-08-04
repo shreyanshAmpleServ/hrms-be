@@ -1,6 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { id } = require("zod/v4/locales");
 const { createRequest } = require("./requestsModel.js");
 const prisma = new PrismaClient();
 

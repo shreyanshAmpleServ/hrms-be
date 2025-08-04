@@ -166,7 +166,7 @@ const getAllRequestApproval = async (
       where: whereClause,
       skip,
       take: size,
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      orderBy: [{ createdate: "desc" }],
       include: {
         request_approval_request: {
           select: {

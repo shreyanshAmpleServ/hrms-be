@@ -3,6 +3,7 @@ const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const prisma = new PrismaClient();
 const { Prisma } = require("@prisma/client");
+const { createRequest } = require("./requestsModel");
 
 const calculateLoanSummary = async (loanId) => {
   const [summary] = await prisma.$queryRaw`
@@ -199,14 +200,20 @@ const createLoanRequest = async (data) => {
     });
 
     const summary = await calculateLoanSummary(loanRequest.loanId);
-
+    await createRequest({
+      requester_id: reqData.employee_id,
+      request_type: "loan_request",
+      reference_id: reqData.id,
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
+    });
     return {
       ...reqData,
       ...summary,
     };
   } catch (error) {
     console.error("Error creating loan request with EMI schedule:", error);
-    throw new CustomError(`Error creating loan request: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
