@@ -30,13 +30,25 @@ const findRequestApproval = async (req, res, next) => {
 
 const getAllRequestApproval = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const {
+      page,
+      size,
+      search,
+      startDate,
+      endDate,
+      request_type,
+      approver_id,
+      status,
+    } = req.query;
     const data = await requestApprovalService.getAllRequestApproval(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      request_type,
+      approver_id,
+      status
     );
     res.status(200).success(null, data);
   } catch (error) {

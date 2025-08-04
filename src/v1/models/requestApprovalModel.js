@@ -24,7 +24,11 @@ const createRequestApproval = async (data) => {
       },
       include: {
         request_approval_request: {
-          select: { request_id: true, request_type: true, requester_id: true },
+          select: {
+            request_data: true,
+            request_type: true,
+            requester_id: true,
+          },
         },
         request_approval_approver: {
           select: { id: true, full_name: true, employee_code: true },
@@ -52,7 +56,11 @@ const updateRequestApproval = async (approval_id, data) => {
       },
       include: {
         request_approval_request: {
-          select: { request_id: true, request_type: true, requester_id: true },
+          select: {
+            request_data: true,
+            request_type: true,
+            requester_id: true,
+          },
         },
         request_approval_approver: {
           select: { id: true, full_name: true, employee_code: true },
@@ -82,52 +90,90 @@ const deleteRequestApproval = async (approval_id) => {
   }
 };
 
-// Get all approvals (paginated + searchable)
 const getAllRequestApproval = async (
   search,
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  request_type,
+  approver_id,
+  status
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size;
 
-    const filters = {};
+    const filters = { AND: [] };
+
+    // Search conditions (OR logic)
     if (search) {
-      filters.OR = [
-        {
-          request_approval_request: {
-            request_type: { contains: search.toLowerCase() },
+      filters.AND.push({
+        OR: [
+          {
+            request_approval_request: {
+              request_type: { contains: search, mode: "insensitive" },
+            },
           },
-        },
-        {
-          request_approval_approver: {
-            full_name: { contains: search.toLowerCase() },
+          {
+            request_approval_approver: {
+              full_name: { contains: search, mode: "insensitive" },
+            },
           },
+          {
+            status: { contains: search, mode: "insensitive" },
+          },
+        ],
+      });
+    }
+
+    // Exact match filters (AND logic)
+    if (request_type) {
+      filters.AND.push({
+        request_approval_request: {
+          request_type: { equals: request_type },
         },
-        { status: { contains: search.toLowerCase() } },
-      ];
+      });
+    }
+
+    if (approver_id) {
+      filters.AND.push({
+        approver_id: { equals: parseInt(approver_id) },
+      });
+    }
+
+    if (status) {
+      filters.AND.push({
+        status: { equals: status },
+      });
     }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = { gte: start, lte: end };
+        filters.AND.push({
+          createdate: { gte: start, lte: end },
+        });
       }
     }
 
+    // If no conditions, remove the AND wrapper
+    const whereClause = filters.AND.length > 0 ? filters : {};
+
     const datas = await prisma.hrms_d_requests_approval.findMany({
-      where: filters,
+      where: whereClause,
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
         request_approval_request: {
-          select: { request_id: true, request_type: true, requester_id: true },
+          select: {
+            request_data: true,
+            request_type: true,
+            requester_id: true,
+          },
         },
         request_approval_approver: {
           select: { id: true, full_name: true, employee_code: true },
@@ -136,7 +182,7 @@ const getAllRequestApproval = async (
     });
 
     const totalCount = await prisma.hrms_d_requests_approval.count({
-      where: filters,
+      where: whereClause,
     });
 
     return {
@@ -147,6 +193,7 @@ const getAllRequestApproval = async (
       totalCount,
     };
   } catch (error) {
+    console.log("Error", error);
     throw new CustomError("Error retrieving request approvals", 503);
   }
 };
@@ -158,7 +205,11 @@ const findRequestApproval = async (approval_id) => {
       where: { approval_id: parseInt(approval_id) },
       include: {
         request_approval_request: {
-          select: { request_id: true, request_type: true, requester_id: true },
+          select: {
+            request_data: true,
+            request_type: true,
+            requester_id: true,
+          },
         },
         request_approval_approver: {
           select: { id: true, full_name: true, employee_code: true },

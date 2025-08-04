@@ -21,14 +21,20 @@ const getAllRequestApproval = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  request_type,
+  approver_id,
+  status
 ) => {
   return await requestApprovalModel.getAllRequestApproval(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    request_type,
+    approver_id,
+    status
   );
 };
 
