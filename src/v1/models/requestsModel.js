@@ -565,6 +565,13 @@ const findRequestByRequestUsers = async (employee_id) => {
                     id: true,
                     full_name: true,
                     employee_code: true,
+                    employee_currency: {
+                      select: {
+                        id: true,
+                        currency_code: true,
+                        currency_name: true,
+                      },
+                    },
                   },
                 },
                 hrms_advance_payement_entry_approvedBy: {
