@@ -626,6 +626,74 @@ const findRequestByRequestUsers = async (employee_id) => {
             });
           }
         }
+        if (requestType === "probation_review" && referenceId) {
+          const probationRequest =
+            await prisma.hrms_d_probation_review.findUnique({
+              where: { id: parseInt(referenceId) },
+              select: {
+                id: true,
+                employee_id: true,
+                probation_end_date: true,
+                review_notes: true,
+                confirmation_status: true,
+                confirmation_date: true,
+                reviewer_id: true,
+                review_meeting_date: true,
+                performance_rating: true,
+                extension_required: true,
+                extension_reason: true,
+                extended_till_date: true,
+                next_review_date: true,
+                final_remarks: true,
+                probation_review_employee: {
+                  select: {
+                    id: true,
+                    employee_code: true,
+                    full_name: true,
+                  },
+                },
+                probation_reviewer: {
+                  select: {
+                    id: true,
+                    employee_code: true,
+                    full_name: true,
+                  },
+                },
+              },
+            });
+          if (probationRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: probationRequest,
+            });
+          }
+        }
+        if (requestType === "appraisal_review" && referenceId) {
+          const appraisalRequest = await prisma.hrms_d_appraisal.findUnique({
+            where: { id: parseInt(referenceId) },
+            select: {
+              id: true,
+              employee_id: true,
+              review_period: true,
+              rating: true,
+              reviewer_comments: true,
+              appraisal_employee: {
+                select: {
+                  full_name: true,
+                  id: true,
+                },
+              },
+            },
+          });
+          if (appraisalRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: appraisalRequest,
+            });
+          }
+        }
       })
     );
     data.sort((a, b) => new Date(b.createdate) - new Date(a.createdate));
@@ -1098,6 +1166,24 @@ const takeActionOnRequest = async ({
             updatedate: new Date(),
           },
         });
+      } else if (request.request_type === "probation_review") {
+        await prisma.hrms_d_probation_review.update({
+          where: { id: request.reference_id },
+          data: {
+            final_remarks: remarks || null,
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      } else if (request.request_type === "appraisal_review") {
+        await prisma.hrms_d_appraisal.update({
+          where: { id: request.reference_id },
+          data: {
+            reviewer_comments: remarks || null,
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
       }
     }
 
@@ -1141,6 +1227,24 @@ const takeActionOnRequest = async ({
           });
         } else if (request.request_type === "asset_request") {
           await prisma.hrms_d_asset_assignment.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "probation_review") {
+          await prisma.hrms_d_probation_review.update({
+            where: { id: request.reference_id },
+            data: {
+              confirmation_status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "appraisal_review") {
+          await prisma.hrms_d_appraisal.update({
             where: { id: request.reference_id },
             data: {
               status: "R",
@@ -1202,6 +1306,24 @@ const takeActionOnRequest = async ({
           });
         } else if (request.request_type === "asset_request") {
           await prisma.hrms_d_asset_assignment.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "probation_review") {
+          await prisma.hrms_d_probation_review.update({
+            where: { id: request.reference_id },
+            data: {
+              confirmation_status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "appraisal_review") {
+          await prisma.hrms_d_appraisal.update({
             where: { id: request.reference_id },
             data: {
               status: "A",
