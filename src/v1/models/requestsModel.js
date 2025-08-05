@@ -432,6 +432,7 @@ const findRequestByRequestUsers = async (employee_id) => {
             full_name: true,
             employee_code: true,
             profile_pic: true,
+            createdate: true,
           },
         },
         request_approval_request: {
@@ -457,6 +458,7 @@ const findRequestByRequestUsers = async (employee_id) => {
         createdate: "desc",
       },
     });
+    console.log(reqData.map((r) => r.createdate));
 
     let data = [];
 
