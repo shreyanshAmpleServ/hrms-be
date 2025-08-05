@@ -444,6 +444,7 @@ const findRequestByRequestUsers = async (employee_id) => {
             sequence: true,
             status: true,
             action_at: true,
+            createdate: true,
             request_approval_approver: {
               select: {
                 id: true,
@@ -489,6 +490,7 @@ const findRequestByRequestUsers = async (employee_id) => {
           if (leaveRequest) {
             data.push({
               ...request,
+              createdate: request.createdate,
               reference: leaveRequest,
             });
           }
@@ -537,6 +539,7 @@ const findRequestByRequestUsers = async (employee_id) => {
           if (loanRequest) {
             data.push({
               ...request,
+              createdate: request.createdate,
               reference: loanRequest,
             });
           }
@@ -575,6 +578,7 @@ const findRequestByRequestUsers = async (employee_id) => {
           if (advancePayment) {
             data.push({
               ...request,
+              createdate: request.createdate,
               reference: advancePayment,
             });
           }
