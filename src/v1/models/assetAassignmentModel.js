@@ -1,5 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { createRequest } = require("./requestsModel");
 const prisma = new PrismaClient();
 
 // Serialize asset assignment data
@@ -24,7 +25,7 @@ const createAssetAssignment = async (data) => {
         log_inst: data.log_inst || 1,
       },
     });
-    return await prisma.hrms_d_asset_assignment.findUnique({
+    const reqData = await prisma.hrms_d_asset_assignment.findUnique({
       where: { id: created.id },
       include: {
         asset_assignment_employee: { select: { id: true, full_name: true } },
@@ -37,6 +38,17 @@ const createAssetAssignment = async (data) => {
         },
       },
     });
+    await createRequest({
+      requester_id: reqData.employee_id,
+      request_type: "asset_request",
+      reference_id: reqData.id,
+      // request_data:
+      //   reqData.reason ||
+      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
+    });
+    return reqData;
   } catch (error) {
     throw new CustomError(
       `Error creating asset assignment: ${error.message}`,
