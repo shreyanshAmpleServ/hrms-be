@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { createRequest } = require("./requestsModel");
+const { request } = require("express");
 const prisma = new PrismaClient();
 
 // Serialize probation review data
@@ -57,6 +59,17 @@ const createProbationReview = async (data) => {
           },
         },
       },
+    });
+
+    await createRequest({
+      requester_id: reqData.employee_id,
+      request_type: "probation_review",
+      reference_id: reqData.id,
+      // request_data:
+      //   reqData.reason ||
+      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
     });
     return reqData;
   } catch (error) {
