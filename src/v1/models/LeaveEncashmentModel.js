@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { parse } = require("dotenv");
+const { createRequest } = require("./requestsModel");
 const prisma = new PrismaClient();
 
 // Serialize leave encashment data
@@ -120,6 +121,16 @@ const createLeaveEncashment = async (data) => {
       },
     });
 
+    await createRequest({
+      requester_id: reqData.employee_id,
+      request_type: "leave_request",
+      reference_id: reqData.id,
+      // request_data:
+      //   reqData.reason ||
+      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
+    });
     return reqData;
   } catch (error) {
     console.error("Leave encashment error:", error);

@@ -25,6 +25,11 @@ const serializeLeaveApplicationData = (data) => ({
 // Create a new leave application
 const createLeaveApplication = async (data) => {
   console.log(Object.keys(prisma.hrms_d_requests.fields));
+  const startDate = new Date(data.start_date);
+  startDate.setUTCHours(0, 0, 0, 0);
+
+  const endDate = new Date(data.end_date);
+  endDate.setUTCHours(23, 59, 59, 999);
 
   const leaveApplication = await prisma.hrms_d_leave_application.findFirst({
     where: {
@@ -32,12 +37,12 @@ const createLeaveApplication = async (data) => {
       AND: [
         {
           start_date: {
-            lte: new Date(data.end_date),
+            lte: endDate,
           },
         },
         {
           end_date: {
-            gte: new Date(data.start_date),
+            gte: startDate,
           },
         },
       ],

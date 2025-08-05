@@ -10,6 +10,24 @@ const serializeData = (data) => {
     review_period: data.review_period || "",
     rating: parseFloat(data.rating) || 0,
     reviewer_comments: data.reviewer_comments || "",
+    status: data.status || "P",
+    appraisal_cycle_id: Number(data.appraisal_cycle_id) || null,
+    appraisal_template_id: Number(data.appraisal_template_id) || null,
+    reviewer_id: Number(data.reviewer_id) || null,
+    hr_reviewer_id: Number(data.hr_reviewer_id) || null,
+    review_start_date: data.review_start_date
+      ? new Date(data.review_start_date)
+      : null,
+    review_end_date: data.review_end_date
+      ? new Date(data.review_end_date)
+      : null,
+    final_score: data.final_score ? Number(data.final_score) : null,
+    overall_remarks: data.overall_remarks || "",
+    effective_date: data.effective_date ? new Date(data.effective_date) : null,
+    review_date: data.review_date ? new Date(data.review_date) : null,
+    next_review_date: data.next_review_date
+      ? new Date(data.next_review_date)
+      : null,
   };
 };
 

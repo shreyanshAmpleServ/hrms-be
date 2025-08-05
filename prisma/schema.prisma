@@ -127,7 +127,7 @@ model hrms_d_appraisal {
   hr_reviewer_id                  Int?
   review_start_date               DateTime?                      @db.Date
   review_end_date                 DateTime?                      @db.Date
-  status                          String?                        @default("Draft", map: "DF__hrms_d_ap__statu__4DB4832C") @db.NVarChar(50)
+  status                          String?                        @default("P", map: "DF__hrms_d_ap__statu__4DB4832C") @db.NVarChar(50)
   final_score                     Decimal?                       @db.Decimal(5, 2)
   final_rating                    String?                        @db.NVarChar(100)
   overall_remarks                 String?                        @db.NVarChar(500)
