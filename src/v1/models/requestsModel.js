@@ -585,7 +585,7 @@ const findRequestByRequestUsers = async (employee_id) => {
         }
       })
     );
-
+    data.sort((a, b) => new Date(b.createdate) - new Date(a.createdate));
     const filteredData = data.filter((request) => {
       const approvals = request.request_approval_request;
       const approverIndex = approvals.findIndex(
