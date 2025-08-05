@@ -536,6 +536,44 @@ const findRequestByRequestUsers = async (employee_id) => {
             });
           }
         }
+
+        if (requestType === "advance_payment" && referenceId) {
+          const advancePayment =
+            await prisma.hrms_d_advance_payment_entry.findUnique({
+              where: { id: parseInt(referenceId) },
+              select: {
+                id: true,
+                employee_id: true,
+                request_date: true,
+                amount_requested: true,
+                amount_approved: true,
+                approval_status: true,
+                approval_date: true,
+                approved_by: true,
+                reason: true,
+                repayment_schedule: true,
+                hrms_advance_payement_entry_employee: {
+                  select: {
+                    id: true,
+                    full_name: true,
+                    employee_code: true,
+                  },
+                },
+                hrms_advance_payement_entry_approvedBy: {
+                  select: {
+                    id: true,
+                    full_name: true,
+                  },
+                },
+              },
+            });
+          if (advancePayment) {
+            data.push({
+              ...request,
+              reference: advancePayment,
+            });
+          }
+        }
       })
     );
 
