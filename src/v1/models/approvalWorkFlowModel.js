@@ -71,10 +71,7 @@ const createApprovalWorkFlow = async (dataArray) => {
 
     return results;
   } catch (error) {
-    throw new CustomError(
-      `Error creating approval workflows: ${error.message}`,
-      500
-    );
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 

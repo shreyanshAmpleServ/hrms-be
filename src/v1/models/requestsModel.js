@@ -771,7 +771,167 @@ const findRequestByRequestUsers = async (employee_id) => {
 //     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
 //   }
 // };
+
 //II.2
+// const takeActionOnRequest = async ({
+//   request_id,
+//   request_approval_id,
+//   action,
+//   acted_by,
+//   remarks,
+// }) => {
+//   try {
+//     const approval = await prisma.hrms_d_requests_approval.findFirst({
+//       where: {
+//         request_id: Number(request_id),
+//         id: Number(request_approval_id),
+//         status: "P",
+//       },
+//     });
+
+//     if (!approval) {
+//       throw new CustomError("No pending approval found for this approver", 404);
+//     }
+
+//     await prisma.hrms_d_requests_approval.update({
+//       where: { id: approval.id },
+//       data: {
+//         status: action === "A" ? "A" : "R",
+//         remarks: remarks || null,
+//         action_at: new Date(),
+//         updatedby: acted_by,
+//         updatedate: new Date(),
+//       },
+//     });
+
+//     const request = await prisma.hrms_d_requests.update({
+//       where: { id: Number(request_id) },
+//       data: {
+//         remarks: remarks || null,
+//         updatedate: new Date(),
+//         updatedby: acted_by,
+//       },
+//     });
+
+//     if (
+//       request &&
+//       request.request_type === "leave_request" &&
+//       request.reference_id
+//     ) {
+//       await prisma.hrms_d_leave_application.update({
+//         where: { id: request.reference_id },
+//         data: {
+//           rejection_reason: remarks || null,
+//           updatedby: acted_by,
+//           updatedate: new Date(),
+//         },
+//       });
+//     }
+
+//     if (action === "R") {
+//       await prisma.hrms_d_requests.update({
+//         where: { id: Number(request_id) },
+//         data: {
+//           status: "R",
+//           updatedate: new Date(),
+//           updatedby: acted_by,
+//         },
+//       });
+
+//       if (
+//         request &&
+//         request.request_type === "leave_request" &&
+//         request.reference_id
+//       ) {
+//         await prisma.hrms_d_leave_application.update({
+//           where: { id: request.reference_id },
+//           data: {
+//             status: "R",
+//             updatedby: acted_by,
+//             updatedate: new Date(),
+//           },
+//         });
+//       }
+//       if (
+//         request &&
+//         request.request_type === "loan_request" &&
+//         request.reference_id
+//       ) {
+//         await prisma.hrms_d_loan_request.update({
+//           where: { id: request.reference_id },
+//           data: {
+//             status: "R",
+//             updatedby: acted_by,
+//             updatedate: new Date(),
+//           },
+//         });
+//       }
+
+//       return { message: "Request rejected and closed." };
+//     }
+
+//     const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
+//       where: {
+//         request_id: Number(request_id),
+//         status: "P",
+//       },
+//       orderBy: { sequence: "asc" },
+//     });
+
+//     if (!nextApprover) {
+//       await prisma.hrms_d_requests.update({
+//         where: { id: Number(request_id) },
+//         data: {
+//           status: "A",
+//           updatedate: new Date(),
+//           updatedby: acted_by,
+//         },
+//       });
+
+//       if (
+//         request &&
+//         request.request_type === "leave_request" &&
+//         request.reference_id
+//       ) {
+//         await prisma.hrms_d_leave_application.update({
+//           where: { id: request.reference_id },
+//           data: {
+//             status: "A",
+//             updatedby: acted_by,
+//             updatedate: new Date(),
+//           },
+//         });
+//       }
+//       if (
+//         request &&
+//         request.request_type === "loan_request" &&
+//         request.reference_id
+//       ) {
+//         await prisma.hrms_d_loan_request.update({
+//           where: { id: request.reference_id },
+//           data: {
+//             status: "A",
+//             updatedby: acted_by,
+//             updatedate: new Date(),
+//           },
+//         });
+//       }
+
+//       return {
+//         message: "All approvers have approved. Request is fully approved.",
+//       };
+//     }
+
+//     return {
+//       message: `Approval recorded successfully`,
+//     };
+//   } catch (error) {
+//     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
+//   }
+// };
+
+// II.3
+
 const takeActionOnRequest = async ({
   request_id,
   request_approval_id,
@@ -812,19 +972,35 @@ const takeActionOnRequest = async ({
       },
     });
 
-    if (
-      request &&
-      request.request_type === "leave_request" &&
-      request.reference_id
-    ) {
-      await prisma.hrms_d_leave_application.update({
-        where: { id: request.reference_id },
-        data: {
-          rejection_reason: remarks || null,
-          updatedby: acted_by,
-          updatedate: new Date(),
-        },
-      });
+    if (request?.reference_id) {
+      if (request.request_type === "leave_request") {
+        await prisma.hrms_d_leave_application.update({
+          where: { id: request.reference_id },
+          data: {
+            rejection_reason: remarks || null,
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      } else if (request.request_type === "loan_request") {
+        await prisma.hrms_d_loan_request.update({
+          where: { id: request.reference_id },
+          data: {
+            rejection_reason: remarks || null,
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      } else if (request.request_type === "advance_request") {
+        await prisma.hrms_d_advance_payment_entry.update({
+          where: { id: request.reference_id },
+          data: {
+            reason: remarks || null,
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      }
     }
 
     if (action === "R") {
@@ -837,33 +1013,35 @@ const takeActionOnRequest = async ({
         },
       });
 
-      if (
-        request &&
-        request.request_type === "leave_request" &&
-        request.reference_id
-      ) {
-        await prisma.hrms_d_leave_application.update({
-          where: { id: request.reference_id },
-          data: {
-            status: "R",
-            updatedby: acted_by,
-            updatedate: new Date(),
-          },
-        });
-      }
-      if (
-        request &&
-        request.request_type === "loan_request" &&
-        request.reference_id
-      ) {
-        await prisma.hrms_d_loan_request.update({
-          where: { id: request.reference_id },
-          data: {
-            status: "R",
-            updatedby: acted_by,
-            updatedate: new Date(),
-          },
-        });
+      if (request?.reference_id) {
+        if (request.request_type === "leave_request") {
+          await prisma.hrms_d_leave_application.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "loan_request") {
+          await prisma.hrms_d_loan_request.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "advance_request") {
+          await prisma.hrms_d_advance_payment_entry.update({
+            where: { id: request.reference_id },
+            data: {
+              approval_status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        }
       }
 
       return { message: "Request rejected and closed." };
@@ -887,33 +1065,35 @@ const takeActionOnRequest = async ({
         },
       });
 
-      if (
-        request &&
-        request.request_type === "leave_request" &&
-        request.reference_id
-      ) {
-        await prisma.hrms_d_leave_application.update({
-          where: { id: request.reference_id },
-          data: {
-            status: "A",
-            updatedby: acted_by,
-            updatedate: new Date(),
-          },
-        });
-      }
-      if (
-        request &&
-        request.request_type === "loan_request" &&
-        request.reference_id
-      ) {
-        await prisma.hrms_d_loan_request.update({
-          where: { id: request.reference_id },
-          data: {
-            status: "A",
-            updatedby: acted_by,
-            updatedate: new Date(),
-          },
-        });
+      if (request?.reference_id) {
+        if (request.request_type === "leave_request") {
+          await prisma.hrms_d_leave_application.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "loan_request") {
+          await prisma.hrms_d_loan_request.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "advance_request") {
+          await prisma.hrms_d_advance_payment_entry.update({
+            where: { id: request.reference_id },
+            data: {
+              approval_status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        }
       }
 
       return {

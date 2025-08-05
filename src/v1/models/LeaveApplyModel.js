@@ -94,7 +94,6 @@ const createLeaveApplication = async (data) => {
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });
-    console.log(prisma.hrms_d_requests.fields);
 
     return reqData;
   } catch (error) {

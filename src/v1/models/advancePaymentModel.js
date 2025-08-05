@@ -6,6 +6,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
+const { createRequest } = require("./requestsModel.js");
 
 /**
  * Creates a new advance payment
@@ -38,6 +39,16 @@ const createAdvancePayment = async (data) => {
           },
         },
       },
+    });
+    await createRequest({
+      requester_id: reqData.employee_id,
+      request_type: "advance_request",
+      reference_id: reqData.id,
+      // request_data:
+      //   reqData.reason ||
+      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
     });
     return reqData;
   } catch (error) {
