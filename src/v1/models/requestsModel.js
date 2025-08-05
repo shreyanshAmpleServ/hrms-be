@@ -453,6 +453,9 @@ const findRequestByRequestUsers = async (employee_id) => {
           },
         },
       },
+      orderBy: {
+        createdate: "desc",
+      },
     });
 
     let data = [];
@@ -537,7 +540,7 @@ const findRequestByRequestUsers = async (employee_id) => {
           }
         }
 
-        if (requestType === "advance_request" && referenceId) {
+        if (requestType === "advance_payment" && referenceId) {
           const advancePayment =
             await prisma.hrms_d_advance_payment_entry.findUnique({
               where: { id: parseInt(referenceId) },
@@ -590,7 +593,7 @@ const findRequestByRequestUsers = async (employee_id) => {
     });
     return filteredData;
   } catch (error) {
-    throw new CustomError(`Error finding Request by ID: ${error.message}`, 503);
+    throw new CustomError(`${error.message}`, 503);
   }
 };
 
