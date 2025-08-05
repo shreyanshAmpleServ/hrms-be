@@ -459,7 +459,6 @@ const findRequestByRequestUsers = async (employee_id) => {
         createdate: "desc",
       },
     });
-    console.log(reqData.map((r) => r.createdate));
 
     let data = [];
 
@@ -580,6 +579,43 @@ const findRequestByRequestUsers = async (employee_id) => {
               ...request,
               createdate: request.createdate,
               reference: advancePayment,
+            });
+          }
+        }
+        if (requestType === "asset_request" && referenceId) {
+          const assetRequest = await prisma.hrms_d_asset_assignment.findUnique({
+            where: { id: parseInt(referenceId) },
+            select: {
+              id: true,
+              asset_type_id: true,
+              asset_name: true,
+              serial_number: true,
+              issued_on: true,
+              returned_on: true,
+              status: true,
+
+              asset_assignment_employee: {
+                select: {
+                  id: true,
+                  full_name: true,
+                  employee_code: true,
+                },
+              },
+              asset_assignment_type: {
+                select: {
+                  id: true,
+                  id: true,
+                  asset_type_name: true,
+                  depreciation_rate: true,
+                },
+              },
+            },
+          });
+          if (assetRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: assetRequest,
             });
           }
         }
@@ -1047,6 +1083,14 @@ const takeActionOnRequest = async ({
             updatedate: new Date(),
           },
         });
+      } else if (request.request_type === "asset_request") {
+        await prisma.hrms_d_asset_assignment.update({
+          where: { id: request.reference_id },
+          data: {
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
       }
     }
 
@@ -1084,6 +1128,15 @@ const takeActionOnRequest = async ({
             where: { id: request.reference_id },
             data: {
               approval_status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "asset_request") {
+          await prisma.hrms_d_asset_assignment.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
               updatedby: acted_by,
               updatedate: new Date(),
             },
@@ -1136,6 +1189,15 @@ const takeActionOnRequest = async ({
             where: { id: request.reference_id },
             data: {
               approval_status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "asset_request") {
+          await prisma.hrms_d_asset_assignment.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
               updatedby: acted_by,
               updatedate: new Date(),
             },
