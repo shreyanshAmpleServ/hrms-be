@@ -542,7 +542,7 @@ const findRequestByRequestUsers = async (employee_id) => {
           }
         }
 
-        if (requestType === "advance_payment" && referenceId) {
+        if (requestType === "advance_request" && referenceId) {
           const advancePayment =
             await prisma.hrms_d_advance_payment_entry.findUnique({
               where: { id: parseInt(referenceId) },
