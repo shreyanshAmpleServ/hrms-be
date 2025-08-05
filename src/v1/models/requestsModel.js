@@ -621,6 +621,49 @@ const findRequestByRequestUsers = async (employee_id) => {
             });
           }
         }
+        if (requestType === "leave_encashment" && referenceId) {
+          const leaveEncashmentRequest =
+            await prisma.hrms_d_leave_encashment.findUnique({
+              where: { id: parseInt(referenceId) },
+              select: {
+                id: true,
+                employee_id: true,
+                leave_type_id: true,
+                leave_days: true,
+                encashment_amount: true,
+                approval_status: true,
+                encashment_date: true,
+                basic_salary: true,
+                payroll_period: true,
+                total_amount: true,
+                entitled: true,
+                total_available: true,
+                used: true,
+                balance: true,
+                requested: true,
+                requested_date: true,
+                leave_encashment_employee: {
+                  select: {
+                    full_name: true,
+                    id: true,
+                  },
+                },
+                encashment_leave_types: {
+                  select: {
+                    leave_type: true,
+                    id: true,
+                  },
+                },
+              },
+            });
+          if (leaveEncashmentRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: leaveEncashmentRequest,
+            });
+          }
+        }
       })
     );
     data.sort((a, b) => new Date(b.createdate) - new Date(a.createdate));
@@ -1005,6 +1048,14 @@ const takeActionOnRequest = async ({
             updatedate: new Date(),
           },
         });
+      } else if (request.request_type === "leave_encashment") {
+        await prisma.hrms_d_leave_encashment.update({
+          where: { id: request.reference_id },
+          data: {
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
       }
     }
 
@@ -1069,6 +1120,15 @@ const takeActionOnRequest = async ({
             where: { id: request.reference_id },
             data: {
               status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "leave_encashment") {
+          await prisma.hrms_d_leave_encashment.update({
+            where: { id: request.reference_id },
+            data: {
+              approval_status: "R",
               updatedby: acted_by,
               updatedate: new Date(),
             },
@@ -1148,6 +1208,15 @@ const takeActionOnRequest = async ({
             where: { id: request.reference_id },
             data: {
               status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "leave_encashment") {
+          await prisma.hrms_d_leave_encashment.update({
+            where: { id: request.reference_id },
+            data: {
+              approval_status: "A",
               updatedby: acted_by,
               updatedate: new Date(),
             },

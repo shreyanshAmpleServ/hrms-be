@@ -123,7 +123,7 @@ const createLeaveEncashment = async (data) => {
 
     await createRequest({
       requester_id: reqData.employee_id,
-      request_type: "leave_request",
+      request_type: "leave_encashment",
       reference_id: reqData.id,
       // request_data:
       //   reqData.reason ||
