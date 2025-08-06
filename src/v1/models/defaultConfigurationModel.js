@@ -21,7 +21,7 @@ const serializeDefaultConfig = (data) => ({
   pan_number: data.pan_number || null,
   tax_id: data.tax_id || null,
   smtp_host: data.smtp_host || null,
-  smtp_port: Number(data.smtp_host) || null,
+  smtp_port: Number(data.smtp_port) || null,
   smtp_username: data.smtp_username || null,
   smtp_password: data.smtp_password || null,
   log_inst: data.log_inst || 1,
