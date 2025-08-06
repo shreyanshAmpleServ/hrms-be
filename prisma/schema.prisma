@@ -2501,6 +2501,10 @@ model hrms_d_default_configurations {
   gst_number                    String?                @db.VarChar(30)
   pan_number                    String?                @db.VarChar(30)
   tax_id                        String?                @db.VarChar(30)
+  smtp_host                     String?                @db.VarChar(50)
+  smtp_port                     Int?
+  smtp_username                 String?                @db.VarChar(200)
+  smtp_password                 String?                @db.VarChar(100)
   createdate                    DateTime               @default(now()) @db.DateTime
   createdby                     Int
   updatedate                    DateTime?              @db.DateTime

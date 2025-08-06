@@ -20,10 +20,13 @@ const serializeDefaultConfig = (data) => ({
   gst_number: data.gst_number || null,
   pan_number: data.pan_number || null,
   tax_id: data.tax_id || null,
+  smtp_host: data.smtp_host || null,
+  smtp_port: Number(data.smtp_host) || null,
+  smtp_username: data.smtp_username || null,
+  smtp_password: data.smtp_password || null,
   log_inst: data.log_inst || 1,
 });
 
-// Create a new default configuration
 const createDefaultConfiguration = async (data) => {
   try {
     const reqData = await prisma.hrms_d_default_configurations.create({
