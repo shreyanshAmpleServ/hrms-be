@@ -3,6 +3,8 @@ const CustomError = require("../../utils/CustomError");
 const { log } = require("winston");
 const logger = require("../../Comman/logger");
 const prisma = new PrismaClient();
+const sendEmail = require("../../utils/mailer.js");
+const emailTemplates = require("../../utils/emailTemplates.js");
 
 const serializeRequestsData = (data) => ({
   requester_id: Number(data.requester_id),
@@ -1135,6 +1137,26 @@ const takeActionOnRequest = async ({
           });
         }
       }
+      const requester = await prisma.hrms_d_employee.findUnique({
+        where: { id: request.requester_id },
+        select: { email: true, full_name: true },
+      });
+
+      if (requester?.email) {
+        const template = emailTemplates.requestRejected({
+          fullName: requester.full_name,
+          requestType: request.request_type,
+          remarks,
+        });
+
+        await sendEmail({
+          to: requester.email,
+          subject: template.subject,
+          html: template.html,
+          createdby: acted_by,
+          log_inst: request.log_inst,
+        });
+      }
 
       return { message: "Request rejected and closed." };
     }
@@ -1223,6 +1245,25 @@ const takeActionOnRequest = async ({
           });
         }
       }
+      const requester = await prisma.hrms_d_employee.findUnique({
+        where: { id: request.requester_id },
+        select: { email: true, full_name: true },
+      });
+
+      if (requester?.email) {
+        const template = emailTemplates.requestApproved({
+          fullName: requester.full_name,
+          requestType: request.request_type,
+        });
+
+        await sendEmail({
+          to: requester.email,
+          subject: template.subject,
+          html: template.html,
+          createdby: acted_by,
+          log_inst: request.log_inst,
+        });
+      }
 
       return {
         message: "All approvers have approved. Request is fully approved.",
@@ -1236,7 +1277,6 @@ const takeActionOnRequest = async ({
     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
   }
 };
-
 // III with socket
 // const takeActionOnRequest = async ({
 //   request_id,
