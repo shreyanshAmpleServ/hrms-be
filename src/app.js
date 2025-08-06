@@ -3,14 +3,9 @@ const cors = require("cors");
 const dotenv = require("dotenv");
 const routes = require("../src/routes/index");
 
-// const responseHandler = require("../src/utils/responseMiddleware.js");
 const responseHandler = require("../src/utils/responseMiddleware.js");
-
 const cookieParser = require("cookie-parser");
-// const { errorHandler } = require("../src/utils/errorMiddleware.js");
 const errorHandler = require("../src/utils/errorMiddleware.js");
-
-// const isProduction = process.env.NODE_ENV === 'production';
 
 dotenv.config();
 
@@ -29,22 +24,11 @@ app.use(
       "http://192.168.29.74:3000",
       "http://10.160.5.101:3000",
       "http://10.160.5.101:3001",
-    ], // Replace with your frontend URL
-    credentials: true, // Allow cookies to be sent
+    ],
+    credentials: true,
   })
 );
 
-// const authenticateUser = require("./v1/middlewares/authMiddleware.js"); // example path
-// app.use(authenticateUser);
-// const responseLogger = require("./v1/middlewares/responseLogger.js");
-// app.use(responseLogger);
-
-// app.use(
-//   cors({
-//     origin: true,
-//     credentials: true,
-//   })
-// );
 app.use(responseHandler);
 app.use("/uploads", express.static("uploads"));
 app.use("/api", routes);
