@@ -40,8 +40,28 @@ const findRequestByRequestTypeAndReferenceId = async (request) => {
   return await requestsModel.findRequestByRequestTypeAndReferenceId(request);
 };
 
-const findRequestByRequestUsers = async (employee_id) => {
-  return await requestsModel.findRequestByRequestUsers(employee_id);
+const findRequestByRequestUsers = async (
+  search,
+  page,
+  size,
+  employee_id,
+  requestType,
+  status,
+  requester_id,
+  startDate,
+  endDate
+) => {
+  return await requestsModel.findRequestByRequestUsers(
+    search,
+    page,
+    size,
+    employee_id,
+    requestType,
+    status,
+    requester_id,
+    startDate,
+    endDate
+  );
 };
 
 // const takeActionOnRequest = async (data) => {

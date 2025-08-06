@@ -99,9 +99,27 @@ const findRequestByRequestTypeAndReferenceId = async (req, res, next) => {
 };
 
 const findRequestByRequestUsers = async (req, res, next) => {
+  const {
+    search,
+    page,
+    size,
+    request_type,
+    requester_id,
+    status,
+    startDate,
+    endDate,
+  } = req.query;
   try {
     const result = await requestsService.findRequestByRequestUsers(
-      req?.user?.employee_id
+      search,
+      Number(page),
+      Number(size),
+      Number(req?.user?.employee_id),
+      request_type,
+      status,
+      Number(requester_id),
+      startDate ? moment(startDate) : null,
+      endDate ? moment(endDate) : null
     );
     res.status(200).success("Request found successfully", result);
   } catch (error) {

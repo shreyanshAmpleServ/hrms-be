@@ -1,6 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { get } = require("../routes/overtimeSetupRoute");
 const prisma = new PrismaClient();
 
 // Serialize input data

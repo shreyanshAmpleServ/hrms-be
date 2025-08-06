@@ -396,9 +396,58 @@ const findRequestByRequestTypeAndReferenceId = async (request) => {
   }
 };
 
-const findRequestByRequestUsers = async (employee_id) => {
+const findRequestByRequestUsers = async (
+  search = "",
+  page = 1,
+  size = 10,
+  employee_id,
+  requestType = "",
+  status = "",
+  requester_id,
+  startDate,
+  endDate
+) => {
+  page = !page || page == 0 ? 1 : page;
+  size = size || 10;
+  const skip = (page - 1) * size || 0;
+
+  const filters = {};
+
+  if (search) {
+    filters.OR = [
+      {
+        request_type: { contains: search.toLowerCase() },
+      },
+      {
+        request_data: { contains: search.toLowerCase() },
+      },
+    ];
+  }
+
+  if (requestType) {
+    filters.request_type = { equals: requestType };
+  }
+
+  if (status) {
+    filters.status = { equals: status.toUpperCase() };
+  }
+
+  if (requester_id) {
+    filters.requester_id = { equals: requester_id };
+  }
+
+  if (startDate && endDate) {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+    if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+      filters.createdate = { gte: start, lte: end };
+    }
+  }
+
   try {
     const reqData = await prisma.hrms_d_requests.findMany({
+      where: filters,
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
         requests_employee: {
           select: {
@@ -428,9 +477,6 @@ const findRequestByRequestUsers = async (employee_id) => {
             },
           },
         },
-      },
-      orderBy: {
-        createdate: "desc",
       },
     });
 
@@ -517,7 +563,6 @@ const findRequestByRequestUsers = async (employee_id) => {
             });
           }
         }
-
         if (requestType === "advance_request" && referenceId) {
           const advancePayment =
             await prisma.hrms_d_advance_payment_entry.findUnique({
@@ -574,7 +619,6 @@ const findRequestByRequestUsers = async (employee_id) => {
               issued_on: true,
               returned_on: true,
               status: true,
-
               asset_assignment_employee: {
                 select: {
                   id: true,
@@ -718,14 +762,22 @@ const findRequestByRequestUsers = async (employee_id) => {
       const approvals = request.request_approval_request;
       const approverIndex = approvals.findIndex(
         (approval) =>
-          approval.approver_id === employee_id && approval.status === "P"
+          approval.approver_id === employee_id &&
+          (status === "" || approval.status === status)
       );
       if (approverIndex === -1) return false;
       if (approverIndex === 0) return true;
       const prevApproval = approvals[approverIndex - 1];
       return prevApproval?.status === "A";
     });
-    return filteredData;
+    const slideData = filteredData.slice(skip, skip + size);
+    return {
+      data: slideData,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(filteredData.length / size),
+      totalCount: filteredData.length,
+    };
   } catch (error) {
     throw new CustomError(`${error.message}`, 503);
   }
