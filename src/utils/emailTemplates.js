@@ -1,30 +1,100 @@
+const formatRequestType = (type) =>
+  type.replace(/_/g, " ").replace(/\b\w/g, (char) => char.toUpperCase());
+
+const renderDetailsHtml = (details) => {
+  if (!details) return "";
+  let html = `<h4 style="margin-top: 10px;">Request Details:</h4><ul style="padding-left: 15px;">`;
+
+  for (const [key, value] of Object.entries(details)) {
+    const label = key
+      .replace(/_/g, " ")
+      .replace(/\b\w/g, (c) => c.toUpperCase());
+
+    const formattedValue =
+      value instanceof Date
+        ? value.toLocaleDateString("en-IN", {
+            year: "numeric",
+            month: "short",
+            day: "numeric",
+          })
+        : value;
+
+    html += `<li><strong>${label}:</strong> ${formattedValue ?? "N/A"}</li>`;
+  }
+
+  html += `</ul>`;
+  return html;
+};
+
 const emailTemplates = {
-  requestApproved: ({ fullName, requestType }) => ({
-    subject: "Your request has been approved",
+  requestApproved: ({ fullName, requestType, companyName, details }) => ({
+    subject: `${companyName} - ${formatRequestType(requestType)} Approved`,
     html: `
-    <p> Dear ${fullName}, </p>
-    <p> Your request of type <strong>${requestType}</strong> has been <strong>approved</strong> by all approvers.</p>
-    <p>Regards,<br/> Team</p>
+      <p>Dear ${fullName},</p>
+      <p>Your request of type <strong>${formatRequestType(
+        requestType
+      )}</strong> has been <strong>approved</strong> by all approvers.</p>
+      ${renderDetailsHtml(details)}
+      <p>Regards,<br/>${companyName}</p>
     `,
   }),
 
-  requestRejected: ({ fullName, requestType, remarks }) => ({
-    subject: "Your request has been rejected",
+  requestRejected: ({
+    fullName,
+    requestType,
+    remarks,
+    companyName,
+    details,
+  }) => ({
+    subject: `${companyName} - ${formatRequestType(requestType)} Rejected`,
     html: `
-    <p>Dear ${fullName},</p>
-    <p>Your request of type <strong>${requestType}</strong> has been <strong>rejected</strong>.</p>
+      <p>Dear ${fullName},</p>
+      <p>Your request of type <strong>${formatRequestType(
+        requestType
+      )}</strong> has been <strong>rejected</strong>.</p>
       <p><strong>Remarks:</strong> ${remarks || "N/A"}</p>
-      <p>Regards,<br/> Team</p>
+      ${renderDetailsHtml(details)}
+      <p>Regards,<br/>${companyName}</p>
     `,
   }),
 
-  requestPending: ({ fullName, requestType, remarks }) => ({
-    subject: "Your request is pending",
+  notifyApprover: ({
+    approverName,
+    previousApprover,
+    requestType,
+    action,
+    companyName,
+    details,
+  }) => ({
+    subject: `Action Required: ${requestType} has been ${action}`,
     html: `
-    <p>Dear ${fullName}, </p>
-    <p>Your request of this type <strong>${requestType}</strong> is currently in <strong>pending</strong> state.</p>
-    <p><strong>Remarks: </strong>${remarks} is being reviewd by team.  
+      <p>Dear ${approverName},</p>
+      <p>The request <strong>${requestType}</strong> has been <strong>${action}</strong> by <strong>${previousApprover}</strong>.</p>
+            ${renderDetailsHtml(details)}
+
+      <p>It is now pending your action. Please review and take appropriate action.</p>
+      <p>Regards,<br/>${companyName}</p>
+    `,
+  }),
+  notifyNextApprover: ({
+    approverName,
+    previousApprover,
+    requestType,
+    action,
+    companyName,
+    details,
+  }) => ({
+    subject: `${companyName} - ${formatRequestType(requestType)} ${action}`,
+    html: `
+      <p>Dear ${approverName},</p>
+      <p>A <strong>${formatRequestType(
+        requestType
+      )}</strong> has been <strong>${action.toLowerCase()}</strong> by <strong>${previousApprover}</strong>.</p>
+      ${renderDetailsHtml(details)}
+      <p>Please login to the HRMS to take necessary action.</p>
+      <p>Regards,<br>${companyName}</p>
     `,
   }),
 };
+
 module.exports = emailTemplates;

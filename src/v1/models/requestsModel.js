@@ -5,6 +5,13 @@ const logger = require("../../Comman/logger");
 const prisma = new PrismaClient();
 const sendEmail = require("../../utils/mailer.js");
 const emailTemplates = require("../../utils/emailTemplates.js");
+const getRequestDetailsByType = require("../../utils/getDetails.js");
+
+const formatRequestType = (type) => {
+  return type
+    .replace(/_/g, " ")
+    .replace(/\w\S*/g, (txt) => txt.charAt(0).toUpperCase() + txt.substr(1));
+};
 
 const serializeRequestsData = (data) => ({
   requester_id: Number(data.requester_id),
@@ -86,11 +93,50 @@ const createRequest = async (data) => {
       },
     });
 
+    const requester = await prisma.hrms_d_employee.findUnique({
+      where: { id: parentData.requester_id },
+      select: { full_name: true },
+    });
+
+    const firstApproverId = approvalsToInsert[0]?.approver_id;
+    const firstApprover = await prisma.hrms_d_employee.findUnique({
+      where: { id: firstApproverId },
+      select: { email: true, full_name: true },
+    });
+
+    const company = await prisma.hrms_d_default_configurations.findUnique({
+      where: { id: parentData.log_inst },
+      select: { company_name: true },
+    });
+    const companyName = company?.company_name || "HRMS System";
+
+    if (firstApprover?.email && requester?.full_name) {
+      const details = await getRequestDetailsByType(
+        request_type,
+        reqData.reference_id
+      );
+
+      const template = emailTemplates.notifyNextApprover({
+        approverName: firstApprover.full_name,
+        previousApprover: requester.full_name,
+        requestType: formatRequestType(request_type),
+        action: "Created",
+        companyName,
+        details,
+      });
+      await sendEmail({
+        to: firstApprover.email,
+        subject: template.subject,
+        html: template.html,
+        createdby: parentData.createdby,
+        log_inst: parentData.log_inst,
+      });
+
+      console.log(`[Email Sent] → First Approver: ${firstApprover.email}`);
+    }
     return fullData;
   } catch (error) {
-    // console.log("Error", error);
     console.log(error);
-
     throw new CustomError(
       `Error creating request model: ${error.message}`,
       500
@@ -109,7 +155,6 @@ const updateRequests = async (id, data) => {
     if (!existing) {
       throw new CustomError(`Request with ID ${id} not found`, 404);
     }
-
     if (
       parentData.request_type &&
       parentData.request_type.trim() !== "" &&
@@ -687,116 +732,8 @@ const findRequestByRequestUsers = async (employee_id) => {
 };
 
 // IInd  - new modified
+
 //II.1
-// const takeActionOnRequest = async ({
-//   request_id,
-//   request_approval_id,
-//   action,
-//   acted_by,
-//   remarks,
-// }) => {
-//   try {
-//     const approval = await prisma.hrms_d_requests_approval.findFirst({
-//       where: {
-//         request_id: Number(request_id),
-//         id: Number(request_approval_id),
-//         status: "P",
-//       },
-//     });
-
-//     if (!approval) {
-//       throw new CustomError("No pending approval found for this approver", 404);
-//     }
-
-//     await prisma.hrms_d_requests_approval.update({
-//       where: { id: approval.id },
-//       data: {
-//         status: action === "A" ? "A" : "R",
-//         remarks: remarks || null,
-//         action_at: new Date(),
-//         updatedby: acted_by,
-//         updatedate: new Date(),
-//       },
-//     });
-
-//     const request = await prisma.hrms_d_requests.update({
-//       where: { id: Number(request_id) },
-//       data: {
-//         remarks: remarks || null,
-//         updatedate: new Date(),
-//         updatedby: acted_by,
-//       },
-//     });
-
-//     if (action === "R") {
-//       if (
-//         request &&
-//         request.request_type === "leave_request" &&
-//         request.reference_id
-//       ) {
-//         await prisma.hrms_d_leave_application.update({
-//           where: { id: request.reference_id },
-//           data: {
-//             status: "R",
-//             rejection_reason: remarks || null,
-//             updatedby: acted_by,
-//             updatedate: new Date(),
-//           },
-//         });
-//       }
-
-//       return { message: "Request rejected and closed." };
-//     }
-
-//     const nextApprover = await prisma.hrms_d_requests_approval.findFirst({
-//       where: {
-//         request_id: Number(request_id),
-//         status: "P",
-//       },
-//       orderBy: { sequence: "asc" },
-//     });
-
-//     if (!nextApprover) {
-//       await prisma.hrms_d_requests.update({
-//         where: { id: request_id },
-//         data: {
-//           status: "A",
-//           updatedate: new Date(),
-//           updatedby: acted_by,
-//         },
-//       });
-
-//       if (
-//         request &&
-//         request.request_type === "leave_request" &&
-//         request.reference_id
-//       ) {
-//         await prisma.hrms_d_leave_application.update({
-//           where: { id: request.reference_id },
-//           data: {
-//             status: "A",
-//             rejection_reason: remarks || null,
-//             updatedby: acted_by,
-//             updatedate: new Date(),
-//           },
-//         });
-//       }
-
-//       return {
-//         message: "All approvers have approved. Request is fully approved.",
-//       };
-//     }
-
-//     return {
-//       // message: `Approval recorded. Notified next approver (ID: ${nextApprover.approver_id}).`,
-//       message: `Approval recorded successfully`,
-//     };
-//   } catch (error) {
-//     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
-//   }
-// };
-
-//II.2
 // const takeActionOnRequest = async ({
 //   request_id,
 //   request_approval_id,
@@ -954,7 +891,7 @@ const findRequestByRequestUsers = async (employee_id) => {
 //   }
 // };
 
-// II.3
+// II.2
 
 const takeActionOnRequest = async ({
   request_id,
@@ -995,6 +932,12 @@ const takeActionOnRequest = async ({
         updatedby: acted_by,
       },
     });
+
+    const company = await prisma.hrms_d_default_configurations.findUnique({
+      where: { id: request.log_inst },
+      select: { company_name: true },
+    });
+    const companyName = company?.company_name || "HRMS System";
 
     if (request?.reference_id) {
       if (request.request_type === "leave_request") {
@@ -1143,10 +1086,16 @@ const takeActionOnRequest = async ({
       });
 
       if (requester?.email) {
+        const details = await getRequestDetailsByType(
+          request.request_type,
+          request.reference_id
+        );
         const template = emailTemplates.requestRejected({
           fullName: requester.full_name,
-          requestType: request.request_type,
+          requestType: formatRequestType(request.request_type),
           remarks,
+          companyName,
+          details,
         });
 
         await sendEmail({
@@ -1251,9 +1200,16 @@ const takeActionOnRequest = async ({
       });
 
       if (requester?.email) {
+        const details = await getRequestDetailsByType(
+          request.request_type,
+          request.reference_id
+        );
+
         const template = emailTemplates.requestApproved({
           fullName: requester.full_name,
-          requestType: request.request_type,
+          requestType: formatRequestType(request.request_type),
+          companyName,
+          details,
         });
 
         await sendEmail({
@@ -1269,14 +1225,61 @@ const takeActionOnRequest = async ({
         message: "All approvers have approved. Request is fully approved.",
       };
     }
+    console.log("Email successfully sent to next approver.");
+
+    const nextApproverUser = await prisma.hrms_d_employee.findUnique({
+      where: { id: nextApprover.approver_id },
+      select: { email: true, full_name: true },
+    });
+    let actingUser = null;
+    if (acted_by) {
+      actingUser = await prisma.hrms_d_employee.findUnique({
+        where: { id: Number(acted_by) },
+        select: { full_name: true },
+      });
+    }
+
+    console.log("Evaluating next approver email condition...");
+    console.log("nextApproverUser:", nextApproverUser);
+    console.log("actingUser:", actingUser);
+
+    if (nextApproverUser?.email && actingUser?.full_name) {
+      const details = await getRequestDetailsByType(
+        request.request_type,
+        request.reference_id
+      );
+      const template = emailTemplates.notifyApprover({
+        approverName: nextApproverUser.full_name,
+        previousApprover: actingUser.full_name,
+        requestType: formatRequestType(request.request_type),
+        action: action === "A" ? "approved" : "rejected",
+        companyName,
+        details,
+      });
+      console.log(
+        `1Email Sent To Approver: ${nextApproverUser.email}, Subject: ${template.subject}`
+      );
+
+      await sendEmail({
+        to: nextApproverUser.email,
+        subject: template.subject,
+        html: template.html,
+        createdby: acted_by,
+        log_inst: request.log_inst,
+      });
+      console.log("Email successfully sent to next approver.");
+    }
 
     return {
       message: `Approval recorded successfully`,
     };
   } catch (error) {
+    console.log("Email fail sent to next approver.", error);
+
     throw new CustomError(`Error in approval flow: ${error.message}`, 500);
   }
 };
+
 // III with socket
 // const takeActionOnRequest = async ({
 //   request_id,
