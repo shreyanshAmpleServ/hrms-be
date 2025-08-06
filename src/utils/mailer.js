@@ -8,28 +8,18 @@ const sendEmail = async ({ to, subject, html, log_inst }) => {
       where: { log_inst },
     });
 
-    if (
-      !config?.smtp_host ||
-      !config?.smtp_username ||
-      !config?.smtp_password
-    ) {
-      throw new Error(
-        `SMTP settings not found for company (log_inst=${log_inst})`
-      );
-    }
-
     const transporter = nodemailer.createTransport({
-      host: config.smtp_host,
-      port: config.smtp_port,
+      host: config.smtp_host || process.env.SMTP_HOST,
+      port: config.smtp_port || process.env.SMTP_PORT,
       secure: config.smtp_port === 465,
       auth: {
-        user: config.smtp_username,
-        pass: config.smtp_password,
+        user: config.smtp_username || process.env.SMTP_USERNAME,
+        pass: config.smtp_password || process.env.SMTP_PASSWORD,
       },
     });
 
     await transporter.sendMail({
-      from: config.smtp_username,
+      from: config.smtp_username || process.env.SMTP_USERNAME,
       to,
       subject,
       html,
