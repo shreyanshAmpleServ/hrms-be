@@ -97,7 +97,9 @@ const createRequest = async (data) => {
       where: { id: parentData.requester_id },
       select: { full_name: true },
     });
-
+    console.log("parentData.requester_id:", parentData.requester_id);
+    console.log("requester found:", requester);
+    console.log("requester full_name:", requester?.full_name);
     const firstApproverId = approvalsToInsert[0]?.approver_id;
     const firstApprover = await prisma.hrms_d_employee.findUnique({
       where: { id: firstApproverId },
@@ -119,10 +121,11 @@ const createRequest = async (data) => {
       const template = await generateEmailContent(
         templateKeyMap.notifyApprover,
         {
-          approverName: firstApprover.full_name,
-          previousApprover: requester.full_name,
-          request_type: formatRequestType(request_type),
-          action: "Updated",
+          employee_name: firstApprover.full_name,
+          approver_name: firstApprover.full_name,
+          requester_name: requester.full_name,
+          request_type: request_type,
+          action: "created",
           company_name,
           request_detail,
         }
@@ -266,7 +269,7 @@ const deleteRequests = async (id) => {
     });
 
     await prisma.hrms_d_requests.delete({
-      where: { id: parseInt(id) }, // ✅ fixed here
+      where: { id: parseInt(id) },
     });
 
     return {
@@ -1702,7 +1705,7 @@ const takeActionOnRequest = async ({
       const template = await generateEmailContent(
         templateKeyMap.notifyNextApprover,
         {
-          approverName: nextApproverUser.full_name,
+          approver_name: nextApproverUser.full_name,
           previousApprover: actingUser.full_name,
           request_type: formatRequestType(request.request_type),
           action: action === "A" ? "approved" : "rejected",

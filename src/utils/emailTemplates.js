@@ -198,8 +198,9 @@ const generateEmailContent = async (key, variables = {}) => {
   });
 
   if (!template) throw new Error(`Email template with key "${key}" not found.`);
-  if (!variables.employee_name && variables.approverName) {
-    variables.employee_name = variables.approverName;
+
+  if (!variables.employee_name && variables.approver_name) {
+    variables.employee_name = variables.approver_name;
   }
 
   const computedVars = {
@@ -208,13 +209,23 @@ const generateEmailContent = async (key, variables = {}) => {
     request_detail: renderDetailsHtml(variables.request_detail),
   };
 
-  const render = (str) =>
-    (str || "").replace(/\{\{(\w+)\}\}/g, (_, key) => computedVars[key] || "");
+  console.log("Template key:", key);
+  console.log("Variables received:", variables);
+  console.log("Computed variables:", computedVars);
+  console.log("Template body:", template.body);
 
-  return {
+  const render = (str) =>
+    (str || "").replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => {
+      console.log(`Replacing {{${key}}} with:`, computedVars[key]);
+      return computedVars[key] || "";
+    });
+  const result = {
     subject: render(template.subject),
     body: render(template.body),
   };
+
+  console.log("Final rendered body:", result.body);
+  return result;
 };
 
 module.exports = { generateEmailContent, formatRequestType, renderDetailsHtml };

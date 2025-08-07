@@ -216,7 +216,7 @@ const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
       while ((match = regex.exec(text)) !== null) {
         matches.push(match[1].trim());
       }
-      return [...new Set(matches)]; // Remove duplicates
+      return [...new Set(matches)];
     };
 
     const templatesWithVariables = datas.map((template) => {
