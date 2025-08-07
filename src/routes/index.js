@@ -138,7 +138,7 @@ const defaultConfigurationRoute = require("../v1/routes/defaultConfigurationRout
 const requestsRoute = require("../v1/routes/requestsRoute.js");
 const requestApprovalRoute = require("../v1/routes/requestApprovalRoute.js");
 const approvalWorkFlowRoute = require("../v1/routes/approvalWorkFlowRoute.js");
-
+const emailTemplatesRoute = require("../v1/routes/emailTemplatesRoute.js");
 const router = express.Router();
 
 // Version 1 API
@@ -281,7 +281,7 @@ router.use("/v1", defaultConfigurationRoute);
 router.use("/v1", requestsRoute);
 router.use("/v1", requestApprovalRoute);
 router.use("/v1", approvalWorkFlowRoute);
-
+router.use("/v1", emailTemplatesRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;

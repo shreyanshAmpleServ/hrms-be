@@ -2563,3 +2563,14 @@ model hrms_d_requests_approval {
   request_approval_request  hrms_d_requests? @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   request_approval_approver hrms_d_employee? @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
+
+model hrms_d_templates {
+  id         Int       @id @default(autoincrement())
+  name       String    @unique @db.VarChar(50)
+  subject    String    @db.VarChar(100)
+  body       String?   @db.Text
+  createdate DateTime  @default(now()) @db.DateTime
+  createdby  Int
+  updatedate DateTime? @db.DateTime
+  updatedby  Int?
+}
