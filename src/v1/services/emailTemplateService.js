@@ -1,5 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
-const emailTemplateModel = require("../services/emailTemplateModel.js");
+const emailTemplateModel = require("../models/emailTemplateModel.js");
 
 const createEmailTemplate = async (data) => {
   return await emailTemplateModel.createEmailTemplate(data);

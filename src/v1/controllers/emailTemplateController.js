@@ -1,4 +1,7 @@
 const emailTemplateService = require("../services/emailTemplateService.js");
+const CustomError = require("../../utils/CustomError");
+const { logActivity } = require("../../utils/activityLogger");
+const moment = require("moment");
 
 const createEmailTemplate = async (req, res) => {
   try {
@@ -9,12 +12,20 @@ const createEmailTemplate = async (req, res) => {
   }
 };
 
-const getAllEmailTemplate = async (req, res) => {
+const getAllEmailTemplate = async (req, res, next) => {
   try {
-    const result = await emailTemplateService.getAllEmailTemplate();
-    res.json(result);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
+    const { page, size, search, startDate, endDate } = req.query;
+
+    const result = await emailTemplateService.getAllEmailTemplate(
+      search,
+      Number(page),
+      Number(size),
+      startDate && moment(startDate),
+      endDate && moment(endDate)
+    );
+    res.status(200).success(null, result);
+  } catch (error) {
+    next(error);
   }
 };
 
