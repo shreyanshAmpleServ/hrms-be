@@ -131,7 +131,7 @@ const createRequest = async (data) => {
       await sendEmail({
         to: firstApprover.email,
         subject: template.subject,
-        html: template.html,
+        html: template.body,
         createdby: parentData.createdby,
         log_inst: parentData.log_inst,
       });
@@ -1549,7 +1549,7 @@ const takeActionOnRequest = async ({
         await sendEmail({
           to: requester.email,
           subject: template.subject,
-          html: template.html,
+          html: template.body,
           createdby: acted_by,
           log_inst: request.log_inst,
         });
@@ -1666,7 +1666,7 @@ const takeActionOnRequest = async ({
         await sendEmail({
           to: requester.email,
           subject: template.subject,
-          html: template.html,
+          html: template.body,
           createdby: acted_by,
           log_inst: request.log_inst,
         });
@@ -1717,7 +1717,7 @@ const takeActionOnRequest = async ({
       await sendEmail({
         to: nextApproverUser.email,
         subject: template.subject,
-        html: template.html,
+        html: template.body,
         createdby: acted_by,
         log_inst: request.log_inst,
       });

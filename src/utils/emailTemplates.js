@@ -98,6 +98,71 @@
 // };
 
 // module.exports = emailTemplates;
+
+// II
+// const { PrismaClient } = require("@prisma/client");
+
+// const prisma = new PrismaClient();
+
+// const formatRequestType = (type) =>
+//   type?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ?? "";
+
+// const renderDetailsHtml = (request_detail) => {
+//   if (!request_detail) return "";
+
+//   let html = `<h4>Request Details:</h4><ul>`;
+//   for (const [key, value] of Object.entries(request_detail)) {
+//     const label = key
+//       .replace(/_/g, " ")
+//       .replace(/\b\w/g, (c) => c.toUpperCase());
+//     const formatted =
+//       value instanceof Date
+//         ? value.toLocaleDateString("en-IN", {
+//             year: "numeric",
+//             month: "short",
+//             day: "numeric",
+//           })
+//         : value ?? "N/A";
+//     html += `<li><strong>${label}:</strong> ${formatted}</li>`;
+//   }
+//   html += `</ul>`;
+//   return html;
+// };
+
+// const generateEmailContent = async (key, variables = {}) => {
+//   const template = await prisma.hrms_d_templates.findUnique({
+//     where: { key },
+//   });
+
+//   if (!template) throw new Error(`Email template with key "${key}" not found.`);
+//   if (!variables.employee_name && variables.approverName) {
+//     variables.employee_name = variables.approverName;
+//   }
+
+//   const computedVars = {
+//     ...variables,
+//     request_type: formatRequestType(variables.request_type),
+//     request_detail: renderDetailsHtml(variables.request_detail),
+//   };
+
+//   const render = (str) =>
+//     (str || "").replace(/\{\{(\w+)\}\}/g, (_, key) => computedVars[key] || "");
+//   console.log("TEMPLATE DEBUG:");
+//   console.log("Template Key:", template.key);
+//   console.log("Raw Body:", template.body);
+//   console.log("Variables:", variables);
+//   console.log("Rendered Body:", render(template.body));
+
+//   return {
+//     subject: render(template.subject),
+//     body: render(template.body),
+//   };
+// };
+
+// module.exports = { generateEmailContent, formatRequestType, renderDetailsHtml };
+
+// III
+
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
@@ -105,11 +170,11 @@ const prisma = new PrismaClient();
 const formatRequestType = (type) =>
   type?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ?? "";
 
-const renderDetailsHtml = (details) => {
-  if (!details) return "";
+const renderDetailsHtml = (request_detail) => {
+  if (!request_detail) return "";
 
-  let html = `<h4>Request Details:</h4><ul>`;
-  for (const [key, value] of Object.entries(details)) {
+  let html = `<h4 style="margin: 0; margin-bottom: 5px;">Request Details:</h4><ul style="margin: 0; padding-left: 10px;">`;
+  for (const [key, value] of Object.entries(request_detail)) {
     const label = key
       .replace(/_/g, " ")
       .replace(/\b\w/g, (c) => c.toUpperCase());
@@ -121,7 +186,7 @@ const renderDetailsHtml = (details) => {
             day: "numeric",
           })
         : value ?? "N/A";
-    html += `<li><strong>${label}:</strong> ${formatted}</li>`;
+    html += `<li style="margin: 0; line-height: 1.2;"><strong>${label}:</strong> ${formatted}</li>`;
   }
   html += `</ul>`;
   return html;
@@ -133,12 +198,14 @@ const generateEmailContent = async (key, variables = {}) => {
   });
 
   if (!template) throw new Error(`Email template with key "${key}" not found.`);
+  if (!variables.employee_name && variables.approverName) {
+    variables.employee_name = variables.approverName;
+  }
 
-  // Add computed replacements
   const computedVars = {
     ...variables,
     request_type: formatRequestType(variables.request_type),
-    request_detail: renderDetailsHtml(variables.details), // HTML block
+    request_detail: renderDetailsHtml(variables.request_detail),
   };
 
   const render = (str) =>
