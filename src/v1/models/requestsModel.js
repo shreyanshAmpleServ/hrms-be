@@ -117,7 +117,7 @@ const createRequest = async (data) => {
       );
 
       const template = await generateEmailContent(
-        templateKeyMap.notifyNextApprover,
+        templateKeyMap.notifyApprover,
         {
           approverName: firstApprover.full_name,
           previousApprover: requester.full_name,
@@ -1700,7 +1700,7 @@ const takeActionOnRequest = async ({
         request.reference_id
       );
       const template = await generateEmailContent(
-        templateKeyMap.notifyApprover,
+        templateKeyMap.notifyNextApprover,
         {
           approverName: nextApproverUser.full_name,
           previousApprover: actingUser.full_name,

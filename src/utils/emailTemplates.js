@@ -210,11 +210,6 @@ const generateEmailContent = async (key, variables = {}) => {
 
   const render = (str) =>
     (str || "").replace(/\{\{(\w+)\}\}/g, (_, key) => computedVars[key] || "");
-  console.log("TEMPLATE DEBUG:");
-  console.log("Template Key:", template.key);
-  console.log("Raw Body:", template.body);
-  console.log("Variables:", variables);
-  console.log("Rendered Body:", render(template.body));
 
   return {
     subject: render(template.subject),
