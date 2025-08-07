@@ -13,9 +13,52 @@ const serializeEmailTemplateData = (data) => ({
   updatedate: data.updatedate ? new Date(data.updatedate) : null,
 });
 
-// Create a new email template
+const validateEmailTemplateData = async (data) => {
+  const errors = [];
+
+  if (!data.body || data.body.trim() === "") {
+    errors.push("Body is mandatory and cannot be empty");
+  }
+
+  if (!data.name || data.name.trim() === "") {
+    errors.push("Name is mandatory and cannot be empty");
+  }
+
+  if (!data.key || data.key.trim() === "") {
+    errors.push("Key is mandatory and cannot be empty");
+  }
+
+  if (data.name) {
+    const existingName = await prisma.hrms_d_templates.findFirst({
+      where: {
+        name: data.name.trim(),
+      },
+    });
+    if (existingName) {
+      errors.push("Template name already exists");
+    }
+  }
+
+  if (data.key) {
+    const existingKey = await prisma.hrms_d_templates.findFirst({
+      where: {
+        key: data.key.trim(),
+      },
+    });
+    if (existingKey) {
+      errors.push("Template key already exists");
+    }
+  }
+
+  if (errors.length > 0) {
+    throw new CustomError(errors.join(", "), 400);
+  }
+};
+
 const createEmailTemplate = async (data) => {
   try {
+    await validateEmailTemplateData(data);
+
     const result = await prisma.hrms_d_templates.create({
       data: {
         ...serializeEmailTemplateData(data),
@@ -24,6 +67,9 @@ const createEmailTemplate = async (data) => {
     });
     return result;
   } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
     throw new CustomError(
       `Error creating email template: ${error.message}`,
       500
@@ -52,6 +98,8 @@ const getEmailTemplateById = async (id) => {
 // Update email template
 const updateEmailTemplate = async (id, data) => {
   try {
+    await validateEmailTemplateData(data);
+
     const result = await prisma.hrms_d_templates.update({
       where: { id: Number(id) },
       data: {
@@ -62,6 +110,9 @@ const updateEmailTemplate = async (id, data) => {
     });
     return result;
   } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
     throw new CustomError(
       `Error updating email template: ${error.message}`,
       500
@@ -83,7 +134,50 @@ const deleteEmailTemplate = async (id) => {
   }
 };
 
-// Get all email templates with pagination and search
+// const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         { name: { contains: search.toLowerCase() } },
+//         { subject: { contains: search.toLowerCase() } },
+//         { body: { contains: search.toLowerCase() } },
+//       ];
+//     }
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = { gte: start, lte: end };
+//       }
+//     }
+
+//     const datas = await prisma.hrms_d_templates.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//     });
+//     const totalCount = await prisma.hrms_d_templates.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: datas,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     throw new CustomError("Error retrieving email templates", 503);
+//   }
+// };
+
 const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -112,12 +206,38 @@ const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
+
+    // Extract variables from each template
+    const extractVariables = (text) => {
+      if (!text) return [];
+      const regex = /\{\{([^}]+)\}\}/g;
+      const matches = [];
+      let match;
+      while ((match = regex.exec(text)) !== null) {
+        matches.push(match[1].trim());
+      }
+      return [...new Set(matches)]; // Remove duplicates
+    };
+
+    const templatesWithVariables = datas.map((template) => {
+      const subjectVariables = extractVariables(template.subject);
+      const bodyVariables = extractVariables(template.body);
+      const allVariables = [
+        ...new Set([...subjectVariables, ...bodyVariables]),
+      ];
+
+      return {
+        ...template,
+        variables: allVariables,
+      };
+    });
+
     const totalCount = await prisma.hrms_d_templates.count({
       where: filters,
     });
 
     return {
-      data: datas,
+      data: templatesWithVariables,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
