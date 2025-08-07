@@ -104,7 +104,7 @@ const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
       }
     }
 
-    const data = await prisma.hrms_d_templates.findMany({
+    const datas = await prisma.hrms_d_templates.findMany({
       where: filters,
       skip,
       take: size,
@@ -115,7 +115,7 @@ const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
     });
 
     return {
-      data,
+      data: datas,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),

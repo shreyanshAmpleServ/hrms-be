@@ -137,14 +137,14 @@ const generateEmailContent = async (templateName, variables) => {
   const replacePlaceholders = (text) =>
     text.replace(/{{(.*?)}}/g, (_, key) => {
       const trimmed = key.trim();
-      switch (trimmed) {
-        case "requestType":
-          return formatRequestType(variables["requestType"]);
-        case "detailsHtml":
-          return renderDetailsHtml(variables["details"]);
-        default:
-          return variables[trimmed] ?? "";
+
+      if (trimmed === "requestType") {
+        return formatRequestType(variables[trimmed]);
+      } else if (trimmed === "detailsHtml") {
+        return renderDetailsHtml(variables["details"]);
       }
+
+      return variables[trimmed] ?? "";
     });
 
   return {
