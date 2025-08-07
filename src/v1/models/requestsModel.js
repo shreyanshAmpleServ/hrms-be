@@ -1,7 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { log } = require("winston");
-const logger = require("../../Comman/logger");
 const prisma = new PrismaClient();
 const sendEmail = require("../../utils/mailer.js");
 const emailTemplates = require("../../utils/emailTemplates.js");
@@ -138,7 +136,7 @@ const createRequest = async (data) => {
         log_inst: parentData.log_inst,
       });
 
-      console.log(`Email Sent First Approver: ${firstApprover.email}`);
+      console.log(`[Email Sent] → First Approver: ${firstApprover.email}`);
     }
     return fullData;
   } catch (error) {
@@ -1713,7 +1711,7 @@ const takeActionOnRequest = async ({
         }
       );
       console.log(
-        `Email Sent To Approver: ${nextApproverUser.email}, Subject: ${template.subject}`
+        `1Email Sent To Approver: ${nextApproverUser.email}, Subject: ${template.subject}`
       );
 
       await sendEmail({
