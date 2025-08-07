@@ -127,29 +127,31 @@ const renderDetailsHtml = (details) => {
   return html;
 };
 
-const generateEmailContent = async (templateName, variables) => {
-  const template = await prisma.hrms_d_templates.findFirst({
-    where: { name: templateName },
+const generateEmailContent = async (key, variables = {}) => {
+  const template = await prisma.hrms_d_templates.findUnique({
+    where: { key },
   });
 
-  if (!template) throw new Error(`Email template "${templateName}" not found`);
+  if (!template) throw new Error(`Email template with key "${key}" not found.`);
 
-  const replacePlaceholders = (text) =>
-    text.replace(/{{(.*?)}}/g, (_, key) => {
-      const trimmed = key.trim();
+  // Add computed replacements
+  const computedVars = {
+    ...variables,
+    request_type: formatRequestType(variables.request_type),
+    request_detail: renderDetailsHtml(variables.details), // HTML block
+  };
 
-      if (trimmed === "requestType") {
-        return formatRequestType(variables[trimmed]);
-      } else if (trimmed === "detailsHtml") {
-        return renderDetailsHtml(variables["details"]);
-      }
-
-      return variables[trimmed] ?? "";
-    });
+  const render = (str) =>
+    (str || "").replace(/\{\{(\w+)\}\}/g, (_, key) => computedVars[key] || "");
+  console.log("TEMPLATE DEBUG:");
+  console.log("Template Key:", template.key);
+  console.log("Raw Body:", template.body);
+  console.log("Variables:", variables);
+  console.log("Rendered Body:", render(template.body));
 
   return {
-    subject: replacePlaceholders(template.subject),
-    html: replacePlaceholders(template.body),
+    subject: render(template.subject),
+    body: render(template.body),
   };
 };
 

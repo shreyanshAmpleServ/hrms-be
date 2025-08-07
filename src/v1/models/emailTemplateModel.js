@@ -5,6 +5,7 @@ const prisma = new PrismaClient();
 // Serialize email template data
 const serializeEmailTemplateData = (data) => ({
   name: data.name,
+  key: data.key,
   subject: data.subject,
   body: data.body || "",
   createdby: data.createdby ? Number(data.createdby) : 1,
@@ -55,6 +56,7 @@ const updateEmailTemplate = async (id, data) => {
       where: { id: Number(id) },
       data: {
         ...serializeEmailTemplateData(data),
+        updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
     });

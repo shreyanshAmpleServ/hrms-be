@@ -17,7 +17,10 @@ const sendEmail = async ({ to, subject, html, log_inst }) => {
         pass: config.smtp_password || process.env.SMTP_PASSWORD,
       },
     });
-
+    console.log("EMAIL DEBUG:");
+    console.log("To:", to);
+    console.log("Subject:", subject);
+    console.log("HTML Body:", html);
     await transporter.sendMail({
       from: config.smtp_username || process.env.SMTP_USERNAME,
       to,

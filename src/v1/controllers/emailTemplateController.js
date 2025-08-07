@@ -41,15 +41,20 @@ const getEmailTemplateById = async (req, res) => {
   }
 };
 
-const updateEmailTemplate = async (req, res) => {
+const updateEmailTemplate = async (req, res, next) => {
   try {
+    const data = {
+      ...req.body,
+      updatedby: req.user.employee_id,
+      log_inst: req.user.log_inst,
+    };
     const result = await emailTemplateService.updateEmailTemplate(
-      +req.params.id,
-      req.body
+      req.params.id,
+      data
     );
-    res.json(result);
-  } catch (err) {
-    res.status(400).json({ error: err.message });
+    res.status(200).success("Email Template updated successfully", result);
+  } catch (error) {
+    next(error);
   }
 };
 

@@ -7,6 +7,7 @@ const sendEmail = require("../../utils/mailer.js");
 const emailTemplates = require("../../utils/emailTemplates.js");
 const getRequestDetailsByType = require("../../utils/getDetails.js");
 const { generateEmailContent } = require("../../utils/emailTemplates.js");
+const { templateKeyMap } = require("../../utils/templateKeyMap.js");
 
 const formatRequestType = (type) => {
   return type
@@ -109,22 +110,26 @@ const createRequest = async (data) => {
       where: { id: parentData.log_inst },
       select: { company_name: true },
     });
-    const companyName = company?.company_name || "HRMS System";
+    const company_name = company?.company_name || "HRMS System";
 
     if (firstApprover?.email && requester?.full_name) {
-      const details = await getRequestDetailsByType(
+      const request_detail = await getRequestDetailsByType(
         request_type,
         reqData.reference_id
       );
 
-      const template = await generateEmailContent("notifyNextApprover", {
-        approverName: firstApprover.full_name,
-        previousApprover: requester.full_name,
-        requestType: formatRequestType(request_type),
-        action: "Updated",
-        companyName,
-        details,
-      });
+      const template = await generateEmailContent(
+        templateKeyMap.notifyNextApprover,
+        {
+          approverName: firstApprover.full_name,
+          previousApprover: requester.full_name,
+          request_type: formatRequestType(request_type),
+          action: "Updated",
+          company_name,
+          request_detail,
+        }
+      );
+
       await sendEmail({
         to: firstApprover.email,
         subject: template.subject,
@@ -1334,6 +1339,7 @@ const findRequestByRequestUsers = async (
 // };
 
 // II.3
+
 const takeActionOnRequest = async ({
   request_id,
   request_approval_id,
@@ -1378,7 +1384,7 @@ const takeActionOnRequest = async ({
       where: { id: request.log_inst },
       select: { company_name: true },
     });
-    const companyName = company?.company_name || "HRMS System";
+    const company_name = company?.company_name || "HRMS System";
 
     if (request?.reference_id) {
       if (request.request_type === "leave_request") {
@@ -1527,17 +1533,20 @@ const takeActionOnRequest = async ({
       });
 
       if (requester?.email) {
-        const details = await getRequestDetailsByType(
+        const request_detail = await getRequestDetailsByType(
           request.request_type,
           request.reference_id
         );
-        const template = await generateEmailContent("requestRejected", {
-          fullName: requester.full_name,
-          requestType: formatRequestType(request.request_type),
-          remarks,
-          companyName,
-          details,
-        });
+        const template = await generateEmailContent(
+          templateKeyMap.requestRejected,
+          {
+            employee_name: requester.full_name,
+            request_type: formatRequestType(request.request_type),
+            remarks,
+            company_name,
+            request_detail,
+          }
+        );
 
         await sendEmail({
           to: requester.email,
@@ -1641,17 +1650,20 @@ const takeActionOnRequest = async ({
       });
 
       if (requester?.email) {
-        const details = await getRequestDetailsByType(
+        const request_detail = await getRequestDetailsByType(
           request.request_type,
           request.reference_id
         );
 
-        const template = await generateEmailContent("requestAccepted", {
-          fullName: requester.full_name,
-          requestType: formatRequestType(request.request_type),
-          companyName,
-          details,
-        });
+        const template = await generateEmailContent(
+          templateKeyMap.requestAccepted,
+          {
+            employee_name: requester.full_name,
+            request_type: formatRequestType(request.request_type),
+            company_name,
+            request_detail,
+          }
+        );
 
         await sendEmail({
           to: requester.email,
@@ -1685,18 +1697,21 @@ const takeActionOnRequest = async ({
     console.log("actingUser:", actingUser);
 
     if (nextApproverUser?.email && actingUser?.full_name) {
-      const details = await getRequestDetailsByType(
+      const request_detail = await getRequestDetailsByType(
         request.request_type,
         request.reference_id
       );
-      const template = await generateEmailContent("notifyApprover", {
-        approverName: nextApproverUser.full_name,
-        previousApprover: actingUser.full_name,
-        requestType: formatRequestType(request.request_type),
-        action: action === "A" ? "approved" : "rejected",
-        companyName,
-        details,
-      });
+      const template = await generateEmailContent(
+        templateKeyMap.notifyApprover,
+        {
+          approverName: nextApproverUser.full_name,
+          previousApprover: actingUser.full_name,
+          request_type: formatRequestType(request.request_type),
+          action: action === "A" ? "approved" : "rejected",
+          company_name,
+          request_detail,
+        }
+      );
       console.log(
         `Email Sent To Approver: ${nextApproverUser.email}, Subject: ${template.subject}`
       );
