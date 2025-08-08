@@ -162,7 +162,6 @@
 // module.exports = { generateEmailContent, formatRequestType, renderDetailsHtml };
 
 // III
-
 const { PrismaClient } = require("@prisma/client");
 
 const prisma = new PrismaClient();
@@ -214,11 +213,22 @@ const generateEmailContent = async (key, variables = {}) => {
   console.log("Computed variables:", computedVars);
   console.log("Template body:", template.body);
 
-  const render = (str) =>
-    (str || "").replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => {
+  const render = (str) => {
+    if (!str) return "";
+
+    let rendered = str.replace(/\$\{\s*(\w+)\s*\}/g, (_, key) => {
+      console.log(`Replacing \${${key}} with:`, computedVars[key]);
+      return computedVars[key] || "";
+    });
+
+    rendered = rendered.replace(/\{\{\s*(\w+)\s*\}\}/g, (_, key) => {
       console.log(`Replacing {{${key}}} with:`, computedVars[key]);
       return computedVars[key] || "";
     });
+
+    return rendered;
+  };
+
   const result = {
     subject: render(template.subject),
     body: render(template.body),

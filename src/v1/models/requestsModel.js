@@ -1706,8 +1706,8 @@ const takeActionOnRequest = async ({
         templateKeyMap.notifyNextApprover,
         {
           approver_name: nextApproverUser.full_name,
-          previousApprover: actingUser.full_name,
-          request_type: formatRequestType(request.request_type),
+          previous_approver: actingUser.full_name,
+          request_type: request.request_type,
           action: action === "A" ? "approved" : "rejected",
           company_name,
           request_detail,
