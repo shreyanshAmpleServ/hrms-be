@@ -52,16 +52,13 @@ const upsertDailyAttendance = async (id, data) => {
 };
 
 const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
-  // If no dates passed, set to current month range (1st to last day)
   if (!startDate || !endDate) {
     const now = new Date();
-    // Use string formatting to avoid JavaScript Date constructor issues
     const year = now.getFullYear();
-    const month = (now.getMonth() + 1).toString().padStart(2, "0"); // +1 because getMonth() is 0-based
+    const month = (now.getMonth() + 1).toString().padStart(2, "0");
 
     startDate = `${year}-${month}-01`;
 
-    // Get last day of current month
     const lastDay = new Date(year, now.getMonth() + 1, 0).getDate();
     endDate = `${year}-${month}-${lastDay.toString().padStart(2, "0")}`;
 
