@@ -235,7 +235,104 @@ const deleteDailyAttendance = async (id) => {
 //   }
 // };
 
-// without week off
+// const getAllDailyAttendance = async (
+//   search,
+//   page,
+//   size,
+//   startDate,
+//   endDate
+// ) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+
+//     const filters = {};
+
+//     if (search) {
+//       filters.OR = [
+//         {
+//           hrms_daily_attendance_employee: {
+//             full_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         {
+//           hrms_daily_attendance_employee: {
+//             employee_code: { contains: search.toLowerCase() },
+//           },
+//         },
+//         { status: { contains: search.toLowerCase() } },
+//         { remarks: { contains: search.toLowerCase() } },
+//       ];
+//     }
+
+//     let start, end;
+//     if (startDate && endDate) {
+//       start = new Date(startDate);
+//       end = new Date(endDate);
+//     } else {
+//       const now = new Date();
+//       start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0));
+//       end = new Date(
+//         Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 0, 0, 0)
+//       );
+//     }
+
+//     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//       filters.attendance_date = { gte: start, lte: end };
+//     }
+
+//     const attendanceEntries =
+//       await prisma.hrms_d_daily_attendance_entry.findMany({
+//         where: filters,
+//         orderBy: [{ attendance_date: "asc" }],
+//         include: {
+//           hrms_daily_attendance_employee: {
+//             select: {
+//               id: true,
+//               employee_code: true,
+//               full_name: true,
+//             },
+//           },
+//         },
+//       });
+
+//     const attendanceMap = {};
+//     attendanceEntries.forEach((entry) => {
+//       const key = entry.attendance_date.toISOString().split("T")[0];
+//       attendanceMap[key] = entry;
+//     });
+
+//     const allDates = [];
+//     const current = new Date(start);
+
+//     while (current <= end) {
+//       const dateStr = current.toISOString().split("T")[0];
+//       const data = attendanceMap[dateStr] || {
+//         attendance_date: new Date(dateStr),
+//         status: null,
+//         remarks: null,
+//         hrms_daily_attendance_employee: null,
+//       };
+//       allDates.push(data);
+//       current.setUTCDate(current.getUTCDate() + 1);
+//     }
+
+//     const paginated = allDates.slice(skip, skip + size);
+
+//     return {
+//       data: paginated,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(allDates.length / size),
+//       totalCount: allDates.length,
+//     };
+//   } catch (error) {
+//     console.error(error);
+//     throw new CustomError("Error retrieving attendance entries", 503);
+//   }
+// };
+
 const getAllDailyAttendance = async (
   search,
   page,
@@ -274,7 +371,7 @@ const getAllDailyAttendance = async (
     } else {
       const now = new Date();
       start = new Date(now.getFullYear(), now.getMonth(), 1);
-      end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
     }
 
     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
@@ -296,7 +393,6 @@ const getAllDailyAttendance = async (
         },
       });
 
-    // Step 2: Create a map of date string → attendance entry
     const attendanceMap = {};
     attendanceEntries.forEach((entry) => {
       const key = entry.attendance_date.toISOString().split("T")[0];
@@ -306,18 +402,30 @@ const getAllDailyAttendance = async (
     const allDates = [];
     const current = new Date(start);
     const final = new Date(end);
-    final.setDate(final.getDate() + 1);
 
-    while (current < final) {
+    while (current <= final) {
       const dateStr = current.toISOString().split("T")[0];
-      const data = attendanceMap[dateStr] || {
-        attendance_date: new Date(dateStr),
-        status: null,
-        remarks: null,
-        hrms_daily_attendance_employee: null,
-      };
-      allDates.push(data);
-      current.setDate(current.getDate() + 1);
+      const entry = attendanceMap[dateStr];
+
+      if (entry) {
+        allDates.push({
+          id: entry.id,
+          attendance_date: entry.attendance_date,
+          status: entry.status,
+          remarks: entry.remarks,
+          hrms_daily_attendance_employee: entry.hrms_daily_attendance_employee,
+        });
+      } else {
+        allDates.push({
+          id: null,
+          attendance_date: new Date(dateStr),
+          status: null,
+          remarks: null,
+          hrms_daily_attendance_employee: null,
+        });
+      }
+
+      current.setUTCDate(current.getUTCDate() + 1);
     }
 
     const paginated = allDates.slice(skip, skip + size);
@@ -334,61 +442,6 @@ const getAllDailyAttendance = async (
     throw new CustomError("Error retrieving attendance entries", 503);
   }
 };
-
-// const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
-//   try {
-
-//     const filters = {};
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-//         filters.attendance_date = { gte: start, lte: end };
-//       }
-//     }
-
-//     const summary = await prisma.hrms_d_daily_attendance_entry.groupBy({
-//       by: ["employee_id", "status"],
-//       where: filters,
-//       _count: { status: true },
-//     });
-
-//     const employees = await prisma.hrms_d_employee.findMany({
-//       select: {
-//         id: true,
-//         employee_code: true,
-//         full_name: true,
-//         department_id: true,
-//       },
-//     });
-
-//     const normalize = (status) => status.toLowerCase().replace(/ /g, "_");
-
-//     const result = employees.map((emp) => {
-//       const empSummary = summary.filter((s) => s.employee_id === emp.id);
-
-//       return {
-//         ...emp,
-//         present:
-//           empSummary.find((s) => normalize(s.status) === "present")?._count
-//             .status || 0,
-//         absent:
-//           empSummary.find((s) => normalize(s.status) === "absent")?._count
-//             .status || 0,
-//         half_Day:
-//           empSummary.find((s) => normalize(s.status) === "half_day")?._count
-//             .status || 0,
-//         late:
-//           empSummary.find((s) => normalize(s.status) === "late")?._count
-//             .status || 0,
-//       };
-//     });
-
-//     return result;
-//   } catch (error) {
-//     throw new CustomError("Error generating attendance summary", 503);
-//   }
-// };
 
 const getAttendanceSummaryByEmployee = async (
   search,
