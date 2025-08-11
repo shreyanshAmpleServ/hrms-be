@@ -113,34 +113,53 @@ const findDailyAttendanceById = async (id) => {
 };
 
 // Update attendance entry
-const updateDailyAttendance = async (id, data) => {
+const upsertDailyAttendance = async (id, data) => {
   try {
     const serializedData = await serializeAttendanceData(data);
 
-    const updatedEntry = await prisma.hrms_d_daily_attendance_entry.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...serializedData,
-        updatedby: data.updatedby || 1,
-        updatedate: new Date(),
-      },
-      include: {
-        hrms_daily_attendance_employee: {
-          select: {
-            id: true,
-            employee_code: true,
-            full_name: true,
+    let updatedEntry;
+
+    if (id) {
+      updatedEntry = await prisma.hrms_d_daily_attendance_entry.update({
+        where: { id: parseInt(id) },
+        data: {
+          ...serializedData,
+          updatedby: data.updatedby || 1,
+          updatedate: new Date(),
+        },
+        include: {
+          hrms_daily_attendance_employee: {
+            select: {
+              id: true,
+              employee_code: true,
+              full_name: true,
+            },
           },
         },
-      },
-    });
-
+      });
+    } else {
+      updatedEntry = await prisma.hrms_d_daily_attendance_entry.create({
+        data: {
+          employee_id: data.employee_id,
+          attendance_date: new Date(data.attendance_date),
+          ...serializedData,
+          createdby: data.createdby || 1,
+        },
+        include: {
+          hrms_daily_attendance_employee: {
+            select: {
+              id: true,
+              employee_code: true,
+              full_name: true,
+            },
+          },
+        },
+      });
+    }
     return updatedEntry;
   } catch (error) {
-    throw new CustomError(
-      `Error updating attendance entry: ${error.message}`,
-      500
-    );
+    console.log(`Error in updating attendance entry: ${error.message}`);
+    throw new CustomError(` ${error.message}`);
   }
 };
 
@@ -569,50 +588,44 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
 
     if (!employee) throw new CustomError("Employee not found", 404);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-
-    let start = startDate ? new Date(startDate) : new Date(today);
-    let end = endDate ? new Date(endDate) : new Date(today);
-
-    if (!startDate && !endDate) {
-      start.setDate(start.getDate() - 29);
+    let start, end;
+    if (startDate && endDate) {
+      start = new Date(startDate + "T00:00:00.000Z");
+      end = new Date(endDate + "T23:59:59.999Z");
+    } else {
+      start = new Date(startDate + "T00:00:00.000Z");
+      end = new Date(endDate + "T23:59:59.999Z");
     }
 
     if (isNaN(start) || isNaN(end)) {
       throw new CustomError("Invalid date range provided", 400);
     }
 
-    const attendanceData = await prisma.hrms_d_daily_attendance_entry.findMany({
-      where: {
-        employee_id: empId,
-        attendance_date: {
-          gte: start,
-          lte: end,
+    const attendanceEntries =
+      await prisma.hrms_d_daily_attendance_entry.findMany({
+        where: {
+          employee_id: empId,
+          attendance_date: {
+            gte: start,
+            lte: end,
+          },
         },
-      },
-      orderBy: { attendance_date: "asc" },
-      select: {
-        id: true,
-        attendance_date: true,
-        status: true,
-        remarks: true,
-        check_in_time: true,
-        check_out_time: true,
-        working_hours: true,
-      },
-    });
+        orderBy: { attendance_date: "asc" },
+        select: {
+          id: true,
+          attendance_date: true,
+          status: true,
+          remarks: true,
+          check_in_time: true,
+          check_out_time: true,
+          working_hours: true,
+        },
+      });
 
-    const summary = {
-      present: 0,
-      absent: 0,
-      leave: 0,
-      late: 0,
-      half_Day: 0,
-    };
+    const summary = { present: 0, absent: 0, leave: 0, late: 0, half_Day: 0 };
 
-    attendanceData.forEach((entry) => {
-      const status = entry.status.toLowerCase();
+    attendanceEntries.forEach((entry) => {
+      const status = entry.status?.toLowerCase();
       if (status === "present") summary.present++;
       else if (status === "absent") summary.absent++;
       else if (status === "leave") summary.leave++;
@@ -621,46 +634,51 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
         summary.half_Day++;
     });
 
-    const allDates = [];
-    for (let d = new Date(end); d >= start; d.setDate(d.getDate() - 1)) {
-      allDates.push(new Date(d));
-    }
-
-    const attendanceMap = new Map();
-    attendanceData.forEach((entry) => {
-      const key = new Date(entry.attendance_date).toISOString().split("T")[0];
-      if (!attendanceMap.has(key)) {
-        attendanceMap.set(key, entry);
-      }
+    const attendanceMap = {};
+    attendanceEntries.forEach((entry) => {
+      const key = entry.attendance_date.toISOString().split("T")[0];
+      attendanceMap[key] = entry;
     });
 
-    const attendanceList = allDates.map((date) => {
-      const key = date.toISOString().split("T")[0];
-      const entry = attendanceMap.get(key);
-      return {
-        attendance_date: key,
+    const allDates = [];
+
+    const iterationStartDate = startDate;
+    const iterationEndDate = endDate;
+
+    const current = new Date(iterationStartDate + "T00:00:00Z");
+    const endDateObj = new Date(iterationEndDate + "T00:00:00Z");
+
+    while (current <= endDateObj) {
+      const dateStr = current.toISOString().split("T")[0];
+      const entry = attendanceMap[dateStr];
+
+      allDates.push({
+        attendance_date: dateStr,
         id: entry?.id || null,
         status: entry?.status || null,
         remarks: entry?.remarks || null,
         check_in_time: entry?.check_in_time || null,
         check_out_time: entry?.check_out_time || null,
         working_hours: entry?.working_hours || null,
-      };
-    });
+      });
 
-    return { employee, summary, attendanceList };
+      current.setUTCDate(current.getUTCDate() + 1);
+    }
+
+    return {
+      employee,
+      summary,
+      attendanceList: allDates,
+    };
   } catch (error) {
-    throw new CustomError(
-      `Error retrieving attendance entry: ${error.message}`,
-      500
-    );
+    console.error(`Error retrieving attendance entry:`, error);
+    throw new CustomError(error.message, 500);
   }
 };
-
 module.exports = {
   createDailyAttendance,
   findDailyAttendanceById,
-  updateDailyAttendance,
+  upsertDailyAttendance,
   deleteDailyAttendance,
   getAllDailyAttendance,
   getAttendanceSummaryByEmployee,

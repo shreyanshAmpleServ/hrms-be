@@ -25,10 +25,16 @@ router.get(
 );
 
 // Update a daily attendance by ID routes
-router.put(
-  "/daily-attendance/:id",
+// router.put(
+//   "/daily-attendance/:id",
+//   authenticateToken,
+//   dailyAttendanceController.updateDailyAttendance
+// );
+
+router.post(
+  "/daily-attendance/upsert",
   authenticateToken,
-  dailyAttendanceController.updateDailyAttendance
+  dailyAttendanceController.upsertDailyAttendance
 );
 
 // Delete  daily attendance by ID routes
@@ -49,4 +55,5 @@ router.get(
   authenticateToken,
   dailyAttendanceController.findAttendanceByEmployeeId
 );
+
 module.exports = router;

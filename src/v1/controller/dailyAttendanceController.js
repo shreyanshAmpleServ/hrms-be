@@ -17,6 +17,34 @@ const createDailyAttendance = async (req, res, next) => {
     next(error);
   }
 };
+const upsertDailyAttendance = async (req, res, next) => {
+  try {
+    const { id } = req.body;
+
+    const data = {
+      ...req.body,
+      updatedby: req.user.id,
+      createdby: req.user.id,
+      log_inst: req.user.log_inst,
+    };
+
+    const reqData = await dailyAttendanceService.upsertDailyAttendance(
+      id && id !== "0" ? id : null,
+      data
+    );
+
+    res
+      .status(200)
+      .success(
+        id && id !== "0"
+          ? "Daily attendance updated successfully"
+          : "Daily attendance created successfully",
+        reqData
+      );
+  } catch (error) {
+    next(error);
+  }
+};
 
 const findDailyAttendance = async (req, res, next) => {
   try {
@@ -88,23 +116,20 @@ const getAttendanceSummaryByEmployee = async (req, res, next) => {
   }
 };
 
-// Controller: dailyAttendanceController.js
 const findAttendanceByEmployeeId = async (req, res, next) => {
   try {
-    const { page, size, startDate, endDate } = req.query;
+    const { startDate, endDate } = req.query;
     const employeeId = req.params.id;
 
     const result = await dailyAttendanceService.findAttendanceByEmployeeId(
       employeeId,
-      Number(page),
-      Number(size),
-      startDate && moment(startDate),
-      endDate && moment(endDate)
+      startDate,
+      endDate
     );
 
     res
       .status(200)
-      .success("Attendance of employee retreivesd successfully", result);
+      .success("Attendance of employee retrieved successfully", result);
   } catch (error) {
     next(error);
   }
@@ -118,4 +143,5 @@ module.exports = {
   getAllDailyAttendance,
   getAttendanceSummaryByEmployee,
   findAttendanceByEmployeeId,
+  upsertDailyAttendance,
 };
