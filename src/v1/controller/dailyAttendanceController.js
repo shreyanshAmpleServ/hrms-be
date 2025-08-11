@@ -103,18 +103,28 @@ const getAllDailyAttendance = async (req, res, next) => {
 const getAttendanceSummaryByEmployee = async (req, res, next) => {
   try {
     const { page, size, search, startDate, endDate } = req.query;
+
+    const start = startDate ? moment(startDate, "YYYY-MM-DD", true) : null;
+    const end = endDate ? moment(endDate, "YYYY-MM-DD", true) : null;
+
+    if ((startDate && !start.isValid()) || (endDate && !end.isValid())) {
+      return res.status(400).json({ message: "Invalid date format. Use YYYY-MM-DD." });
+    }
+
     const data = await dailyAttendanceService.getAttendanceSummaryByEmployee(
       search,
       Number(page),
       Number(size),
-      startDate && moment(startDate),
-      endDate && moment(endDate)
+      start,
+      end
     );
+
     res.status(200).success(null, data);
   } catch (error) {
     next(error);
   }
 };
+
 
 const findAttendanceByEmployeeId = async (req, res, next) => {
   try {
