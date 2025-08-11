@@ -1716,6 +1716,7 @@ const takeActionOnRequest = async ({
       console.log(
         `1Email Sent To Approver: ${nextApproverUser.email}, Subject: ${template.subject}`
       );
+      console.log;
 
       await sendEmail({
         to: nextApproverUser.email,

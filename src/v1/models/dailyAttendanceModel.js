@@ -273,15 +273,14 @@ const getAllDailyAttendance = async (
       end = new Date(endDate);
     } else {
       const now = new Date();
-      start = new Date(now.getFullYear(), now.getMonth(), 1); // 1st of current month
-      end = new Date(now.getFullYear(), now.getMonth(), now.getDate()); // today (midnight)
+      start = new Date(now.getFullYear(), now.getMonth(), 1);
+      end = new Date(now.getFullYear(), now.getMonth(), now.getDate());
     }
 
     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
       filters.attendance_date = { gte: start, lte: end };
     }
 
-    // Step 1: Fetch attendance data in the date range
     const attendanceEntries =
       await prisma.hrms_d_daily_attendance_entry.findMany({
         where: filters,
@@ -304,11 +303,10 @@ const getAllDailyAttendance = async (
       attendanceMap[key] = entry;
     });
 
-    // Step 3: Generate continuous date list and match with map
     const allDates = [];
     const current = new Date(start);
     const final = new Date(end);
-    final.setDate(final.getDate() + 1); // ensure today's date is included
+    final.setDate(final.getDate() + 1);
 
     while (current < final) {
       const dateStr = current.toISOString().split("T")[0];
@@ -322,7 +320,6 @@ const getAllDailyAttendance = async (
       current.setDate(current.getDate() + 1);
     }
 
-    // Step 4: Apply pagination
     const paginated = allDates.slice(skip, skip + size);
 
     return {
@@ -338,15 +335,105 @@ const getAllDailyAttendance = async (
   }
 };
 
-const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
+// const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
+//   try {
+
+//     const filters = {};
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.attendance_date = { gte: start, lte: end };
+//       }
+//     }
+
+//     const summary = await prisma.hrms_d_daily_attendance_entry.groupBy({
+//       by: ["employee_id", "status"],
+//       where: filters,
+//       _count: { status: true },
+//     });
+
+//     const employees = await prisma.hrms_d_employee.findMany({
+//       select: {
+//         id: true,
+//         employee_code: true,
+//         full_name: true,
+//         department_id: true,
+//       },
+//     });
+
+//     const normalize = (status) => status.toLowerCase().replace(/ /g, "_");
+
+//     const result = employees.map((emp) => {
+//       const empSummary = summary.filter((s) => s.employee_id === emp.id);
+
+//       return {
+//         ...emp,
+//         present:
+//           empSummary.find((s) => normalize(s.status) === "present")?._count
+//             .status || 0,
+//         absent:
+//           empSummary.find((s) => normalize(s.status) === "absent")?._count
+//             .status || 0,
+//         half_Day:
+//           empSummary.find((s) => normalize(s.status) === "half_day")?._count
+//             .status || 0,
+//         late:
+//           empSummary.find((s) => normalize(s.status) === "late")?._count
+//             .status || 0,
+//       };
+//     });
+
+//     return result;
+//   } catch (error) {
+//     throw new CustomError("Error generating attendance summary", 503);
+//   }
+// };
+
+const getAttendanceSummaryByEmployee = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
   try {
+    page = !page || page == 0 ? 1 : page;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
+
     const filters = {};
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      const end = new Date(endDate);
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.attendance_date = { gte: start, lte: end };
+    if (startDate || endDate) {
+      filters.attendance_date = {};
+      if (startDate) {
+        const start = new Date(startDate);
+        if (!isNaN(start.getTime())) {
+          filters.attendance_date.gte = start;
+        }
       }
+      if (endDate) {
+        const end = new Date(endDate);
+        if (!isNaN(end.getTime())) {
+          filters.attendance_date.lte = end;
+        }
+      }
+    } else {
+      const now = new Date();
+      const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
+      const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+      filters.attendance_date = {
+        gte: firstDay,
+        lte: lastDay,
+      };
+    }
+
+    if (search) {
+      filters.hrms_daily_attendance_employee = {
+        OR: [
+          { full_name: { contains: search.toLowerCase() } },
+          { employee_code: { contains: search.toLowerCase() } },
+        ],
+      };
     }
 
     const summary = await prisma.hrms_d_daily_attendance_entry.groupBy({
@@ -355,20 +442,34 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
       _count: { status: true },
     });
 
+    const employeeWhere = {};
+    if (search) {
+      employeeWhere.OR = [
+        { full_name: { contains: search.toLowerCase() } },
+        { employee_code: { contains: search.toLowerCase() } },
+      ];
+    }
+
+    const totalCount = await prisma.hrms_d_employee.count({
+      where: employeeWhere,
+    });
+
     const employees = await prisma.hrms_d_employee.findMany({
+      where: employeeWhere,
       select: {
         id: true,
         employee_code: true,
         full_name: true,
         department_id: true,
       },
+      skip,
+      take: size,
     });
 
     const normalize = (status) => status.toLowerCase().replace(/ /g, "_");
 
-    const result = employees.map((emp) => {
+    const data = employees.map((emp) => {
       const empSummary = summary.filter((s) => s.employee_id === emp.id);
-
       return {
         ...emp,
         present:
@@ -377,7 +478,7 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
         absent:
           empSummary.find((s) => normalize(s.status) === "absent")?._count
             .status || 0,
-        half_Day:
+        half_day:
           empSummary.find((s) => normalize(s.status) === "half_day")?._count
             .status || 0,
         late:
@@ -386,8 +487,15 @@ const getAttendanceSummaryByEmployee = async (startDate, endDate) => {
       };
     });
 
-    return result;
+    return {
+      data,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount,
+    };
   } catch (error) {
+    console.error(error);
     throw new CustomError("Error generating attendance summary", 503);
   }
 };
@@ -422,7 +530,6 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
       throw new CustomError("Invalid date range provided", 400);
     }
 
-    // Fetch attendance entries within range
     const attendanceData = await prisma.hrms_d_daily_attendance_entry.findMany({
       where: {
         employee_id: empId,
