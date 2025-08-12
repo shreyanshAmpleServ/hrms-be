@@ -629,7 +629,7 @@ const attendanceOverview = async (dateString) => {
     const endOfDay = today.endOf("day");
 
     const employees = await prisma.hrms_d_employee.findMany({
-      where: { status: "active" },
+      where: { status: "Active" },
       select: { id: true },
     });
 
@@ -669,20 +669,39 @@ const attendanceOverview = async (dateString) => {
     };
 
     const markedEmployees = new Set();
+    // old code
+    // for (const [empId, status] of latestRecordMap.entries()) {
+    //   markedEmployees.add(empId);
+    //   const normalizedStatus = status?.toLowerCase();
 
+    //   if (normalizedStatus === "present") {
+    //     statusCounts.Present++;
+    //   } else if (normalizedStatus === "late") {
+    //     statusCounts.Late++;
+    //   } else if (
+    //     normalizedStatus === "half day" ||
+    //     normalizedStatus === "halfday"
+    //   ) {
+    //     statusCounts["Half Day"]++;
+    //   }
+    // }
+
+    // new code by devShivang
     for (const [empId, status] of latestRecordMap.entries()) {
-      markedEmployees.add(empId);
       const normalizedStatus = status?.toLowerCase();
 
       if (normalizedStatus === "present") {
         statusCounts.Present++;
+        markedEmployees.add(empId);
       } else if (normalizedStatus === "late") {
         statusCounts.Late++;
+        markedEmployees.add(empId);
       } else if (
         normalizedStatus === "half day" ||
         normalizedStatus === "halfday"
       ) {
         statusCounts["Half Day"]++;
+        markedEmployees.add(empId);
       }
     }
 
@@ -700,7 +719,6 @@ const attendanceOverview = async (dateString) => {
     throw new CustomError("Error retrieving attendance status count", 503);
   }
 };
-
 const getEmployeeActivity = async () => {
   try {
     const logs = await prisma.hrms_d_activity_log.findMany({

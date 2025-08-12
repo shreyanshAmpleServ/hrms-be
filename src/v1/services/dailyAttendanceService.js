@@ -63,6 +63,8 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
     endDate = `${year}-${month}-${lastDay.toString().padStart(2, "0")}`;
 
     console.log(`Default date range: ${startDate} to ${endDate}`);
+    console.log(`Default is the current month: ${startDate} to ${endDate}`);
+    console.error(`${error}`);
   }
 
   return await dailyAttendanceModel.findAttendanceByEmployeeId(
