@@ -43,7 +43,7 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
     case "asset_request":
       return await prisma.hrms_d_asset_assignment.findUnique({
         where: { id: reference_id },
-        select: { asset_name: true, assigned_date: true },
+        select: { asset_name: true, issued_on: true },
       });
 
     case "probation_review":
