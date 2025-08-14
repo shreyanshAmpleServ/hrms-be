@@ -5,4 +5,4 @@ const templateKeyMap = {
   notifyNextApprover: "notify_next_approver",
 };
 
-module.exports = templateKeyMap;
+module.exports = { templateKeyMap };
