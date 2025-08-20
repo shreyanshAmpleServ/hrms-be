@@ -155,7 +155,7 @@ const getAllEmployeeAttendance = async (dateString) => {
   const endOfDay = today.endOf("day");
 
   const employees = await prisma.hrms_d_employee.findMany({
-    where: { status: "active" },
+    where: { status: { in: ["Active", "Probation"] } },
     select: { id: true },
   });
 
@@ -196,8 +196,12 @@ const getAllEmployeeAttendance = async (dateString) => {
 
   for (const [empId, status] of latestRecordMap.entries()) {
     markedEmployees.add(empId);
+    console.log("status : ", status);
     if (status === "present") present++;
-    else if (status === "wfh" || status === "work from home") wfh++;
+    else if (status === "work from home" || status === "wfh") {
+      console.log("wfh");
+      wfh++;
+    }
   }
 
   const absent = totalEmployees - markedEmployees.size;
@@ -478,7 +482,7 @@ const getStatus = async () => {
   const statusOrder = [
     "Active",
     "Probation",
-    "Onhold",
+    "On Hold",
     "Resigned",
     "Notice Period",
     "Terminated",
@@ -629,7 +633,7 @@ const attendanceOverview = async (dateString) => {
     const endOfDay = today.endOf("day");
 
     const employees = await prisma.hrms_d_employee.findMany({
-      where: { status: "Active" },
+      where: { status: { in: ["Active", "Probation"] } },
       select: { id: true },
     });
 
@@ -666,6 +670,7 @@ const attendanceOverview = async (dateString) => {
       Absent: 0,
       Late: 0,
       "Half Day": 0,
+      "Work From Home": 0,
     };
 
     const markedEmployees = new Set();
@@ -702,12 +707,18 @@ const attendanceOverview = async (dateString) => {
       ) {
         statusCounts["Half Day"]++;
         markedEmployees.add(empId);
+      } else if (
+        normalizedStatus === "work from home" ||
+        normalizedStatus === "wfh"
+      ) {
+        statusCounts["Work From Home"]++;
+        markedEmployees.add(empId);
       }
     }
 
     statusCounts.Absent = totalEmployees - markedEmployees.size;
 
-    const labels = ["Present", "Absent", "Late", "Half Day"];
+    const labels = ["Present", "Absent", "Late", "Half Day", "Work From Home"];
     const values = labels.map((label) => statusCounts[label]);
 
     return {
