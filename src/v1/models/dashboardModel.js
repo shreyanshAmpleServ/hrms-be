@@ -367,7 +367,6 @@ const getAllUpcomingBirthdays = async () => {
     };
   });
 
-  // Filter and sort
   return allBirthdays
     .filter(
       ({ birthday }) =>
@@ -512,9 +511,115 @@ const getStatus = async () => {
   };
 };
 
+// const workAnniversary = async (page = 1, size = 10) => {
+//   const today = moment();
+//   const tomorrow = moment().add(1, "day");
+
+//   const employees = await prisma.hrms_d_employee.findMany({
+//     where: {
+//       join_date: {
+//         not: null,
+//       },
+//     },
+//     select: {
+//       id: true,
+//       first_name: true,
+//       last_name: true,
+//       designation_id: true,
+//       profile_pic: true,
+//       join_date: true,
+//       hrms_employee_designation: {
+//         select: {
+//           designation_name: true,
+//         },
+//       },
+//     },
+//   });
+
+//   const todayList = [];
+//   const tomorrowList = [];
+//   const others = [];
+
+//   employees.forEach((emp) => {
+//     const joinDate = moment(emp.join_date);
+//     const currentYear = today.year();
+//     let anniversaryThisYear = moment(
+//       `${currentYear}-${joinDate.format("MM-DD")}`,
+//       "YYYY-MM-DD"
+//     );
+
+//     if (anniversaryThisYear.isBefore(today, "day")) {
+//       anniversaryThisYear.add(1, "year");
+//     }
+
+//     const yearsOfService = anniversaryThisYear.year() - joinDate.year();
+
+//     const formattedLabel = anniversaryThisYear.isSame(today, "day")
+//       ? "today"
+//       : anniversaryThisYear.isSame(tomorrow, "day")
+//       ? "tomorrow"
+//       : anniversaryThisYear.format("DD MMM YYYY");
+
+//     const anniversaryObj = {
+//       id: emp.id,
+//       name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+//       designation: emp.hrms_employee_designation?.designation_name || "",
+//       profile_pic: emp.profile_pic || "",
+//       anniversary: anniversaryThisYear.toDate(),
+//       years_of_service: yearsOfService,
+//       label: formattedLabel,
+//     };
+
+//     if (formattedLabel === "today") {
+//       todayList.push(anniversaryObj);
+//     } else if (formattedLabel === "tomorrow") {
+//       tomorrowList.push(anniversaryObj);
+//     } else {
+//       others.push(anniversaryObj);
+//     }
+//   });
+
+//   const all = [...todayList, ...tomorrowList, ...others].sort(
+//     (a, b) => b.anniversary - a.anniversary
+//   );
+
+//   const totalCount = all.length;
+//   const totalPages = Math.ceil(totalCount / size);
+//   const offset = (page - 1) * size;
+
+//   const paginated = all.slice(offset, offset + size);
+
+//   if (paginated.length === 0) {
+//     return {
+//       data: [],
+//       currentPage: page,
+//       size,
+//       totalPages,
+//       totalCount,
+//     };
+//   }
+
+//   const grouped = {};
+//   paginated.forEach((item) => {
+//     const { anniversary, label, ...rest } = item;
+//     if (!grouped[label]) {
+//       grouped[label] = [];
+//     }
+//     grouped[label].push(rest);
+//   });
+
+//   return {
+//     data: grouped,
+//     currentPage: page,
+//     size,
+//     totalPages,
+//     totalCount,
+//   };
+// };
+
 const workAnniversary = async (page = 1, size = 10) => {
   const today = moment();
-  const tomorrow = moment().add(1, "day");
+  const next30Days = moment().add(30, "days");
 
   const employees = await prisma.hrms_d_employee.findMany({
     where: {
@@ -537,68 +642,56 @@ const workAnniversary = async (page = 1, size = 10) => {
     },
   });
 
-  const todayList = [];
-  const tomorrowList = [];
-  const others = [];
+  const resultList = [];
 
   employees.forEach((emp) => {
     const joinDate = moment(emp.join_date);
     const currentYear = today.year();
+
+    // anniversary date in current year
     let anniversaryThisYear = moment(
       `${currentYear}-${joinDate.format("MM-DD")}`,
       "YYYY-MM-DD"
     );
 
+    // if already passed this year, shift to next year
     if (anniversaryThisYear.isBefore(today, "day")) {
       anniversaryThisYear.add(1, "year");
     }
 
-    const yearsOfService = anniversaryThisYear.year() - joinDate.year();
+    // only include if within next 30 days
+    if (
+      anniversaryThisYear.isSameOrAfter(today, "day") &&
+      anniversaryThisYear.isSameOrBefore(next30Days, "day")
+    ) {
+      const yearsOfService = anniversaryThisYear.year() - joinDate.year();
 
-    const formattedLabel = anniversaryThisYear.isSame(today, "day")
-      ? "today"
-      : anniversaryThisYear.isSame(tomorrow, "day")
-      ? "tomorrow"
-      : anniversaryThisYear.format("DD MMM YYYY");
+      const formattedLabel = anniversaryThisYear.isSame(today, "day")
+        ? "today"
+        : anniversaryThisYear.isSame(moment().add(1, "day"), "day")
+        ? "tomorrow"
+        : anniversaryThisYear.format("DD MMM YYYY");
 
-    const anniversaryObj = {
-      id: emp.id,
-      name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
-      designation: emp.hrms_employee_designation?.designation_name || "",
-      profile_pic: emp.profile_pic || "",
-      anniversary: anniversaryThisYear.toDate(),
-      years_of_service: yearsOfService,
-      label: formattedLabel,
-    };
-
-    if (formattedLabel === "today") {
-      todayList.push(anniversaryObj);
-    } else if (formattedLabel === "tomorrow") {
-      tomorrowList.push(anniversaryObj);
-    } else {
-      others.push(anniversaryObj);
+      resultList.push({
+        id: emp.id,
+        name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+        designation: emp.hrms_employee_designation?.designation_name || "",
+        profile_pic: emp.profile_pic || "",
+        anniversary: anniversaryThisYear.toDate(),
+        years_of_service: yearsOfService,
+        label: formattedLabel,
+      });
     }
   });
 
-  const all = [...todayList, ...tomorrowList, ...others].sort(
-    (a, b) => b.anniversary - a.anniversary
-  );
+  // sort by upcoming date
+  const all = resultList.sort((a, b) => a.anniversary - b.anniversary);
 
   const totalCount = all.length;
   const totalPages = Math.ceil(totalCount / size);
   const offset = (page - 1) * size;
 
   const paginated = all.slice(offset, offset + size);
-
-  if (paginated.length === 0) {
-    return {
-      data: [],
-      currentPage: page,
-      size,
-      totalPages,
-      totalCount,
-    };
-  }
 
   const grouped = {};
   paginated.forEach((item) => {
