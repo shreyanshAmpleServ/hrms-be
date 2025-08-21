@@ -221,9 +221,112 @@ const getAllEmployeeAttendance = async (dateString) => {
   };
 };
 
+// const getUpcomingBirthdays = async (page = 1, size = 10) => {
+//   const today = moment();
+//   const tomorrow = moment().add(1, "day");
+
+//   const employees = await prisma.hrms_d_employee.findMany({
+//     where: {
+//       date_of_birth: {
+//         not: null,
+//       },
+//     },
+//     select: {
+//       id: true,
+//       first_name: true,
+//       last_name: true,
+//       designation_id: true,
+//       profile_pic: true,
+//       date_of_birth: true,
+//       hrms_employee_designation: {
+//         select: {
+//           designation_name: true,
+//         },
+//       },
+//     },
+//   });
+
+//   const todayList = [];
+//   const tomorrowList = [];
+//   const others = [];
+
+//   employees.forEach((emp) => {
+//     const dob = moment(emp.date_of_birth);
+//     const currentYear = today.year();
+//     let birthdayThisYear = moment(
+//       `${currentYear}-${dob.format("MM-DD")}`,
+//       "YYYY-MM-DD"
+//     );
+
+//     if (birthdayThisYear.isBefore(today, "day")) {
+//       birthdayThisYear.add(1, "year");
+//     }
+
+//     const formattedLabel = birthdayThisYear.isSame(today, "day")
+//       ? "today"
+//       : birthdayThisYear.isSame(tomorrow, "day")
+//       ? "tomorrow"
+//       : birthdayThisYear.format("DD MMM YYYY");
+
+//     const birthdayObj = {
+//       id: emp.id,
+//       name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+//       designation: emp.hrms_employee_designation?.designation_name || "",
+//       profile_pic: emp.profile_pic || "",
+//       birthday: birthdayThisYear.toDate(),
+//       label: formattedLabel,
+//     };
+
+//     if (formattedLabel === "today") {
+//       todayList.push(birthdayObj);
+//     } else if (formattedLabel === "tomorrow") {
+//       tomorrowList.push(birthdayObj);
+//     } else {
+//       others.push(birthdayObj);
+//     }
+//   });
+
+//   const all = [...todayList, ...tomorrowList, ...others].sort(
+//     (a, b) => a.birthday - b.birthday
+//   );
+
+//   const totalCount = all.length;
+//   const totalPages = Math.ceil(totalCount / size);
+//   const offset = (page - 1) * size;
+
+//   const paginated = all.slice(offset, offset + size);
+
+//   if (paginated.length === 0) {
+//     return {
+//       data: {},
+//       currentPage: page,
+//       size,
+//       totalPages,
+//       totalCount,
+//     };
+//   }
+
+//   const grouped = {};
+//   paginated.forEach((item) => {
+//     const { birthday, label, ...rest } = item;
+//     if (!grouped[label]) {
+//       grouped[label] = [];
+//     }
+//     grouped[label].push(rest);
+//   });
+
+//   return {
+//     data: grouped,
+//     currentPage: page,
+//     size,
+//     totalPages,
+//     totalCount,
+//   };
+// };
+
 const getUpcomingBirthdays = async (page = 1, size = 10) => {
   const today = moment();
-  const tomorrow = moment().add(1, "day");
+  const next30Days = moment().add(30, "days");
 
   const employees = await prisma.hrms_d_employee.findMany({
     where: {
@@ -246,65 +349,53 @@ const getUpcomingBirthdays = async (page = 1, size = 10) => {
     },
   });
 
-  const todayList = [];
-  const tomorrowList = [];
-  const others = [];
+  const upcomingList = [];
 
   employees.forEach((emp) => {
     const dob = moment(emp.date_of_birth);
     const currentYear = today.year();
+
+    // this year's birthday
     let birthdayThisYear = moment(
       `${currentYear}-${dob.format("MM-DD")}`,
       "YYYY-MM-DD"
     );
 
+    // if already passed this year, shift to next year
     if (birthdayThisYear.isBefore(today, "day")) {
       birthdayThisYear.add(1, "year");
     }
 
-    const formattedLabel = birthdayThisYear.isSame(today, "day")
-      ? "today"
-      : birthdayThisYear.isSame(tomorrow, "day")
-      ? "tomorrow"
-      : birthdayThisYear.format("DD MMM YYYY");
+    // include only if within next 30 days
+    if (
+      birthdayThisYear.isSameOrAfter(today, "day") &&
+      birthdayThisYear.isSameOrBefore(next30Days, "day")
+    ) {
+      const formattedLabel = birthdayThisYear.isSame(today, "day")
+        ? "today"
+        : birthdayThisYear.isSame(moment().add(1, "day"), "day")
+        ? "tomorrow"
+        : birthdayThisYear.format("DD MMM YYYY");
 
-    const birthdayObj = {
-      id: emp.id,
-      name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
-      designation: emp.hrms_employee_designation?.designation_name || "",
-      profile_pic: emp.profile_pic || "",
-      birthday: birthdayThisYear.toDate(),
-      label: formattedLabel,
-    };
-
-    if (formattedLabel === "today") {
-      todayList.push(birthdayObj);
-    } else if (formattedLabel === "tomorrow") {
-      tomorrowList.push(birthdayObj);
-    } else {
-      others.push(birthdayObj);
+      upcomingList.push({
+        id: emp.id,
+        name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+        designation: emp.hrms_employee_designation?.designation_name || "",
+        profile_pic: emp.profile_pic || "",
+        birthday: birthdayThisYear.toDate(),
+        label: formattedLabel,
+      });
     }
   });
 
-  const all = [...todayList, ...tomorrowList, ...others].sort(
-    (a, b) => a.birthday - b.birthday
-  );
+  // sort by nearest birthday
+  const all = upcomingList.sort((a, b) => a.birthday - b.birthday);
 
   const totalCount = all.length;
   const totalPages = Math.ceil(totalCount / size);
   const offset = (page - 1) * size;
 
   const paginated = all.slice(offset, offset + size);
-
-  if (paginated.length === 0) {
-    return {
-      data: {},
-      currentPage: page,
-      size,
-      totalPages,
-      totalCount,
-    };
-  }
 
   const grouped = {};
   paginated.forEach((item) => {

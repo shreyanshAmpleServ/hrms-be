@@ -9,13 +9,43 @@ const previewAnniversaryEmail = async (req, res, next) => {
     const { employeeId } = req.params;
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(employeeId) },
-      select: { full_name: true, email: true, log_inst: true },
+      select: {
+        full_name: true,
+        email: true,
+        log_inst: true,
+        join_date: true,
+        hrms_employee_department: {
+          select: { department_name: true },
+        },
+      },
     });
 
     if (!employee) throw new CustomError("Employee not found", 404);
 
+    const sender = await prisma.hrms_d_employee.findUnique({
+      where: { id: req.user.employee_id },
+      select: {
+        full_name: true,
+        hrms_employee_department: {
+          select: { department_name: true },
+        },
+      },
+    });
+
+    const joinDate = employee.join_date ? new Date(employee.join_date) : null;
+    const years =
+      joinDate && !isNaN(joinDate)
+        ? new Date().getFullYear() - joinDate.getFullYear()
+        : 0;
+
     const emailContent = await generateEmailContent("work_anniversary", {
       employee_name: employee.full_name,
+      department_name:
+        employee.hrms_employee_department?.department_name || "Department",
+      years: String(years),
+      sender_name: sender?.full_name || "HR Team",
+      sender_department_name:
+        sender?.hrms_employee_department?.department_name || "HR Department",
     });
 
     res.json({

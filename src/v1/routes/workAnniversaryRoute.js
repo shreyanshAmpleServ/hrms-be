@@ -7,7 +7,11 @@ const { authenticateToken } = require("../middlewares/authMiddleware");
 
 const router = express.Router();
 
-router.get("/anniversary/preview/:employeeId", previewAnniversaryEmail);
+router.get(
+  "/anniversary/preview/:employeeId",
+  authenticateToken,
+  previewAnniversaryEmail
+);
 
 router.post(
   "/anniversary/send/:employeeId",

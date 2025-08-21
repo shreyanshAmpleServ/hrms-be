@@ -9,13 +9,22 @@ const previewBirthdayEmail = async (req, res, next) => {
     const { employeeId } = req.params;
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(employeeId) },
-      select: { full_name: true, email: true, log_inst: true },
+      select: {
+        full_name: true,
+        email: true,
+        log_inst: true,
+        hrms_employee_department: {
+          select: { department_name: true },
+        },
+      },
     });
 
     if (!employee) throw new CustomError("Employee not found", 404);
 
     const emailContent = await generateEmailContent("birthday_wish", {
       employee_name: employee.full_name,
+      department_name:
+        employee.hrms_employee_department?.department_name || "Department",
     });
 
     res.json({
