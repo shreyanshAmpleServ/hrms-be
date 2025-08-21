@@ -36,7 +36,7 @@ const createContact = async (req, res, next) => {
       industry:Number(req.body.industry),
       reviews:Number(req.body.reviews),
       emailOptOut: Boolean(req.body.emailOptOut),
-      dateOfBirth: formattedDOB, // Ensure it's a Date object
+      dateOfBirth: formattedDOB, 
       image: imageUrl,
     });
     res.status(201).success('Contact created successfully', contact);

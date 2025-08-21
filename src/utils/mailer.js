@@ -7,7 +7,6 @@ const sendEmail = async ({ to, subject, html, log_inst }) => {
     const config = await prisma.hrms_d_default_configurations.findFirst({
       where: { log_inst },
     });
-
     const transporter = nodemailer.createTransport({
       host: config.smtp_host || process.env.SMTP_HOST,
       port: config.smtp_port || process.env.SMTP_PORT,
