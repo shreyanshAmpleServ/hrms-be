@@ -355,18 +355,15 @@ const getUpcomingBirthdays = async (page = 1, size = 10) => {
     const dob = moment(emp.date_of_birth);
     const currentYear = today.year();
 
-    // this year's birthday
     let birthdayThisYear = moment(
       `${currentYear}-${dob.format("MM-DD")}`,
       "YYYY-MM-DD"
     );
 
-    // if already passed this year, shift to next year
     if (birthdayThisYear.isBefore(today, "day")) {
       birthdayThisYear.add(1, "year");
     }
 
-    // include only if within next 30 days
     if (
       birthdayThisYear.isSameOrAfter(today, "day") &&
       birthdayThisYear.isSameOrBefore(next30Days, "day")
@@ -388,7 +385,6 @@ const getUpcomingBirthdays = async (page = 1, size = 10) => {
     }
   });
 
-  // sort by nearest birthday
   const all = upcomingList.sort((a, b) => a.birthday - b.birthday);
 
   const totalCount = all.length;
