@@ -648,18 +648,15 @@ const workAnniversary = async (page = 1, size = 10) => {
     const joinDate = moment(emp.join_date);
     const currentYear = today.year();
 
-    // anniversary date in current year
     let anniversaryThisYear = moment(
       `${currentYear}-${joinDate.format("MM-DD")}`,
       "YYYY-MM-DD"
     );
 
-    // if already passed this year, shift to next year
     if (anniversaryThisYear.isBefore(today, "day")) {
       anniversaryThisYear.add(1, "year");
     }
 
-    // only include if within next 30 days
     if (
       anniversaryThisYear.isSameOrAfter(today, "day") &&
       anniversaryThisYear.isSameOrBefore(next30Days, "day")
@@ -684,7 +681,6 @@ const workAnniversary = async (page = 1, size = 10) => {
     }
   });
 
-  // sort by upcoming date
   const all = resultList.sort((a, b) => a.anniversary - b.anniversary);
 
   const totalCount = all.length;
