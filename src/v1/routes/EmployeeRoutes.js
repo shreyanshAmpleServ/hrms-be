@@ -5,11 +5,25 @@ const upload = require("../middlewares/UploadFileMiddleware");
 
 const router = express.Router();
 
-// Route to create a new employee
 router.post(
   "/employee",
   authenticateToken,
-  upload.single("profile_pic"),
+  upload.fields([
+    { name: "profile_pic", maxCount: 1 },
+    { name: "nssf_file", maxCount: 1 },
+    { name: "nida_file", maxCount: 1 },
+  ]),
+  (req, res, next) => {
+    console.log("Files received:", req.files);
+    if (req.files.profile_pic) {
+      console.log(
+        "Profile pic buffer size:",
+        req.files.profile_pic[0].buffer.length
+      );
+    }
+    console.log("Body data:", req.body);
+    next();
+  },
   EmployeeController.createEmployee
 );
 
@@ -21,11 +35,25 @@ router.get(
   EmployeeController.findEmployeeById
 );
 
-// Route to update an existing employee by its ID
 router.put(
   "/employee/:id",
   authenticateToken,
-  upload.single("profile_pic"),
+  upload.fields([
+    { name: "profile_pic", maxCount: 1 },
+    { name: "nssf_file", maxCount: 1 },
+    { name: "nida_file", maxCount: 1 },
+  ]),
+  (req, res, next) => {
+    console.log("Files received:", req.files);
+    if (req.files.profile_pic) {
+      console.log(
+        "Profile pic buffer size:",
+        req.files.profile_pic[0].buffer.length
+      );
+    }
+    console.log("Body data:", req.body);
+    next();
+  },
   EmployeeController.updateEmployee
 );
 

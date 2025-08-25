@@ -63,9 +63,13 @@ const serializeTags = (data) => {
   }
   if ("nationality" in data) serialized.nationality = data.nationality;
   if ("passport_issue_date" in data)
-    serialized.passport_issue_date = data.passport_issue_date;
+    serialized.passport_issue_date = data.passport_issue_date
+      ? moment(data.passport_issue_date).toDate()
+      : null;
   if ("passport_expiry_date" in data)
-    serialized.passport_expiry_date = data.passport_expiry_date;
+    serialized.passport_expiry_date = moment(
+      data.passport_expiry_date
+    ).toDate();
   if ("passport_number" in data)
     serialized.passport_number = data.passport_number;
   if ("address" in data) serialized.address = data.address;
@@ -90,10 +94,16 @@ const serializeTags = (data) => {
   if ("phone_number" in data) serialized.phone_number = data.phone_number;
   if ("status" in data) serialized.status = data.status;
   if ("profile_pic" in data) serialized.profile_pic = data.profile_pic;
+  if ("nssf_file" in data) serialized.nssf_file = data.nssf_file;
+  if ("nida_file" in data) serialized.nida_file = data.nida_file;
   if ("spouse_name" in data) serialized.spouse_name = data.spouse_name;
   if ("marital_status" in data) serialized.marital_status = data.marital_status;
   if ("no_of_child" in data) serialized.no_of_child = Number(data.no_of_child);
-  if ("social_medias" in data) serialized.social_medias = data.social_medias;
+  if ("social_medias" in data) {
+    serialized.social_medias = Array.isArray(data.social_medias)
+      ? JSON.stringify(data.social_medias)
+      : JSON.stringify([data.social_medias]);
+  }
 
   if ("father_name" in data) serialized.father_name = data.father_name;
   if ("mother_name" in data) serialized.mother_name = data.mother_name;

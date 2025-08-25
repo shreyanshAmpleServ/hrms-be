@@ -360,6 +360,8 @@ model hrms_d_employee {
   employee_currency                               hrms_m_currency_master?                           @relation("EmployeeCurrency", fields: [currency_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   approval_work_approver                          hrms_d_approval_work_flow[]
   request_approval_approver                       hrms_d_requests_approval[]
+  nida_file                                       String?                                           @db.VarChar(255)
+  nssf_file                                       String?                                           @db.VarChar(255)
 }
 
 model hrms_d_employee_address {
@@ -2569,7 +2571,7 @@ model hrms_d_templates {
   name       String    @unique @db.VarChar(50)
   key        String    @unique @db.VarChar(100)
   subject    String    @db.VarChar(100)
-  body       String   @db.Text
+  body       String    @db.Text
   createdate DateTime  @default(now()) @db.DateTime
   createdby  Int
   updatedate DateTime? @db.DateTime
