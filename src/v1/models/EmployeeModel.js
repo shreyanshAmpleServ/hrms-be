@@ -762,22 +762,82 @@ const employeeOptions = async () => {
  * @param {number} id - The employee ID.
  * @throws {CustomError} If deletion fails.
  */
+// const deleteEmployee = async (id) => {
+//   try {
+//     await prisma.$transaction(async (prisma) => {
+//       await prisma.hrms_d_employee_address.deleteMany({
+//         where: { employee_id: parseInt(id) },
+//       });
+
+//       await prisma.hrms_d_employee.delete({
+//         where: { id: parseInt(id) },
+//       });
+
+//       // Handle transaction notification after successful deletion
+//       await handleTransactionNotification("m_employee", "D", parseInt(id));
+//     });
+//   } catch (error) {
+//     console.log("Error to delete employee : ", error);
+//     throw new CustomError(
+//       `Error deleting employee: ${error.message}`,
+//       error.status || 500
+//     );
+//   }
+// };
+
 const deleteEmployee = async (id) => {
   try {
-    await prisma.$transaction(async (prisma) => {
-      await prisma.hrms_d_employee_address.deleteMany({
-        where: { employee_id: parseInt(id) },
+    const employeeId = parseInt(id);
+
+    await prisma.$transaction(async (tx) => {
+      await tx.hrms_employee_d_experiences.deleteMany({
+        where: { employee_id: employeeId },
+      });
+      await tx.hrms_employee_d_educations.deleteMany({
+        where: { employee_id: employeeId },
+      });
+      await tx.hrms_d_employee_address.deleteMany({
+        where: { employee_id: employeeId },
       });
 
-      await prisma.hrms_d_employee.delete({
-        where: { id: parseInt(id) },
+      await tx.hrms_d_loan_request.deleteMany({
+        where: { employee_id: employeeId },
+      });
+      await tx.hrms_d_leave_application.deleteMany({
+        where: { employee_id: employeeId },
+      });
+      await tx.hrms_d_training_feedback.deleteMany({
+        where: { employee_id: employeeId },
       });
 
-      // Handle transaction notification after successful deletion
-      await handleTransactionNotification("m_employee", "D", parseInt(id));
+      const balances = await tx.hrms_d_leave_balance.findMany({
+        where: { employee_id: employeeId },
+        select: { id: true },
+      });
+      const balanceIds = balances.map((b) => b.id);
+
+      if (balanceIds.length > 0) {
+        await tx.hrms_d_leave_balance_details.deleteMany({
+          where: { parent_id: { in: balanceIds } },
+        });
+        await tx.hrms_d_leave_balance.deleteMany({
+          where: { employee_id: employeeId },
+        });
+      }
+
+      await tx.hrms_d_requests_approval.deleteMany({
+        where: { approver_id: employeeId },
+      });
+      await tx.hrms_d_requests.deleteMany({
+        where: { requester_id: employeeId },
+      });
+
+      await tx.hrms_d_employee.delete({ where: { id: employeeId } });
+
+      await handleTransactionNotification("m_employee", "D", employeeId);
     });
   } catch (error) {
-    console.log("Error to delete employee : ", error);
+    console.error("Error to delete employee : ", error);
     throw new CustomError(
       `Error deleting employee: ${error.message}`,
       error.status || 500
