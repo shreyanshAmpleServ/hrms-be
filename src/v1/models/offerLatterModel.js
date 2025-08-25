@@ -6,6 +6,7 @@ const prisma = new PrismaClient();
 const serializeJobData = (data) => {
   return {
     candidate_id: Number(data.candidate_id) || null,
+    currency_id: Number(data.currency_id) || null,
     offer_date: data.offer_date || new Date(),
     position: data.position || "",
     offered_salary: Number(data.offered_salary) || 0,
@@ -34,6 +35,13 @@ const createOfferLetter = async (data) => {
           select: {
             full_name: true,
             id: true,
+          },
+        },
+        offer_letter_currencyId: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
           },
         },
       },
@@ -83,6 +91,13 @@ const updateOfferLetter = async (id, data) => {
           select: {
             full_name: true,
             id: true,
+          },
+        },
+        offer_letter_currencyId: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
           },
         },
       },
@@ -163,6 +178,13 @@ const getAllOfferLetter = async (
             id: true,
           },
         },
+        offer_letter_currencyId: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
+        },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
@@ -185,6 +207,7 @@ const getAllOfferLetter = async (
 const updateOfferLetterStatus = async (id, data) => {
   try {
     const offerLetterId = parseInt(id);
+
     if (isNaN(leaveId)) {
       throw new CustomError("Invalid Offer Letter ID", 400);
     }
@@ -215,6 +238,21 @@ const updateOfferLetterStatus = async (id, data) => {
     }
     const updatedEntry = await prisma.hrms_d_offer_letter.update({
       where: { id: offerLetterId },
+      include: {
+        offered_caZndidate: {
+          select: {
+            full_name: true,
+            id: true,
+          },
+        },
+        offer_letter_currencyId: {
+          select: {
+            id: true,
+            currency_code: true,
+            currency_name: true,
+          },
+        },
+      },
       data: updateData,
     });
     return updatedEntry;
