@@ -792,7 +792,6 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
   }
 };
 
-const downloadExcel = async(employee_id, payroll_month, payroll_year);
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
