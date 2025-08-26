@@ -1,4 +1,8 @@
 const EmploymentContractModel = require("../models/employmentContractModel");
+const { generateContractPDF } = require("../../utils/contractUtils");
+const fs = require("fs");
+const path = require("path");
+const CustomError = require("../../utils/CustomError");
 
 const createEmploymentContract = async (data) => {
   return await EmploymentContractModel.createEmploymentContract(data);
@@ -34,10 +38,28 @@ const getAllEmploymentContract = async (
   );
 };
 
+const downloadContractPDF = async (data) => {
+  if (!data) {
+    throw new CustomError("Contract not found", 404);
+  }
+
+  const fileName = `Employement_Contract.pdf`;
+  const filePath = path.join(__dirname, `../../pdfs/${fileName}`);
+
+  if (!fs.existsSync(path.dirname(filePath))) {
+    fs.mkdirSync(path.dirname(filePath), { recursive: true });
+  }
+
+  await generateContractPDF(data, filePath);
+
+  return filePath;
+};
+
 module.exports = {
   createEmploymentContract,
   findEmploymentContractById,
   updateEmploymentContract,
   deleteEmploymentContract,
   getAllEmploymentContract,
+  downloadContractPDF,
 };

@@ -5,6 +5,7 @@ const {
   uploadToBackblaze,
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze");
+const fs = require("fs");
 
 const createEmploymentContract = async (req, res, next) => {
   try {
@@ -115,10 +116,45 @@ const getAllEmploymentContract = async (req, res, next) => {
   }
 };
 
+const downloadContractPDF = async (req, res, next) => {
+  try {
+    const data = req.body;
+
+    if (!data) {
+      throw new CustomError("Missing required parameters", 400);
+    }
+
+    const filePath = await EmploymentContractService.downloadContractPDF(data);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", 'inline; filename="contract.pdf"');
+
+    res.sendFile(filePath, (err) => {
+      if (err) {
+        console.error("Error sending PDF file:", err);
+        return next(err);
+      }
+
+      setTimeout(() => {
+        fs.unlink(filePath, (unlinkErr) => {
+          if (unlinkErr) {
+            console.error("Error deleting PDF file:", unlinkErr);
+          } else {
+            console.log(`Deleted temporary PDF: ${filePath}`);
+          }
+        });
+      }, 5 * 60 * 1000);
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createEmploymentContract,
   findEmploymentContractById,
   updateEmploymentContract,
   deleteEmploymentContract,
   getAllEmploymentContract,
+  downloadContractPDF,
 };

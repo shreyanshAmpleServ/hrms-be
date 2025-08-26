@@ -151,6 +151,7 @@ const getAllDefaultConfiguration = async () => {
     });
     return { data };
   } catch (error) {
+    console.log("Error retrieving default configurations", error);
     throw new CustomError("Error retrieving default configurations", 400);
   }
 };
