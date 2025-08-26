@@ -11,10 +11,8 @@ router.post(
   upload.single("file"),
   BasicPayController.importFromExcel
 );
-// Route to create a new Basic Pay
 router.post("/basic-pay", authenticateToken, BasicPayController.createBasicPay);
 
-// Route to get a specific Basic Pay by its ID
 router.get(
   "/basic-pay/:id",
   authenticateToken,
