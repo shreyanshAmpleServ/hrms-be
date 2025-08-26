@@ -4,7 +4,6 @@ const moment = require("moment");
 const { success } = require("zod/v4");
 const fs = require("fs");
 const path = require("path");
-const { logActivity } = require("../../utils/ActivityLogger.js");
 
 const createMonthlyPayroll = async (req, res, next) => {
   try {
@@ -90,6 +89,7 @@ const triggerMonthlyPayrollSP = async (req, res, next) => {
     next(error);
   }
 };
+
 const downloadPayrollExcel = async (req, res, next) => {
   try {
     const { search, employee_id, payroll_month, payroll_year } = req.query;
@@ -246,6 +246,7 @@ const getGeneratedMonthlyPayroll = async (req, res, next) => {
     next(error);
   }
 };
+
 const downloadPayslipPDF = async (req, res, next) => {
   try {
     const { employee_id, payroll_month, payroll_year } = req.query;
