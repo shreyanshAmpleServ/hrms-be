@@ -2525,6 +2525,8 @@ model hrms_d_default_configurations {
   half_day_working_hours          Int?
   working_days                    Int?
   local_employee_probation_period String?                @db.VarChar(255)
+  terms_and_conditions            String?                @db.VarChar(255)
+  notes                           String?                @db.VarChar(255)
   default_configuration_country   hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
   default_configuration_state     crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
 }

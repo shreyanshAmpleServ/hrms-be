@@ -30,6 +30,8 @@ const serializeDefaultConfig = (data) => ({
   half_day_working_hours: Number(data.half_day_working_hours) || null,
   working_days: Number(data.working_days) || null,
   local_employee_probation_period: data.local_employee_probation_period || null,
+  terms_and_conditions: data.terms_and_conditions || null,
+  notes: data.notes || null,
   log_inst: data.log_inst || 1,
 });
 
