@@ -1,6 +1,7 @@
 const BasicPayService = require("../services/BasicPayService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const XLSX = require("xlsx");
 
 const createBasicPay = async (req, res, next) => {
   try {
@@ -78,10 +79,41 @@ const getAllBasicPay = async (req, res, next) => {
   }
 };
 
+const importFromExcel = async (req, res, next) => {
+  try {
+    if (!req.file) throw new CustomError("No file uploaded", 400);
+    console.log("---- Incoming File ----");
+    console.log(req.file); // 👈 check uploaded file details
+    console.log("---- Incoming Body ----");
+    console.log(req.body); // 👈 check if extra fields are sent
+
+    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
+    const sheetName = workbook.SheetNames[0];
+    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    console.log("Sheet Names:", workbook.SheetNames);
+    console.log("Raw JSON Data:", sheetData);
+    const reqData = sheetData.map((row) => ({
+      ...row,
+      createdby: req.user.id,
+      log_inst: req.user.log_inst,
+    }));
+    const result = await BasicPayService.importFromExcel(reqData);
+    res
+      .status(201)
+      .success(
+        `${result.count} employee pay assignments imported successfully`,
+        result.data
+      );
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createBasicPay,
   findBasicPayById,
   updateBasicPay,
   deleteBasicPay,
   getAllBasicPay,
+  importFromExcel,
 };

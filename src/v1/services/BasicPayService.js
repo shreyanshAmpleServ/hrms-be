@@ -39,6 +39,9 @@ const getAllBasicPay = async (
     employee_id
   );
 };
+const importFromExcel = async (rows) => {
+  return await BasicPayModel.importFromExcel(rows);
+};
 
 module.exports = {
   createBasicPay,
@@ -46,4 +49,5 @@ module.exports = {
   updateBasicPay,
   getAllBasicPay,
   deleteBasicPay,
+  importFromExcel,
 };

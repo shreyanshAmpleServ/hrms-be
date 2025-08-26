@@ -2527,6 +2527,7 @@ model hrms_d_default_configurations {
   local_employee_probation_period String?                @db.VarChar(255)
   terms_and_conditions            String?                @db.Text
   notes                           String?                @db.Text
+  local_employee_notice_period                   Int?
   default_configuration_country   hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
   default_configuration_state     crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
 }

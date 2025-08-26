@@ -5,6 +5,12 @@ const upload = require("../middlewares/UploadFileMiddleware");
 
 const router = express.Router();
 
+router.post(
+  "/basic-pay/import",
+  authenticateToken,
+  upload.single("file"),
+  BasicPayController.importFromExcel
+);
 // Route to create a new Basic Pay
 router.post("/basic-pay", authenticateToken, BasicPayController.createBasicPay);
 

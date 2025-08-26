@@ -32,6 +32,8 @@ const serializeDefaultConfig = (data) => ({
   local_employee_probation_period: data.local_employee_probation_period || null,
   terms_and_conditions: data.terms_and_conditions || null,
   notes: data.notes || null,
+  local_employee_notice_period:
+    Number(data.local_employee_notice_period) || null,
   log_inst: data.log_inst || 1,
 });
 
