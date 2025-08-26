@@ -1,6 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
+const xlsx = require("xlsx");
+
 const moment = require("moment");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const requiredFields = {
@@ -785,75 +787,109 @@ const deleteBasicPay = async (id) => {
   }
 };
 
+// const importFromExcel = async (rows) => {
+//   const importedData = [];
+
+//   for (const row of rows) {
+//     const { employee_code, component_code, amount, createdby, log_inst } = row;
+
+//     if (!employee_code || !component_code) continue; // skip invalid rows
+
+//     // Check if record exists
+//     const existing = await prisma.hrms_d_employee_pay_assignment.findFirst({
+//       where: {
+//         employee_code,
+//         component_code,
+//       },
+//     });
+
+//     if (existing) {
+//       const updated = await prisma.hrms_d_employee_pay_assignment.update({
+//         where: { id: existing.id },
+//         data: {
+//           amount,
+//           updatedby: createdby,
+//           log_inst,
+//         },
+//       });
+//       importedData.push(updated);
+//     } else {
+//       // ➕ Insert new
+//       const created = await prisma.hrms_d_employee_pay_assignment.create({
+//         data: {
+//           employee_code,
+//           component_code,
+//           amount,
+//           createdby,
+//           log_inst,
+//         },
+//       });
+//       importedData.push(created);
+//     }
+//   }
+
+//   return { count: importedData.length, data: importedData };
+// };
+
 const importFromExcel = async (rows) => {
-  let createdRecords = [];
+  const importedData = [];
 
-  const result = await prisma.$transaction(async (prisma) => {
-    const grouped = {};
-    for (const row of rows) {
-      const key = `${row.employee_id}-${row.effective_from}`;
-      if (!grouped[key]) grouped[key] = { header: row, lines: [] };
-      grouped[key].lines.push(row);
-    }
+  const normalizeRow = (row) => ({
+    employee_id: row.employee_id,
+    pay_grade_id: row.pay_grade_id,
+    pay_grade_level: row.pay_grade_level,
+    createdby: 1,
+    log_inst: 1,
+    status: row.status || "Active",
+    remarks: row.remarks || "",
+    effective_from: new Date(row.effective_from),
+    effective_to: new Date(row.effective_to),
+    department_id: row.department_id,
+    branch_id: row.branch_id,
+    position_id: row.position_id,
+    allowance_group: row.allowance_group,
+    work_life_entry: row.work_life_entry,
+  });
 
-    for (const key of Object.keys(grouped)) {
-      const { header, lines } = grouped[key];
-      if (!header.employee_id)
-        throw new CustomError("Employee ID missing", 400);
-      if (!header.effective_from)
-        throw new CustomError(
-          `Effective from missing for employee ${header.employee_id}`,
-          400
-        );
+  for (const row of rows) {
+    const data = normalizeRow(row);
 
-      const existing =
-        await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
-          where: { employee_id: Number(header.employee_id) },
+    if (!data.employee_id || !data.pay_grade_id) continue;
+
+    const existing =
+      await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+        where: {
+          employee_id: data.employee_id,
+          pay_grade_id: data.pay_grade_id,
+        },
+      });
+
+    if (existing) {
+      const updated =
+        await prisma.hrms_d_employee_pay_component_assignment_header.update({
+          where: { id: existing.id },
+          data: {
+            ...data,
+            updatedby: data.createdby,
+            updatedate: new Date(),
+          },
         });
-      if (existing) continue;
-      const createdHeader =
+      importedData.push(updated);
+    } else {
+      const created =
         await prisma.hrms_d_employee_pay_component_assignment_header.create({
           data: {
-            ...serializeHeaders(header),
-            createdby: header.createdby || 1,
-            log_inst: header.log_inst || 1,
+            ...data,
             createdate: new Date(),
           },
         });
-      const payComponents = await prisma.hrms_m_pay_component.findMany({
-        where: {
-          component_code: { in: lines.map((l) => l.component_code) },
-        },
-        select: { id: true, component_code: true },
-      });
-      const codeMap = Object.fromEntries(
-        payComponents.map((pc) => [pc.component_code, pc.id])
-      );
-
-      const lineDatas = lines.map((line, i) => ({
-        line_num: i + 1,
-        pay_component_id: codeMap[line.component_code],
-        amount: Number(line.amount) || 0,
-        is_taxable: line.is_taxable || "Y",
-        is_recurring: line.is_recurring || "Y",
-        component_type: line.component_type || "O",
-        parent_id: createdHeader.id,
-        createdby: header.createdby || 1,
-        createdate: new Date(),
-      }));
-
-      await prisma.hrms_d_employee_pay_component_assignment_line.createMany({
-        data: lineDatas,
-      });
-
-      createdRecords.push(createdHeader);
+      importedData.push(created);
     }
+  }
 
-    return { count: createdRecords.length, data: createdRecords };
-  });
-
-  return result;
+  return { count: importedData.length, data: importedData };
 };
+
 module.exports = {
   createBasicPay,
   findBasicPayById,

@@ -4,13 +4,19 @@ const prisma = new PrismaClient();
 
 const sendEmail = async ({ to, subject, html, log_inst }) => {
   try {
-    const config = await prisma.hrms_d_default_configurations.findFirst({
+    let config = await prisma.hrms_d_default_configurations.findFirst({
       where: { log_inst },
     });
+    if (!config) {
+      console.warn(
+        `No SMTP config found for log_inst=${log_inst}, falling back to .env`
+      );
+      config = {};
+    }
     const transporter = nodemailer.createTransport({
       host: config.smtp_host || process.env.SMTP_HOST,
       port: config.smtp_port || process.env.SMTP_PORT,
-      secure: config.smtp_port === 465,
+      secure: true,
       auth: {
         user: config.smtp_username || process.env.SMTP_USERNAME,
         pass: config.smtp_password || process.env.SMTP_PASSWORD,
