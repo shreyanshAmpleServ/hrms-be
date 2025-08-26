@@ -132,32 +132,61 @@ const createOrUpdateMonthlyPayroll = async (req, res, next) => {
   }
 };
 
+// const getGeneratedMonthlyPayroll = async (req, res, next) => {
+//   try {
+//     const {
+//       page,
+//       size,
+//       search,
+//       startDate,
+//       endDate,
+//       payroll_month,
+//       payroll_year,
+//     } = req.query;
+//     const data = await monthlyPayrollService.getGeneratedMonthlyPayroll(
+//       search,
+//       Number(page),
+//       Number(size),
+//       startDate && moment(startDate),
+//       endDate && moment(endDate),
+//       payroll_month,
+//       payroll_year
+//     );
+//     res.status(200).success(null, data);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const getGeneratedMonthlyPayroll = async (req, res, next) => {
   try {
-    const {
+    const { page, size, search, employee_id, payroll_month, payroll_year } =
+      req.query;
+
+    console.log("Filter parameters received:", {
       page,
       size,
       search,
-      startDate,
-      endDate,
+      employee_id,
       payroll_month,
       payroll_year,
-    } = req.query;
+    });
+
     const data = await monthlyPayrollService.getGeneratedMonthlyPayroll(
       search,
-      Number(page),
-      Number(size),
-      startDate && moment(startDate),
-      endDate && moment(endDate),
+      Number(page) || 1,
+      Number(size) || 10,
+      employee_id,
       payroll_month,
       payroll_year
     );
-    res.status(200).success(null, data);
+
+    res.status(200).success("Payroll data retrieved successfully", data);
   } catch (error) {
+    console.error("Controller error:", error);
     next(error);
   }
 };
-
 const downloadPayslipPDF = async (req, res, next) => {
   try {
     const { employee_id, payroll_month, payroll_year } = req.query;

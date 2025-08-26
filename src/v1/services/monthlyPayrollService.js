@@ -80,12 +80,31 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
   return await monthlyPayrollModel.createOrUpdatePayrollBulk(rows, user);
 };
 
+// const getGeneratedMonthlyPayroll = async (
+//   search,
+//   page,
+//   size,
+//   startDate,
+//   endDate,
+//   payroll_month,
+//   payroll_year
+// ) => {
+//   return await monthlyPayrollModel.getGeneratedMonthlyPayroll(
+//     search,
+//     page,
+//     size,
+//     startDate,
+//     endDate,
+//     payroll_month,
+//     payroll_year
+//   );
+// };
+
 const getGeneratedMonthlyPayroll = async (
   search,
   page,
   size,
-  startDate,
-  endDate,
+  employee_id,
   payroll_month,
   payroll_year
 ) => {
@@ -93,13 +112,11 @@ const getGeneratedMonthlyPayroll = async (
     search,
     page,
     size,
-    startDate,
-    endDate,
+    employee_id,
     payroll_month,
     payroll_year
   );
 };
-
 const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
   const data = await monthlyPayrollModel.downloadPayslipPDF(
     employee_id,

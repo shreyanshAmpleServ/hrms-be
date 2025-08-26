@@ -426,12 +426,144 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
 };
 
 // Generate
+// const getGeneratedMonthlyPayroll = async (
+//   search,
+//   page = 1,
+//   size = 10,
+//   startDate,
+//   endDate,
+//   employee_id,
+//   payroll_month,
+//   payroll_year
+// ) => {
+//   try {
+//     page = parseInt(page) || 1;
+//     size = parseInt(size) || 10;
+//     const offset = (page - 1) * size;
+
+//     let whereClause = `WHERE 1=1`;
+
+//     if (search) {
+//       const term = search.toLowerCase().replace(/'/g, "''");
+//       whereClause += `
+//         AND (
+//           LOWER(mp.status) LIKE '%${term}%'
+//           OR CAST(mp.payroll_month AS VARCHAR) LIKE '%${term}%'
+//           OR CAST(mp.payroll_year AS VARCHAR) LIKE '%${term}%'
+//           OR LOWER(mp.remarks) LIKE '%${term}%'
+//           OR LOWER(mp.employee_email) LIKE '%${term}%'
+//           OR LOWER(emp.full_name) LIKE '%${term}%'
+//           OR LOWER(emp.employee_code) LIKE '%${term}%'
+//           OR LOWER(cur.currency_name) LIKE '%${term}%'
+//           OR LOWER(cur.currency_code) LIKE '%${term}%'
+//         )
+//       `;
+//     }
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate).toISOString();
+//       const end = new Date(endDate).toISOString();
+//       whereClause += ` AND mp.createdate BETWEEN '${start}' AND '${end}'`;
+//     }
+
+//     if (
+//       employee_id !== undefined &&
+//       employee_id !== null &&
+//       employee_id !== ""
+//     ) {
+//       whereClause += ` AND mp.employee_id = ${Number(employee_id)}`;
+//     }
+
+//     if (
+//       payroll_month !== undefined &&
+//       payroll_month !== null &&
+//       payroll_month !== ""
+//     ) {
+//       whereClause += ` AND mp.payroll_month = ${Number(payroll_month)}`;
+//     }
+
+//     if (
+//       payroll_year !== undefined &&
+//       payroll_year !== null &&
+//       payroll_year !== ""
+//     ) {
+//       whereClause += ` AND CAST(mp.payroll_year AS VARCHAR) = '${payroll_year}'`;
+//     }
+
+//     const query = `
+//       SELECT
+//         mp.*,
+//         emp.id AS employee_id,
+//         emp.full_name AS employee_full_name,
+//         emp.employee_code AS employee_code,
+//         cur.id AS id,
+//         cur.currency_code AS currency_code,
+//         cur.currency_name AS currency_name
+//       FROM hrms_d_monthly_payroll_processing mp
+//       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+//       LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
+//       ${whereClause}
+//       ORDER BY mp.updatedate DESC
+//       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY;
+//     `;
+
+//     const rawData = await prisma.$queryRawUnsafe(query);
+
+//     const data = rawData.map((row) => {
+//       const {
+//         employee_id,
+//         employee_full_name,
+//         employee_code,
+//         id,
+//         currency_code,
+//         currency_name,
+//         ...payrollData
+//       } = row;
+
+//       return {
+//         ...payrollData,
+//         hrms_monthly_payroll_employee: {
+//           id: employee_id,
+//           full_name: employee_full_name,
+//           employee_code,
+//         },
+//         hrms_monthly_payroll_currency: {
+//           id: id,
+//           currency_code,
+//           currency_name,
+//         },
+//       };
+//     });
+
+//     const countQuery = `
+//       SELECT COUNT(*) AS count
+//       FROM hrms_d_monthly_payroll_processing mp
+//       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+//       LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
+//       ${whereClause};
+//     `;
+
+//     const countResult = await prisma.$queryRawUnsafe(countQuery);
+//     const totalCount = parseInt(countResult[0].count, 10);
+//     const totalPages = Math.ceil(totalCount / size);
+
+//     return {
+//       data,
+//       currentPage: page,
+//       size,
+//       totalPages,
+//       totalCount,
+//     };
+//   } catch (error) {
+//     console.error("Payroll retrieval error", error);
+//     throw new CustomError("Error retrieving payroll entries", 503);
+//   }
+// };
+
 const getGeneratedMonthlyPayroll = async (
   search,
   page = 1,
   size = 10,
-  startDate,
-  endDate,
   employee_id,
   payroll_month,
   payroll_year
@@ -443,52 +575,34 @@ const getGeneratedMonthlyPayroll = async (
 
     let whereClause = `WHERE 1=1`;
 
-    if (search) {
+    if (employee_id && !isNaN(employee_id) && employee_id !== "") {
+      whereClause += ` AND mp.employee_id = ${Number(employee_id)}`;
+    }
+
+    if (payroll_month && !isNaN(payroll_month) && payroll_month !== "") {
+      whereClause += ` AND mp.payroll_month = ${Number(payroll_month)}`;
+    }
+
+    if (payroll_year && !isNaN(payroll_year) && payroll_year !== "") {
+      whereClause += ` AND mp.payroll_year = ${Number(payroll_year)}`;
+    }
+
+    if (search && search.trim() !== "") {
       const term = search.toLowerCase().replace(/'/g, "''");
       whereClause += `
         AND (
-          LOWER(mp.status) LIKE '%${term}%'
-          OR CAST(mp.payroll_month AS VARCHAR) LIKE '%${term}%'
-          OR CAST(mp.payroll_year AS VARCHAR) LIKE '%${term}%'
+          LOWER(emp.full_name) LIKE '%${term}%'
+          OR LOWER(emp.employee_code) LIKE '%${term}%'
+          OR LOWER(mp.status) LIKE '%${term}%'
           OR LOWER(mp.remarks) LIKE '%${term}%'
           OR LOWER(mp.employee_email) LIKE '%${term}%'
-          OR LOWER(emp.full_name) LIKE '%${term}%'
-          OR LOWER(emp.employee_code) LIKE '%${term}%'
-          OR LOWER(cur.currency_name) LIKE '%${term}%'
-          OR LOWER(cur.currency_code) LIKE '%${term}%'
+          OR CAST(mp.payroll_month AS VARCHAR) LIKE '%${term}%'
+          OR CAST(mp.payroll_year AS VARCHAR) LIKE '%${term}%'
         )
       `;
     }
 
-    if (startDate && endDate) {
-      const start = new Date(startDate).toISOString();
-      const end = new Date(endDate).toISOString();
-      whereClause += ` AND mp.createdate BETWEEN '${start}' AND '${end}'`;
-    }
-
-    if (
-      employee_id !== undefined &&
-      employee_id !== null &&
-      employee_id !== ""
-    ) {
-      whereClause += ` AND mp.employee_id = ${Number(employee_id)}`;
-    }
-
-    if (
-      payroll_month !== undefined &&
-      payroll_month !== null &&
-      payroll_month !== ""
-    ) {
-      whereClause += ` AND mp.payroll_month = ${Number(payroll_month)}`;
-    }
-
-    if (
-      payroll_year !== undefined &&
-      payroll_year !== null &&
-      payroll_year !== ""
-    ) {
-      whereClause += ` AND CAST(mp.payroll_year AS VARCHAR) = '${payroll_year}'`;
-    }
+    whereClause += ` AND emp.id IS NOT NULL`;
 
     const query = `
       SELECT 
@@ -496,16 +610,18 @@ const getGeneratedMonthlyPayroll = async (
         emp.id AS employee_id,
         emp.full_name AS employee_full_name,
         emp.employee_code AS employee_code,
-        cur.id AS id,
-        cur.currency_code AS currency_code,
-        cur.currency_name AS currency_name
+        cur.id AS currency_id,
+        cur.currency_code,
+        cur.currency_name
       FROM hrms_d_monthly_payroll_processing mp
-      LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+      INNER JOIN hrms_d_employee emp ON emp.id = mp.employee_id
       LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
       ${whereClause}
-      ORDER BY mp.updatedate DESC
+      ORDER BY mp.updatedate DESC, mp.payroll_year DESC, mp.payroll_month DESC
       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY;
     `;
+
+    console.log("Generated Query:", query);
 
     const rawData = await prisma.$queryRawUnsafe(query);
 
@@ -514,7 +630,7 @@ const getGeneratedMonthlyPayroll = async (
         employee_id,
         employee_full_name,
         employee_code,
-        id,
+        currency_id,
         currency_code,
         currency_name,
         ...payrollData
@@ -528,7 +644,7 @@ const getGeneratedMonthlyPayroll = async (
           employee_code,
         },
         hrms_monthly_payroll_currency: {
-          id: id,
+          id: currency_id,
           currency_code,
           currency_name,
         },
@@ -538,7 +654,7 @@ const getGeneratedMonthlyPayroll = async (
     const countQuery = `
       SELECT COUNT(*) AS count
       FROM hrms_d_monthly_payroll_processing mp
-      LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+      INNER JOIN hrms_d_employee emp ON emp.id = mp.employee_id
       LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
       ${whereClause};
     `;
@@ -553,119 +669,18 @@ const getGeneratedMonthlyPayroll = async (
       size,
       totalPages,
       totalCount,
+      filters: {
+        employee_id: employee_id || null,
+        payroll_month: payroll_month || null,
+        payroll_year: payroll_year || null,
+        search: search || null,
+      },
     };
   } catch (error) {
     console.error("Payroll retrieval error", error);
-    throw new CustomError("Error retrieving payroll entries", 503);
+    throw new Error("Error retrieving payroll entries");
   }
 };
-
-// const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
-//   try {
-//     const payroll = await prisma.$queryRawUnsafe(`
-//       SELECT
-//   mp.*,
-//   emp.full_name,
-//   emp.employee_code AS pf_hr_id,
-//   emp.account_number AS bank_account,
-//   emp.work_location AS location,
-//   emp.join_date AS engagement_date,
-//   emp.national_id_number AS nrc_no,
-//   emp.identification_number AS tpin_no,
-//   emp.cost_center_id AS cost_center,
-//   emp.email AS employee_email,
-//   emp.bank_id,
-//   emp.payment_mode,
-//   d.designation_name AS designation,
-//   b.bank_name AS bank_name
-// FROM hrms_d_monthly_payroll_processing mp
-// LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
-// LEFT JOIN hrms_m_designation_master d ON d.id = emp.designation_id
-// LEFT JOIN hrms_m_bank_master b ON b.id = emp.bank_id
-// WHERE mp.employee_id = ${employee_id}
-//   AND mp.payroll_month = ${payroll_month}
-//   AND mp.payroll_year = ${payroll_year}
-
-//     `);
-
-//     if (!payroll || payroll.length === 0) return null;
-
-//     const record = payroll[0];
-
-//     const componentLabels = {
-//       1111001: "BASIC PAY",
-//       1111002: "HOUSING ALLOWANCE",
-//       1111003: "LUNCH ALLOWANCE",
-//       1111004: "TRANSPORT ALLOWANCE",
-//       1111005: "EX-GRATIA PAYMENT",
-//       1111006: "GRATUITY",
-//       1112001: "NAPSA",
-//       1112002: "NHIMA",
-//       1112003: "Paye",
-//     };
-
-//     const earnings = [];
-//     const deductions = [];
-
-//     for (const key in record) {
-//       if (/^\d{7}$/.test(key) && Number(record[key]) !== 0) {
-//         const label = componentLabels[key] || `Component ${key}`;
-//         if (parseInt(key) < 1112000) {
-//           earnings.push({ label, amount: Number(record[key]) });
-//         } else {
-//           deductions.push({ label, amount: Number(record[key]) });
-//         }
-//       }
-//     }
-
-//     return {
-//       employee_id: record.employee_id,
-//       pf_hr_id: record.pf_hr_id || "",
-//       full_name: record.full_name || "",
-//       designation: record.designation || "",
-//       location: record.location || "",
-//       cost_center1_id: record.cost_center1_id || "",
-//       cost_center2_id: record.cost_center2_id || "",
-//       cost_center3_id: record.cost_center3_id || "",
-//       cost_center4_id: record.cost_center4_id || "",
-//       cost_center5_id: record.cost_center5_id || "",
-//       napsa_no: record.napsa_no || "",
-//       tpin_no: record.tpin_no || "",
-//       nrc_no: record.nrc_no || "",
-//       nhis_no: record.nhis_no || "",
-
-//       engagement_date: record.engagement_date
-//         ? new Date(record.engagement_date).toDateString()
-//         : "",
-
-//       leave_days: record.leave_days || 0,
-//       leave_value: record.leave_value || 0,
-
-//       taxable_ytd: record.taxable_earnings || 0,
-//       tax_ytd: record.tax_amount || 0,
-
-//       earnings,
-//       deductions,
-//       net_pay: record.net_pay || 0,
-
-//       bank_name: record.bank_name || "NMB",
-//       pay_point: record.pay_point || "NDOLA E WALLET",
-//       bank_account: record.bank_account || "********",
-
-//       leave_taken: record.leave_taken || 0,
-//       actual_hours: record.actual_hours || "",
-//       workday_ot: record.workday_ot || "",
-//       night_hours: record.night_hours || "",
-//       sunday_ot: record.sunday_ot || "",
-
-//       month: record.payroll_month || "",
-//       year: record.payroll_year || "",
-//     };
-//   } catch (error) {
-//     console.error("Raw payslip fetch error:", error);
-//     throw new CustomError("Error fetching payslip data", 500);
-//   }
-// };
 
 const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
   try {
@@ -777,6 +792,7 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
   }
 };
 
+const downloadExcel = async(employee_id, payroll_month, payroll_year);
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,

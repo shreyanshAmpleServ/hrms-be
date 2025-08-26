@@ -2493,34 +2493,40 @@ model hrms_d_exit_clearance1 {
 }
 
 model hrms_d_default_configurations {
-  id                            Int                    @id @default(autoincrement())
-  company_logo                  String?                @db.VarChar(255)
-  company_name                  String                 @db.NVarChar(150)
-  email                         String                 @db.VarChar(100)
-  website                       String?                @db.VarChar(150)
-  phone_number                  String?                @db.VarChar(20)
-  description                   String?
-  street_address                String?                @db.NVarChar(200)
-  city                          String?                @db.NVarChar(100)
-  state                         Int?
-  province                      String?                @db.NVarChar(100)
-  zip_code                      String?                @db.VarChar(20)
-  country                       Int?
-  gst_number                    String?                @db.VarChar(30)
-  pan_number                    String?                @db.VarChar(30)
-  tax_id                        String?                @db.VarChar(30)
-  smtp_host                     String?                @db.VarChar(50)
-  smtp_port                     Int?
-  smtp_username                 String?                @db.VarChar(200)
-  smtp_password                 String?                @db.VarChar(100)
-  createdate                    DateTime               @default(now()) @db.DateTime
-  createdby                     Int
-  updatedate                    DateTime?              @db.DateTime
-  updatedby                     Int?
-  log_inst                      Int?
-  company_signature             String?                @db.VarChar(255)
-  default_configuration_country hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
-  default_configuration_state   crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
+  id                              Int                    @id @default(autoincrement())
+  company_logo                    String?                @db.VarChar(255)
+  company_name                    String                 @db.NVarChar(150)
+  email                           String                 @db.VarChar(100)
+  website                         String?                @db.VarChar(150)
+  phone_number                    String?                @db.VarChar(20)
+  description                     String?
+  street_address                  String?                @db.NVarChar(200)
+  city                            String?                @db.NVarChar(100)
+  state                           Int?
+  province                        String?                @db.NVarChar(100)
+  zip_code                        String?                @db.VarChar(20)
+  country                         Int?
+  gst_number                      String?                @db.VarChar(30)
+  pan_number                      String?                @db.VarChar(30)
+  tax_id                          String?                @db.VarChar(30)
+  smtp_host                       String?                @db.VarChar(50)
+  smtp_port                       Int?
+  smtp_username                   String?                @db.VarChar(200)
+  smtp_password                   String?                @db.VarChar(100)
+  createdate                      DateTime               @default(now()) @db.DateTime
+  createdby                       Int
+  updatedate                      DateTime?              @db.DateTime
+  updatedby                       Int?
+  log_inst                        Int?
+  company_signature               String?                @db.VarChar(255)
+  column_one                      String?                @db.VarChar(255)
+  column_two                      String?                @db.VarChar(255)
+  full_day_working_hours          Int?
+  half_day_working_hours          Int?
+  working_days                    Int?
+  local_employee_probation_period String?                @db.VarChar(255)
+  default_configuration_country   hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
+  default_configuration_state     crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_requests {
