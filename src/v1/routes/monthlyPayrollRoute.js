@@ -62,7 +62,11 @@ router.post(
   authenticateToken,
   monthlyPayrollController.createOrUpdateMonthlyPayroll
 );
-
+router.get(
+  "/monthly-payroll/download-excel",
+  authenticateToken,
+  monthlyPayrollController.downloadPayrollExcel
+);
 router.get(
   "/generated-monthly-payroll",
   authenticateToken,

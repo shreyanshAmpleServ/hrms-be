@@ -792,6 +792,198 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
   }
 };
 
+const getPayrollDataForExcel = async (
+  search,
+  employee_id,
+  payroll_month,
+  payroll_year
+) => {
+  try {
+    let whereClause = `WHERE 1=1`;
+
+    if (employee_id && !isNaN(employee_id) && employee_id !== "") {
+      whereClause += `AND mp.employee_id = ${Number(employee_id)}`;
+    }
+
+    if (payroll_month && !isNaN(payroll_month) && payroll_month !== "") {
+      whereClause += ` AND mp.payroll_month = ${Number(payroll_month)}`;
+    }
+
+    if (payroll_year && !isNaN(payroll_year) && payroll_year != "") {
+      whereClause += ` AND mp.payroll_year = ${Number(payroll_year)}`;
+    }
+
+    if (search && search.trim() !== "") {
+      const term = search.toLowerCase().replace(/'/g, "''");
+      whereClause += `
+        AND (
+          LOWER(emp.full_name) LIKE '%${term}%'
+          OR LOWER(emp.employee_code) LIKE '%${term}%'
+          OR LOWER(mp.status) LIKE '%${term}%'
+          OR LOWER(mp.remarks) LIKE '%${term}%'
+          OR LOWER(mp.employee_email) LIKE '%${term}%'
+          OR CAST(mp.payroll_month AS VARCHAR) LIKE '%${term}%'
+          OR CAST(mp.payroll_year AS VARCHAR) LIKE '%${term}%'
+        )
+      `;
+    }
+    whereClause += ` AND emp.id IS NOT NULL`;
+
+    const query = `
+      SELECT 
+        mp.*,
+        emp.id AS emp_id,
+        emp.full_name AS employee_full_name,
+        emp.employee_code AS employee_code,
+        emp.national_id_number AS nrc_no,
+        emp.identification_number AS tpin_no,
+        emp.join_date,
+        emp.account_number AS bank_account,
+        emp.work_location AS location,
+        emp.email AS emp_email,
+        emp.napsa_no,
+        emp.nhis_no,
+        cur.id AS currency_id,
+        cur.currency_code,
+        cur.currency_name,
+        d.designation_name AS designation,
+        dept.department_name AS department,
+        b.bank_name AS bank_name,
+        cc.cost_center_name AS cost_center_name
+      FROM hrms_d_monthly_payroll_processing mp
+      INNER JOIN hrms_d_employee emp ON emp.id = mp.employee_id
+      LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
+      LEFT JOIN hrms_m_designation_master d ON d.id = emp.designation_id
+      LEFT JOIN hrms_m_department_master dept ON dept.id = emp.department_id
+      LEFT JOIN hrms_m_bank_master b ON b.id = emp.bank_id
+      LEFT JOIN hrms_m_cost_center_master cc ON cc.id = emp.cost_center_id
+      ${whereClause}
+      ORDER BY mp.updatedate DESC, mp.payroll_year DESC, mp.payroll_month DESC;
+    `;
+
+    console.log("Excel Query:", query);
+
+    const rawData = await prisma.$queryRawUnsafe(query);
+
+    const componentResult = await prisma.$queryRawUnsafe(`
+      SELECT * FROM vw_hrms_get_component_names ORDER BY component_code
+      `);
+
+    const componentCodeToName = {};
+    const componentCodeToPayType = {};
+    const earningsComponents = [];
+    const deductionComponents = [];
+
+    if (componentResult && Array.isArray(componentResult)) {
+      componentResult.forEach((component) => {
+        if (component.component_code && component.component_name) {
+          componentCodeToName[component.component_code] =
+            component.component_name;
+          componentCodeToPayType[component.component_code] =
+            component.pay_or_deduct;
+
+          if (component.pay_or_deduct === "P") {
+            earningsComponents.push(component.component_code);
+          } else if (component.pay_or_deduct === "D") {
+            deductionComponents.push(component.component_code);
+          }
+        }
+      });
+    }
+
+    const processedData = rawData.map((row) => {
+      const processedRow = {
+        employee_id: row.emp_id,
+        employee_code: row.employee_code,
+        employee_full_name: row.employee_full_name,
+        designation: row.designation || "",
+        department: row.department || "",
+        location: row.location || "",
+        cost_center_name: row.cost_center_name || "",
+        join_date: row.join_date ? new Date(row.join_date) : null,
+        nrc_no: row.nrc_no || "",
+        tpin_no: row.tpin_no || "",
+        napsa_no: row.napsa_no || "",
+        nhis_no: row.nhis_no || "",
+        bank_account: row.bank_account || "",
+        bank_name: row.bank_name || "",
+        employee_email: row.emp_email || "",
+
+        payroll_month: row.payroll_month,
+        payroll_year: row.payroll_year,
+        payroll_week: row.payroll_week || 0,
+        payroll_start_date: row.payroll_start_date
+          ? new Date(row.payroll_start_date)
+          : null,
+        payroll_end_date: row.payroll_end_date
+          ? new Date(row.payroll_end_date)
+          : null,
+        payroll_paid_days: row.payroll_paid_days || 0,
+
+        currency_code: row.currency_code || "",
+        currency_name: row.currency_name || "",
+
+        basic_salary: Number(row.basic_salary) || 0,
+        total_earnings: Number(row.total_earnings) || 0,
+        taxable_earnings: Number(row.taxable_earnings) || 0,
+        tax_amount: Number(row.tax_amount) || 0,
+        total_deductions: Number(row.total_deductions) || 0,
+        net_pay: Number(row.net_pay) || 0,
+
+        status: row.status || "",
+        processed: row.processed || "N",
+        execution_date: row.execution_date
+          ? new Date(row.execution_date)
+          : null,
+        pay_date: row.pay_date ? new Date(row.pay_date) : null,
+        doc_date: row.doc_date ? new Date(row.doc_date) : null,
+        processed_on: row.processed_on ? new Date(row.processed_on) : null,
+
+        approved1: row.approved1 || "N",
+        approver1_id: row.approver1_id || "",
+
+        project_id: row.project_id || "",
+        cost_center1_id: row.cost_center1_id || "",
+        cost_center2_id: row.cost_center2_id || "",
+        cost_center3_id: row.cost_center3_id || "",
+        cost_center4_id: row.cost_center4_id || "",
+        cost_center5_id: row.cost_center5_id || "",
+
+        je_transid: row.je_transid || "",
+        remarks: row.remarks || "",
+
+        createdby: row.createdby || "",
+        createdate: row.createdate ? new Date(row.createdate) : null,
+        updatedby: row.updatedby || "",
+        updatedate: row.updatedate ? new Date(row.updatedate) : null,
+        log_inst: row.log_inst || "",
+      };
+
+      [...earningsComponents, ...deductionComponents].forEach(
+        (componentCode) => {
+          const value = Number(row[componentCode]) || 0;
+          const componentName =
+            componentCodeToName[componentCode] || `Component_${componentCode}`;
+          const payType = componentCodeToPayType[componentCode];
+          processedRow[`${componentName} (${componentCode})`] = value;
+        }
+      );
+
+      return processedRow;
+    });
+    return {
+      data: processedData,
+      componentMapping: componentCodeToName,
+      earningsComponents,
+      deductionComponents,
+      totalRecords: processedData.length,
+    };
+  } catch (error) {
+    console.error("Excel data retrieval error", error);
+    throw new Error("Error retrieving payroll data for Excel export");
+  }
+};
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,
@@ -804,4 +996,5 @@ module.exports = {
   createOrUpdatePayrollBulk,
   getGeneratedMonthlyPayroll,
   downloadPayslipPDF,
+  getPayrollDataForExcel,
 };

@@ -90,6 +90,65 @@ const triggerMonthlyPayrollSP = async (req, res, next) => {
     next(error);
   }
 };
+const downloadPayrollExcel = async (req, res, next) => {
+  try {
+    const { search, employee_id, payroll_month, payroll_year } = req.query;
+
+    console.log("Excel download parameters:", {
+      search,
+      employee_id,
+      payroll_month,
+      payroll_year,
+      user: req.user?.id,
+    });
+
+    const result = await monthlyPayrollService.downloadPayrollExcel(
+      search,
+      employee_id,
+      payroll_month,
+      payroll_year
+    );
+
+    console.log(`Excel file generated successfully: ${result.filename}`);
+    console.log(
+      `Total records: ${result.totalRecords}, Earnings: ${result.earningsCount}, Deductions: ${result.deductionsCount}`
+    );
+
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="${result.filename}"`
+    );
+    res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
+    res.setHeader("Cache-Control", "no-cache");
+
+    res.sendFile(result.filePath, (err) => {
+      if (err) {
+        console.error("Error sending Excel file:", err);
+        return next(new CustomError("Failed to send Excel file", 500));
+      }
+
+      console.log(`Excel file sent successfully: ${result.filename}`);
+
+      setTimeout(() => {
+        fs.unlink(result.filePath, (unlinkErr) => {
+          if (unlinkErr) {
+            console.error("Error deleting Excel file:", unlinkErr);
+          } else {
+            console.log(`Deleted temporary Excel file: ${result.filePath}`);
+          }
+        });
+      }, 10 * 60 * 1000);
+    });
+  } catch (error) {
+    console.error("Excel download controller error:", error);
+
+    next(error);
+  }
+};
 
 const triggerMonthlyPayrollCalculationSP = async (req, res, next) => {
   try {
@@ -237,4 +296,5 @@ module.exports = {
   createOrUpdateMonthlyPayroll,
   getGeneratedMonthlyPayroll,
   downloadPayslipPDF,
+  downloadPayrollExcel,
 };
