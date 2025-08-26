@@ -167,24 +167,16 @@ const downloadPayrollExcel = async (
     const worksheet = workbook.addWorksheet("Monthly Payroll Data");
 
     const staticColumns = [
-      { header: "Employee ID", key: "employee_id", width: 12 },
       { header: "Employee Code", key: "employee_code", width: 15 },
       { header: "Employee Name", key: "employee_full_name", width: 25 },
       { header: "Designation", key: "designation", width: 20 },
       { header: "Department", key: "department", width: 20 },
-      { header: "Location", key: "location", width: 15 },
-      { header: "Cost Center", key: "cost_center_name", width: 18 },
       { header: "Join Date", key: "join_date", width: 12 },
       { header: "NRC No", key: "nrc_no", width: 15 },
       { header: "TPIN No", key: "tpin_no", width: 15 },
       { header: "NAPSA No", key: "napsa_no", width: 15 },
       { header: "NHIS No", key: "nhis_no", width: 15 },
-      { header: "Bank Account", key: "bank_account", width: 18 },
-      { header: "Bank Name", key: "bank_name", width: 15 },
       { header: "Email", key: "employee_email", width: 25 },
-
-      { header: "Payroll Month", key: "payroll_month", width: 12 },
-      { header: "Payroll Year", key: "payroll_year", width: 12 },
       { header: "Payroll Week", key: "payroll_week", width: 12 },
       { header: "Start Date", key: "payroll_start_date", width: 12 },
       { header: "End Date", key: "payroll_end_date", width: 12 },
@@ -224,30 +216,22 @@ const downloadPayrollExcel = async (
     });
 
     const additionalColumns = [
+      { header: "Payroll Month", key: "payroll_month", width: 15 },
+      { header: "Payroll Year", key: "payroll_year", width: 15 },
       { header: "Status", key: "status", width: 10 },
       { header: "Processed", key: "processed", width: 10 },
       { header: "Execution Date", key: "execution_date", width: 15 },
       { header: "Pay Date", key: "pay_date", width: 12 },
       { header: "Doc Date", key: "doc_date", width: 12 },
       { header: "Processed On", key: "processed_on", width: 15 },
-      { header: "Approved", key: "approved1", width: 10 },
-      { header: "Approver ID", key: "approver1_id", width: 12 },
-      { header: "Project ID", key: "project_id", width: 12 },
-      { header: "Cost Center 1", key: "cost_center1_id", width: 12 },
-      { header: "Cost Center 2", key: "cost_center2_id", width: 12 },
-      { header: "Cost Center 3", key: "cost_center3_id", width: 12 },
-      { header: "Cost Center 4", key: "cost_center4_id", width: 12 },
-      { header: "Cost Center 5", key: "cost_center5_id", width: 12 },
       { header: "JE Trans ID", key: "je_transid", width: 12 },
       { header: "Remarks", key: "remarks", width: 30 },
       { header: "Created By", key: "createdby", width: 12 },
       { header: "Create Date", key: "createdate", width: 15 },
       { header: "Updated By", key: "updatedby", width: 12 },
       { header: "Update Date", key: "updatedate", width: 15 },
-      { header: "Log Instance", key: "log_inst", width: 12 },
     ];
 
-    // Combine all columns
     const allColumns = [
       ...staticColumns,
       ...dynamicColumns,
@@ -255,7 +239,6 @@ const downloadPayrollExcel = async (
     ];
     worksheet.columns = allColumns;
 
-    // Style the header row
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true, size: 12, color: { argb: "FFFFFFFF" } };
     headerRow.fill = {
@@ -266,8 +249,28 @@ const downloadPayrollExcel = async (
     headerRow.height = 20;
     headerRow.alignment = { vertical: "middle", horizontal: "center" };
 
+    // result.data.forEach((row, index) => {
+    //   const dataRow = worksheet.addRow(row);
+
+    //   if (index % 2 === 1) {
+    //     dataRow.fill = {
+    //       type: "pattern",
+    //       pattern: "solid",
+    //       fgColor: { argb: "FFF8F9FA" },
+    //     };
+    //   }
+    // });
+
     result.data.forEach((row, index) => {
-      const dataRow = worksheet.addRow(row);
+      const fullRow = {};
+      worksheet.columns.forEach((col) => {
+        fullRow[col.key] =
+          row[col.key] !== undefined && row[col.key] !== null
+            ? row[col.key]
+            : "N/A";
+      });
+
+      const dataRow = worksheet.addRow(fullRow);
 
       if (index % 2 === 1) {
         dataRow.fill = {
@@ -328,7 +331,6 @@ const downloadPayrollExcel = async (
       }
     });
 
-    // Add borders to all cells
     worksheet.eachRow((row, rowNumber) => {
       row.eachCell((cell) => {
         cell.border = {
@@ -340,7 +342,6 @@ const downloadPayrollExcel = async (
       });
     });
 
-    // Auto-fit columns
     worksheet.columns.forEach((column) => {
       if (column.header && column.header.length > column.width) {
         column.width = column.header.length + 2;
@@ -387,6 +388,7 @@ const downloadPayrollExcel = async (
     );
   }
 };
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayrollById,

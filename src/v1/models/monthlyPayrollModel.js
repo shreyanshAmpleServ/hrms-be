@@ -81,7 +81,18 @@ const createMonthlyPayroll = async (data) => {
 
 // Find payroll entry by ID
 const findMonthlyPayrollById = async (id) => {
+  const prismaClient = new PrismaClient();
+
   try {
+    console.log("ID received:", id, "Type:", typeof id);
+    if (!id) {
+      throw new CustomError("ID parameter is required", 400);
+    }
+
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
+      throw new CustomError("Invalid ID parameter", 400);
+    }
     const reqData = await prisma.hrms_d_monthly_payroll_processing.findUnique({
       where: { id: parseInt(id) },
     });
@@ -94,6 +105,8 @@ const findMonthlyPayrollById = async (id) => {
       `Error finding payroll entry by ID: ${error.message}`,
       503
     );
+  } finally {
+    await prismaClient.$disconnect();
   }
 };
 
@@ -425,141 +438,6 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
   }
 };
 
-// Generate
-// const getGeneratedMonthlyPayroll = async (
-//   search,
-//   page = 1,
-//   size = 10,
-//   startDate,
-//   endDate,
-//   employee_id,
-//   payroll_month,
-//   payroll_year
-// ) => {
-//   try {
-//     page = parseInt(page) || 1;
-//     size = parseInt(size) || 10;
-//     const offset = (page - 1) * size;
-
-//     let whereClause = `WHERE 1=1`;
-
-//     if (search) {
-//       const term = search.toLowerCase().replace(/'/g, "''");
-//       whereClause += `
-//         AND (
-//           LOWER(mp.status) LIKE '%${term}%'
-//           OR CAST(mp.payroll_month AS VARCHAR) LIKE '%${term}%'
-//           OR CAST(mp.payroll_year AS VARCHAR) LIKE '%${term}%'
-//           OR LOWER(mp.remarks) LIKE '%${term}%'
-//           OR LOWER(mp.employee_email) LIKE '%${term}%'
-//           OR LOWER(emp.full_name) LIKE '%${term}%'
-//           OR LOWER(emp.employee_code) LIKE '%${term}%'
-//           OR LOWER(cur.currency_name) LIKE '%${term}%'
-//           OR LOWER(cur.currency_code) LIKE '%${term}%'
-//         )
-//       `;
-//     }
-
-//     if (startDate && endDate) {
-//       const start = new Date(startDate).toISOString();
-//       const end = new Date(endDate).toISOString();
-//       whereClause += ` AND mp.createdate BETWEEN '${start}' AND '${end}'`;
-//     }
-
-//     if (
-//       employee_id !== undefined &&
-//       employee_id !== null &&
-//       employee_id !== ""
-//     ) {
-//       whereClause += ` AND mp.employee_id = ${Number(employee_id)}`;
-//     }
-
-//     if (
-//       payroll_month !== undefined &&
-//       payroll_month !== null &&
-//       payroll_month !== ""
-//     ) {
-//       whereClause += ` AND mp.payroll_month = ${Number(payroll_month)}`;
-//     }
-
-//     if (
-//       payroll_year !== undefined &&
-//       payroll_year !== null &&
-//       payroll_year !== ""
-//     ) {
-//       whereClause += ` AND CAST(mp.payroll_year AS VARCHAR) = '${payroll_year}'`;
-//     }
-
-//     const query = `
-//       SELECT
-//         mp.*,
-//         emp.id AS employee_id,
-//         emp.full_name AS employee_full_name,
-//         emp.employee_code AS employee_code,
-//         cur.id AS id,
-//         cur.currency_code AS currency_code,
-//         cur.currency_name AS currency_name
-//       FROM hrms_d_monthly_payroll_processing mp
-//       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
-//       LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
-//       ${whereClause}
-//       ORDER BY mp.updatedate DESC
-//       OFFSET ${offset} ROWS FETCH NEXT ${size} ROWS ONLY;
-//     `;
-
-//     const rawData = await prisma.$queryRawUnsafe(query);
-
-//     const data = rawData.map((row) => {
-//       const {
-//         employee_id,
-//         employee_full_name,
-//         employee_code,
-//         id,
-//         currency_code,
-//         currency_name,
-//         ...payrollData
-//       } = row;
-
-//       return {
-//         ...payrollData,
-//         hrms_monthly_payroll_employee: {
-//           id: employee_id,
-//           full_name: employee_full_name,
-//           employee_code,
-//         },
-//         hrms_monthly_payroll_currency: {
-//           id: id,
-//           currency_code,
-//           currency_name,
-//         },
-//       };
-//     });
-
-//     const countQuery = `
-//       SELECT COUNT(*) AS count
-//       FROM hrms_d_monthly_payroll_processing mp
-//       LEFT JOIN hrms_d_employee emp ON emp.id = mp.employee_id
-//       LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
-//       ${whereClause};
-//     `;
-
-//     const countResult = await prisma.$queryRawUnsafe(countQuery);
-//     const totalCount = parseInt(countResult[0].count, 10);
-//     const totalPages = Math.ceil(totalCount / size);
-
-//     return {
-//       data,
-//       currentPage: page,
-//       size,
-//       totalPages,
-//       totalCount,
-//     };
-//   } catch (error) {
-//     console.error("Payroll retrieval error", error);
-//     throw new CustomError("Error retrieving payroll entries", 503);
-//   }
-// };
-
 const getGeneratedMonthlyPayroll = async (
   search,
   page = 1,
@@ -689,9 +567,7 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
         mp.*,  
         emp.full_name,
         emp.employee_code AS pf_hr_id,
-        emp.account_number AS bank_account,
-        emp.work_location AS location,
-        emp.join_date AS engagement_date,
+        emp.account_number AS bank_account,        emp.join_date AS engagement_date,
         emp.national_id_number AS nrc_no,
         emp.identification_number AS tpin_no,
         emp.cost_center_id AS cost_center,
@@ -772,19 +648,14 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
       pf_hr_id: record.pf_hr_id || "",
       full_name: record.full_name || "",
       designation: record.designation || "",
-      location: record.location || "",
       cost_center: record.cost_center || "",
-      napsa_no: record.napsa_no || "",
       tpin_no: record.tpin_no || "",
       nrc_no: record.nrc_no || "",
       nhis_no: record.nhis_no || "",
       engagement_date: record.engagement_date || "",
-      bank_account: record.bank_account || "********",
       bank_name: record.bank_name || "NMB",
       earnings,
       deductions,
-      company_logo: reqData.company_logo || "",
-      company_signature: reqData.company_signature || "",
     };
   } catch (error) {
     console.error("Raw payslip fetch error:", error);
@@ -802,14 +673,14 @@ const getPayrollDataForExcel = async (
     let whereClause = `WHERE 1=1`;
 
     if (employee_id && !isNaN(employee_id) && employee_id !== "") {
-      whereClause += `AND mp.employee_id = ${Number(employee_id)}`;
+      whereClause += ` AND mp.employee_id = ${Number(employee_id)}`;
     }
 
     if (payroll_month && !isNaN(payroll_month) && payroll_month !== "") {
       whereClause += ` AND mp.payroll_month = ${Number(payroll_month)}`;
     }
 
-    if (payroll_year && !isNaN(payroll_year) && payroll_year != "") {
+    if (payroll_year && !isNaN(payroll_year) && payroll_year !== "") {
       whereClause += ` AND mp.payroll_year = ${Number(payroll_year)}`;
     }
 
@@ -827,10 +698,11 @@ const getPayrollDataForExcel = async (
         )
       `;
     }
+
     whereClause += ` AND emp.id IS NOT NULL`;
 
     const query = `
-      SELECT 
+      SELECT
         mp.*,
         emp.id AS emp_id,
         emp.full_name AS employee_full_name,
@@ -838,25 +710,20 @@ const getPayrollDataForExcel = async (
         emp.national_id_number AS nrc_no,
         emp.identification_number AS tpin_no,
         emp.join_date,
-        emp.account_number AS bank_account,
-        emp.work_location AS location,
         emp.email AS emp_email,
-        emp.napsa_no,
-        emp.nhis_no,
         cur.id AS currency_id,
         cur.currency_code,
         cur.currency_name,
         d.designation_name AS designation,
         dept.department_name AS department,
-        b.bank_name AS bank_name,
-        cc.cost_center_name AS cost_center_name
+        b.bank_name AS bank_name
       FROM hrms_d_monthly_payroll_processing mp
       INNER JOIN hrms_d_employee emp ON emp.id = mp.employee_id
       LEFT JOIN hrms_m_currency_master cur ON cur.id = mp.pay_currency
       LEFT JOIN hrms_m_designation_master d ON d.id = emp.designation_id
       LEFT JOIN hrms_m_department_master dept ON dept.id = emp.department_id
       LEFT JOIN hrms_m_bank_master b ON b.id = emp.bank_id
-      LEFT JOIN hrms_m_cost_center_master cc ON cc.id = emp.cost_center_id
+
       ${whereClause}
       ORDER BY mp.updatedate DESC, mp.payroll_year DESC, mp.payroll_month DESC;
     `;
@@ -867,7 +734,7 @@ const getPayrollDataForExcel = async (
 
     const componentResult = await prisma.$queryRawUnsafe(`
       SELECT * FROM vw_hrms_get_component_names ORDER BY component_code
-      `);
+    `);
 
     const componentCodeToName = {};
     const componentCodeToPayType = {};
@@ -893,22 +760,13 @@ const getPayrollDataForExcel = async (
 
     const processedData = rawData.map((row) => {
       const processedRow = {
-        employee_id: row.emp_id,
         employee_code: row.employee_code,
         employee_full_name: row.employee_full_name,
         designation: row.designation || "",
         department: row.department || "",
-        location: row.location || "",
-        cost_center_name: row.cost_center_name || "",
         join_date: row.join_date ? new Date(row.join_date) : null,
-        nrc_no: row.nrc_no || "",
         tpin_no: row.tpin_no || "",
-        napsa_no: row.napsa_no || "",
-        nhis_no: row.nhis_no || "",
-        bank_account: row.bank_account || "",
-        bank_name: row.bank_name || "",
         employee_email: row.emp_email || "",
-
         payroll_month: row.payroll_month,
         payroll_year: row.payroll_year,
         payroll_week: row.payroll_week || 0,
@@ -943,11 +801,6 @@ const getPayrollDataForExcel = async (
         approver1_id: row.approver1_id || "",
 
         project_id: row.project_id || "",
-        cost_center1_id: row.cost_center1_id || "",
-        cost_center2_id: row.cost_center2_id || "",
-        cost_center3_id: row.cost_center3_id || "",
-        cost_center4_id: row.cost_center4_id || "",
-        cost_center5_id: row.cost_center5_id || "",
 
         je_transid: row.je_transid || "",
         remarks: row.remarks || "",
@@ -964,13 +817,13 @@ const getPayrollDataForExcel = async (
           const value = Number(row[componentCode]) || 0;
           const componentName =
             componentCodeToName[componentCode] || `Component_${componentCode}`;
-          const payType = componentCodeToPayType[componentCode];
           processedRow[`${componentName} (${componentCode})`] = value;
         }
       );
 
       return processedRow;
     });
+
     return {
       data: processedData,
       componentMapping: componentCodeToName,
@@ -980,7 +833,10 @@ const getPayrollDataForExcel = async (
     };
   } catch (error) {
     console.error("Excel data retrieval error", error);
-    throw new Error("Error retrieving payroll data for Excel export");
+    throw new CustomError(
+      `Error retrieving payroll data for Excel export: ${error.message}`,
+      500
+    );
   }
 };
 

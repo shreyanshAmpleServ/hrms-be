@@ -3,21 +3,6 @@ const router = express.Router();
 const monthlyPayrollController = require("../controller/monthlyPayrollController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 
-// Create monthly payroll routes
-router.post(
-  "/monthly-payroll",
-  authenticateToken,
-
-  monthlyPayrollController.createMonthlyPayroll
-);
-
-// Get all monthly payroll routes
-router.get(
-  "/monthly-payroll",
-  authenticateToken,
-  monthlyPayrollController.getAllMonthlyPayroll
-);
-
 router.get(
   "/monthly-payroll/run-sp",
   authenticateToken,
@@ -25,52 +10,45 @@ router.get(
 );
 
 router.get(
+  "/monthly-payroll/download-excel",
+  authenticateToken,
+  monthlyPayrollController.downloadPayrollExcel
+);
+
+router.get(
+  "/monthly-payroll-download/download",
+  authenticateToken,
+  monthlyPayrollController.downloadPayslipPDF
+);
+
+router.get(
   "/tax-calculation",
   authenticateToken,
-
   monthlyPayrollController.triggerMonthlyPayrollCalculationSP
 );
+
 router.get(
   "/components",
   authenticateToken,
   monthlyPayrollController.getComponentNames
 );
 
-// Get a single monthly payroll by ID routes
 router.get(
-  "/monthly-payroll/:id",
+  "/generated-monthly-payroll",
   authenticateToken,
-  monthlyPayrollController.findMonthlyPayroll
+  monthlyPayrollController.getGeneratedMonthlyPayroll
 );
 
-// Update a monthly payroll by ID routes
-router.put(
-  "/monthly-payroll/:id",
+router.post(
+  "/monthly-payroll",
   authenticateToken,
-  monthlyPayrollController.updateMonthlyPayroll
-);
-
-// Delete  monthly payroll by ID routes
-router.delete(
-  "/monthly-payroll/:id",
-  authenticateToken,
-  monthlyPayrollController.deleteMonthlyPayroll
+  monthlyPayrollController.createMonthlyPayroll
 );
 
 router.post(
   "/generate-monthly-payroll",
   authenticateToken,
   monthlyPayrollController.createOrUpdateMonthlyPayroll
-);
-router.get(
-  "/monthly-payroll/download-excel",
-  authenticateToken,
-  monthlyPayrollController.downloadPayrollExcel
-);
-router.get(
-  "/generated-monthly-payroll",
-  authenticateToken,
-  monthlyPayrollController.getGeneratedMonthlyPayroll
 );
 
 router.post(
@@ -80,9 +58,27 @@ router.post(
 );
 
 router.get(
-  "/monthly-payroll-download/download",
+  "/monthly-payroll",
   authenticateToken,
-  monthlyPayrollController.downloadPayslipPDF
+  monthlyPayrollController.getAllMonthlyPayroll
+);
+
+router.get(
+  "/monthly-payroll/:id",
+  authenticateToken,
+  monthlyPayrollController.findMonthlyPayroll
+);
+
+router.put(
+  "/monthly-payroll/:id",
+  authenticateToken,
+  monthlyPayrollController.updateMonthlyPayroll
+);
+
+router.delete(
+  "/monthly-payroll/:id",
+  authenticateToken,
+  monthlyPayrollController.deleteMonthlyPayroll
 );
 
 module.exports = router;
