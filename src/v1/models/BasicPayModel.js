@@ -787,79 +787,188 @@ const deleteBasicPay = async (id) => {
   }
 };
 
+// const importFromExcel = async (rows) => {
+//   const importedData = [];
+//   let createdCount = 0;
+//   let updatedCount = 0;
+
+//   const normalizeRow = (row) => {
+//     const parseDate = (dateValue) => {
+//       if (!dateValue) return null;
+//       const date = new Date(dateValue);
+//       return isNaN(date.getTime()) ? null : date;
+//     };
+
+//     return {
+//       employee_id: row.employee_id,
+//       pay_grade_id: row.pay_grade_id,
+//       pay_grade_level: row.pay_grade_level,
+//       createdby: row.createdby || 1,
+//       log_inst: row.log_inst || 1,
+//       status: row.status || "Active",
+//       remarks: row.remarks || "",
+//       effective_from: parseDate(row.effective_from),
+//       effective_to: parseDate(row.effective_to),
+//       department_id: row.department_id,
+//       branch_id: row.branch_id,
+//       position_id: row.position_id,
+//       allowance_group: row.allowance_group,
+//       work_life_entry: row.work_life_entry,
+//     };
+//   };
+
+//   const latestRows = {};
+//   for (const row of rows) {
+//     if (!row.employee_id) continue;
+//     latestRows[row.employee_id] = normalizeRow(row);
+//   }
+
+//   for (const employeeId in latestRows) {
+//     const data = latestRows[employeeId];
+
+//     try {
+//       const existing =
+//         await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+//           where: { employee_id: data.employee_id },
+//         });
+
+//       if (existing) {
+//         const updated =
+//           await prisma.hrms_d_employee_pay_component_assignment_header.update({
+//             where: { id: existing.id },
+//             data: {
+//               ...data,
+//               updatedby: data.createdby,
+//               updatedate: new Date(),
+//             },
+//           });
+//         importedData.push(updated);
+//         updatedCount++;
+//         console.log(`Updated employee ${data.employee_id}`);
+//       } else {
+//         const created =
+//           await prisma.hrms_d_employee_pay_component_assignment_header.create({
+//             data: {
+//               ...data,
+//               createdate: new Date(),
+//             },
+//           });
+//         importedData.push(created);
+//         createdCount++;
+//         console.log(` Created employee ${data.employee_id}`);
+//       }
+//     } catch (error) {
+//       console.error(` Error processing employee ${employeeId}:`, error);
+//     }
+//   }
+
+//   return {
+//     count: importedData.length,
+//     created: createdCount,
+//     updated: updatedCount,
+//     data: importedData,
+//   };
+// };
+
 const importFromExcel = async (rows) => {
   const importedData = [];
   let createdCount = 0;
   let updatedCount = 0;
 
-  const normalizeRow = (row) => {
-    const parseDate = (dateValue) => {
-      if (!dateValue) return null;
-      const date = new Date(dateValue);
-      return isNaN(date.getTime()) ? null : date;
-    };
-
-    return {
-      employee_id: row.employee_id,
-      pay_grade_id: row.pay_grade_id,
-      pay_grade_level: row.pay_grade_level,
-      createdby: row.createdby || 1,
-      log_inst: row.log_inst || 1,
-      status: row.status || "Active",
-      remarks: row.remarks || "",
-      effective_from: parseDate(row.effective_from),
-      effective_to: parseDate(row.effective_to),
-      department_id: row.department_id,
-      branch_id: row.branch_id,
-      position_id: row.position_id,
-      allowance_group: row.allowance_group,
-      work_life_entry: row.work_life_entry,
-    };
-  };
-
-  const latestRows = {};
-  for (const row of rows) {
-    if (!row.employee_id) continue;
-    latestRows[row.employee_id] = normalizeRow(row);
+  function normalizeKeys(obj) {
+    const newObj = {};
+    for (let key in obj) {
+      if (Object.hasOwn(obj, key)) {
+        newObj[key.toLowerCase().replace(/\s+/g, "_")] = obj[key];
+      }
+    }
+    return newObj;
   }
 
-  for (const employeeId in latestRows) {
-    const data = latestRows[employeeId];
+  for (const rawRow of rows) {
+    const row = normalizeKeys(rawRow);
+    if (!row.employee_id) {
+      console.warn("Skipping row, missing employee_id:", row);
+      continue;
+    }
+    const headerData = {
+      employee_id: Number(row.employee_id),
+      effective_from: row.effective_from ? new Date(row.effective_from) : null,
+      effective_to: row.effective_to ? new Date(row.effective_to) : null,
+      department_id: row.department_id ? Number(row.department_id) : null,
+      branch_id: row.branch_id ? Number(row.branch_id) : null,
+      position_id: row.position_id ? Number(row.position_id) : null,
+      pay_grade_id: row.pay_grade_id ? Number(row.pay_grade_id) : null,
+      pay_grade_level: row.pay_grade_level ? Number(row.pay_grade_level) : null,
+      allowance_group: row.allowance_group || null,
+      work_life_entry: row.work_life_entry ? Number(row.work_life_entry) : null,
+      status: row.status || "Active",
+      remarks: row.remarks || "",
+      createdby: row.createdby || 1,
+      log_inst: row.log_inst || 1,
+    };
+    console.log("Processing employee:", headerData.employee_id);
 
-    try {
-      const existing =
-        await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
-          where: { employee_id: data.employee_id },
+    const lineData = {
+      line_num: Number(row.line_num) || 0,
+      pay_component_id: Number(row.pay_component_id),
+      amount: Number(row.amount) || 0,
+      type_value: Number(row.type_value) || 0,
+      currency_id: row.currency_id ? Number(row.currency_id) : null,
+      is_taxable: row.is_taxable?.toLowerCase() === "y" ? "Y" : "N",
+      is_recurring: row.is_recurring?.toLowerCase() === "y" ? "Y" : "N",
+      is_worklife_related:
+        row.is_worklife_related?.toLowerCase() === "y" ? "Y" : "N",
+      is_grossable: row.is_grossable?.toLowerCase() === "y" ? "Y" : "N",
+      remarks: row.remarks_1 || null,
+      tax_code_id: row.tax_code_id ? Number(row.tax_code_id) : null,
+      gl_account_id: row.gl_account_id ? Number(row.gl_account_id) : null,
+      payable_glaccount_id: row.payable_glaccount_id
+        ? Number(row.payable_glaccount_id)
+        : null,
+      component_type: row.component_type || "O",
+      project_id: row.project_id ? Number(row.project_id) : null,
+      cost_center1_id: row.cost_center1_id ? Number(row.cost_center1_id) : null,
+      cost_center2_id: row.cost_center2_id ? Number(row.cost_center2_id) : null,
+      cost_center3_id: row.cost_center3_id ? Number(row.cost_center3_id) : null,
+      cost_center4_id: row.cost_center4_id ? Number(row.cost_center4_id) : null,
+      cost_center5_id: row.cost_center5_id ? Number(row.cost_center5_id) : null,
+    };
+
+    const result = await prisma.$transaction(async (tx) => {
+      let header =
+        await tx.hrms_d_employee_pay_component_assignment_header.findFirst({
+          where: { employee_id: headerData.employee_id },
         });
 
-      if (existing) {
-        const updated =
-          await prisma.hrms_d_employee_pay_component_assignment_header.update({
-            where: { id: existing.id },
-            data: {
-              ...data,
-              updatedby: data.createdby,
-              updatedate: new Date(),
-            },
+      if (!header) {
+        header =
+          await tx.hrms_d_employee_pay_component_assignment_header.create({
+            data: { ...headerData, createdate: new Date() },
           });
-        importedData.push(updated);
-        updatedCount++;
-        console.log(`Updated employee ${data.employee_id}`);
-      } else {
-        const created =
-          await prisma.hrms_d_employee_pay_component_assignment_header.create({
-            data: {
-              ...data,
-              createdate: new Date(),
-            },
-          });
-        importedData.push(created);
         createdCount++;
-        console.log(` Created employee ${data.employee_id}`);
+      } else {
+        await tx.hrms_d_employee_pay_component_assignment_header.update({
+          where: { id: header.id },
+          data: { ...headerData, updatedate: new Date() },
+        });
+        updatedCount++;
+        console.log("Updated header for employee", header.employee_id);
       }
-    } catch (error) {
-      console.error(` Error processing employee ${employeeId}:`, error);
-    }
+
+      await tx.hrms_d_employee_pay_component_assignment_line.create({
+        data: {
+          ...lineData,
+          parent_id: header.id,
+          createdate: new Date(),
+          createdby: headerData.createdby,
+        },
+      });
+
+      return header;
+    });
+
+    importedData.push(result);
   }
 
   return {
