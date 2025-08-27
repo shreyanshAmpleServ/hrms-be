@@ -1,5 +1,6 @@
 const fs = require("fs");
 const logger = require("../Comman/logger");
+const path = require("path");
 
 // HTML Template with placeholders
 const payslipTemplate = `<!DOCTYPE html>
@@ -18,7 +19,7 @@ const payslipTemplate = `<!DOCTYPE html>
         body {
             font-family: Arial, sans-serif;
             background-color: #f5f5f5;
-            padding: 20px;  
+            padding: 20px;
         }
 
         .payslip {
@@ -281,7 +282,7 @@ const payslipTemplate = `<!DOCTYPE html>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{basicPay}}</span>
             </div>
-         
+
             <div class="info-row">
                 <span class="info-label">Employee Name</span>
                 <span class="info-colon">:</span>
@@ -297,7 +298,7 @@ const payslipTemplate = `<!DOCTYPE html>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{pfHrId}}</span>
             </div>
-           
+
              <div class="info-row">
                 <span class="info-label">Leave Days</span>
                 <span class="info-colon">:</span>
@@ -318,8 +319,7 @@ const payslipTemplate = `<!DOCTYPE html>
                 <span class="info-colon">:</span>
                 <span class="info-value">{{location}}</span>
             </div>
-           
-          
+
             <div class="info-row">
                 <span class="info-label">ENG Date</span>
                 <span class="info-colon">:</span>
@@ -419,7 +419,7 @@ const payslipTemplate = `<!DOCTYPE html>
 
         <!--  <div class="declaration">
             The net pay is accepted and I the undersigned shall have no further claim related to my employment up to date of _ _/_ _/_ _ _ _
-        </div> --> 
+        </div> -->
 
         <div class="signature-section">
             <span>Signature</span>
@@ -428,7 +428,6 @@ const payslipTemplate = `<!DOCTYPE html>
     </div>
 </body>
 </html>`;
-
 /**
  * Generate HTML payslip from data
  * @param {Object} data - Payroll data object
@@ -551,7 +550,27 @@ const generatePayslipPDF = async (data, filePath) => {
     const puppeteer = require("puppeteer");
 
     const htmlContent = await generatePayslipHTML(data);
+    const chromePaths = [
+      process.env.CHROME_PATH,
+      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+      "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+      "/usr/bin/google-chrome",
+      "/usr/bin/chromium-browser",
+      "/usr/bin/chromium",
+      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+    ];
 
+    const executablePath = chromePaths.find((p) => p && fs.existsSync(p));
+    if (!executablePath) {
+      throw new Error(
+        "Chrome/Chromium not found. Please install Google Chrome or set CHROME_PATH environment variable."
+      );
+    }
+
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
     const browser = await puppeteer.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
