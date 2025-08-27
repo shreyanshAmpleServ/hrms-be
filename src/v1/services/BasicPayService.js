@@ -53,6 +53,9 @@ const downloadPreviewExcel = async (fileBuffer) => {
   return await BasicPayModel.downloadPreviewExcel(fileBuffer);
 };
 
+const downloadSampleExcel = async () => {
+  return await BasicPayModel.downloadSampleExcel();
+};
 module.exports = {
   createBasicPay,
   findBasicPayById,
@@ -62,4 +65,5 @@ module.exports = {
   importFromExcel,
   previewExcel,
   downloadPreviewExcel,
+  downloadSampleExcel,
 };

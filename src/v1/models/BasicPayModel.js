@@ -892,7 +892,46 @@ const downloadPreviewExcel = async (fileBuffer) => {
 
   return xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
 };
+const downloadSampleExcel = async () => {
+  const headers = [
+    "id",
+    "employee_id",
+    "effective_from",
+    "effective_to",
+    "department_id",
+    "branch_id",
+    "position_id",
+    "pay_grade_id",
+    "pay_grade_level",
+    "allowance_group",
+    "work_life_entry",
+    "status",
+    "remarks",
+  ];
 
+  const sampleRow = {
+    id: "1",
+    employee_id: "1",
+    effective_from: "2026-09-09",
+    effective_to: "2026-09-09",
+    department_id: "5",
+    branch_id: "9",
+    position_id: "4",
+    pay_grade_id: "3",
+    pay_grade_level: "7",
+    allowance_group: "1",
+    work_life_entry: "2",
+    status: "Active/Inactive",
+    remarks: "Any notes here",
+  };
+
+  const ws = xlsx.utils.json_to_sheet([sampleRow], { header: headers });
+
+  const wb = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(wb, ws, "Sample Template");
+
+  return xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+};
 module.exports = {
   createBasicPay,
   findBasicPayById,
@@ -902,4 +941,5 @@ module.exports = {
   importFromExcel,
   downloadPreviewExcel,
   previewExcel,
+  downloadSampleExcel,
 };

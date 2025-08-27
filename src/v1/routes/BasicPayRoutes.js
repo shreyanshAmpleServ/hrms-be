@@ -12,6 +12,11 @@ router.post(
   BasicPayController.importFromExcel
 );
 
+router.get(
+  "/basic-pay/sample-excel",
+  authenticateToken,
+  BasicPayController.downloadSampleExcel
+);
 router.post(
   "/basic-pay/import/preview",
   authenticateToken,
