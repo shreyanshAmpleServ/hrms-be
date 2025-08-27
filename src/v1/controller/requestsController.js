@@ -108,6 +108,7 @@ const findRequestByRequestUsers = async (req, res, next) => {
     status,
     startDate,
     endDate,
+    overall_status,
   } = req.query;
   try {
     const result = await requestsService.findRequestByRequestUsers(
@@ -118,8 +119,9 @@ const findRequestByRequestUsers = async (req, res, next) => {
       request_type,
       status,
       Number(requester_id),
-      startDate ? moment(startDate) : null,
-      endDate ? moment(endDate) : null
+      startDate || null,
+      endDate || null,
+      overall_status || null
     );
     res.status(200).success("Request found successfully", result);
   } catch (error) {

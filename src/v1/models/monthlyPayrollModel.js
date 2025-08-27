@@ -641,21 +641,24 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
       },
     });
 
-    console.log("reqData", reqData);
-
     return {
       ...record,
       pf_hr_id: record.pf_hr_id || "",
       full_name: record.full_name || "",
       designation: record.designation || "",
+      location: record.location || "",
       cost_center: record.cost_center || "",
+      napsa_no: record.napsa_no || "",
       tpin_no: record.tpin_no || "",
       nrc_no: record.nrc_no || "",
       nhis_no: record.nhis_no || "",
       engagement_date: record.engagement_date || "",
+      bank_account: record.bank_account || "********",
       bank_name: record.bank_name || "NMB",
       earnings,
       deductions,
+      company_logo: reqData.company_logo || "",
+      company_signature: reqData.company_signature || "",
     };
   } catch (error) {
     console.error("Raw payslip fetch error:", error);
