@@ -125,7 +125,6 @@ const importFromExcel = async (req, res, next) => {
 
     console.log("Raw JSON Data:", sheetData);
 
-    // Map Excel rows into your service-compatible format
     const reqData = sheetData.map((row) => ({
       employee_id: row.employee_id,
       effective_from: row.effective_from,
