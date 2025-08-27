@@ -111,9 +111,9 @@ const importFromExcel = async (req, res, next) => {
   try {
     if (!req.file) throw new CustomError("No file uploaded", 400);
 
-    console.log("---- Incoming File ----");
+    console.log("Incoming File");
     console.log(req.file);
-    console.log("---- Incoming Body ----");
+    console.log("Incoming Body ");
     console.log(req.body);
 
     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
