@@ -49,7 +49,8 @@ const findRequestByRequestUsers = async (
   status,
   requester_id,
   startDate,
-  endDate
+  endDate,
+  overall_status
 ) => {
   return await requestsModel.findRequestByRequestUsers(
     search,
@@ -60,7 +61,8 @@ const findRequestByRequestUsers = async (
     status,
     requester_id,
     startDate,
-    endDate
+    endDate,
+    overall_status
   );
 };
 

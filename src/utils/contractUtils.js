@@ -64,8 +64,7 @@ const contractTemplate = `<!DOCTYPE html>
         }
 
         .company-logo {
-            height: 60px;
-            max-width: 160px;
+            height: 90px;
             object-fit: contain;
         }
 
@@ -447,15 +446,11 @@ const contractTemplate = `<!DOCTYPE html>
                         <span class="info-value">{{employeeName}}</span>
                     </div>
                     <div class="info-row">
-                        <span class="info-label">Address</span>
+                        <span class="info-label">Nationality</span>
                         <span class="info-colon">:</span>
-                        <span class="info-value">{{employeeAddress}}</span>
+                        <span class="info-value">{{employeeNationality}}</span>
                     </div>
-                    <div class="info-row">
-                        <span class="info-label">City</span>
-                        <span class="info-colon">:</span>
-                        <span class="info-value">{{employeeCity}}, {{employeeState}} {{employeeZip}}</span>
-                    </div>
+
                     <div class="info-row">
                         <span class="info-label">Phone</span>
                         <span class="info-colon">:</span>
@@ -497,17 +492,17 @@ const contractTemplate = `<!DOCTYPE html>
                 <div class="info-row">
                     <span class="info-label">Working Hours</span>
                     <span class="info-colon">:</span>
-                    <span class="info-value">{{workingHours}} hours/week</span>
+                    <span class="info-value">{{workingHours}} hours</span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Probation Period</span>
                     <span class="info-colon">:</span>
-                    <span class="info-value">{{probationPeriod}} days</span>
+                    <span class="info-value">{{probationPeriod}} months </span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Notice Period</span>
                     <span class="info-colon">:</span>
-                    <span class="info-value">{{noticePeriod}} days</span>
+                    <span class="info-value">{{noticePeriod}} months </span>
                 </div>
                 <div class="info-row">
                     <span class="info-label">Payment Frequency</span>
@@ -696,7 +691,6 @@ ${deductionsRows}
         ? `<img src="${data.companyLogo}" alt="Company Logo" class="company-logo">`
         : "";
 
-      // Prepare template data
       const templateData = {
         contractNumber: data.contractNumber || "N/A",
         date: formatDate(data.date) || formatDate(new Date()),
@@ -714,6 +708,7 @@ ${deductionsRows}
         employeeState: data.employeeState || "",
         employeeZip: data.employeeZip || "",
         employeePhone: data.employeePhone || "",
+        employeeNationality: data.employeeNationality || "N/A",
         employeeEmail: data.employeeEmail || "",
         position: data.position || "N/A",
         department: data.department || "N/A",
@@ -797,10 +792,10 @@ const generateContractPDF = async (data, filePath) => {
       format: "A4",
       printBackground: true,
       margin: {
-        top: "0.75in",
-        right: "0.75in",
-        bottom: "0.75in",
-        left: "0.75in",
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
       },
       preferCSSPageSize: true,
       displayHeaderFooter: false,
