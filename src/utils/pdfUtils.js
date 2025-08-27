@@ -526,6 +526,7 @@ const generatePayslipHTML = (data, filePath = null) => {
         htmlContent = htmlContent.replace(placeholder, templateData[key]);
       });
 
+      console.log(data.company_logo, "company_logo");
       logger.debug("HTML content generated successfully");
 
       // If file path is provided, write to file

@@ -412,7 +412,8 @@ const findRequestByRequestUsers = async (
   status = "",
   requester_id,
   startDate,
-  endDate
+  endDate,
+  overall_status
 ) => {
   page = !page || page == 0 ? 1 : page;
   size = size || 10;
@@ -436,7 +437,11 @@ const findRequestByRequestUsers = async (
   }
 
   if (status) {
-    filters.status = { equals: status.toUpperCase() };
+    filters.status = { equals: status };
+  }
+
+  if (overall_status) {
+    filters.overall_status = { equals: overall_status };
   }
 
   if (requester_id) {
@@ -772,11 +777,17 @@ const findRequestByRequestUsers = async (
           approval.approver_id === employee_id &&
           (status === "" || approval.status === status)
       );
-      if (approverIndex === -1) return false;
-      if (approverIndex === 0) return true;
+      if (approverIndex === -1) {
+        return false;
+      }
+      if (approverIndex === 0) {
+        return true;
+      }
       const prevApproval = approvals[approverIndex - 1];
-      return prevApproval?.status === "A";
+      const shouldInclude = prevApproval?.status === "A";
+      return shouldInclude;
     });
+
     const slideData = filteredData.slice(skip, skip + size);
     return {
       data: slideData,
@@ -1715,7 +1726,6 @@ const takeActionOnRequest = async ({
       console.log(
         `1Email Sent To Approver: ${nextApproverUser.email}, Subject: ${template.subject}`
       );
-      console.log;
 
       await sendEmail({
         to: nextApproverUser.email,

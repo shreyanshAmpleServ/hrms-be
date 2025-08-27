@@ -139,6 +139,8 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
     fs.mkdirSync(path.dirname(filePath), { recursive: true });
   }
 
+  console.log(data, "data");
+
   await generatePayslipPDF(data, filePath);
 
   return filePath;
