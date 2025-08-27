@@ -1,7 +1,7 @@
 const fs = require("fs");
 const logger = require("../Comman/logger");
 
-// HTML Template for Employment Contract with page break controls
+// HTML Template for Employment Contract with proper signature alignment
 const contractTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -283,6 +283,7 @@ const contractTemplate = `<!DOCTYPE html>
             margin-bottom: 4px;
         }
 
+        /* Enhanced Signature Section with Proper Alignment */
         .signature-section {
             margin-top: 25px;
             display: grid;
@@ -297,12 +298,41 @@ const contractTemplate = `<!DOCTYPE html>
             padding: 10px;
             page-break-inside: avoid;
             break-inside: avoid;
+            position: relative;
+            min-height: 120px;
+        }
+
+        /* Company signature image positioning */
+        .signature-image-container {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            height: 60px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1;
+        }
+
+        .company-signature {
+            max-height: 50px;
+            max-width: 150px;
+            object-fit: contain;
         }
 
         .signature-line {
             border-bottom: 1px solid #2c3e50;
-            margin: 30px 0 10px 0;
-            height: 30px;
+            margin: 60px 0 10px 0;
+            height: 1px;
+            position: relative;
+            z-index: 0;
+        }
+
+        /* Adjust signature line for company signature block when image is present */
+        .signature-block.has-signature .signature-line {
+            margin-top: 70px;
         }
 
         .signature-label {
@@ -310,6 +340,7 @@ const contractTemplate = `<!DOCTYPE html>
             font-size: 11px;
             color: #2c3e50;
             text-transform: uppercase;
+            margin-bottom: 5px;
         }
 
         .signature-name {
@@ -387,6 +418,14 @@ const contractTemplate = `<!DOCTYPE html>
             .force-page-break {
                 page-break-before: always !important;
                 break-before: page !important;
+            }
+
+            /* Ensure signature alignment in print */
+            .signature-image-container {
+                position: absolute !important;
+                top: 0 !important;
+                left: 50% !important;
+                transform: translateX(-50%) !important;
             }
         }
     </style>
@@ -556,7 +595,7 @@ const contractTemplate = `<!DOCTYPE html>
         <!-- Additional Notes -->
         {{notesSection}}
 
-        <!-- Signature Section -->
+        <!-- Enhanced Signature Section with Proper Alignment -->
         <div class="signature-section avoid-break">
             <div class="signature-block avoid-break">
                 <div class="signature-line"></div>
@@ -564,7 +603,8 @@ const contractTemplate = `<!DOCTYPE html>
                 <div class="signature-name">{{employeeName}}</div>
                 <div class="signature-date">Date: _______________</div>
             </div>
-            <div class="signature-block avoid-break">
+            <div class="signature-block avoid-break {{companySignatureClass}}">
+                {{companySignHtml}}
                 <div class="signature-line"></div>
                 <div class="signature-label">Company Representative</div>
                 <div class="signature-name">{{companyName}}</div>
@@ -691,6 +731,18 @@ ${deductionsRows}
         ? `<img src="${data.companyLogo}" alt="Company Logo" class="company-logo">`
         : "";
 
+      // Generate company signature HTML with proper positioning
+      const companySignHtml = data.companySignature
+        ? `<div class="signature-image-container">
+                <img src="${data.companySignature}" alt="Company Signature" class="company-signature">
+            </div>`
+        : "";
+
+      // Add class to signature block if signature is present
+      const companySignatureClass = data.companySignature
+        ? "has-signature"
+        : "";
+
       const templateData = {
         contractNumber: data.contractNumber || "N/A",
         date: formatDate(data.date) || formatDate(new Date()),
@@ -725,6 +777,8 @@ ${deductionsRows}
         notesSection: notesSection,
         totalPackage: totalPackage.toLocaleString(),
         additionalTerms: data.additionalTerms,
+        companySignHtml: companySignHtml,
+        companySignatureClass: companySignatureClass,
       };
 
       // Replace all placeholders in template
@@ -767,6 +821,8 @@ const generateContractPDF = async (data, filePath) => {
     const htmlContent = await generateContractHTML(data);
 
     const browser = await puppeteer.launch({
+      executablePath:
+        "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
       headless: true,
       args: [
         "--no-sandbox",
@@ -786,7 +842,7 @@ const generateContractPDF = async (data, filePath) => {
       waitUntil: ["networkidle0", "domcontentloaded"],
     });
 
-    // Enhanced PDF generation with better page break handling[1][2]
+    // Enhanced PDF generation with better page break handling
     await page.pdf({
       path: filePath,
       format: "A4",
@@ -836,22 +892,6 @@ const escapeHtml = (text) => {
     "'": "&#039;",
   };
   return text.replace(/[&<>"']/g, (m) => map[m]);
-};
-
-const getDefaultTerms = () => {
-  return `
-    <p><strong>1. CONFIDENTIALITY</strong></p>
-    <p>Employee agrees to maintain strict confidentiality regarding all proprietary information, trade secrets, and confidential business information of the Company.</p>
-    
-    <p><strong>2. NON-COMPETE</strong></p>
-    <p>During employment and for 12 months following termination, Employee shall not engage in any business that directly competes with the Company's business interests.</p>
-    
-    <p><strong>3. INTELLECTUAL PROPERTY</strong></p>
-    <p>All work products, inventions, and intellectual property created during employment shall be the exclusive property of the Company.</p>
-    
-    <p><strong>4. TERMINATION</strong></p>
-    <p>Either party may terminate this agreement with written notice as specified in the notice period. The Company reserves the right to terminate immediately for cause.</p>
-  `;
 };
 
 module.exports = {
