@@ -11,6 +11,20 @@ router.post(
   upload.single("file"),
   BasicPayController.importFromExcel
 );
+
+router.post(
+  "/basic-pay/import/preview",
+  authenticateToken,
+  upload.single("file"),
+  BasicPayController.previewExcel
+);
+
+router.post(
+  "/basic-pay/import/preview/download",
+  authenticateToken,
+  upload.single("file"),
+  BasicPayController.downloadPreviewExcel
+);
 router.post("/basic-pay", authenticateToken, BasicPayController.createBasicPay);
 
 router.get(

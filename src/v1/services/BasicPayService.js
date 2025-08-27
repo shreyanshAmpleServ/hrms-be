@@ -1,3 +1,4 @@
+const { file } = require("pdfkit");
 const BasicPayModel = require("../models/BasicPayModel");
 
 const createBasicPay = async (data) => {
@@ -39,8 +40,17 @@ const getAllBasicPay = async (
     employee_id
   );
 };
+
 const importFromExcel = async (rows) => {
   return await BasicPayModel.importFromExcel(rows);
+};
+
+const previewExcel = async (fileBuffer) => {
+  return await BasicPayModel.previewExcel(fileBuffer);
+};
+
+const downloadPreviewExcel = async (fileBuffer) => {
+  return await BasicPayModel.downloadPreviewExcel(fileBuffer);
 };
 
 module.exports = {
@@ -50,4 +60,6 @@ module.exports = {
   getAllBasicPay,
   deleteBasicPay,
   importFromExcel,
+  previewExcel,
+  downloadPreviewExcel,
 };

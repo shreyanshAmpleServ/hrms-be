@@ -54,7 +54,6 @@ const serializeJobData = (data) => {
 
 const createJobPosting = async (data) => {
   try {
-    // Fetch department, designation, and job title first
     const department = await prisma.hrms_m_department_master.findUnique({
       where: { id: data.department_id },
     });
@@ -72,7 +71,6 @@ const createJobPosting = async (data) => {
       );
     }
 
-    // Build initials (e.g., SDJ)
     const prefix =
       `${department.department_name[0]}${designation.designation_name[0]}${jobTitle[0]}`.toUpperCase();
 

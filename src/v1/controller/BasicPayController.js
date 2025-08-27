@@ -123,7 +123,6 @@ const importFromExcel = async (req, res, next) => {
     console.log("Sheet Names:", workbook.SheetNames);
     console.log("Raw JSON Data:", sheetData);
 
-    // Add user context to each row
     const reqData = sheetData.map((row) => ({
       ...row,
       createdby: req.user.id,
@@ -143,6 +142,36 @@ const importFromExcel = async (req, res, next) => {
   }
 };
 
+const previewExcel = async (req, res, next) => {
+  try {
+    if (!req.file) throw new CustomError("No file has been uploaded", 400);
+
+    const previewData = await BasicPayService.previewExcel(req.file.buffer);
+
+    res.status(200).success("Excel preview generated", previewData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const downloadPreviewExcel = async (req, res, next) => {
+  try {
+    if (!req.file) throw new CustomError("No file uploaded", 400);
+    const buffer = await BasicPayService.downloadPreviewExcel(req.file.buffer);
+    res.setHeader(
+      "Content-Disposition",
+      `attachment; filename="preview_${Date.now()}.xlsx`
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    );
+    res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createBasicPay,
   findBasicPayById,
@@ -150,4 +179,6 @@ module.exports = {
   deleteBasicPay,
   getAllBasicPay,
   importFromExcel,
+  previewExcel,
+  downloadPreviewExcel,
 };

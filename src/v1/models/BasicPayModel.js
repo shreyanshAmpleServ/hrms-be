@@ -870,6 +870,29 @@ const importFromExcel = async (rows) => {
   };
 };
 
+const previewExcel = async (fileBuffer) => {
+  const workbook = xlsx.read(fileBuffer, { type: "buffer" });
+  const sheetName = workbook.SheetNames[0];
+  const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+  return sheetData.map((row, index) => ({
+    row: index + 1,
+    ...row,
+  }));
+};
+
+const downloadPreviewExcel = async (fileBuffer) => {
+  const workbook = xlsx.read(fileBuffer, { type: "buffeer" });
+  const sheetName = workbook.SheetNames[0];
+  const sheetData = xlsx.utils.sheet_to_json(workbook.Sheets[sheetName]);
+
+  const ws = xlsx.utils.json_to_sheet(sheetData);
+  const wb = xlsx.utils.book_new();
+  xlsx.utils.book_append_sheet(wb, ws, "Preview");
+
+  return xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
+};
+
 module.exports = {
   createBasicPay,
   findBasicPayById,
@@ -877,4 +900,6 @@ module.exports = {
   getAllBasicPay,
   deleteBasicPay,
   importFromExcel,
+  downloadPreviewExcel,
+  previewExcel,
 };
