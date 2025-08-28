@@ -2,7 +2,8 @@ const BasicPayService = require("../services/BasicPayService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const XLSX = require("xlsx");
-
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 const createBasicPay = async (req, res, next) => {
   try {
     let reqData = {
@@ -79,64 +80,17 @@ const getAllBasicPay = async (req, res, next) => {
   }
 };
 
-// const importFromExcel = async (req, res, next) => {
-//   try {
-//     if (!req.file) throw new CustomError("No file uploaded", 400);
-//     console.log(req.file);
-//     console.log(req.body);
-
-//     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-//     const sheetName = workbook.SheetNames[0];
-//     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-//     console.log("Sheet Names:", workbook.SheetNames);
-//     console.log("Raw JSON Data:", sheetData);
-//     const reqData = sheetData.map((row) => ({
-//       ...row,
-//       createdby: req.user.id,
-//       log_inst: req.user.log_inst,
-//     }));
-//     const result = await BasicPayService.importFromExcel(reqData);
-//     res
-//       .status(201)
-//       .success(
-//         `${result.count} employee pay assignments imported successfully`,
-//         result.data
-//       );
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
 const importFromExcel = async (req, res, next) => {
   try {
     if (!req.file) throw new CustomError("No file uploaded", 400);
 
-    console.log("Incoming File");
-    console.log(req.file);
-    console.log("Incoming Body ");
-    console.log(req.body);
+    const result = await BasicPayService.importFromExcel(req.file.buffer);
 
-    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-    console.log("Sheet Names:", workbook.SheetNames);
-    console.log("Raw JSON Data:", sheetData);
-
-    const reqData = sheetData.map((row) => ({
-      ...row,
-      createdby: req.user.id,
-      log_inst: req.user.log_inst,
-    }));
-
-    const result = await BasicPayService.importFromExcel(reqData);
-
-    res
-      .status(201)
-      .success(
-        `${result.count} employee pay assignments processed successfully (${result.created} created, ${result.updated} updated)`,
-        result.data
-      );
+    res.status(201).json({
+      success: true,
+      message: `${result.count} employee pay records imported successfully`,
+      data: result.data,
+    });
   } catch (error) {
     next(error);
   }
@@ -175,7 +129,6 @@ const downloadPreviewExcel = async (req, res, next) => {
 const downloadSampleExcel = async (req, res, next) => {
   try {
     const buffer = await BasicPayService.downloadSampleExcel();
-
     res.setHeader(
       "Content-Disposition",
       "attachment; filename=employee_payroll_sample.xlsx"
@@ -184,7 +137,6 @@ const downloadSampleExcel = async (req, res, next) => {
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
-
     res.send(buffer);
   } catch (error) {
     next(error);

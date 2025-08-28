@@ -932,6 +932,118 @@ const downloadSampleExcel = async () => {
 
   return xlsx.write(wb, { type: "buffer", bookType: "xlsx" });
 };
+
+const getAllPayComponents = async () => {
+  return await prisma.hrms_m_pay_component.findMany({
+    select: {
+      id: true,
+      component_name: true,
+      component_code: true,
+    },
+  });
+};
+
+const createOrUpdateBasicPay = async (headerData, payLines) => {
+  try {
+    const { employee_id } = headerData;
+    if (!employee_id) throw new CustomError("Employee ID is required", 400);
+
+    const existingHeader =
+      await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+        where: { employee_id: Number(employee_id) },
+        include: { hrms_d_employee_pay_component_assignment_line: true },
+      });
+
+    const serializedHeader = {
+      ...headerData,
+      effective_from: new Date(headerData.effective_from),
+      effective_to: headerData.effective_to
+        ? new Date(headerData.effective_to)
+        : null,
+    };
+
+    if (existingHeader) {
+      await prisma.hrms_d_employee_pay_component_assignment_header.update({
+        where: { id: existingHeader.id },
+        data: {
+          ...serializedHeader,
+          updatedate: new Date(),
+          updatedby: headerData.createdby,
+        },
+      });
+
+      await prisma.hrms_d_employee_pay_component_assignment_line.deleteMany({
+        where: { parent_id: existingHeader.id },
+      });
+
+      const lineData = payLines.map((line, index) => ({
+        line_num: index + 1,
+        pay_component_id: line.pay_component_id,
+        amount: line.amount || 0,
+        type_value: line.type_value ?? 0,
+        parent_id: existingHeader.id,
+        createdby: headerData.createdby,
+        log_inst: headerData.log_inst || 1,
+      }));
+
+      await prisma.hrms_d_employee_pay_component_assignment_line.createMany({
+        data: lineData,
+      });
+
+      return await findBasicPayByEmployeeId(employee_id);
+    } else {
+      const lineData = payLines.map((line, index) => ({
+        line_num: index + 1,
+        pay_component_id: line.pay_component_id,
+        amount: line.amount || 0,
+        type_value: line.type_value ?? 0,
+        createdby: headerData.createdby,
+        log_inst: headerData.log_inst || 1,
+      }));
+
+      const result =
+        await prisma.hrms_d_employee_pay_component_assignment_header.create({
+          data: {
+            ...serializedHeader,
+            createdate: new Date(),
+            hrms_d_employee_pay_component_assignment_line: { create: lineData },
+          },
+          include: { hrms_d_employee_pay_component_assignment_line: true },
+        });
+
+      return result;
+    }
+  } catch (error) {
+    console.error("Error in createOrUpdateBasicPay:", error);
+    throw new CustomError(
+      error.message || "Failed to create or update basic pay",
+      error.status || 500
+    );
+  }
+};
+
+const findBasicPayByEmployeeId = async (employeeId) => {
+  try {
+    if (!employeeId) {
+      return null; // Return null instead of throwing error for empty employeeId
+    }
+
+    const record =
+      await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+        where: { employee_id: Number(employeeId) },
+        include: {
+          hrms_d_employee_pay_component_assignment_line: true,
+        },
+      });
+    return record;
+  } catch (error) {
+    console.error("Error in findBasicPayByEmployeeId:", error);
+    throw new CustomError(
+      `Error finding basic pay by employee ID: ${error.message}`,
+      error.status || 503
+    );
+  }
+};
 module.exports = {
   createBasicPay,
   findBasicPayById,
@@ -942,4 +1054,7 @@ module.exports = {
   downloadPreviewExcel,
   previewExcel,
   downloadSampleExcel,
+  getAllPayComponents,
+  createOrUpdateBasicPay,
+  findBasicPayByEmployeeId,
 };
