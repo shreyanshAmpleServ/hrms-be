@@ -80,89 +80,17 @@ const getAllBasicPay = async (req, res, next) => {
   }
 };
 
-// const importFromExcel = async (req, res, next) => {
-//   try {
-//     if (!req.file) throw new CustomError("No file uploaded", 400);
-
-//     console.log("Incoming File");
-//     console.log(req.file);
-//     console.log("Incoming Body ");
-//     console.log(req.body);
-
-//     const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-//     const sheetName = workbook.SheetNames[0];
-//     const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
-
-//     console.log("Sheet Names:", workbook.SheetNames);
-//     console.log("Raw JSON Data:", sheetData);
-
-//     const reqData = sheetData.map((row) => ({
-//       ...row,
-//       createdby: req.user.id,
-//       log_inst: req.user.log_inst,
-//     }));
-
-//     const result = await BasicPayService.importFromExcel(reqData);
-
-//     res
-//       .status(201)
-//       .success(
-//         `${result.count} employee pay assignments processed successfully (${result.created} created, ${result.updated} updated)`,
-//         result.data
-//       );
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
 const importFromExcel = async (req, res, next) => {
   try {
     if (!req.file) throw new CustomError("No file uploaded", 400);
 
-    const workbook = XLSX.read(req.file.buffer, { type: "buffer" });
-    const sheetName = workbook.SheetNames[0];
-    const sheetData = XLSX.utils.sheet_to_json(workbook.Sheets[sheetName]);
+    const result = await BasicPayService.importFromExcel(req.file.buffer);
 
-    console.log("Raw JSON Data:", sheetData);
-
-    const reqData = sheetData.map((row) => ({
-      employee_id: row.employee_id,
-      effective_from: row.effective_from,
-      effective_to: row.effective_to,
-      department_id: row.department_id,
-      branch_id: row.branch_id,
-      position_id: row.position_id,
-      pay_grade_id: row.pay_grade_id,
-      pay_grade_level: row.pay_grade_level,
-      allowance_group: row.allowance_group,
-      work_life_entry: row.work_life_entry,
-      status: row.status,
-      remarks: row.remarks,
-      line_num: row.line_num,
-      pay_component_id: row.pay_component_id,
-      amount: row.amount,
-      is_taxable: row.is_taxable,
-      is_recurring: row.is_recurring,
-      is_worklife_related: row.is_worklife_related,
-      is_grossable: row.is_grossable,
-      remarks_1: row.remarks_1,
-      tax_code_id: row.tax_code_id,
-      createdby: req.user.id,
-      log_inst: req.user.log_inst,
-    }));
-
-    const result = await BasicPayService.importFromExcel(
-      reqData,
-      req.user.id,
-      req.user.log_inst
-    );
-
-    res
-      .status(201)
-      .success(
-        `${result.count} employee pay assignments processed successfully (${result.created} created, ${result.updated} updated)`,
-        result.data
-      );
+    res.status(201).json({
+      success: true,
+      message: `${result.count} employee pay records imported successfully`,
+      data: result.data,
+    });
   } catch (error) {
     next(error);
   }
@@ -198,10 +126,28 @@ const downloadPreviewExcel = async (req, res, next) => {
   }
 };
 
+// const downloadSampleExcel = async (req, res, next) => {
+//   try {
+//     const buffer = await BasicPayService.downloadSampleExcel();
+
+//     res.setHeader(
+//       "Content-Disposition",
+//       "attachment; filename=employee_payroll_sample.xlsx"
+//     );
+//     res.setHeader(
+//       "Content-Type",
+//       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+//     );
+
+//     res.send(buffer);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const downloadSampleExcel = async (req, res, next) => {
   try {
     const buffer = await BasicPayService.downloadSampleExcel();
-
     res.setHeader(
       "Content-Disposition",
       "attachment; filename=employee_payroll_sample.xlsx"
@@ -210,7 +156,6 @@ const downloadSampleExcel = async (req, res, next) => {
       "Content-Type",
       "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     );
-
     res.send(buffer);
   } catch (error) {
     next(error);
