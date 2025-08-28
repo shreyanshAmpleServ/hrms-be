@@ -564,12 +564,6 @@ const contractTemplate = `<!DOCTYPE html>
                     </tr>
                 </thead>
                 <tbody>
-                    <tr>
-                        <td><strong>Base Salary</strong></td>
-                        <td>Salary</td>
-                        <td class="amount-cell">{{baseSalary}}</td>
-                        <td>{{paymentFrequency}}</td>
-                    </tr>
                     {{benefitsRows}}
                 </tbody>
                 <tfoot>
@@ -634,7 +628,6 @@ const generateContractHTML = (data, filePath = null) => {
       logger.debug("Starting contract HTML generation");
 
       // Calculate totals
-      const baseSalaryAmount = parseFloat(data.baseSalary || 0);
       const totalBenefits = (data.benefits || []).reduce(
         (sum, benefit) => sum + parseFloat(benefit.amount || 0),
         0
@@ -643,7 +636,7 @@ const generateContractHTML = (data, filePath = null) => {
         (sum, deduction) => sum + parseFloat(deduction.amount || 0),
         0
       );
-      const totalPackage = baseSalaryAmount + totalBenefits;
+      const totalPackage = totalBenefits;
       const netAnnualSalary = totalPackage - totalDeductions;
 
       // Generate benefits rows (properly formatted HTML)
@@ -691,7 +684,7 @@ const generateContractHTML = (data, filePath = null) => {
                     <tr>
                         <th>Description</th>
                         <th>Type</th>
-                        <th>Amount (${data.currency || "USD"})</th>
+                        <th>Amount (${data.currency || "TZS"})</th>
                         <th>Period</th>
                     </tr>
                 </thead>
@@ -710,7 +703,7 @@ ${deductionsRows}
 
         <div class="net-salary-highlight avoid-break">
             NET ANNUAL SALARY: ${
-              data.currency || "USD"
+              data.currency || "TZS"
             } ${netAnnualSalary.toLocaleString()}
         </div>`
           : "";
@@ -770,7 +763,7 @@ ${deductionsRows}
         probationPeriod: data.probationPeriod || "90",
         noticePeriod: data.noticePeriod || "30",
         baseSalary: parseFloat(data.baseSalary || 0).toLocaleString(),
-        currency: data.currency || "USD",
+        currency: data.currency || "TZS",
         paymentFrequency: data.paymentFrequency || "Monthly",
         benefitsRows: benefitsRows,
         deductionsSection: deductionsSection,
