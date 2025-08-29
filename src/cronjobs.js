@@ -161,21 +161,21 @@ const sendContractExpiryAlert = async (contract, daysUntilExpiry) => {
 /**
  * Initializes and schedules all HRMS cron jobs
  * @description Sets up health check and contract expiry alert cron jobs with specified schedules
- * Health Check Schedule: "39 17 * * *" - Every day at 5:39 PM (17:39) in Asia/Kolkata timezone
- * Contract Alert Schedule: "0 9 * * *" - Every day at 9:00 AM in Asia/Kolkata timezone
+ * Health Check Schedule: "0 10 * * *" - Every day at 10:00 AM (10:00) in Asia/Kolkata timezone
+ * Contract Alert Schedule: "0 10 * * *" - Every day at 10:00 AM in Asia/Kolkata timezone
  * @returns {void}
  */
 const initializeCronJobs = () => {
   try {
     logger.info("=== Initializing HRMS Cron Jobs ===");
 
-    cron.schedule("39 17 * * *", HealthCheckUp, {
+    cron.schedule("0 10 * * *", HealthCheckUp, {
       scheduled: true,
       name: "Health Check",
       timezone: "Asia/Kolkata",
     });
 
-    cron.schedule("41 15 * * *", contractExpiryAlert, {
+    cron.schedule("0 10 * * *", contractExpiryAlert, {
       scheduled: true,
       name: "Contract Expiry Alert",
       timezone: "Asia/Kolkata",
