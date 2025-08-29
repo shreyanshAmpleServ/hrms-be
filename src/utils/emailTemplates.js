@@ -126,6 +126,7 @@ const autoMapVariables = (template, vars) => {
           "staff_name",
           "candidate_name",
         ],
+        candidate_name: ["candidate_name"],
         requester_name: ["applicant_name", "initiator_name"],
         approver_name: ["manager_name", "reviewer_name"],
         days: ["remaining_days", "days"],
