@@ -1,6 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { includes } = require("zod/v4");
 const prisma = new PrismaClient();
 
 // Serialize notification log data
@@ -14,12 +13,12 @@ const serializeNotificationLog = (data) => ({
 });
 
 // Create a new notification log
-const createNotificationLog = async (data) => {
+const createNotificationLog = async (data, user) => {
   try {
     const created = await prisma.hrms_d_notification_log.create({
       data: {
         ...serializeNotificationLog(data),
-        createdby: Number(data.createdby) || 1,
+        createdby: Number(user.id) || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
@@ -103,7 +102,8 @@ const getAllNotificationLog = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  user
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -147,7 +147,11 @@ const getAllNotificationLog = async (
     const datas = await prisma.hrms_d_notification_log.findMany({
       where: filters,
       skip,
-      take: size,
+      take: user?.role?.toLowerCase()?.includes("admin")
+        ? size
+        : user?.role?.toLowerCase()?.includes("hr")
+        ? size
+        : 0,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
         notification_log_employee: { select: { id: true, full_name: true } },

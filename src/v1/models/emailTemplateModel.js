@@ -24,17 +24,13 @@ const validateEmailTemplateData = async (data) => {
     errors.push("Name is mandatory and cannot be empty");
   }
 
-  if (!data.key || data.key.trim() === "") {
-    errors.push("Key is mandatory and cannot be empty");
-  }
-
   if (data.name) {
     const existingName = await prisma.hrms_d_templates.findFirst({
       where: {
         name: data.name.trim(),
       },
     });
-    if (existingName) {
+    if (existingName.id !== Number(data.id)) {
       errors.push("Template name already exists");
     }
   }
@@ -45,7 +41,7 @@ const validateEmailTemplateData = async (data) => {
         key: data.key.trim(),
       },
     });
-    if (existingKey) {
+    if (existingKey.id !== Number(data.id)) {
       errors.push("Template key already exists");
     }
   }
@@ -98,7 +94,7 @@ const getEmailTemplateById = async (id) => {
 // Update email template
 const updateEmailTemplate = async (id, data) => {
   try {
-    await validateEmailTemplateData(data);
+    await validateEmailTemplateData({ ...data, id });
 
     const result = await prisma.hrms_d_templates.update({
       where: { id: Number(id) },

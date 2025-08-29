@@ -1,7 +1,7 @@
 const notificationLogModel = require("../models/notificationLogModel.js");
 
-const createNotificationLog = async (data) => {
-  return await notificationLogModel.createNotificationLog(data);
+const createNotificationLog = async (data, user) => {
+  return await notificationLogModel.createNotificationLog(data, user);
 };
 
 const findNotificationLogById = async (id) => {
@@ -21,14 +21,16 @@ const getAllNotificationLog = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  user
 ) => {
   return await notificationLogModel.getAllNotificationLog(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    user
   );
 };
 

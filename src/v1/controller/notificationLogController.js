@@ -64,7 +64,8 @@ const getAllNotificationLog = async (req, res, next) => {
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      req.user
     );
     res.status(200).success(null, data);
   } catch (error) {
