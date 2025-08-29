@@ -70,10 +70,44 @@ const updateInterviewStage = async (id, data) => {
 // Delete
 const deleteInterviewStage = async (id) => {
   try {
-    await prisma.hrms_m_interview_stage.delete({
-      where: { id: parseInt(id) },
+    const stageId = parseInt(id);
+    if (isNaN(stageId)) {
+      throw new CustomError("Invalid interview stage ID", 400);
+    }
+
+    const existing = await prisma.hrms_m_interview_stage.findUnique({
+      where: { id: stageId },
     });
+
+    if (!existing) {
+      throw new CustomError("Interview stage not found", 404);
+    }
+
+    // Perform deletions / updates in a single transaction:
+    // 1) delete all child remarks
+    // 2) clear candidate references to this stage
+    // 3) delete the stage itself
+    await prisma.$transaction([
+      prisma.hrms_m_interview_stage_remark.deleteMany({
+        where: { stage_id: stageId },
+      }),
+      prisma.hrms_d_candidate_master.updateMany({
+        where: { interview_stage: stageId },
+        data: {
+          interview_stage: null,
+          updatedby: 1,
+          updatedate: new Date(),
+        },
+      }),
+      prisma.hrms_m_interview_stage.delete({
+        where: { id: stageId },
+      }),
+    ]);
+
+    return { message: "Interview stage and its children deleted successfully" };
   } catch (error) {
+    // Keep consistent error patterns
+    if (error instanceof CustomError) throw error;
     throw new CustomError(
       `Error deleting interview stage: ${error.message}`,
       500

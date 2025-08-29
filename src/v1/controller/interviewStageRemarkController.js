@@ -2,21 +2,40 @@ const interviewStageRemarkService = require("../services/interviewStageRemarkSer
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
 
+// const createInterviewStageRemark = async (req, res, next) => {
+//   try {
+//     console.log("Incoming request body:", req.body);
+
+//     const data = {
+//       ...req.body,
+//       createdby: req.user.id,
+//       log_inst: req.user.log_inst,
+//     };
+
+//     const reqData =
+//       await interviewStageRemarkService.createInterviewStageRemark(data);
+//     res
+//       .status(201)
+//       .success("Interview stage Remark created successfully", reqData);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const createInterviewStageRemark = async (req, res, next) => {
   try {
-    console.log("Incoming request body:", req.body);
-
     const data = {
       ...req.body,
       createdby: req.user.id,
       log_inst: req.user.log_inst,
     };
 
-    const reqData =
-      await interviewStageRemarkService.createInterviewStageRemark(data);
+    const result = await interviewStageRemarkService.createInterviewStageRemark(
+      data
+    );
     res
       .status(201)
-      .success("Interview stage Remark created successfully", reqData);
+      .success("Interview stage remark created successfully", result);
   } catch (error) {
     next(error);
   }
@@ -88,32 +107,56 @@ const getAllInterviewStageRemark = async (req, res, next) => {
   }
 };
 
+// const updateInterviewStageRemarkStatus = async (req, res, next) => {
+//   try {
+//     console.log("Approver ID from token:", req.user.employee_id);
+
+//     const status = req.body.status;
+//     console.log("User : ", req.user);
+//     const data = {
+//       status,
+//       updatedby: req.user.employee_id,
+//       approver_id: req.user.employee_id,
+//       updatedate: new Date(),
+//     };
+
+//     const reqData =
+//       await interviewStageRemarkService.updateInterviewStageRemarkStatus(
+//         req.params.id,
+//         data
+//       );
+//     res
+//       .status(200)
+//       .success("Interview stage remark status updated successfully", reqData);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const updateInterviewStageRemarkStatus = async (req, res, next) => {
   try {
-    console.log("Approver ID from token:", req.user.employee_id);
+    const status = req.body.status; // Approved/Rejected
+    const approverId = req.user.employee_id;
 
-    const status = req.body.status;
-    console.log("User : ", req.user);
     const data = {
       status,
-      updatedby: req.user.employee_id,
-      approver_id: req.user.employee_id,
-      updatedate: new Date(),
+      approver_id: approverId,
+      updatedby: approverId,
     };
 
-    const reqData =
+    const updatedRemark =
       await interviewStageRemarkService.updateInterviewStageRemarkStatus(
         req.params.id,
         data
       );
+
     res
       .status(200)
-      .success("Interview stage remark status updated successfully", reqData);
+      .success("Interview stage updated successfully", updatedRemark);
   } catch (error) {
     next(error);
   }
 };
-
 module.exports = {
   createInterviewStageRemark,
   findInterviewStageRemarkById,

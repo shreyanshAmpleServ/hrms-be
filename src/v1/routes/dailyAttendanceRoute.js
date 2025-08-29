@@ -49,7 +49,6 @@ router.get(
   authenticateToken,
   dailyAttendanceController.getAttendanceSummaryByEmployee
 );
-
 router.get(
   "/findAttendanceByEmployeeId/:id",
   authenticateToken,
