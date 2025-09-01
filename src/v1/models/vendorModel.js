@@ -52,7 +52,7 @@ const createVendor = async (data) => {
     const user = await prisma.crms_m_vendor.create({
       data: {
         ...data,
-        account_owner : Number(data?.account_owner),
+        account_owner: Number(data?.account_owner),
         is_active: data.is_active || "Y",
         log_inst: data.log_inst || 1,
         billing_state: Number(data.billing_state) || null,
@@ -62,12 +62,12 @@ const createVendor = async (data) => {
         updatedby: data.createdby || 1,
         createdby: data.createdby || 1,
       },
-      include:{
-        crms_m_user:{
-          select:{
-            full_name:true,
-            id:true
-          }
+      include: {
+        crms_m_user: {
+          select: {
+            full_name: true,
+            id: true,
+          },
         },
       },
     });
@@ -80,21 +80,22 @@ const createVendor = async (data) => {
 
 // Update a Vendor
 const updateVendor = async (id, data) => {
-  try {const updatedVendor = await prisma.crms_m_vendor.update({
+  try {
+    const updatedVendor = await prisma.crms_m_vendor.update({
       where: { id: parseInt(id) },
       data: {
         ...data,
         billing_state: Number(data.billing_state) || null,
         billing_country: Number(data.billing_country) || null,
         account_owner: Number(data?.account_owner),
-        updatedate:new Date()
+        updatedate: new Date(),
       },
-      include:{
-        crms_m_user:{
-          select:{
-            full_name:true,
-            id:true
-          }
+      include: {
+        crms_m_user: {
+          select: {
+            full_name: true,
+            id: true,
+          },
         },
       },
     });
@@ -126,34 +127,32 @@ const findUserByEmail = async (email) => {
 const findVendorById = async (id) => {
   try {
     const users = await prisma.crms_m_vendor.findUnique({
-      where:{ id: parseInt(id)},
-      include:{
-        crms_m_user:{
-          select:{
-            full_name:true,
-            id:true
-          }
+      where: { id: parseInt(id) },
+      include: {
+        crms_m_user: {
+          select: {
+            full_name: true,
+            id: true,
+          },
         },
-        state:
-        {
-          select:{
-            id:true,
-            name:true,
-          }
+        state: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
         country: {
-          select:{
-            id:true,
-            name:true,
-            code:true,
-          }
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
         },
       },
-     
     });
     return users;
   } catch (error) {
-    console.log("Error in Details of Vendor ", error)
+    console.log("Error in Details of Vendor ", error);
     throw new CustomError(`Error finding user by ID: ${error.message}`, 503);
   }
 };
@@ -161,19 +160,25 @@ const findVendorById = async (id) => {
 // Delete a Vendor
 const deleteVendor = async (id) => {
   try {
-
     await prisma.crms_m_vendor.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting Vendor: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
 // Get all users and include their roles
-const getAllVendors = async (search,page,size ,startDate, endDate) => {
+const getAllVendors = async (search, page, size, startDate, endDate) => {
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;
 
@@ -184,17 +189,17 @@ const getAllVendors = async (search,page,size ,startDate, endDate) => {
       filters.OR = [
         {
           crms_m_user: {
-            full_name: { contains: search, mode: 'insensitive' },
+            full_name: { contains: search, mode: "insensitive" },
           },
         },
         {
-          phone: { contains: search, mode: 'insensitive' },
+          phone: { contains: search, mode: "insensitive" },
         },
         {
-          email: { contains: search, mode: 'insensitive' },
+          email: { contains: search, mode: "insensitive" },
         },
         {
-          name: { contains: search, mode: 'insensitive' },
+          name: { contains: search, mode: "insensitive" },
         },
       ];
     }
@@ -213,29 +218,28 @@ const getAllVendors = async (search,page,size ,startDate, endDate) => {
     }
 
     const users = await prisma.crms_m_vendor.findMany({
-      where:filters,
+      where: filters,
       skip,
       take: size,
-      include:{
-        crms_m_user:{
-          select:{
-            full_name:true,
-            id:true
-          }
+      include: {
+        crms_m_user: {
+          select: {
+            full_name: true,
+            id: true,
+          },
         },
-        state:
-        {
-          select:{
-            id:true,
-            name:true,
-          }
+        state: {
+          select: {
+            id: true,
+            name: true,
+          },
         },
         country: {
-          select:{
-            id:true,
-            name:true,
-            code:true,
-          }
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
         },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
@@ -248,11 +252,10 @@ const getAllVendors = async (search,page,size ,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
-  }
-  catch (error) {
-    console.log("Error in vedor get : ",error)
+  } catch (error) {
+    console.log("Error in vedor get : ", error);
     throw new CustomError("Error retrieving vendor", 503);
   }
 };

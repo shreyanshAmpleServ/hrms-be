@@ -779,11 +779,14 @@ const deleteBasicPay = async (id) => {
       });
     });
   } catch (error) {
-    console.log("Error to delete Basic pay : ", error);
-    throw new CustomError(
-      `Error deleting Basic pay: ${error.message}`,
-      error.status || 500
-    );
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 

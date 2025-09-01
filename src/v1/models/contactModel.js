@@ -132,7 +132,7 @@ const updateContact = async (id, data) => {
     const serializedData = serializeSocialProfiles(updatedData);
     const contact = await prisma.crms_m_contact.update({
       where: { id: parseInt(id) },
-      data:  {
+      data: {
         ...serializedData,
         state: Number(serializedData.state) || null,
         country: Number(serializedData.country) || null,
@@ -172,13 +172,20 @@ const deleteContact = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting contact: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
-const getAllContacts = async (search ,page , size ,startDate, endDate) => {
+const getAllContacts = async (search, page, size, startDate, endDate) => {
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;
     const filters = {};
@@ -245,7 +252,7 @@ const getAllContacts = async (search ,page , size ,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
   } catch (error) {
     console.log("Error", error);

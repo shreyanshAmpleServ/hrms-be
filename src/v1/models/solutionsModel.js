@@ -7,7 +7,7 @@ const createSolutions = async (data) => {
   try {
     // Create the solution
     const solutions = await prisma.crms_d_solution.create({
-      data: { 
+      data: {
         ...data,
         createdate: new Date(),
         updatedate: new Date(),
@@ -35,7 +35,7 @@ const createSolutions = async (data) => {
   }
 };
 
-// Update a Solution 
+// Update a Solution
 const updateSolutions = async (id, data) => {
   try {
     const updatedSolution = await prisma.crms_d_solution.update({
@@ -52,7 +52,7 @@ const updateSolutions = async (id, data) => {
         // is_active: data.is_active || "Y",
         // log_inst: data.log_inst || 1,
         updatedby: data.updatedby || 1,
-        updatedate:new Date()
+        updatedate: new Date(),
       },
       include: {
         solution_user_owner: {
@@ -75,7 +75,7 @@ const updateSolutions = async (id, data) => {
   }
 };
 
-// Find a case by ID 
+// Find a case by ID
 const findSolutionById = async (id) => {
   try {
     const solutionData = await prisma.crms_d_solution.findUnique({
@@ -94,7 +94,10 @@ const findSolutionById = async (id) => {
     });
     return await solutionData;
   } catch (error) {
-    throw new CustomError(`Error finding solution by ID: ${error.message}`, 503);
+    throw new CustomError(
+      `Error finding solution by ID: ${error.message}`,
+      503
+    );
   }
 };
 
@@ -105,14 +108,21 @@ const deleteSolution = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting solution: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
-// Get all solutions 
-const getAllSolution = async (search ,page , size,startDate, endDate) => {
+// Get all solutions
+const getAllSolution = async (search, page, size, startDate, endDate) => {
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
 
     const filters = {};
@@ -122,15 +132,15 @@ const getAllSolution = async (search ,page , size,startDate, endDate) => {
       filters.OR = [
         {
           solution_product: {
-                name: { contains: search.toLowerCase() },
-            },
+            name: { contains: search.toLowerCase() },
+          },
         },
         {
           solution_user_owner: {
-                full_name: { contains: search.toLowerCase() },
-            },
+            full_name: { contains: search.toLowerCase() },
+          },
         },
-      
+
         {
           title: { contains: search.toLowerCase() },
         },
@@ -152,7 +162,7 @@ const getAllSolution = async (search ,page , size,startDate, endDate) => {
 
     const solutions = await prisma.crms_d_solution.findMany({
       where: filters,
-      include: { 
+      include: {
         solution_user_owner: {
           select: {
             id: true,
@@ -173,10 +183,9 @@ const getAllSolution = async (search ,page , size,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
-  }
- catch (error) {
+  } catch (error) {
     console.log(error);
     throw new CustomError("Error retrieving solutions", 503);
   }

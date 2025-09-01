@@ -94,14 +94,14 @@ const createPermission = async (reqBody) => {
         (perm) =>
           typeof perm.module_id === "number" &&
           perm.permissions &&
-          ["view", "update", "create", "delete"].every((key) =>
-            typeof perm.permissions[key] === "boolean"
+          ["view", "update", "create", "delete"].every(
+            (key) => typeof perm.permissions[key] === "boolean"
           )
       )
     ) {
       throw new Error("Invalid permissions format");
     }
-       // // Validate module IDs exist in `hrms_m_module`
+    // // Validate module IDs exist in `hrms_m_module`
     // const isValidModules = await validateModuleIds(permissions);
     // if (!isValidModules) {
     //   throw new Error("One or more moduleIds are invalid");
@@ -140,7 +140,7 @@ const createPermission = async (reqBody) => {
     }
 
     console.log("Updated Data", updatedPermission);
-    
+
     // Parse JSON before returning
     return {
       ...updatedPermission,
@@ -148,11 +148,11 @@ const createPermission = async (reqBody) => {
     };
   } catch (error) {
     console.error("Error creating/updating role permissions:", error);
-    throw new Error(`Failed to create/update role permissions: ${error.message}`);
+    throw new Error(
+      `Failed to create/update role permissions: ${error.message}`
+    );
   }
 };
-
-
 
 const findContactById = async (id) => {
   try {
@@ -195,7 +195,7 @@ const updateContact = async (id, data) => {
     const serializedData = serializePermission(updatedData);
     const contact = await prisma.hrms_d_role_permissions.update({
       where: { id: parseInt(id) },
-      data:  {
+      data: {
         ...serializedData,
         updatedate: new Date(),
       },
@@ -233,14 +233,20 @@ const deleteContact = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting contact: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
-
 const getAllPermission = async (id) => {
-  const role_id = Number(id)
-  
+  const role_id = Number(id);
+
   try {
     // Check if permissions already exist for this role_id
     let savedPermissions = await prisma.hrms_d_role_permissions?.findFirst({
@@ -248,42 +254,55 @@ const getAllPermission = async (id) => {
       // include: { crms_m_roles: true }, // Fetch role details
     });
 
-// Otherwise, fetch all modules
-const allModules = await prisma.hrms_m_module.findMany({
-  select: {
-    id: true,
-    module_name: true,
-  },
-});
+    // Otherwise, fetch all modules
+    const allModules = await prisma.hrms_m_module.findMany({
+      select: {
+        id: true,
+        module_name: true,
+      },
+    });
 
+    savedPermissions = parsePermissions(savedPermissions);
+    // // If permissions exist, return them as-is (already formatted)
+    // if (savedPermissions) {
+    //   return parsePermissions(savedPermissions);
+    // }
 
-savedPermissions =  parsePermissions(savedPermissions)
-// // If permissions exist, return them as-is (already formatted)
-// if (savedPermissions) {
-//   return parsePermissions(savedPermissions);
-// }
-
-    
     // If permissions exist, use them; otherwise, start fresh
-    let existingPermissions = savedPermissions ? savedPermissions.permissions : [];
+    let existingPermissions = savedPermissions
+      ? savedPermissions.permissions
+      : [];
 
     // Ensure all modules are included, keeping existing ones and adding new ones
     const updatedPermissions = allModules.map((module) => {
-      const existingModulePermission = existingPermissions.find((perm) => (perm.module_id === module.id && perm.module_name === module?.module_name));
-      const existingModuleChange = existingPermissions.find((perm) => (perm.module_id === module.id && perm.module_name !== module?.module_name));
-  
+      const existingModulePermission = existingPermissions.find(
+        (perm) =>
+          perm.module_id === module.id &&
+          perm.module_name === module?.module_name
+      );
+      const existingModuleChange = existingPermissions.find(
+        (perm) =>
+          perm.module_id === module.id &&
+          perm.module_name !== module?.module_name
+      );
+
       return existingModulePermission
         ? existingModulePermission // Keep existing permissions
-        : existingModuleChange ?
-       { 
-        module_id: module.id,
-        module_name: module.module_name,
-        permissions:existingModuleChange?.permissions 
-      }
-      : {
+        : existingModuleChange
+        ? {
             module_id: module.id,
             module_name: module.module_name,
-            permissions: { view: false, update: false, create: false, delete: false },
+            permissions: existingModuleChange?.permissions,
+          }
+        : {
+            module_id: module.id,
+            module_name: module.module_name,
+            permissions: {
+              view: false,
+              update: false,
+              create: false,
+              delete: false,
+            },
           };
     });
 
@@ -300,7 +319,7 @@ savedPermissions =  parsePermissions(savedPermissions)
     // }));
 
     return {
-      role_id : role_id || null,
+      role_id: role_id || null,
       // permissions: formattedPermissions,
       permissions: updatedPermissions,
     };
@@ -335,7 +354,7 @@ savedPermissions =  parsePermissions(savedPermissions)
 //     // Ensure all modules are included, keeping existing ones and adding new ones
 //     const updatedPermissions = allModules.map((module) => {
 //       const existingModulePermission = existingPermissions.find((perm) => perm.module_id === module.id);
-      
+
 //       return existingModulePermission
 //         ? existingModulePermission // Keep existing permissions
 //         : {
@@ -355,7 +374,6 @@ savedPermissions =  parsePermissions(savedPermissions)
 //   }
 // };
 
- 
 module.exports = {
   createPermission,
   findContactById,

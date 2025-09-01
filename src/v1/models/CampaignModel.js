@@ -4,10 +4,12 @@ const prisma = new PrismaClient();
 
 // Serialize  before saving it
 const serializeTags = (data) => {
-
-  return {...data,exp_revenue:parseFloat(data?.exp_revenue),
-    camp_cost:parseFloat(data?.camp_cost),
-    owner_id:Number(data.owner_id || null) };
+  return {
+    ...data,
+    exp_revenue: parseFloat(data?.exp_revenue),
+    camp_cost: parseFloat(data?.camp_cost),
+    owner_id: Number(data.owner_id || null),
+  };
 };
 
 // Parse  after retrieving it
@@ -38,7 +40,7 @@ const validateContactsExist = async (contactIds) => {
 
 // Create a new campaign
 const createCampaign = async (data) => {
-  const { contact_ids,lead_ids, ...campaignData } = data; // Separate `contactIds` from other deal data
+  const { contact_ids, lead_ids, ...campaignData } = data; // Separate `contactIds` from other deal data
   try {
     const serializedData = serializeTags(campaignData);
 
@@ -51,14 +53,15 @@ const createCampaign = async (data) => {
     const result = await prisma.$transaction(async (prisma) => {
       // Create the campaign
       const campaign = await prisma.crms_d_campaign.create({
-        data: {...serializedData,
+        data: {
+          ...serializedData,
           campaign_leads: {
-            connect: lead_ids.map(id => ({ id })),
+            connect: lead_ids.map((id) => ({ id })),
           },
         },
       });
 
-       // Map contacts to the campaign
+      // Map contacts to the campaign
       if (contact_ids && contact_ids.length > 0) {
         const contactMappings = contact_ids.map((contactId) => ({
           camp_id: campaign.id,
@@ -71,16 +74,18 @@ const createCampaign = async (data) => {
       const fullCampaign = await prisma.crms_d_campaign.findFirst({
         where: { id: campaign.id },
         include: {
-          campaign_contact:{select:{
-            camp_contact:true}},
-          campaign_leads:true,
-          campaign_user:true
-  
+          campaign_contact: {
+            select: {
+              camp_contact: true,
+            },
+          },
+          campaign_leads: true,
+          campaign_user: true,
         },
       });
-   const { campaign_contact, ...rest } = parseTags(fullCampaign); // Remove "deals" key
-   const finalContact = campaign_contact.map(item => item.camp_contact);
-   return { ...rest,campaign_contact :finalContact}; // Rename "stages" to "deals"
+      const { campaign_contact, ...rest } = parseTags(fullCampaign); // Remove "deals" key
+      const finalContact = campaign_contact.map((item) => item.camp_contact);
+      return { ...rest, campaign_contact: finalContact }; // Rename "stages" to "deals"
     });
 
     return parseTags(result);
@@ -98,7 +103,8 @@ const updateCampaign = async (id, data) => {
       ...campaignData,
       updatedDate: new Date(),
     };
-    const{ owner_id,lead_ids,...serializedData} = serializeTags(updatedData);
+    const { owner_id, lead_ids, ...serializedData } =
+      serializeTags(updatedData);
 
     // Validate that all contactIds exist in the crms_m_contact table
     if (contact_ids && contact_ids.length > 0) {
@@ -107,8 +113,6 @@ const updateCampaign = async (id, data) => {
 
     // Use transaction for atomicity
     const result = await prisma.$transaction(async (prisma) => {
-
-
       // Update campaign-contact mappings
       if (contact_ids && contact_ids.length) {
         // Delete existing mappings
@@ -124,29 +128,33 @@ const updateCampaign = async (id, data) => {
         }));
         await prisma.CampaignContacts.createMany({ data: contactMappings });
       }
-            // Update the campaign
-            const campaign = await prisma.crms_d_campaign.update({
-              where: { id: parseInt(id) },
-              data: {...serializedData ,   
-                campaign_user: {
-                connect: { id: data.owner_id }, // instead of setting owner_id directly
+      // Update the campaign
+      const campaign = await prisma.crms_d_campaign.update({
+        where: { id: parseInt(id) },
+        data: {
+          ...serializedData,
+          campaign_user: {
+            connect: { id: data.owner_id }, // instead of setting owner_id directly
+          },
+          ...(lead_ids &&
+            lead_ids.length > 0 && {
+              campaign_leads: {
+                set: lead_ids.map((id) => ({ id })),
               },
-              ...(lead_ids && lead_ids.length > 0 && {
-                campaign_leads: {
-                  set: lead_ids.map(id => ({ id })),
-                }
-              }),},
-            });
+            }),
+        },
+      });
       // Retrieve the updated campaign with campaignContacts and campaignHistory included
       const updatedCampaign = await prisma.crms_d_campaign.findUnique({
         where: { id: parseInt(id) },
         include: {
-          campaign_contact:{
-            select:{
-              camp_contact:true}
+          campaign_contact: {
+            select: {
+              camp_contact: true,
             },
-          campaign_leads:true,
-          campaign_user:true
+          },
+          campaign_leads: true,
+          campaign_user: true,
         },
       });
 
@@ -155,7 +163,7 @@ const updateCampaign = async (id, data) => {
 
     return parseTags(result);
   } catch (error) {
-    console.log("Updating error in campaign",error)
+    console.log("Updating error in campaign", error);
     throw new CustomError(`Error updating campaign: ${error.message}`, 500);
   }
 };
@@ -166,10 +174,13 @@ const findCampaignById = async (id) => {
     const campaign = await prisma.crms_d_campaign.findUnique({
       where: { id: parseInt(id) },
       include: {
-        campaign_contact:{select:{
-          camp_contact:true}},
-        campaign_leads:true,
-        campaign_user:true
+        campaign_contact: {
+          select: {
+            camp_contact: true,
+          },
+        },
+        campaign_leads: true,
+        campaign_user: true,
       },
     });
     return parseTags(campaign);
@@ -243,17 +254,20 @@ const getAllCampaign = async (
       skip: skip,
       take: size,
       include: {
-        campaign_contact:{select:{
-          camp_contact:true}},
-        campaign_leads:true,
-        campaign_user:true
+        campaign_contact: {
+          select: {
+            camp_contact: true,
+          },
+        },
+        campaign_leads: true,
+        campaign_user: true,
       },
       orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
     const formattedDeals = campaigns.map((deal) => {
       const { campaign_contact, ...rest } = parseTags(deal); // Remove "deals" key
-      const finalContact = campaign_contact.map(item => item.camp_contact);
-      return { ...rest,campaign_contact :finalContact}; // Rename "stages" to "deals"
+      const finalContact = campaign_contact.map((item) => item.camp_contact);
+      return { ...rest, campaign_contact: finalContact }; // Rename "stages" to "deals"
     });
     const totalCount = await prisma.crms_d_campaign.count({
       where: filters,
@@ -283,7 +297,7 @@ const deleteCampaign = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    console.log("Error to delete campaign : ",error)
+    console.log("Error to delete campaign : ", error);
     throw new CustomError(`Error deleting campaign: ${error.message}`, 500);
   }
 };

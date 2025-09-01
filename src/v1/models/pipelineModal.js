@@ -1,22 +1,27 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 // Utility Method: Formats pipeline data consistently
-const formatPipelineData = (pipeline,isArray) => {
+const formatPipelineData = (pipeline, isArray) => {
   if (!pipeline) return null;
 
   let totalDeals = 0;
   let totalDealValue = 0;
 
-isArray ? pipeline?.stages?.forEach(stage => {
-    totalDeals += stage?.deals?.length;
-    totalDealValue += stage?.deals?.reduce((sum, deal) => sum + (deal.dealValue || 0), 0);
-  })
-
- : totalDealValue = pipeline.stages?.reduce((sum, deal) => sum + (deal.valuealue || 0), 0);
- !isArray && (totalDeals = pipeline.deals?.length);
-
+  isArray
+    ? pipeline?.stages?.forEach((stage) => {
+        totalDeals += stage?.deals?.length;
+        totalDealValue += stage?.deals?.reduce(
+          (sum, deal) => sum + (deal.dealValue || 0),
+          0
+        );
+      })
+    : (totalDealValue = pipeline.stages?.reduce(
+        (sum, deal) => sum + (deal.valuealue || 0),
+        0
+      ));
+  !isArray && (totalDeals = pipeline.deals?.length);
 
   return {
     id: pipeline.id,
@@ -38,33 +43,35 @@ isArray ? pipeline?.stages?.forEach(stage => {
         : 0,
       deals: stage.deals
         ? stage.deals?.map((deal) => ({
-          id: deal.id,
-          name: deal.dealName,
-          value: deal.dealValue,
-          currency: deal.currency,
-          dueDate: deal.dueDate,
-          expectedCloseDate: deal.expectedCloseDate,
-          followUpDate: deal.followUpDate,
-          priority: deal.priority,
-          status: deal.status,
-          createdDate: deal.createdDate,
-          contact: deal.DealContacts?.map((dealContact) => ({
-            contactId: dealContact.contactId,
-            roleInDeal: dealContact.roleInDeal,
-            contact: dealContact.contact ? {
-              id: dealContact.contact.id,
-              firstName: dealContact.contact.firstName,
-              lastName: dealContact.contact.lastName,
-              email: dealContact.contact.email,
-              phone1: dealContact.contact.phone1,
-              streetAddress: dealContact.contact.streetAddress,
-              city: dealContact.contact.city,
-              state: dealContact.contact.state,
-              country: dealContact.contact.country,
-              zipcode: dealContact.contact.zipcode,
-            } : null,
-          })),
-        }))
+            id: deal.id,
+            name: deal.dealName,
+            value: deal.dealValue,
+            currency: deal.currency,
+            dueDate: deal.dueDate,
+            expectedCloseDate: deal.expectedCloseDate,
+            followUpDate: deal.followUpDate,
+            priority: deal.priority,
+            status: deal.status,
+            createdDate: deal.createdDate,
+            contact: deal.DealContacts?.map((dealContact) => ({
+              contactId: dealContact.contactId,
+              roleInDeal: dealContact.roleInDeal,
+              contact: dealContact.contact
+                ? {
+                    id: dealContact.contact.id,
+                    firstName: dealContact.contact.firstName,
+                    lastName: dealContact.contact.lastName,
+                    email: dealContact.contact.email,
+                    phone1: dealContact.contact.phone1,
+                    streetAddress: dealContact.contact.streetAddress,
+                    city: dealContact.contact.city,
+                    state: dealContact.contact.state,
+                    country: dealContact.contact.country,
+                    zipcode: dealContact.contact.zipcode,
+                  }
+                : null,
+            })),
+          }))
         : [],
     })),
   };
@@ -88,7 +95,7 @@ const createPipelineWithStages = async (data) => {
         pipeline: true,
       },
     });
-    return formatPipelineData(pipeline ,false);
+    return formatPipelineData(pipeline, false);
   } catch (error) {
     throw new CustomError(`Error creating pipeline: ${error.message}`, 500);
   }
@@ -100,23 +107,25 @@ const findPipelineById = async (id) => {
     const pipeline = await prisma.pipeline.findUnique({
       where: { id: parseInt(id) },
       include: {
-        stages:true,
+        stages: true,
         // deals: true,
       },
     });
 
     if (!pipeline) {
-      throw new CustomError('Pipeline not found', 404);
+      throw new CustomError("Pipeline not found", 404);
     }
-    console.log("PPPPPP",pipeline)
+    console.log("PPPPPP", pipeline);
 
-    return formatPipelineData(pipeline,false);
+    return formatPipelineData(pipeline, false);
   } catch (error) {
-    console.log("Error to get Stages : ",error)
-    throw new CustomError(`Error finding pipeline by ID: ${error.message}`, 503);
+    console.log("Error to get Stages : ", error);
+    throw new CustomError(
+      `Error finding pipeline by ID: ${error.message}`,
+      503
+    );
   }
 };
-
 
 // Update an existing pipeline
 const updatePipeline = async (id, data) => {
@@ -128,7 +137,7 @@ const updatePipeline = async (id, data) => {
     });
 
     if (!existingPipeline) {
-      throw new CustomError('Pipeline not found', 404);
+      throw new CustomError("Pipeline not found", 404);
     }
 
     const stagesToUpdate = [];
@@ -203,13 +212,12 @@ const updatePipeline = async (id, data) => {
       { maxWait: 10000, timeout: 10000 } // Increase timeout to 10 seconds
     );
 
-    return formatPipelineData(updatedPipeline , false);
+    return formatPipelineData(updatedPipeline, false);
   } catch (error) {
-    console.log("Update Pipeline Error :",error)
+    console.log("Update Pipeline Error :", error);
     throw new CustomError(`Error updating pipeline: ${error.message}`, 500);
   }
 };
-
 
 // Delete a pipeline along with its stages and deals
 const deletePipeline = async (id) => {
@@ -221,15 +229,28 @@ const deletePipeline = async (id) => {
 
     await prisma.pipeline.delete({ where: { id: parseInt(id) } });
   } catch (error) {
-    console.log(error)
-    throw new CustomError(`Error deleting pipeline: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
 // Retrieve all pipelines
-const getAllPipelines = async (page , size , search ,startDate,endDate ,status  ) => {
+const getAllPipelines = async (
+  page,
+  size,
+  search,
+  startDate,
+  endDate,
+  status
+) => {
   try {
-    page = (!page || (page == 0)) ?  1 : page ;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -237,13 +258,14 @@ const getAllPipelines = async (page , size , search ,startDate,endDate ,status  
     // Handle search
     if (search) {
       filters.OR = [
-
         {
           name: { contains: search.toLowerCase() },
-        }
+        },
       ];
     }
-    if(status){filters.is_active = {equals :status} }
+    if (status) {
+      filters.is_active = { equals: status };
+    }
     // if(priority){filters.priority = {equals :priority} }
 
     if (startDate && endDate) {
@@ -263,19 +285,16 @@ const getAllPipelines = async (page , size , search ,startDate,endDate ,status  
       take: size,
       include: {
         stages: {
-          select:{
-            id:true,
-            deals:true,
-            name:true,
-            colorCode:true
-          }
+          select: {
+            id: true,
+            deals: true,
+            name: true,
+            colorCode: true,
+          },
         },
         pipeline: true,
       },
-      orderBy: [
-        { updatedDate: 'desc' },
-        { createdDate: 'desc' },
-      ],
+      orderBy: [{ updatedDate: "desc" }, { createdDate: "desc" }],
     });
 
     // return pipelines.map(pipeline => {
@@ -294,17 +313,19 @@ const getAllPipelines = async (page , size , search ,startDate,endDate ,status  
     //   };
     // });
 
-   const pipelineData= pipelines.map((pipeline)=>formatPipelineData(pipeline,true));
-   const totalCount = await prisma.pipeline.count();
+    const pipelineData = pipelines.map((pipeline) =>
+      formatPipelineData(pipeline, true)
+    );
+    const totalCount = await prisma.pipeline.count();
     return {
-        data: pipelineData,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount : totalCount  ,
-      };
+      data: pipelineData,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(totalCount / size),
+      totalCount: totalCount,
+    };
   } catch (error) {
-    console.log("pipline geting error : ",error)
+    console.log("pipline geting error : ", error);
     throw new CustomError(`Error retrieving pipelines: ${error.message}`, 503);
   }
 };
@@ -312,7 +333,6 @@ const getAllPipelines = async (page , size , search ,startDate,endDate ,status  
 // Retrieve pipeline data with deals
 const getPipelineDataWithDeals = async (pipelineId) => {
   try {
-
     const pipeline = await prisma.pipeline.findUnique({
       where: { id: parseInt(pipelineId) },
       include: {
@@ -359,7 +379,7 @@ const getPipelineDataWithDeals = async (pipelineId) => {
     });
 
     if (!pipeline) {
-      throw new Error('Pipeline not found');
+      throw new Error("Pipeline not found");
     }
 
     // Format the response data
@@ -369,7 +389,10 @@ const getPipelineDataWithDeals = async (pipelineId) => {
         name: pipeline.name,
         stages: pipeline.stages.map((stage) => {
           const totalDeals = stage.deals.length;
-          const totalRevenue = stage.deals.reduce((sum, deal) => sum + (deal.dealValue || 0), 0);
+          const totalRevenue = stage.deals.reduce(
+            (sum, deal) => sum + (deal.dealValue || 0),
+            0
+          );
 
           return {
             id: stage.id,
@@ -392,18 +415,20 @@ const getPipelineDataWithDeals = async (pipelineId) => {
               contact: deal.DealContacts.map((dealContact) => ({
                 contactId: dealContact.contactId,
                 roleInDeal: dealContact.roleInDeal,
-                contact: dealContact.contact ? {
-                  id: dealContact.contact.id,
-                  firstName: dealContact.contact.firstName,
-                  lastName: dealContact.contact.lastName,
-                  email: dealContact.contact.email,
-                  phone1: dealContact.contact.phone1,
-                  streetAddress: dealContact.contact.streetAddress,
-                  city: dealContact.contact.city,
-                  state: dealContact.contact.state,
-                  country: dealContact.contact.country,
-                  zipcode: dealContact.contact.zipcode,
-                } : null,
+                contact: dealContact.contact
+                  ? {
+                      id: dealContact.contact.id,
+                      firstName: dealContact.contact.firstName,
+                      lastName: dealContact.contact.lastName,
+                      email: dealContact.contact.email,
+                      phone1: dealContact.contact.phone1,
+                      streetAddress: dealContact.contact.streetAddress,
+                      city: dealContact.contact.city,
+                      state: dealContact.contact.state,
+                      country: dealContact.contact.country,
+                      zipcode: dealContact.contact.zipcode,
+                    }
+                  : null,
               })),
             })),
           };
@@ -432,7 +457,6 @@ const updateDealStage = async (dealId, data) => {
   }
 };
 
-
 module.exports = {
   createPipelineWithStages,
   findPipelineById,
@@ -440,5 +464,5 @@ module.exports = {
   deletePipeline,
   getAllPipelines,
   getPipelineDataWithDeals,
-  updateDealStage
+  updateDealStage,
 };
