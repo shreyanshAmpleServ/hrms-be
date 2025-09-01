@@ -551,31 +551,18 @@ const generatePayslipPDF = async (data, filePath) => {
     const puppeteer = require("puppeteer");
 
     const htmlContent = await generatePayslipHTML(data);
-    const chromePaths = [
-      process.env.CHROME_PATH,
-      "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
-      "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
-      "/usr/bin/google-chrome",
-      "/usr/bin/chromium-browser",
-      "/usr/bin/chromium",
-      "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
-    ];
-
-    const executablePath = chromePaths.find((p) => p && fs.existsSync(p));
-    if (!executablePath) {
-      throw new Error(
-        "Chrome/Chromium not found. Please install Google Chrome or set CHROME_PATH environment variable."
-      );
-    }
 
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
+
     const browser = await puppeteer.launch({
+      executablePath: puppeteer.executablePath(),
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
+
     const page = await browser.newPage();
 
     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
