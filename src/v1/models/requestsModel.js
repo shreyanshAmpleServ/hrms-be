@@ -887,6 +887,20 @@ const takeActionOnRequest = async ({
     });
     const company_name = company?.company_name || "HRMS System";
 
+    let candidateName = null;
+    if (request.request_type === "interview_stage" && request.reference_id) {
+      const interviewStage =
+        await prisma.hrms_m_interview_stage_remark.findUnique({
+          where: { id: request.reference_id },
+          include: {
+            interview_stage_candidate: {
+              select: { full_name: true },
+            },
+          },
+        });
+      candidateName =
+        interviewStage?.interview_stage_candidate?.full_name || null;
+    }
     if (request?.reference_id) {
       if (request.request_type === "interview_stage") {
         await prisma.hrms_m_interview_stage_remark.update({
@@ -1245,6 +1259,7 @@ const takeActionOnRequest = async ({
           action: action === "A" ? "approved" : "rejected",
           company_name,
           request_detail,
+          candidate_name: candidateName || null,
           stage_name: stage_name || null,
         }
       );

@@ -31,7 +31,7 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
     case "loan_request":
       return await prisma.hrms_d_loan_request.findUnique({
         where: { id: reference_id },
-        select: { loan_type_id: true, amount: true, reason: true },
+        select: { loan_type_id: true, amount: true },
       });
 
     case "advance_request":
