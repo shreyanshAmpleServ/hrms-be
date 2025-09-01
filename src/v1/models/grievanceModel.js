@@ -13,7 +13,7 @@ const serializeData = (data) => {
     submitted_on: data.submitted_on || "",
     status: data.status || "",
     assigned_to: Number(data.assigned_to) || null,
-    resolution_notes: data.resolution_notes || 0,
+    resolution_notes: data.resolution_notes || null,
     resolved_on: data.resolved_on || null,
     is_active: data.is_active || "Y",
 

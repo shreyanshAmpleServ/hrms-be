@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "main": "index.js",
   "scripts": {
-    "start": "npx playwright install chromium && nodemon src/server.js",
+    "start": "npm install playwright && npx playwright install chromium && nodemon src/server.js",
     "generate": "npx rimraf node_modules/.prisma && npx prisma generate && nodemon src/server.js",
     "worker": "node src/utils/emailWorker.js"
   },

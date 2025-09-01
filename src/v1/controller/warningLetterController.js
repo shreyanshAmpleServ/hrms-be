@@ -14,7 +14,6 @@ const createWarningLetter = async (req, res, next) => {
 
     if (!req.file) throw new CustomError("No file uploaded", 400);
 
-    // Read file from disk into a buffer
     const fileBuffer = await fs.readFile(req.file.path);
 
     const fileUrl = await uploadToBackblaze(
@@ -66,15 +65,42 @@ const updateWarningLetter = async (req, res, next) => {
 
     let fileUrl = existingLetter.attachment_path;
 
-    if (req.file) {
-      const fileBuffer = await fs.readFile(req.file.path);
+    const safeDeleteFromBackblaze = async (fileUrl) => {
+      if (!fileUrl) return;
 
-      fileUrl = await uploadToBackblaze(
-        fileBuffer,
-        req.file.originalname,
-        req.file.mimetype,
-        "warning_letters"
-      );
+      try {
+        console.log(`Attempting to delete file: ${fileUrl}`);
+        await deleteFromBackblaze(fileUrl);
+        console.log(`Successfully deleted file: ${fileUrl}`);
+      } catch (error) {
+        console.warn(`Failed to delete old file:`, error.message);
+        console.log(`File URL: ${fileUrl}`);
+        console.log(`Error details:`, error);
+      }
+    };
+
+    if (req.file) {
+      try {
+        const fileBuffer = await fs.readFile(req.file.path);
+
+        fileUrl = await uploadToBackblaze(
+          fileBuffer,
+          req.file.originalname,
+          req.file.mimetype,
+          "warning_letters"
+        );
+        console.log(`New file uploaded: ${fileUrl}`);
+
+        if (
+          existingLetter.attachment_path &&
+          existingLetter.attachment_path !== fileUrl
+        ) {
+          await safeDeleteFromBackblaze(existingLetter.attachment_path);
+        }
+      } catch (error) {
+        console.error("Failed to upload new file:", error.message);
+        throw new Error("Failed to upload new file");
+      }
     }
 
     const warningLetterData = {
@@ -94,10 +120,6 @@ const updateWarningLetter = async (req, res, next) => {
       message: "Warning letter updated successfully",
       status: 200,
     });
-
-    if (existingLetter.attachment_path && req.file) {
-      await deleteFromBackblaze(existingLetter.attachment_path);
-    }
   } catch (error) {
     next(error);
   }
@@ -105,7 +127,21 @@ const updateWarningLetter = async (req, res, next) => {
 
 const deleteWarningLetter = async (req, res, next) => {
   try {
+    const existingLetter = await warningLetterService.findWarningLetterById(
+      req.params.id
+    );
+
     await warningLetterService.deleteWarningLetter(req.params.id);
+
+    if (existingLetter && existingLetter.attachment_path) {
+      try {
+        await deleteFromBackblaze(existingLetter.attachment_path);
+        console.log(`Deleted file: ${existingLetter.attachment_path}`);
+      } catch (error) {
+        console.log(`Failed to delete file from storage: ${error.message}`);
+      }
+    }
+
     res.status(200).success("Warning letter deleted successfully", null);
   } catch (error) {
     next(error);

@@ -7,7 +7,6 @@ const {
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
 const { url } = require("inspector");
-
 const createDefaultConfiguration = async (req, res, next) => {
   try {
     let companyLogo = null;
