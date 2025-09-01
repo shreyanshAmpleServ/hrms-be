@@ -1,5 +1,6 @@
 const ResumeUploadService = require("../services/ResumeUploadService");
 const CustomError = require("../../utils/CustomError");
+const moment = require("moment");
 const {
   uploadToBackblaze,
   deleteFromBackblaze,
@@ -7,21 +8,22 @@ const {
 
 const createResumeUpload = async (req, res, next) => {
   try {
-    let imageUrl = null;
-    if (req.file) {
-      imageUrl = await uploadToBackblaze(
-        req.file.buffer,
-        req.file.originalname,
-        req.file.mimetype,
-        "Resume"
-      );
-    }
+    if (!req.file) throw new CustomError("No file uploaded", 400);
+
+    const imageUrl = await uploadToBackblaze(
+      req.file.buffer,
+      req.file.originalname,
+      req.file.mimetype,
+      "Resume"
+    );
+
     const data = {
       ...req.body,
       resume_path: imageUrl,
       createdby: req.user.id,
       log_inst: req.user.log_inst,
     };
+
     const reqData = await ResumeUploadService.createResumeUpload(data);
     res.status(201).success("Resume created successfully", reqData);
   } catch (error) {
@@ -47,39 +49,60 @@ const updateResumeUpload = async (req, res, next) => {
       req.params.id
     );
     if (!existingData) throw new CustomError("Resume not found", 404);
+
     let imageUrl = existingData.resume_path;
 
-    // Upload the file to Backblaze
+    const safeDeleteFromBackblaze = async (fileUrl) => {
+      if (!fileUrl) return;
+
+      try {
+        console.log(`Attempting to delete resume file: ${fileUrl}`);
+        await deleteFromBackblaze(fileUrl);
+        console.log(`Successfully deleted resume file: ${fileUrl}`);
+      } catch (error) {
+        console.log(`Failed to delete old resume file:`, error.message);
+        console.log(`File URL: ${fileUrl}`);
+        console.log(`Error details:`, error);
+      }
+    };
+
     if (
       req.file &&
       req.file.buffer &&
       req.file.originalname &&
       req.file.mimetype
     ) {
-      imageUrl = await uploadToBackblaze(
-        req.file.buffer,
-        req.file.originalname,
-        req.file.mimetype,
-        "Resume"
-      );
+      try {
+        imageUrl = await uploadToBackblaze(
+          req.file.buffer,
+          req.file.originalname,
+          req.file.mimetype,
+          "Resume"
+        );
+        console.log(`New resume file uploaded: ${imageUrl}`);
+
+        if (existingData.resume_path && existingData.resume_path !== imageUrl) {
+          await safeDeleteFromBackblaze(existingData.resume_path);
+        }
+      } catch (error) {
+        console.log("Failed to upload new resume file:", error.message);
+        throw new Error("Failed to upload new resume file");
+      }
     }
+
     const data = {
       ...req.body,
-      resume_path: req.file ? imageUrl : existingData.resume_path,
+      resume_path: imageUrl,
       updatedby: req.user.id,
       log_inst: req.user.log_inst,
     };
+
     const reqData = await ResumeUploadService.updateResumeUpload(
       req.params.id,
       data
     );
     console.log("reqData", reqData);
     res.status(200).success("Resume updated successfully", reqData);
-    if (req.file) {
-      if (existingData.image) {
-        await deleteFromBackblaze(existingData.image); // Delete the old logo
-      }
-    }
   } catch (error) {
     next(error);
   }
@@ -92,10 +115,19 @@ const deleteResumeUpload = async (req, res, next) => {
     );
 
     await ResumeUploadService.deleteResumeUpload(req.params.id);
-    res.status(200).success("Resume deleted successfully", null);
-    if (existingData.image) {
-      await deleteFromBackblaze(existingData.image); // Delete the old logo
+
+    if (existingData && existingData.resume_path) {
+      try {
+        await deleteFromBackblaze(existingData.resume_path);
+        console.log(`Deleted resume file: ${existingData.resume_path}`);
+      } catch (error) {
+        console.log(
+          `Failed to delete resume file from storage: ${error.message}`
+        );
+      }
     }
+
+    res.status(200).success("Resume deleted successfully", null);
   } catch (error) {
     next(error);
   }
