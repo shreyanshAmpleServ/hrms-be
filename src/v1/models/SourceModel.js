@@ -1,16 +1,16 @@
-const { PrismaClient } = require('@prisma/client');
-const CustomError = require('../../utils/CustomError');
+const { PrismaClient } = require("@prisma/client");
+const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 // Create a new source
 const createSource = async (data) => {
   try {
-      const source = await prisma.Sources.create({
+    const source = await prisma.Sources.create({
       data: {
         name: data.name,
         description: data.description || null,
-        is_active: data.is_active || 'Y',
-        createdby: data.createdby||1,
+        is_active: data.is_active || "Y",
+        createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
       },
     });
@@ -27,7 +27,7 @@ const findSourceById = async (id) => {
       where: { id: parseInt(id) },
     });
     if (!source) {
-      throw new CustomError('Source not found', 404);
+      throw new CustomError("Source not found", 404);
     }
     return source;
   } catch (error) {
@@ -58,7 +58,14 @@ const deleteSource = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting source: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
@@ -66,14 +73,11 @@ const deleteSource = async (id) => {
 const getAllSources = async () => {
   try {
     const sources = await prisma.Sources.findMany({
-      orderBy: [
-        { updatedate: 'desc' },
-        { createdate: 'desc' },
-      ],
+      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     return sources;
   } catch (error) {
-    throw new CustomError('Error retrieving sources', 503);
+    throw new CustomError("Error retrieving sources", 503);
   }
 };
 

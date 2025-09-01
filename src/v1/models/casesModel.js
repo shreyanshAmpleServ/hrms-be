@@ -7,7 +7,7 @@ const createCases = async (data) => {
   try {
     // Create the case
     const cases = await prisma.crms_d_cases.create({
-      data: { 
+      data: {
         ...data,
         createdate: new Date(),
         updatedate: new Date(),
@@ -39,7 +39,7 @@ const createCases = async (data) => {
   }
 };
 
-// Update a case 
+// Update a case
 const updateCases = async (id, data) => {
   try {
     const updatedCase = await prisma.crms_d_cases.update({
@@ -56,7 +56,7 @@ const updateCases = async (id, data) => {
         // is_active: data.is_active || "Y",
         // log_inst: data.log_inst || 1,
         updatedby: data.updatedby || 1,
-        updatedate:new Date()
+        updatedate: new Date(),
       },
       include: {
         cases_user_owner: {
@@ -82,7 +82,7 @@ const updateCases = async (id, data) => {
   }
 };
 
-// Find a case by ID 
+// Find a case by ID
 const findCasesById = async (id) => {
   try {
     const caseData = await prisma.crms_d_cases.findUnique({
@@ -115,33 +115,44 @@ const deleteCase = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting case: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
-// Get all cases 
-const getAllCases = async (search ,page , size,startDate, endDate) => {
+// Get all cases
+const getAllCases = async (search, page, size, startDate, endDate) => {
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
     const filters = {};
 
     // Handle search
     if (search) {
       filters.OR = [
-        { name: { contains: search.toLowerCase() }},
-        { case_number: { contains: search.toLowerCase() }} ,
-        {case_contact: {
-          is: {
-            OR: [
-              { firstName: { contains: search.toLowerCase() } },
-              { lastName: { contains: search.toLowerCase() } },
-            ],
+        { name: { contains: search.toLowerCase() } },
+        { case_number: { contains: search.toLowerCase() } },
+        {
+          case_contact: {
+            is: {
+              OR: [
+                { firstName: { contains: search.toLowerCase() } },
+                { lastName: { contains: search.toLowerCase() } },
+              ],
+            },
           },
-      },},
-     { case_product: {
-        name: { contains: search.toLowerCase() },
-    },}
+        },
+        {
+          case_product: {
+            name: { contains: search.toLowerCase() },
+          },
+        },
       ];
     }
 
@@ -158,8 +169,8 @@ const getAllCases = async (search ,page , size,startDate, endDate) => {
       }
     }
     const cases = await prisma.crms_d_cases.findMany({
-       where: filters,
-      include: { 
+      where: filters,
+      include: {
         cases_user_owner: {
           select: {
             id: true,
@@ -183,15 +194,14 @@ const getAllCases = async (search ,page , size,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
-  }
- catch (error) {
+  } catch (error) {
     console.log(error);
     throw new CustomError("Error retrieving cases", 503);
   }
 };
-// Get all case reasons 
+// Get all case reasons
 const getAllCaseReasons = async () => {
   try {
     const cases = await prisma.crms_m_case_reasons.findMany({
@@ -211,16 +221,15 @@ const getAllCaseReasons = async () => {
 const generateCaseNumber = async () => {
   try {
     const cases = await prisma.crms_d_cases.findFirst({
-      orderBy: { id: 'desc' }
+      orderBy: { id: "desc" },
     });
-     const nextId = cases ? cases.id + 1 : 1;
+    const nextId = cases ? cases.id + 1 : 1;
     return `CASE-00${nextId}`;
-} catch (error) {
-    console.log("Error to generation case number : ", error)
-    throw new CustomError('Error retrieving case number', 503);
-}
+  } catch (error) {
+    console.log("Error to generation case number : ", error);
+    throw new CustomError("Error retrieving case number", 503);
+  }
 };
-
 
 module.exports = {
   createCases,
@@ -229,5 +238,5 @@ module.exports = {
   deleteCase,
   getAllCases,
   getAllCaseReasons,
-  generateCaseNumber
+  generateCaseNumber,
 };

@@ -59,7 +59,14 @@ const deleteCountry = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting country: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
@@ -76,7 +83,7 @@ const getAllCountries = async (is_active) => {
 
     const countries = await prisma.hrms_m_country_master.findMany({
       where: filters,
-      orderBy: [{ name: "asc" }],
+      orderBy: [{ createdate: "desc" }],
     });
 
     return countries;

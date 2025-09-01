@@ -5,12 +5,12 @@ const prisma = new PrismaClient();
 // Create a new tax
 const createTaxSetup = async (data) => {
   try {
-    console.log("Create Tax setUp : ", data)
+    console.log("Create Tax setUp : ", data);
     // Create the tax
     const tax = await prisma.crms_m_tax_setup.create({
       data: {
         ...data,
-        account_id : Number(data?.account_id) || null,
+        account_id: Number(data?.account_id) || null,
         is_active: data.is_active || "Y",
         log_inst: data.log_inst || 1,
         createdate: new Date(),
@@ -30,19 +30,20 @@ const createTaxSetup = async (data) => {
     });
     return tax;
   } catch (error) {
-    console.log("Error tax SetUp Modal Create : ", error)
+    console.log("Error tax SetUp Modal Create : ", error);
     throw new CustomError(`Error creating tax: ${error.message}`, 500);
   }
 };
 
 // Update a tax
 const updateTaxSetup = async (id, data) => {
-  try {const updatedTax = await prisma.crms_m_tax_setup.update({
+  try {
+    const updatedTax = await prisma.crms_m_tax_setup.update({
       where: { id: parseInt(id) },
       data: {
         ...data,
-        account_id : Number(data?.account_id),
-        updatedate:new Date(),
+        account_id: Number(data?.account_id),
+        updatedate: new Date(),
         updatedby: data.updatedby || 1,
       },
       // include:{
@@ -53,7 +54,7 @@ const updateTaxSetup = async (id, data) => {
       //       id:true
       //     }
       //   },
-       
+
       // },
     });
 
@@ -68,7 +69,7 @@ const updateTaxSetup = async (id, data) => {
 const findTaxSetupById = async (id) => {
   try {
     const tax = await prisma.crms_m_tax_setup.findUnique({
-      where:{ id: parseInt(id)},
+      where: { id: parseInt(id) },
       // include:{
       //   Account:{
       //     select:{
@@ -77,13 +78,12 @@ const findTaxSetupById = async (id) => {
       //       id:true
       //     }
       //   },
-       
+
       // },
-     
     });
     return tax;
   } catch (error) {
-    console.log("Error in Details of tax ", error)
+    console.log("Error in Details of tax ", error);
     throw new CustomError(`Error finding tax by ID: ${error.message}`, 503);
   }
 };
@@ -91,12 +91,18 @@ const findTaxSetupById = async (id) => {
 // Delete a tax
 const deleteSetup = async (id) => {
   try {
-
     await prisma.crms_m_tax_setup.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting tax: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
@@ -112,7 +118,7 @@ const getAllTaxSetup = async () => {
       //       id:true
       //     }
       //   },
-       
+
       // },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

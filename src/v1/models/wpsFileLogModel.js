@@ -8,7 +8,7 @@ const serializeData = (data) => {
     payroll_month: data.payroll_month || "",
     file_path: data.file_path || "",
     generated_on: data.generated_on || new Date(),
-    submitted_to_bank: data.submitted_to_bank ? true :  false,
+    submitted_to_bank: data.submitted_to_bank ? true : false,
   };
 };
 
@@ -56,7 +56,7 @@ const updateWPSFile = async (id, data) => {
         ...serializeData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
-      }
+      },
     });
     return updatedWPSFile;
   } catch (error) {
@@ -71,7 +71,14 @@ const deleteWPSFile = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting wps file: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
@@ -93,7 +100,7 @@ const getAllWPSFile = async (search, page, size, startDate, endDate) => {
         // },
         {
           payroll_month: { contains: search.toLowerCase() },
-        }
+        },
       ];
     }
 

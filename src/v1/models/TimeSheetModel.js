@@ -105,7 +105,14 @@ const deleteTimeSheet = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting time sheet: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 

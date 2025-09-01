@@ -15,7 +15,7 @@ const serializeData = (data) => {
 // Create a new competency tracking
 const createCompetencyTracking = async (data) => {
   try {
-   await errorNotExist('hrms_d_employee',data.employee_id ,"Employee" );
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const reqData = await prisma.hrms_d_competency.create({
       data: {
         ...serializeData(data),
@@ -24,17 +24,20 @@ const createCompetencyTracking = async (data) => {
         log_inst: data.log_inst || 1,
       },
       include: {
-        competency_employee:{
+        competency_employee: {
           select: {
             full_name: true,
-            id:true,
-          }
+            id: true,
+          },
         },
       },
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(`Error creating competency tracking: ${error.message}`, 500);
+    throw new CustomError(
+      `Error creating competency tracking: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -59,7 +62,7 @@ const findCompetencyTrackingById = async (id) => {
 // Update a competency tracking
 const updateCompetencyTracking = async (id, data) => {
   try {
-    await errorNotExist("hrms_d_employee",data.employee_id , "Employee");
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
     const updatedCompetencyTracking = await prisma.hrms_d_competency.update({
       where: { id: parseInt(id) },
@@ -69,18 +72,20 @@ const updateCompetencyTracking = async (id, data) => {
         updatedate: new Date(),
       },
       include: {
-                competency_employee:{
+        competency_employee: {
           select: {
             full_name: true,
-            id:true,
-          }
+            id: true,
+          },
         },
-
       },
     });
     return updatedCompetencyTracking;
   } catch (error) {
-    throw new CustomError(`Error updating competency tracking: ${error.message}`, 500);
+    throw new CustomError(
+      `Error updating competency tracking: ${error.message}`,
+      500
+    );
   }
 };
 
@@ -91,14 +96,27 @@ const deleteCompetencyTracking = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting competency tracking: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
 // Get all competency tracking
-const getAllCompetencyTracking = async (search,page,size ,startDate, endDate) => {
+const getAllCompetencyTracking = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
   try {
-    page = (!page || page == 0) ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -136,19 +154,18 @@ const getAllCompetencyTracking = async (search,page,size ,startDate, endDate) =>
       skip: skip,
       take: size,
       include: {
-        competency_employee:{
+        competency_employee: {
           select: {
             full_name: true,
-            id:true,
-          }
+            id: true,
+          },
         },
-
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     // const totalCount = await prisma.hrms_d_competency.count();
     const totalCount = await prisma.hrms_d_competency.count({
-        where: filters,
+      where: filters,
     });
 
     return {
@@ -159,7 +176,7 @@ const getAllCompetencyTracking = async (search,page,size ,startDate, endDate) =>
       totalCount: totalCount,
     };
   } catch (error) {
-    console.log("Error", error)
+    console.log("Error", error);
     throw new CustomError("Error retrieving competency tracking", 503);
   }
 };
