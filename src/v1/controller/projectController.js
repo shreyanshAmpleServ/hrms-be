@@ -46,8 +46,8 @@ const getAllProjects = async (req, res, next) => {
       search,
       Number(page),
       Number(size),
-      startDate && moment(startDate),
-      endDate && moment(endDate),
+      startDate && moment(startDate).toISOString(),
+      endDate && moment(endDate).toISOString(),
       is_active
     );
     res.status(200).success(null, projects);
