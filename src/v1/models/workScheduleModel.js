@@ -2,30 +2,6 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
-// const createWorkSchedule = async (data) => {
-//   try {
-//     const finalData = await prisma.hrms_m_work_schedule_template.create({
-//       data: {
-//         template_name: data.template_name,
-//         description: data.description,
-//         createdby: data.createdby || 1,
-//         log_inst: data.log_inst || 1,
-//         is_active: data.is_active || "Y",
-
-//         createdate: new Date(),
-//         updatedate: new Date(),
-//         updatedby: 1,
-//       },
-//     });
-//     return finalData;
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error creating work schedule: ${error.message}`,
-//       500
-//     );
-//   }
-// };
-
 const createWorkSchedule = async (data) => {
   try {
     const newSchedule = await prisma.hrms_m_work_schedule_template.create({
@@ -41,16 +17,14 @@ const createWorkSchedule = async (data) => {
       },
     });
 
-    // Fetch approvers from workflow table for request type "WorkSchedule"
     const workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
       where: { request_type: "WorkSchedule" },
       orderBy: { sequence: "asc" },
     });
 
-    // Insert into hrms_d_requests_approval table
     if (workflowSteps.length > 0) {
       const approvalEntries = workflowSteps.map((step) => ({
-        request_id: newSchedule.id, // reuse this as request_id
+        request_id: newSchedule.id,
         approver_id: step.approver_id,
         sequence: step.sequence,
         status: "Pending",
