@@ -11,10 +11,10 @@ const serializeTimeSheetData = (data) => ({
   hours_worked: data.hours_worked ? Number(data.hours_worked) : null,
   approved_by: data.approved_by ? Number(data.approved_by) : null,
   approved_on: data.approved_on ? new Date(data.approved_on) : null,
-  project_id: Number(data.project_id),
+  project_id: data.project_id ? Number(data.project_id) : null,
   remarks: data.remarks || "",
   status: data.status || "Draft",
-  task_id: Number(data.task_id),
+  task_id: data.task_id ? Number(data.task_id) : null,
   billable_flag: data.billable_flag || "",
   work_location: data.work_location || "",
   submission_date: data.submission_date ? new Date(data.submission_date) : null,
@@ -22,7 +22,6 @@ const serializeTimeSheetData = (data) => ({
   timesheet_type: data.timesheet_type || "",
 });
 
-// Create a new time sheet
 const createTimeSheet = async (data) => {
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
@@ -34,6 +33,7 @@ const createTimeSheet = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+
       include: {
         hrms_time_sheets_submitted: {
           select: { full_name: true, id: true },
@@ -41,8 +41,12 @@ const createTimeSheet = async (data) => {
         hrms_time_sheets_approved: {
           select: { full_name: true, id: true },
         },
-        time_sheet_project: true,
-        time_sheet_task: true,
+        time_sheet_project: {
+          select: { id: true, project_code: true, project_name: true },
+        },
+        time_sheet_task: {
+          select: { id: true, task_code: true, task_name: true },
+        },
       },
     });
 
@@ -52,7 +56,6 @@ const createTimeSheet = async (data) => {
   }
 };
 
-// Find a time sheet by ID
 const findTimeSheetById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_time_sheet.findUnique({
