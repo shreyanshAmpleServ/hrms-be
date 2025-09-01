@@ -13,8 +13,10 @@ const createCompany = async (data) => {
         createdate: new Date(),
         updatedate: new Date(),
         is_active: data.is_active || "Y",
-
         log_inst: data.log_inst || 1,
+      },
+      include: {
+        company_country: true,
       },
     });
     return company;
@@ -28,6 +30,9 @@ const findCompanyById = async (id) => {
   try {
     const company = await prisma.hrms_m_company_master.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        company_country: true,
+      },
     });
     if (!company) {
       throw new CustomError("company not found", 404);
@@ -48,6 +53,9 @@ const updateCompany = async (id, data) => {
         country_id: Number(data.country_id),
         is_active: data.is_active || "Y",
         updatedate: new Date(),
+      },
+      include: {
+        company_country: true,
       },
     });
     return updatedcompany;
@@ -122,6 +130,9 @@ const getAllCompanies = async (
       skip: skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      include: {
+        company_country: true,
+      },
     });
 
     const totalCount = await prisma.hrms_m_company_master.count({

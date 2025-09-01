@@ -1,6 +1,7 @@
 const fs = require("fs");
 const logger = require("../Comman/logger");
 const path = require("path");
+const { chromium } = require("playwright");
 
 // HTML Template with placeholders
 const payslipTemplate = `<!DOCTYPE html>
@@ -381,46 +382,6 @@ const payslipTemplate = `<!DOCTYPE html>
             </div>
         </div>
 
-      <!--     <div class="ot-hours">
-            <div class="ot-hours-title">OT HOURS</div>
-            <div class="ot-grid">
-                <div class="ot-row">
-                    <span class="ot-label">Actual Worked Hours</span>
-                    <span class="ot-colon">:</span>
-                    <span>{{actualWorkedHours}}</span>
-                </div>
-                <div class="ot-row">
-                    <span class="ot-label">Expected Worked Hours</span>
-                    <span class="ot-colon">:</span>
-                    <span>{{expectedWorkedHours}}</span>
-                </div>
-                <div class="ot-row">
-                    <span class="ot-label">Work Day OT</span>
-                    <span class="ot-colon">:</span>
-                    <span>{{workDayOt}}</span>
-                </div>
-                <div class="ot-row">
-                    <span class="ot-label">Sunday & Public Holiday OT</span>
-                    <span class="ot-colon">:</span>
-                    <span>{{sundayPublicHolidayOt}}</span>
-                </div>
-                <div class="ot-row">
-                    <span class="ot-label">Night Hours</span>
-                    <span class="ot-colon">:</span>
-                    <span>{{nightHours}}</span>
-                </div>
-                <div class="ot-row">
-                    <span class="ot-label">Leave Days Taken</span>
-                    <span class="ot-colon">:</span>
-                    <span>{{leaveDaysTaken}}</span>
-                </div>
-            </div>
-        </div> -->
-
-        <!--  <div class="declaration">
-            The net pay is accepted and I the undersigned shall have no further claim related to my employment up to date of _ _/_ _/_ _ _ _
-        </div> -->
-
         <div class="signature-section">
             <span>Signature</span>
             <img src="{{companySignature}}" alt="" class="signature-line">
@@ -428,6 +389,7 @@ const payslipTemplate = `<!DOCTYPE html>
     </div>
 </body>
 </html>`;
+
 /**
  * Generate HTML payslip from data
  * @param {Object} data - Payroll data object
@@ -544,29 +506,36 @@ const generatePayslipHTML = (data, filePath = null) => {
 };
 
 /**
- * Generate HTML payslip and convert to PDF using puppeteer
+ * Generate HTML payslip and convert to PDF using Playwright
+ * @param {Object} data - Payroll data object
+ * @param {string} filePath - Output PDF file path
+ * @returns {Promise<string>} - Path to generated PDF file
  */
 const generatePayslipPDF = async (data, filePath) => {
   try {
-    const puppeteer = require("puppeteer");
-
+    // Generate HTML content
     const htmlContent = await generatePayslipHTML(data);
 
+    // Ensure output directory exists
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    const browser = await puppeteer.launch({
-      executablePath: puppeteer.executablePath(),
+    // Launch Playwright browser
+    const browser = await chromium.launch({
       headless: true,
       args: ["--no-sandbox", "--disable-setuid-sandbox"],
     });
 
     const page = await browser.newPage();
 
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    // Set content and wait for resources to load
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle",
+    });
 
+    // Generate PDF with specified options
     await page.pdf({
       path: filePath,
       format: "A4",
@@ -581,9 +550,66 @@ const generatePayslipPDF = async (data, filePath) => {
 
     await browser.close();
 
+    logger.debug(`PDF generated successfully: ${filePath}`);
     return filePath;
   } catch (error) {
+    logger.error(`PDF generation failed: ${error.message}`);
     throw new Error(`PDF generation failed: ${error.message}`);
+  }
+};
+
+/**
+ * Generate multiple payslip PDFs in batch
+ * @param {Array} payslipDataArray - Array of payroll data objects
+ * @param {string} outputDir - Output directory for PDFs
+ * @returns {Promise<Array>} - Array of generated file paths
+ */
+const generateBatchPayslipPDFs = async (payslipDataArray, outputDir) => {
+  try {
+    const browser = await chromium.launch({
+      headless: true,
+      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+    });
+
+    const generatedFiles = [];
+
+    for (const data of payslipDataArray) {
+      const htmlContent = await generatePayslipHTML(data);
+      const fileName = `payslip_${data.employee_id}_${data.payroll_month}_${data.payroll_year}.pdf`;
+      const filePath = path.join(outputDir, fileName);
+
+      // Ensure output directory exists
+      if (!fs.existsSync(outputDir)) {
+        fs.mkdirSync(outputDir, { recursive: true });
+      }
+
+      const page = await browser.newPage();
+      await page.setContent(htmlContent, { waitUntil: "networkidle" });
+
+      await page.pdf({
+        path: filePath,
+        format: "A4",
+        printBackground: true,
+        margin: {
+          top: "0.5in",
+          right: "0.5in",
+          bottom: "0.5in",
+          left: "0.5in",
+        },
+      });
+
+      await page.close();
+      generatedFiles.push(filePath);
+    }
+
+    await browser.close();
+    logger.debug(
+      `Batch PDF generation completed: ${generatedFiles.length} files`
+    );
+    return generatedFiles;
+  } catch (error) {
+    logger.error(`Batch PDF generation failed: ${error.message}`);
+    throw new Error(`Batch PDF generation failed: ${error.message}`);
   }
 };
 
@@ -614,4 +640,5 @@ const getMonthName = (monthNumber) => {
 module.exports = {
   generatePayslipHTML,
   generatePayslipPDF,
+  generateBatchPayslipPDFs,
 };
