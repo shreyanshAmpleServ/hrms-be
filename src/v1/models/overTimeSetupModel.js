@@ -9,9 +9,12 @@ const serializeOvertimeSetupData = (data) => ({
   hourly_rate_hike: data.hourly_rate_hike
     ? parseFloat(data.hourly_rate_hike)
     : 0,
-  maximum_overtime_allowed: data.maximum_overtime_allowed || null,
+  maximum_overtime_allowed:
+    data.maximum_overtime_allowed !== undefined &&
+    data.maximum_overtime_allowed !== null
+      ? String(data.maximum_overtime_allowed)
+      : "0",
 });
-
 // CREATE
 const createOverTimeSetup = async (data) => {
   try {

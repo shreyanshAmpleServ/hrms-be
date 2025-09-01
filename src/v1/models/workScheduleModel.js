@@ -41,13 +41,11 @@ const createWorkSchedule = async (data) => {
       },
     });
 
-    // Fetch approvers from workflow table for request type "WorkSchedule"
     const workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
       where: { request_type: "WorkSchedule" },
       orderBy: { sequence: "asc" },
     });
 
-    // Insert into hrms_d_requests_approval table
     if (workflowSteps.length > 0) {
       const approvalEntries = workflowSteps.map((step) => ({
         request_id: newSchedule.id, // reuse this as request_id
@@ -97,7 +95,7 @@ const findWorkScheduleById = async (id) => {
 
 const updateWorkSchedule = async (id, data) => {
   try {
-    const upsertedData = await prisma.hrms_m_work_schedule.upsert({
+    const upsertedData = await prisma.hrms_m_work_schedule_template.upsert({
       where: { id: parseInt(id) },
       update: {
         ...data,

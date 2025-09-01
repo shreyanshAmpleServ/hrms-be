@@ -1,22 +1,35 @@
-const { PrismaClient } = require("@prisma/client");
+const { PrismaClient, Prisma } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+
 const prisma = new PrismaClient();
+
+const serializePFData = (data) => ({
+  pf_name: data.pf_name || "",
+  employer_contribution:
+    data.employer_contribution !== undefined &&
+    data.employer_contribution !== null &&
+    !isNaN(data.employer_contribution)
+      ? new Prisma.Decimal(data.employer_contribution)
+      : new Prisma.Decimal(0),
+  employee_contribution:
+    data.employee_contribution !== undefined &&
+    data.employee_contribution !== null &&
+    !isNaN(data.employee_contribution)
+      ? new Prisma.Decimal(data.employee_contribution)
+      : new Prisma.Decimal(0),
+  is_active: data.is_active || "Y",
+});
 
 const createPF = async (data) => {
   try {
     const finalData = await prisma.hrms_m_provident_fund.create({
       data: {
-        pf_name: data.pf_name,
-        employer_contribution: data.employer_contribution,
-        employee_contribution: data.employee_contribution,
-        is_active: data.is_active || "Y",
-
+        ...serializePFData(data),
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
-
         createdate: new Date(),
         updatedate: new Date(),
-        updatedby: 1,
+        updatedby: data.updatedby || 1,
       },
     });
     return finalData;
