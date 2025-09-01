@@ -45,7 +45,7 @@ const createWarningLetter = async (data) => {
             full_name: true,
           },
         },
-        warning_letter_type: true, // ✅ correct name
+        warning_letter_type: true,
       },
     });
 
@@ -80,7 +80,6 @@ const findWarningLetterById = async (id) => {
 const updateWarningLetter = async (id, data) => {
   try {
     const updateData = {
-      letter_type: data.letter_type ? Number(data.letter_type) : null,
       reason: data.reason?.trim().toLowerCase() || "",
       issued_date: data.issued_date ? new Date(data.issued_date) : new Date(),
       severity_level: data.severity_level?.trim().toLowerCase() || "",
@@ -99,6 +98,12 @@ const updateWarningLetter = async (id, data) => {
     if (data.issued_by) {
       updateData.warning_letters_issuedBy = {
         connect: { id: Number(data.issued_by) },
+      };
+    }
+
+    if (data.letter_type) {
+      updateData.warning_letter_type = {
+        connect: { id: Number(data.letter_type) },
       };
     }
 

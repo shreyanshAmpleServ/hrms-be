@@ -171,6 +171,17 @@ const updateEmploymentContract = async (id, data) => {
       "Candidate"
     );
 
+    if (
+      data.contract_start_date &&
+      data.contract_end_date &&
+      new Date(data.contract_end_date) <= new Date(data.contract_start_date)
+    ) {
+      throw new CustomError(
+        "Contract End Date must be greater than Contract Start Date",
+        400
+      );
+    }
+
     const updatedEmploymentContract =
       await prisma.hrms_d_employment_contract.update({
         where: { id: parseInt(id) },
