@@ -15,17 +15,17 @@ router.get(
   authenticateToken,
   payComponentController.findPayComponentById
 );
-// router.put(
-//   "/pay-component/:id",
-//   authenticateToken,
-//   payComponentController.updatePayComponent
-// );
-
 router.put(
-  "/update-all",
+  "/pay-component/:id",
   authenticateToken,
   payComponentController.updatePayComponent
 );
+
+// router.put(
+//   "/update-all",
+//   authenticateToken,
+//   payComponentController.updatePayComponent
+// );
 
 router.delete(
   "/pay-component/:id",

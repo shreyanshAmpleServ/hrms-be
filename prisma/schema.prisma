@@ -418,7 +418,7 @@ model hrms_d_exit_clearance {
   id                      Int                      @id(map: "PK__hrms_d_e__3213E83F6E5C594D") @default(autoincrement())
   employee_id             Int?
   start_date              DateTime?                @db.DateTime
-  reason                  String?                  @db.NVarChar(50)
+  reason                  String?                  @db.NVarChar(255)
   employee_name           String?                  @db.NVarChar(100)
   clearance_date          DateTime?                @db.Date
   cleared_by              Int?
@@ -2527,7 +2527,7 @@ model hrms_d_default_configurations {
   local_employee_probation_period String?                @db.VarChar(255)
   terms_and_conditions            String?                @db.Text
   notes                           String?                @db.Text
-  local_employee_notice_period                   Int?
+  local_employee_notice_period    Int?
   default_configuration_country   hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
   default_configuration_state     crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
 }
