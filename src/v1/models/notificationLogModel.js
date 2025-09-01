@@ -18,7 +18,7 @@ const createNotificationLog = async (data, user) => {
     const created = await prisma.hrms_d_notification_log.create({
       data: {
         ...serializeNotificationLog(data),
-        createdby: Number(user.id) || 1,
+        createdby: Number(user?.id) || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
