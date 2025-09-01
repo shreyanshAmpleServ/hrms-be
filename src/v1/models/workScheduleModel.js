@@ -71,7 +71,7 @@ const findWorkScheduleById = async (id) => {
 
 const updateWorkSchedule = async (id, data) => {
   try {
-    const upsertedData = await prisma.hrms_m_work_schedule.upsert({
+    const upsertedData = await prisma.hrms_m_work_schedule_template.upsert({
       where: { id: parseInt(id) },
       update: {
         ...data,

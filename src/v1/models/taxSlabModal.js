@@ -1,5 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { connect } = require("puppeteer");
+const { id } = require("zod/v4/locales");
 const prisma = new PrismaClient();
 
 const serializeTaxData = (data) => ({
@@ -33,11 +35,29 @@ const createTaxSlab = async (data) => {
         throw new CustomError("Code must be unique", 400);
       }
     }
+    // const parentTax = await prisma.hrms_m_tax_slab_rule.create({
+    //   data: {
+    //     code: data.code,
+    //     name: data.name,
+    //     pay_component_id: parseInt(data.pay_component_id) || null,
+    //     formula_text: data.formula_text || "",
+    //     is_active: data.is_active || "Y",
+    //     createdate: new Date(),
+    //     updatedate: new Date(),
+    //     createdby: data.createdby || 1,
+    //     updatedby: data.createdby || 1,
+    //     log_inst: data.log_inst || 1,
+    //   },
+    //   include: {
+    //     hrms_m_tax_slab_rule1: true,
+    //     tax_slab_pay_component: true,
+    //   },
+    // });
+
     const parentTax = await prisma.hrms_m_tax_slab_rule.create({
       data: {
         code: data.code,
         name: data.name,
-        pay_component_id: parseInt(data.pay_component_id) || null,
         formula_text: data.formula_text || "",
         is_active: data.is_active || "Y",
         createdate: new Date(),
@@ -45,6 +65,11 @@ const createTaxSlab = async (data) => {
         createdby: data.createdby || 1,
         updatedby: data.createdby || 1,
         log_inst: data.log_inst || 1,
+        tax_slab_pay_component: data.pay_component_id
+          ? {
+              connect: { id: parseInt(data.pay_component_id) },
+            }
+          : undefined,
       },
       include: {
         hrms_m_tax_slab_rule1: true,
