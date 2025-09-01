@@ -83,26 +83,6 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
   return await monthlyPayrollModel.createOrUpdatePayrollBulk(rows, user);
 };
 
-// const getGeneratedMonthlyPayroll = async (
-//   search,
-//   page,
-//   size,
-//   startDate,
-//   endDate,
-//   payroll_month,
-//   payroll_year
-// ) => {
-//   return await monthlyPayrollModel.getGeneratedMonthlyPayroll(
-//     search,
-//     page,
-//     size,
-//     startDate,
-//     endDate,
-//     payroll_month,
-//     payroll_year
-//   );
-// };
-
 const getGeneratedMonthlyPayroll = async (
   search,
   page,
@@ -121,31 +101,94 @@ const getGeneratedMonthlyPayroll = async (
   );
 };
 
-const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
-  const data = await monthlyPayrollModel.downloadPayslipPDF(
-    employee_id,
-    payroll_month,
-    payroll_year
+// const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
+//   const data = await monthlyPayrollModel.downloadPayslipPDF(
+//     employee_id,
+//     payroll_month,
+//     payroll_year
+//   );
+
+//   if (!data) {
+//     throw new CustomError("Payslip not found", 404);
+//   }
+
+//   const fileName = `payslip_${employee_id}_${payroll_month}_${payroll_year}.pdf`;
+//   const filePath = path.join(__dirname, `../../pdfs/${fileName}`);
+
+//   if (!fs.existsSync(path.dirname(filePath))) {
+//     fs.mkdirSync(path.dirname(filePath), { recursive: true });
+//   }
+
+//   console.log(data, "data");
+
+//   await generatePayslipPDF(data, filePath);
+
+//   return filePath;
+// };
+
+const downloadPayslipPDF = async (
+  employee_id,
+  payroll_month,
+  payroll_year,
+  maxRetries = 3
+) => {
+  let lastError = null;
+
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      const data = await monthlyPayrollModel.downloadPayslipPDF(
+        employee_id,
+        payroll_month,
+        payroll_year
+      );
+
+      if (!data) {
+        throw new CustomError("Payslip not found", 404);
+      }
+
+      const fileName = `payslip_${employee_id}_${payroll_month}_${payroll_year}.pdf`;
+      const filePath = path.join(__dirname, `../../pdfs/${fileName}`);
+
+      if (!fs.existsSync(path.dirname(filePath))) {
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+      }
+
+      console.log(
+        `Attempt ${attempt}: Generating PDF for employee ${employee_id}`
+      );
+
+      await generatePayslipPDF(data, filePath);
+
+      if (fs.existsSync(filePath) && fs.statSync(filePath).size > 0) {
+        console.log(`PDF generated successfully on attempt ${attempt}`);
+        return filePath;
+      } else {
+        throw new Error("PDF file is empty or was not created");
+      }
+    } catch (error) {
+      lastError = error;
+      console.error(`PDF generation attempt ${attempt} failed:`, error.message);
+
+      if (
+        error.message.includes("Payslip not found") ||
+        error.message.includes("Chrome/Chromium not found")
+      ) {
+        throw error;
+      }
+
+      if (attempt < maxRetries) {
+        const waitTime = Math.pow(2, attempt) * 1000;
+        console.log(`Waiting ${waitTime}ms before retry...`);
+        await new Promise((resolve) => setTimeout(resolve, waitTime));
+      }
+    }
+  }
+
+  throw new CustomError(
+    `PDF generation failed after ${maxRetries} attempts. Last error: ${lastError.message}`,
+    500
   );
-
-  if (!data) {
-    throw new CustomError("Payslip not found", 404);
-  }
-
-  const fileName = `payslip_${employee_id}_${payroll_month}_${payroll_year}.pdf`;
-  const filePath = path.join(__dirname, `../../pdfs/${fileName}`);
-
-  if (!fs.existsSync(path.dirname(filePath))) {
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-  }
-
-  console.log(data, "data");
-
-  await generatePayslipPDF(data, filePath);
-
-  return filePath;
 };
-
 const downloadPayrollExcel = async (
   search,
   employee_id,

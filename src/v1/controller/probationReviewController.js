@@ -1,6 +1,5 @@
 const probationReviewService = require("../services/probationReviewService.js");
 const CustomError = require("../../utils/CustomError");
-const { logActivity } = require("../../utils/activityLogger");
 const moment = require("moment");
 
 const createProbationReview = async (req, res, next) => {
@@ -14,13 +13,6 @@ const createProbationReview = async (req, res, next) => {
     };
     const reqData = await probationReviewService.createProbationReview(data);
     res.status(201).success("Probation review created successfully", reqData);
-    await logActivity({
-      employee_id: req.user.id,
-      module: "Probation",
-      action_type: "CREATE",
-      activity: `Created probation review for employee ID ${req.body.employee_id}`,
-      reference_id: reqData.id,
-    });
   } catch (error) {
     next(error);
   }
@@ -50,13 +42,6 @@ const updateProbationReview = async (req, res, next) => {
       data
     );
     res.status(200).success("Probation review updated successfully", reqData);
-    await logActivity({
-      employee_id: req.user.id,
-      module: "Probation",
-      action_type: "UPDATE",
-      activity: `Updated probation review for employee ID ${req.body.employee_id}`,
-      reference_id: reqData.id,
-    });
   } catch (error) {
     next(error);
   }
@@ -66,13 +51,6 @@ const deleteProbationReview = async (req, res, next) => {
   try {
     await probationReviewService.deleteProbationReview(req.params.id);
     res.status(200).success("Probation review deleted successfully", null);
-    await logActivity({
-      employee_id: req.user.id,
-      module: "Probation",
-      action_type: "DELETE",
-      activity: `Deleted probation review for employee ID ${deletedReview.employee_id}`,
-      reference_id: parseInt(id),
-    });
   } catch (error) {
     next(error);
   }

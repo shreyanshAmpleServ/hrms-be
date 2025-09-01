@@ -13,8 +13,6 @@ const serializeTravelExpenseData = (data) => ({
   end_date: data.end_date ? new Date(data.end_date) : null,
   destination: data.destination || "",
   total_amount: data.total_amount ? Number(data.total_amount) : null,
-  // approved_by: data.approved_by ? Number(data.approved_by) : null,
-  // approval_status: data.approval_status || "",
   travel_mode: data.travel_mode || "",
   advance_amount: data.advance_amount ? Number(data.advance_amount) : null,
   expense_breakdown: data.expense_breakdown || "",

@@ -546,11 +546,69 @@ const generatePayslipHTML = (data, filePath = null) => {
 /**
  * Generate HTML payslip and convert to PDF using puppeteer
  */
+// const generatePayslipPDF = async (data, filePath) => {
+//   try {
+//     const puppeteer = require("puppeteer");
+
+//     const htmlContent = await generatePayslipHTML(data);
+//     const chromePaths = [
+//       process.env.CHROME_PATH,
+//       "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+//       "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+//       "/usr/bin/google-chrome",
+//       "/usr/bin/chromium-browser",
+//       "/usr/bin/chromium",
+//       "/Applications/Google Chrome.app/Contents/MacOS/Google Chrome",
+//     ];
+
+//     const executablePath = chromePaths.find((p) => p && fs.existsSync(p));
+//     if (!executablePath) {
+//       throw new Error(
+//         "Chrome/Chromium not found. Please install Google Chrome or set CHROME_PATH environment variable."
+//       );
+//     }
+
+//     const dir = path.dirname(filePath);
+//     if (!fs.existsSync(dir)) {
+//       fs.mkdirSync(dir, { recursive: true });
+//     }
+//     const browser = await puppeteer.launch({
+//       headless: true,
+//       args: ["--no-sandbox", "--disable-setuid-sandbox"],
+//     });
+//     const page = await browser.newPage();
+
+//     await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+
+//     await page.pdf({
+//       path: filePath,
+//       format: "A4",
+//       printBackground: true,
+//       margin: {
+//         top: "0.5in",
+//         right: "0.5in",
+//         bottom: "0.5in",
+//         left: "0.5in",
+//       },
+//     });
+
+//     await browser.close();
+
+//     return filePath;
+//   } catch (error) {
+//     throw new Error(`PDF generation failed: ${error.message}`);
+//   }
+// };
+
+// Helper functions
+
 const generatePayslipPDF = async (data, filePath) => {
+  let browser = null;
   try {
     const puppeteer = require("puppeteer");
 
     const htmlContent = await generatePayslipHTML(data);
+
     const chromePaths = [
       process.env.CHROME_PATH,
       "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
@@ -572,35 +630,104 @@ const generatePayslipPDF = async (data, filePath) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
-    const browser = await puppeteer.launch({
+
+    browser = await puppeteer.launch({
       headless: true,
-      args: ["--no-sandbox", "--disable-setuid-sandbox"],
+      executablePath,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-accelerated-2d-canvas",
+        "--no-first-run",
+        "--no-zygote",
+        "--single-process",
+        "--disable-gpu",
+      ],
+      timeout: 60000,
     });
+
     const page = await browser.newPage();
 
-    await page.setContent(htmlContent, { waitUntil: "networkidle0" });
+    // Set page timeout
+    await page.setDefaultTimeout(30000);
 
+    // Handle page errors
+    page.on("error", (error) => {
+      console.error("Page error:", error);
+    });
+
+    page.on("pageerror", (error) => {
+      console.error("Page error event:", error);
+    });
+
+    // Set content with better wait conditions
+    await page.setContent(htmlContent, {
+      waitUntil: ["networkidle0", "domcontentloaded"],
+      timeout: 30000,
+    });
+
+    // Wait for fonts and images to load (if any)
+    await page.evaluateHandle("document.fonts.ready");
+
+    // Add a small delay to ensure everything is rendered
+    await page.waitForTimeout(1000);
+
+    // Generate PDF with error handling
     await page.pdf({
       path: filePath,
       format: "A4",
       printBackground: true,
+      preferCSSPageSize: false, // Use the format specified above
       margin: {
         top: "0.5in",
         right: "0.5in",
         bottom: "0.5in",
         left: "0.5in",
       },
+      timeout: 30000, // 30 second timeout for PDF generation
     });
 
-    await browser.close();
+    // Verify file was created and has content
+    if (!fs.existsSync(filePath)) {
+      throw new Error("PDF file was not created successfully");
+    }
 
+    const stats = fs.statSync(filePath);
+    if (stats.size === 0) {
+      throw new Error("Generated PDF file is empty");
+    }
+
+    logger.info(
+      `PDF generated successfully: ${filePath}, size: ${stats.size} bytes`
+    );
     return filePath;
   } catch (error) {
+    // Clean up failed file
+    if (filePath && fs.existsSync(filePath)) {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (cleanupError) {
+        console.error("Failed to clean up failed PDF file:", cleanupError);
+      }
+    }
+
+    logger.error(`PDF generation failed: ${error.message}`, error);
     throw new Error(`PDF generation failed: ${error.message}`);
+  } finally {
+    // Always close browser to prevent memory leaks
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Failed to close browser:", closeError);
+      }
+    }
   }
 };
 
-// Helper functions
+// Enhanced service method with retry logic
+
 const formatDate = (date) => {
   if (!date) return "";
   return new Date(date).toLocaleDateString("en-GB");
