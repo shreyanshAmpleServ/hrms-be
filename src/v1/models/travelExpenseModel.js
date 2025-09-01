@@ -103,20 +103,6 @@ const updateTravelExpense = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_travel_expense.update({
       where: { id: parseInt(id) },
-      include: {
-        travel_expense_approver: {
-          select: { id: true, employee_code: true, full_name: true },
-        },
-        travel_expense_createdby: {
-          select: { id: true, employee_code: true, full_name: true },
-        },
-        travel_expense_employee: {
-          select: { id: true, employee_code: true, full_name: true },
-        },
-        travel_expense_currency: {
-          select: { id: true, currency_code: true, currency_name: true },
-        },
-      },
       data: {
         ...serializeTravelExpenseData(data),
         updatedby: data.updatedby ? Number(data.updatedby) : 1,
@@ -137,6 +123,7 @@ const updateTravelExpense = async (id, data) => {
         },
       },
     });
+
     return updatedEntry;
   } catch (error) {
     throw new CustomError(
