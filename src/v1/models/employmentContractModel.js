@@ -9,6 +9,7 @@ const { generateEmailContent } = require("../../utils/emailTemplates");
 const prisma = new PrismaClient();
 
 const notificationLogModel = require("./notificationLogModel");
+const { date } = require("zod/v4");
 
 const serializeJobData = (data) => {
   return {
@@ -29,6 +30,17 @@ const createEmploymentContract = async (data) => {
       data.candidate_id,
       "Candidate"
     );
+
+    if (
+      data.contract_start_date &&
+      data.contract_end_date &&
+      new Date(data.contract_end_date) <= new Date(data.contract_start_date)
+    ) {
+      throw new CustomError(
+        "Contract End  date must be greater than Contract Start Date",
+        400
+      );
+    }
     const reqData = await prisma.hrms_d_employment_contract.create({
       data: {
         ...serializeJobData(data),
@@ -47,10 +59,7 @@ const createEmploymentContract = async (data) => {
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(
-      `Error creating employment contract: ${error.message}`,
-      500
-    );
+    throw new CustomError(` ${error.message}`, 500);
   }
 };
 
