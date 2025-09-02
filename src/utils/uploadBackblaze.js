@@ -181,47 +181,6 @@ const b2 = new B2({
   applicationKey: process.env.BACKBLAZE_B2_APPLICATION_KEY,
 });
 
-// const uploadToBackblaze = async (
-//   fileBuffer,
-//   originalName,
-//   mimeType,
-//   folder = "general"
-// ) => {
-//   try {
-//     await b2.authorize();
-//     const bucketName = process.env.BACKBLAZE_B2_BUCKET_NAME;
-//     const { data: buckets } = await b2.listBuckets();
-//     const bucket = buckets.buckets.find((b) => b.bucketName === bucketName);
-//     if (!bucket) throw new Error("Bucket not found");
-
-//     const ext = path.extname(originalName);
-//     const fileName = `${folder}/${uuidv4()}${ext}`;
-
-//     const { data: uploadData } = await b2.getUploadUrl({
-//       bucketId: bucket.bucketId,
-//     });
-
-//     await b2.uploadFile({
-//       uploadUrl: uploadData.uploadUrl,
-//       uploadAuthToken: uploadData.authorizationToken,
-//       fileName,
-//       data: fileBuffer,
-//       mime: mimeType,
-//     });
-
-//     console.log("Upload details:", fileName, {
-//       bucketId: uploadData.bucketId,
-//       uploadUrl: uploadData.uploadUrl.split("/").pop(), // Just show the end part
-//     });
-
-//     const fileUrl = `https://DCC-HRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
-//     return fileUrl;
-//   } catch (error) {
-//     console.error("Upload failed:", error.message);
-//     throw new Error(`Failed to upload file to Backblaze: ${error.message}`);
-//   }
-// };
-
 const uploadToBackblaze = async (
   fileBuffer,
   originalName,
@@ -242,7 +201,7 @@ const uploadToBackblaze = async (
       bucketId: bucket.bucketId,
     });
 
-    const { data: uploadedFile } = await b2.uploadFile({
+    await b2.uploadFile({
       uploadUrl: uploadData.uploadUrl,
       uploadAuthToken: uploadData.authorizationToken,
       fileName,
@@ -250,122 +209,85 @@ const uploadToBackblaze = async (
       mime: mimeType,
     });
 
-    console.log("Upload details:", {
-      fileName,
-      fileId: uploadedFile.fileId,
+    console.log("Upload details:", fileName, {
+      bucketId: uploadData.bucketId,
+      uploadUrl: uploadData.uploadUrl.split("/").pop(), // Just show the end part
     });
 
     const fileUrl = `https://DCC-HRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
-
-    return {
-      fileId: uploadedFile.fileId,
-      fileUrl,
-      fileName,
-    };
+    return fileUrl;
   } catch (error) {
     console.error("Upload failed:", error.message);
     throw new Error(`Failed to upload file to Backblaze: ${error.message}`);
   }
 };
 
-// const deleteFromBackblaze = async (fileUrlOrPath) => {
-//   try {
-//     console.log("Starting deletion process for:", fileUrlOrPath);
-
-//     let fileName;
-//     try {
-//       const url = new URL(fileUrlOrPath);
-//       const pathParts = url.pathname.split("/");
-//       fileName = decodeURIComponent(pathParts.slice(1).join("/")); // remove leading slash
-//     } catch {
-//       fileName = fileUrlOrPath.startsWith("/")
-//         ? fileUrlOrPath.slice(1)
-//         : fileUrlOrPath;
-//     }
-
-//     console.log(" Extracted filename:", fileName);
-
-//     await b2.authorize();
-
-//     const { data: buckets } = await b2.listBuckets();
-//     const bucket = buckets.buckets.find(
-//       (b) => b.bucketName === process.env.BACKBLAZE_B2_BUCKET_NAME
-//     );
-//     if (!bucket) throw new Error("Bucket not found");
-
-//     console.log("Searching for file in bucket...");
-//     const { data: fileVersions } = await b2.listFileVersions({
-//       bucketId: bucket.bucketId,
-//       prefix: fileName,
-//       maxFileCount: 1000,
-//     });
-
-//     let file = fileVersions.files.find((f) => f.fileName === fileName);
-//     if (!file) {
-//       const shortName = path.basename(fileName);
-//       file = fileVersions.files.find((f) => f.fileName.endsWith(shortName));
-//     }
-
-//     if (!file) {
-//       console.log(" File not found in bucket:", fileName);
-//       return {
-//         success: true,
-//         message: "File not found (likely already deleted)",
-//         fileName: fileName,
-//       };
-//     }
-
-//     console.log(" Found file, proceeding with deletion:", {
-//       fileName: file.fileName,
-//       fileId: file.fileId,
-//     });
-
-//     await b2.deleteFileVersion({
-//       fileName: file.fileName,
-//       fileId: file.fileId,
-//     });
-
-//     console.log("File deleted successfully:", fileName);
-//     return {
-//       success: true,
-//       message: "File deleted successfully",
-//       fileName: fileName,
-//     };
-//   } catch (err) {
-//     console.error(" Failed to delete from B2:", err.message);
-//     throw err;
-//   }
-// };
-
-const deleteFromBackblaze = async (fileUrl) => {
+const deleteFromBackblaze = async (fileUrlOrPath) => {
   try {
-    await b2.authorize();
-    const bucketName = process.env.BACKBLAZE_B2_BUCKET_NAME;
+    console.log("Starting deletion process for:", fileUrlOrPath);
 
-    // Extract just the fileName (everything after bucket domain)
-    const fileName = fileUrl.split(`${bucketName}/`)[1];
-
-    if (!fileName) throw new Error("Could not extract fileName from URL");
-
-    const { data: versions } = await b2.listFileNames({
-      bucketId: process.env.BACKBLAZE_B2_BUCKET_ID,
-      maxFileCount: 1,
-      startFileName: fileName,
-    });
-
-    if (!versions.files.length) {
-      console.warn("No matching file found:", fileName);
-      return;
+    let fileName;
+    try {
+      const url = new URL(fileUrlOrPath);
+      const pathParts = url.pathname.split("/");
+      fileName = decodeURIComponent(pathParts.slice(1).join("/")); // remove leading slash
+    } catch {
+      fileName = fileUrlOrPath.startsWith("/")
+        ? fileUrlOrPath.slice(1)
+        : fileUrlOrPath;
     }
 
-    await b2.deleteFileVersion({
-      fileId: versions.files[0].fileId,
-      fileName: fileName,
+    console.log(" Extracted filename:", fileName);
+
+    await b2.authorize();
+
+    const { data: buckets } = await b2.listBuckets();
+    const bucket = buckets.buckets.find(
+      (b) => b.bucketName === process.env.BACKBLAZE_B2_BUCKET_NAME
+    );
+    if (!bucket) throw new Error("Bucket not found");
+
+    console.log("Searching for file in bucket...");
+    const { data: fileVersions } = await b2.listFileVersions({
+      bucketId: bucket.bucketId,
+      prefix: fileName,
+      maxFileCount: 1000,
     });
 
-    console.log("Deleted Backblaze file:", fileName);
+    let file = fileVersions.files.find((f) => f.fileName === fileName);
+    if (!file) {
+      const shortName = path.basename(fileName);
+      file = fileVersions.files.find((f) => f.fileName.endsWith(shortName));
+    }
+
+    if (!file) {
+      console.log(" File not found in bucket:", fileName);
+      return {
+        success: true,
+        message: "File not found (likely already deleted)",
+        fileName: fileName,
+      };
+    }
+
+    console.log(" Found file, proceeding with deletion:", {
+      fileName: file.fileName,
+      fileId: file.fileId,
+    });
+
+    await b2.deleteFileVersion({
+      fileName: file.fileName,
+      fileId: file.fileId,
+    });
+
+    console.log("File deleted successfully:", fileName);
+    return {
+      success: true,
+      message: "File deleted successfully",
+      fileName: fileName,
+    };
   } catch (err) {
-    console.error("Error deleting file from Backblaze:", err.message);
+    console.error(" Failed to delete from B2:", err.message);
+    throw err;
   }
 };
 
