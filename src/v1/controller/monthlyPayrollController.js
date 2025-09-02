@@ -303,23 +303,23 @@ const downloadPayslipPDF = async (req, res, next) => {
     );
 
     const fileBuffer = fs.readFileSync(filePath);
+    const originalName = path.basename(filePath);
+    const mimeType = "application/pdf";
 
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader(
-      "Content-Disposition",
-      `inline; filename="payslip_${employee_id}_${payroll_month}_${payroll_year}.pdf"`
+    const fileUrl = await uploadToBackblazeWithValidation(
+      fileBuffer,
+      originalName,
+      mimeType,
+      "payslips"
     );
-    res.send(fileBuffer);
 
-    setTimeout(() => {
-      fs.unlink(filePath, (err) => {
-        if (err) {
-          console.error("Error deleting temp PDF:", err);
-        } else {
-          console.log(`Deleted temp PDF: ${filePath}`);
-        }
-      });
-    }, 5 * 60 * 1000);
+    fs.unlink(filePath, (unlinkErr) => {
+      if (unlinkErr) {
+        console.error("Error deleting temp file:", unlinkErr);
+      }
+    });
+
+    res.redirect(fileUrl);
   } catch (error) {
     next(error);
   }
