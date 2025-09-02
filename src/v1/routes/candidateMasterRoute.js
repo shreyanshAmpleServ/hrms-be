@@ -31,8 +31,14 @@ router.put(
   candidateMasterController.updateCandidateMaster
 );
 
+// router.delete(
+//   "/candidate-master/:id",
+//   authenticateToken,
+//   candidateMasterController.deleteCandidateMaster
+// );
+
 router.delete(
-  "/candidate-master/:id",
+  "/candidate-master",
   authenticateToken,
   candidateMasterController.deleteCandidateMaster
 );

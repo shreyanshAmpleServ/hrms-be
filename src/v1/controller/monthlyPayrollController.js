@@ -3,6 +3,10 @@ const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const { success } = require("zod/v4");
 const fs = require("fs");
+const path = require("path");
+const {
+  uploadToBackblazeWithValidation,
+} = require("../../utils/uploadBackblaze.js");
 
 const createMonthlyPayroll = async (req, res, next) => {
   try {
@@ -246,6 +250,44 @@ const getGeneratedMonthlyPayroll = async (req, res, next) => {
   }
 };
 
+// const downloadPayslipPDF = async (req, res, next) => {
+//   try {
+//     const { employee_id, payroll_month, payroll_year } = req.query;
+
+//     if (!employee_id || !payroll_month || !payroll_year) {
+//       throw new CustomError("Missing required parameters", 400);
+//     }
+
+//     const filePath = await monthlyPayrollService.downloadPayslipPDF(
+//       employee_id,
+//       payroll_month,
+//       payroll_year
+//     );
+
+//     res.setHeader("Content-Type", "application/pdf");
+//     res.setHeader("Content-Disposition", 'inline; filename="payslip.pdf"');
+
+//     res.sendFile(filePath, (err) => {
+//       if (err) {
+//         console.error("Error sending PDF file:", err);
+//         return next(err);
+//       }
+
+//       setTimeout(() => {
+//         fs.unlink(filePath, (unlinkErr) => {
+//           if (unlinkErr) {
+//             console.error("Error deleting PDF file:", unlinkErr);
+//           } else {
+//             console.log(`Deleted temporary PDF: ${filePath}`);
+//           }
+//         });
+//       }, 5 * 60 * 1000);
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const downloadPayslipPDF = async (req, res, next) => {
   try {
     const { employee_id, payroll_month, payroll_year } = req.query;
@@ -260,25 +302,24 @@ const downloadPayslipPDF = async (req, res, next) => {
       payroll_year
     );
 
+    const fileBuffer = fs.readFileSync(filePath);
+
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", 'inline; filename="payslip.pdf"');
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="payslip_${employee_id}_${payroll_month}_${payroll_year}.pdf"`
+    );
+    res.send(fileBuffer);
 
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error("Error sending PDF file:", err);
-        return next(err);
-      }
-
-      setTimeout(() => {
-        fs.unlink(filePath, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error("Error deleting PDF file:", unlinkErr);
-          } else {
-            console.log(`Deleted temporary PDF: ${filePath}`);
-          }
-        });
-      }, 5 * 60 * 1000);
-    });
+    setTimeout(() => {
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error("Error deleting temp PDF:", err);
+        } else {
+          console.log(`Deleted temp PDF: ${filePath}`);
+        }
+      });
+    }, 5 * 60 * 1000);
   } catch (error) {
     next(error);
   }

@@ -57,10 +57,20 @@ const updateDepartment = async (req, res, next) => {
   }
 };
 
+// const deleteDepartment = async (req, res, next) => {
+//   try {
+//     await departmentService.deleteDepartment(req.params.id);
+//     res.status(200).success("Department deleted successfully", null);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const deleteDepartment = async (req, res, next) => {
   try {
-    await departmentService.deleteDepartment(req.params.id);
-    res.status(200).success("Department deleted successfully", null);
+    const ids = req.body.ids;
+    await departmentService.deleteDepartment(ids);
+    res.status(200).success("Department(s) deleted successfully", null);
   } catch (error) {
     next(error);
   }

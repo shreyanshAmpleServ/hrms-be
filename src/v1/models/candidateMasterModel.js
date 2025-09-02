@@ -273,19 +273,46 @@ const updateCandidateMaster = async (id, data) => {
 };
 
 // Delete candidate master
-const deleteCandidateMaster = async (id) => {
+// const deleteCandidateMaster = async (id) => {
+//   try {
+//     await prisma.hrms_d_candidate_master.delete({
+//       where: { id: parseInt(id) },
+//     });
+//   } catch (error) {
+//     if (error.code === "P2003") {
+//       throw new CustomError(
+//         "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+//         400
+//       );
+//     } else {
+//       throw new CustomError(error.meta.constraint, 500);
+//     }
+//   }
+// };
+
+const deleteCandidateMaster = async (ids) => {
   try {
-    await prisma.hrms_d_candidate_master.delete({
-      where: { id: parseInt(id) },
+    const idArray = Array.isArray(ids)
+      ? ids.map((id) => parseInt(id))
+      : [parseInt(ids)];
+
+    const candidates = await prisma.hrms_d_candidate_master.findMany({
+      where: { id: { in: idArray } },
     });
+
+    await prisma.hrms_d_candidate_master.deleteMany({
+      where: { id: { in: idArray } },
+    });
+
+    return candidates;
   } catch (error) {
     if (error.code === "P2003") {
       throw new CustomError(
-        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        "Some candidate(s) cannot be deleted because they have associated records. Please remove dependent data first.",
         400
       );
     } else {
-      throw new CustomError(error.meta.constraint, 500);
+      throw new CustomError(error.meta?.constraint || error.message, 500);
     }
   }
 };

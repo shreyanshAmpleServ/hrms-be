@@ -271,24 +271,53 @@ const updateCandidateMaster = async (req, res, next) => {
 };
 
 // Delete
+// const deleteCandidateMaster = async (req, res, next) => {
+//   try {
+//     const existingCandidateMaster =
+//       await candidateMasterService.getCandidateMasterById(req.params.id);
+//     if (!existingCandidateMaster) {
+//       throw new CustomError("Candidate Master not found", 404);
+//     }
+//     await candidateMasterService.deleteCandidateMaster(req.params.id);
+//     res.status(200).json({
+//       success: true,
+//       message: "Candidate master deleted successfully",
+//     });
+//     if (existingCandidateMaster.profile_pic && req.files?.profile_pic) {
+//       await deleteFromBackblaze(existingCandidateMaster.profile_pic);
+//     }
+//     if (existingCandidateMaster.resume_path && req.files?.resume_path) {
+//       await deleteFromBackblaze(existingCandidateMaster.resume_path);
+//     }
+//   } catch (error) {
+//     next(new CustomError(error.message, 400));
+//   }
+// };
+
 const deleteCandidateMaster = async (req, res, next) => {
   try {
-    const existingCandidateMaster =
-      await candidateMasterService.getCandidateMasterById(req.params.id);
-    if (!existingCandidateMaster) {
-      throw new CustomError("Candidate Master not found", 404);
+    const ids = req.body.ids;
+
+    if (!ids || (Array.isArray(ids) && ids.length === 0)) {
+      throw new CustomError("No candidate IDs provided", 400);
     }
-    await candidateMasterService.deleteCandidateMaster(req.params.id);
-    res.status(200).json({
+
+    const deletedCandidates =
+      await candidateMasterService.deleteCandidateMaster(ids);
+
+    for (const candidate of deletedCandidates) {
+      if (candidate.profile_pic) {
+        await deleteFromBackblaze(candidate.profile_pic);
+      }
+      if (candidate.resume_path) {
+        await deleteFromBackblaze(candidate.resume_path);
+      }
+    }
+
+    res.status(200).send({
       success: true,
-      message: "Candidate master deleted successfully",
+      message: "Candidate master(s) deleted successfully",
     });
-    if (existingCandidateMaster.profile_pic && req.files?.profile_pic) {
-      await deleteFromBackblaze(existingCandidateMaster.profile_pic);
-    }
-    if (existingCandidateMaster.resume_path && req.files?.resume_path) {
-      await deleteFromBackblaze(existingCandidateMaster.resume_path);
-    }
   } catch (error) {
     next(new CustomError(error.message, 400));
   }

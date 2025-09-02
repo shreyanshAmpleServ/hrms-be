@@ -14,8 +14,12 @@ const updateCandidateMaster = async (id, data) => {
   return await candidateMasterModel.updateCandidateMaster(id, data);
 };
 
-const deleteCandidateMaster = async (id) => {
-  return await candidateMasterModel.deleteCandidateMaster(id);
+// const deleteCandidateMaster = async (id) => {
+//   return await candidateMasterModel.deleteCandidateMaster(id);
+// };
+
+const deleteCandidateMaster = async (ids) => {
+  return await candidateMasterModel.deleteCandidateMaster(ids);
 };
 
 const getAllCandidateMaster = async (

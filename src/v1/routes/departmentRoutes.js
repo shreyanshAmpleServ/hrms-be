@@ -20,11 +20,18 @@ router.put(
   authenticateToken,
   departmentController.updateDepartment
 );
+// router.delete(
+//   "/department/:id",
+//   authenticateToken,
+//   departmentController.deleteDepartment
+// );
+
 router.delete(
-  "/department/:id",
+  "/department",
   authenticateToken,
   departmentController.deleteDepartment
 );
+
 router.get(
   "/department",
   authenticateToken,
