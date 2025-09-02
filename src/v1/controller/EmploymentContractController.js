@@ -116,6 +116,40 @@ const getAllEmploymentContract = async (req, res, next) => {
   }
 };
 
+// const downloadContractPDF = async (req, res, next) => {
+//   try {
+//     const data = req.body;
+
+//     if (!data) {
+//       throw new CustomError("Missing required parameters", 400);
+//     }
+
+//     const filePath = await EmploymentContractService.downloadContractPDF(data);
+
+//     res.setHeader("Content-Type", "application/pdf");
+//     res.setHeader("Content-Disposition", 'inline; filename="contract.pdf"');
+
+//     res.sendFile(filePath, (err) => {
+//       if (err) {
+//         console.error("Error sending PDF file:", err);
+//         return next(err);
+//       }
+
+//       setTimeout(() => {
+//         fs.unlink(filePath, (unlinkErr) => {
+//           if (unlinkErr) {
+//             console.error("Error deleting PDF file:", unlinkErr);
+//           } else {
+//             console.log(`Deleted temporary PDF: ${filePath}`);
+//           }
+//         });
+//       }, 5 * 60 * 1000);
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const downloadContractPDF = async (req, res, next) => {
   try {
     const data = req.body;
@@ -126,25 +160,24 @@ const downloadContractPDF = async (req, res, next) => {
 
     const filePath = await EmploymentContractService.downloadContractPDF(data);
 
+    const fileBuffer = fs.readFileSync(filePath);
+
     res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", 'inline; filename="contract.pdf"');
+    res.setHeader(
+      "Content-Disposition",
+      `inline; filename="contract_${data.employee_id || Date.now()}.pdf"`
+    );
+    res.send(fileBuffer);
 
-    res.sendFile(filePath, (err) => {
-      if (err) {
-        console.error("Error sending PDF file:", err);
-        return next(err);
-      }
-
-      setTimeout(() => {
-        fs.unlink(filePath, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error("Error deleting PDF file:", unlinkErr);
-          } else {
-            console.log(`Deleted temporary PDF: ${filePath}`);
-          }
-        });
-      }, 5 * 60 * 1000);
-    });
+    setTimeout(() => {
+      fs.unlink(filePath, (err) => {
+        if (err) {
+          console.error("Error deleting temp contract PDF:", err);
+        } else {
+          console.log(`Deleted temp contract PDF: ${filePath}`);
+        }
+      });
+    }, 5 * 60 * 1000);
   } catch (error) {
     next(error);
   }
