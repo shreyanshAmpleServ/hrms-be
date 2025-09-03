@@ -117,40 +117,7 @@ const getAllEmploymentContract = async (req, res, next) => {
   }
 };
 
-// const downloadContractPDF = async (req, res, next) => {
-//   try {
-//     const data = req.body;
-
-//     if (!data) {
-//       throw new CustomError("Missing required parameters", 400);
-//     }
-
-//     const filePath = await EmploymentContractService.downloadContractPDF(data);
-
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader("Content-Disposition", 'inline; filename="contract.pdf"');
-
-//     res.sendFile(filePath, (err) => {
-//       if (err) {
-//         console.error("Error sending PDF file:", err);
-//         return next(err);
-//       }
-
-//       setTimeout(() => {
-//         fs.unlink(filePath, (unlinkErr) => {
-//           if (unlinkErr) {
-//             console.error("Error deleting PDF file:", unlinkErr);
-//           } else {
-//             console.log(`Deleted temporary PDF: ${filePath}`);
-//           }
-//         });
-//       }, 5 * 60 * 1000);
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
+//  1. without autodeklet(Made and designed by shivang)
 // const downloadContractPDF = async (req, res, next) => {
 //   try {
 //     const data = req.body;
@@ -164,7 +131,7 @@ const getAllEmploymentContract = async (req, res, next) => {
 //     const originalName = `contract_${data.employee_id || Date.now()}.pdf`;
 //     const mimeType = "application/pdf";
 
-//     const { fileId, fileUrl } = await uploadToBackblazeWithValidation(
+//     const fileUrl = await uploadToBackblazeWithValidation(
 //       fileBuffer,
 //       originalName,
 //       mimeType,
@@ -176,23 +143,17 @@ const getAllEmploymentContract = async (req, res, next) => {
 //       if (err) console.error("Error deleting temp contract PDF:", err);
 //     });
 
-//     setTimeout(async () => {
-//       try {
-//         await deleteFromBackblaze(fileId);
-//         console.log(`Deleted Backblaze contract PDF: ${fileId}`);
-//       } catch (err) {
-//         console.error("Error deleting file from Backblaze:", err);
-//       }
-//     }, 5 * 60 * 1000);
+//     if (!/^https?:\/\//i.test(fileUrl)) {
+//       throw new CustomError("Invalid file URL returned from Backblaze", 500);
+//     }
 
-//     res.setHeader("Content-Type", "application/pdf");
-//     res.setHeader("Content-Disposition", `inline; filename="${originalName}"`);
-//     res.send(fileBuffer);
+//     res.json({ url: fileUrl });
 //   } catch (error) {
 //     next(error);
 //   }
 // };
 
+// 2. with autodeklet(Made and designed by shivang)
 const downloadContractPDF = async (req, res, next) => {
   try {
     const data = req.body;
@@ -214,6 +175,7 @@ const downloadContractPDF = async (req, res, next) => {
       { "b2-content-disposition": `inline; filename="${originalName}"` }
     );
 
+    // Delete local temp file
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting temp contract PDF:", err);
     });
@@ -221,6 +183,21 @@ const downloadContractPDF = async (req, res, next) => {
     if (!/^https?:\/\//i.test(fileUrl)) {
       throw new CustomError("Invalid file URL returned from Backblaze", 500);
     }
+
+    // Schedule auto-deletion from Backblaze after 20 seconds
+    setTimeout(async () => {
+      try {
+        await deleteFromBackblaze(fileUrl); // Pass the full URL
+        console.log(
+          `Contract file auto-deleted from Backblaze after 20 seconds`
+        );
+      } catch (error) {
+        console.error(
+          "Error auto-deleting contract file from Backblaze:",
+          error
+        );
+      }
+    }, 10000);
 
     res.json({ url: fileUrl });
   } catch (error) {
