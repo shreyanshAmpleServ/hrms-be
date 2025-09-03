@@ -1028,7 +1028,7 @@ const createOrUpdateBasicPay = async (headerData, payLines) => {
 const findBasicPayByEmployeeId = async (employeeId) => {
   try {
     if (!employeeId) {
-      return null; // Return null instead of throwing error for empty employeeId
+      return null;
     }
 
     const record =

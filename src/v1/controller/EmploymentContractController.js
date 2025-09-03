@@ -172,7 +172,6 @@ const downloadContractPDF = async (req, res, next) => {
       { "b2-content-disposition": `inline; filename="${originalName}"` }
     );
 
-    // Step 3: Delete local temp file immediately
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting temp contract PDF:", err);
     });
