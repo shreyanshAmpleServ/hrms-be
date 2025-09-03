@@ -406,7 +406,7 @@ const downloadPayslipPDF = async (req, res, next) => {
       if (err) console.error("Error deleting temp file:", err);
     });
 
-    res.redirect(fileUrl);
+    res.json({ url: fileUrl });
   } catch (error) {
     next(error);
   }
