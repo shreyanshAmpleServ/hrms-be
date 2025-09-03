@@ -358,12 +358,10 @@ const downloadPayslipPDF = async (req, res, next) => {
 
     res.redirect(fileUrl);
 
-    // Delete local temp file
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting temp file:", err);
     });
 
-    // Redirect the client to the Backblaze URL
     res.redirect(fileUrl);
   } catch (error) {
     next(error);
