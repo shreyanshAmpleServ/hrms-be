@@ -411,6 +411,7 @@ const downloadPayslipPDF = async (req, res, next) => {
     next(error);
   }
 };
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayroll,
