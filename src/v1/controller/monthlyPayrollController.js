@@ -325,6 +325,49 @@ const getGeneratedMonthlyPayroll = async (req, res, next) => {
 //   }
 // };
 
+// const downloadPayslipPDF = async (req, res, next) => {
+//   try {
+//     console.log("Query Params:", req.query);
+
+//     const { employee_id, payroll_month, payroll_year } = req.query;
+
+//     if (!employee_id || !payroll_month || !payroll_year) {
+//       throw new CustomError("Missing required parameters", 400);
+//     }
+
+//     // Generate the PDF locally
+//     const filePath = await monthlyPayrollService.downloadPayslipPDF(
+//       employee_id,
+//       payroll_month,
+//       payroll_year
+//     );
+
+//     const fileBuffer = fs.readFileSync(filePath);
+//     const originalName = path.basename(filePath);
+//     const mimeType = "application/pdf";
+
+//     const fileUrl = await uploadToBackblazeWithValidation(
+//       fileBuffer,
+//       originalName,
+//       mimeType,
+//       "payslips",
+//       {
+//         "b2-content-disposition": `inline; filename="${originalName}"`,
+//       }
+//     );
+
+//     res.redirect(fileUrl);
+
+//     fs.unlink(filePath, (err) => {
+//       if (err) console.error("Error deleting temp file:", err);
+//     });
+
+//     res.redirect(fileUrl);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const downloadPayslipPDF = async (req, res, next) => {
   try {
     console.log("Query Params:", req.query);
@@ -335,7 +378,6 @@ const downloadPayslipPDF = async (req, res, next) => {
       throw new CustomError("Missing required parameters", 400);
     }
 
-    // Generate the PDF locally
     const filePath = await monthlyPayrollService.downloadPayslipPDF(
       employee_id,
       payroll_month,
@@ -356,7 +398,9 @@ const downloadPayslipPDF = async (req, res, next) => {
       }
     );
 
-    res.redirect(fileUrl);
+    if (!/^https?:\/\//i.test(fileUrl)) {
+      throw new CustomError("Invalid file URL returned from Backblaze", 500);
+    }
 
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting temp file:", err);
@@ -367,7 +411,6 @@ const downloadPayslipPDF = async (req, res, next) => {
     next(error);
   }
 };
-
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayroll,
