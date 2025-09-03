@@ -335,7 +335,6 @@ const downloadPayslipPDF = async (req, res, next) => {
       throw new CustomError("Missing required parameters", 400);
     }
 
-    // Generate the PDF locally
     const filePath = await monthlyPayrollService.downloadPayslipPDF(
       employee_id,
       payroll_month,
@@ -358,12 +357,10 @@ const downloadPayslipPDF = async (req, res, next) => {
 
     res.redirect(fileUrl);
 
-    // Delete local temp file
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting temp file:", err);
     });
 
-    // Redirect the client to the Backblaze URL
     res.redirect(fileUrl);
   } catch (error) {
     next(error);

@@ -211,7 +211,7 @@ const uploadToBackblaze = async (
 
     console.log("Upload details:", fileName, {
       bucketId: uploadData.bucketId,
-      uploadUrl: uploadData.uploadUrl.split("/").pop(), // Just show the end part
+      uploadUrl: uploadData.uploadUrl.split("/").pop(),
     });
 
     const fileUrl = `https://DCC-HRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
