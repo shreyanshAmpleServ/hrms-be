@@ -863,7 +863,7 @@ model hrms_d_time_sheet {
   project_id                 Int
   remarks                    String?                  @db.NVarChar(250)
   status                     String                   @default("Draft") @db.NVarChar(20)
-  task_id                    Int
+  task_id                    Int?
   billable_flag              String?                  @db.Char(1)
   work_location              String?                  @db.NVarChar(100)
   submission_date            DateTime?                @db.DateTime
@@ -872,7 +872,7 @@ model hrms_d_time_sheet {
   hrms_time_sheets_approved  hrms_d_employee?         @relation("ApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_approved_by")
   hrms_time_sheets_submitted hrms_d_employee?         @relation("SubmittedBy", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_submitted_by")
   time_sheet_project         hrms_m_timesheet_project @relation("ProjectTimeSheets", fields: [project_id], references: [id], onUpdate: NoAction)
-  time_sheet_task            hrms_m_timesheet_task    @relation("TaskTimeSheets", fields: [task_id], references: [id], onUpdate: NoAction)
+  time_sheet_task            hrms_m_timesheet_task?   @relation("TaskTimeSheets", fields: [task_id], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_training_feedback {
