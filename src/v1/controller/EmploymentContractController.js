@@ -78,7 +78,7 @@ const updateEmploymentContract = async (req, res, next) => {
       .success("Employment contract updated successfully", reqData);
     if (req.file) {
       if (existingData.image) {
-        await deleteFromBackblaze(existingData.image); // Delete the old logo
+        await deleteFromBackblaze(existingData.image);
       }
     }
   } catch (error) {
@@ -93,7 +93,7 @@ const deleteEmploymentContract = async (req, res, next) => {
     await EmploymentContractService.deleteEmploymentContract(req.params.id);
     res.status(200).success("Employment contract deleted successfully", null);
     if (existingData.image) {
-      await deleteFromBackblaze(existingData.image); // Delete the old logo
+      await deleteFromBackblaze(existingData.image);
     }
   } catch (error) {
     next(error);
@@ -175,7 +175,6 @@ const downloadContractPDF = async (req, res, next) => {
       { "b2-content-disposition": `inline; filename="${originalName}"` }
     );
 
-    // Delete local temp file
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting temp contract PDF:", err);
     });
@@ -184,10 +183,9 @@ const downloadContractPDF = async (req, res, next) => {
       throw new CustomError("Invalid file URL returned from Backblaze", 500);
     }
 
-    // Schedule auto-deletion from Backblaze after 20 seconds
     setTimeout(async () => {
       try {
-        await deleteFromBackblaze(fileUrl); // Pass the full URL
+        await deleteFromBackblaze(fileUrl);
         console.log(
           `Contract file auto-deleted from Backblaze after 20 seconds`
         );

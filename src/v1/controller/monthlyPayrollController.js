@@ -251,6 +251,7 @@ const getGeneratedMonthlyPayroll = async (req, res, next) => {
   }
 };
 
+// 1. without auto delete(made by me)
 // const downloadPayslipPDF = async (req, res, next) => {
 //   try {
 //     console.log("Query Params:", req.query);
@@ -295,6 +296,7 @@ const getGeneratedMonthlyPayroll = async (req, res, next) => {
 //   }
 // };
 
+// 2. with auto delete(made by me)
 const downloadPayslipPDF = async (req, res, next) => {
   try {
     console.log("Query Params:", req.query);
@@ -336,7 +338,7 @@ const downloadPayslipPDF = async (req, res, next) => {
     setTimeout(async () => {
       try {
         await deleteFromBackblaze(fileUrl);
-        console.log(`File auto-deleted from Backblaze after 20 seconds`);
+        console.log(`File auto-deleted from Backblaze after 10 seconds`);
       } catch (error) {
         console.error("Error auto-deleting file from Backblaze:", error);
       }
