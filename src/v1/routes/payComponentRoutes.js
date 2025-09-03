@@ -15,6 +15,7 @@ router.get(
   authenticateToken,
   payComponentController.findPayComponentById
 );
+
 router.put(
   "/pay-component/:id",
   authenticateToken,

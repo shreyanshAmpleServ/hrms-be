@@ -20,12 +20,12 @@ const serializeHeaders = (data) => {
 
   // Required fields
   if ("employee_id" in data) serialized.employee_id = Number(data.employee_id);
-  if ("effective_from" in data) {
-    serialized.effective_from = new Date(data.effective_from);
-  }
-  if ("effective_to" in data && data.effective_to) {
-    serialized.effective_to = new Date(data.effective_to);
-  }
+  // if ("effective_from" in data) {
+  //   serialized.effective_from = new Date(data.effective_from);
+  // }
+  // if ("effective_to" in data && data.effective_to) {
+  //   serialized.effective_to = new Date(data.effective_to);
+  // }
   // Optional fields
   if ("department_id" in data)
     serialized.department_id = Number(data.department_id);
@@ -118,9 +118,9 @@ const createBasicPay = async (data) => {
     if (!data.employee_id) {
       throw new CustomError(`Employee is required`, 400);
     }
-    if (!data.effective_from) {
-      throw new CustomError(`Effective from  is required`, 400);
-    }
+    // if (!data.effective_from) {
+    //   throw new CustomError(`Effective from  is required`, 400);
+    // }
     if (!data.status) {
       throw new CustomError(`Status Type is required`, 400);
     }
@@ -810,8 +810,8 @@ const importFromExcel = async (rows) => {
       log_inst: row.log_inst || 1,
       status: row.status || "Active",
       remarks: row.remarks || "",
-      effective_from: parseDate(row.effective_from),
-      effective_to: parseDate(row.effective_to),
+      // effective_from: parseDate(row.effective_from),
+      // effective_to: parseDate(row.effective_to),
       department_id: row.department_id,
       branch_id: row.branch_id,
       position_id: row.position_id,
@@ -899,8 +899,6 @@ const downloadSampleExcel = async () => {
   const headers = [
     "id",
     "employee_id",
-    "effective_from",
-    "effective_to",
     "department_id",
     "branch_id",
     "position_id",
@@ -915,8 +913,6 @@ const downloadSampleExcel = async () => {
   const sampleRow = {
     id: "1",
     employee_id: "1",
-    effective_from: "2026-09-09",
-    effective_to: "2026-09-09",
     department_id: "5",
     branch_id: "9",
     position_id: "4",
@@ -959,10 +955,10 @@ const createOrUpdateBasicPay = async (headerData, payLines) => {
 
     const serializedHeader = {
       ...headerData,
-      effective_from: new Date(headerData.effective_from),
-      effective_to: headerData.effective_to
-        ? new Date(headerData.effective_to)
-        : null,
+      // effective_from: new Date(headerData.effective_from),
+      // effective_to: headerData.effective_to
+      //   ? new Date(headerData.effective_to)
+      //   : null,
     };
 
     if (existingHeader) {

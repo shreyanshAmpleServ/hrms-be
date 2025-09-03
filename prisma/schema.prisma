@@ -1929,7 +1929,7 @@ model hrms_d_warning_letters {
 model hrms_d_employee_pay_component_assignment_header {
   id                                            Int                                             @id(map: "PK__hrms_d_e__3213E83F9954ECB3") @default(autoincrement())
   employee_id                                   Int
-  effective_from                                DateTime                                        @db.Date
+  effective_from                                DateTime?                                       @db.Date
   effective_to                                  DateTime?                                       @db.Date
   department_id                                 Int?
   branch_id                                     Int?

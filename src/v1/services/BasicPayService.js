@@ -114,8 +114,6 @@ const importFromExcel = async (fileBuffer) => {
   for (const row of sheetData) {
     const headerData = {
       employee_id: row.employee_id,
-      effective_from: row.effective_from,
-      effective_to: row.effective_to,
       department_id: row.department_id,
       branch_id: row.branch_id,
       position_id: row.position_id,
@@ -167,8 +165,6 @@ const downloadSampleExcel = async () => {
   const sampleRow = {
     employee_id: "12345",
     employee_name: "Test Employee",
-    effective_from: "2025-01-01",
-    effective_to: "2025-12-31",
     department_id: "1",
     branch_id: "1",
     position_id: "1",
@@ -187,8 +183,6 @@ const downloadSampleExcel = async () => {
   const headers = [
     "employee_id",
     "employee_name",
-    "effective_from",
-    "effective_to",
     "department_id",
     "branch_id",
     "position_id",
