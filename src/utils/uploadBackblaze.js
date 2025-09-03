@@ -539,16 +539,36 @@ const validateFile = (fileBuffer, originalName, mimeType, maxSizeMB = 10) => {
   return true;
 };
 
+// const uploadToBackblazeWithValidation = async (
+//   fileBuffer,
+//   originalName,
+//   mimeType,
+//   folder = "general",
+//   maxSizeMB = 10
+// ) => {
+//   validateFile(fileBuffer, originalName, mimeType, maxSizeMB);
+
+//   return await uploadToBackblaze(fileBuffer, originalName, mimeType, folder);
+// };
 const uploadToBackblazeWithValidation = async (
   fileBuffer,
   originalName,
   mimeType,
   folder = "general",
+  headers = {},
   maxSizeMB = 10
 ) => {
   validateFile(fileBuffer, originalName, mimeType, maxSizeMB);
 
-  return await uploadToBackblaze(fileBuffer, originalName, mimeType, folder);
+  const uploadResult = await uploadToBackblaze(
+    fileBuffer,
+    originalName,
+    mimeType,
+    folder
+  );
+
+  // Return the upload result (now includes fileName)
+  return uploadResult;
 };
 
 module.exports = {
