@@ -814,7 +814,9 @@ const generateContractPDF = async (data, filePath) => {
     const htmlContent = await generateContractHTML(data);
 
     const browser = await puppeteer.launch({
-      executablePath: puppeteer.executablePath(),
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
       headless: true,
       args: [
         "--no-sandbox",
