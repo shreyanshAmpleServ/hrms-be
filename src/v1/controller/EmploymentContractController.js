@@ -151,48 +151,6 @@ const getAllEmploymentContract = async (req, res, next) => {
 //   }
 // };
 
-const downloadContractPDF = async (req, res, next) => {
-  try {
-    const data = req.body;
-    if (!data) {
-      throw new CustomError("Missing required parameters", 400);
-    }
-
-    const filePath = await EmploymentContractService.downloadContractPDF(data);
-    const fileBuffer = fs.readFileSync(filePath);
-
-    const originalName = `contract_${data.employee_id || Date.now()}.pdf`;
-    const mimeType = "application/pdf";
-
-    const { fileId, fileUrl } = await uploadToBackblazeWithValidation(
-      fileBuffer,
-      originalName,
-      mimeType,
-      "contracts",
-      { "b2-content-disposition": `inline; filename="${originalName}"` }
-    );
-
-    fs.unlink(filePath, (err) => {
-      if (err) console.error("Error deleting temp contract PDF:", err);
-    });
-
-    setTimeout(async () => {
-      try {
-        await deleteFromBackblaze(fileId);
-        console.log(`Deleted Backblaze contract PDF: ${fileId}`);
-      } catch (err) {
-        console.error("Error deleting file from Backblaze:", err);
-      }
-    }, 5 * 60 * 1000);
-
-    res.setHeader("Content-Type", "application/pdf");
-    res.setHeader("Content-Disposition", `inline; filename="${originalName}"`);
-    res.send(fileBuffer);
-  } catch (error) {
-    next(error);
-  }
-};
-
 // const downloadContractPDF = async (req, res, next) => {
 //   try {
 //     const data = req.body;
@@ -209,23 +167,14 @@ const downloadContractPDF = async (req, res, next) => {
 //     const { fileId, fileUrl } = await uploadToBackblazeWithValidation(
 //       fileBuffer,
 //       originalName,
-//       "application/pdf",
+//       mimeType,
 //       "contracts",
-//       {
-//         "Content-Type": "application/pdf",
-//         "Content-Disposition": `inline; filename="${originalName}"`,
-//       }
+//       { "b2-content-disposition": `inline; filename="${originalName}"` }
 //     );
 
-//     setTimeout(() => {
-//       fs.unlink(filePath, (err) => {
-//         if (err) {
-//           console.error("Error deleting temp contract PDF:", err);
-//         } else {
-//           console.log(`Deleted temp contract PDF after 1 minute: ${filePath}`);
-//         }
-//       });
-//     }, 5 * 60 * 1000);
+//     fs.unlink(filePath, (err) => {
+//       if (err) console.error("Error deleting temp contract PDF:", err);
+//     });
 
 //     setTimeout(async () => {
 //       try {
@@ -234,7 +183,7 @@ const downloadContractPDF = async (req, res, next) => {
 //       } catch (err) {
 //         console.error("Error deleting file from Backblaze:", err);
 //       }
-//     }, 1 * 60 * 1000);
+//     }, 5 * 60 * 1000);
 
 //     res.setHeader("Content-Type", "application/pdf");
 //     res.setHeader("Content-Disposition", `inline; filename="${originalName}"`);
@@ -243,6 +192,41 @@ const downloadContractPDF = async (req, res, next) => {
 //     next(error);
 //   }
 // };
+
+const downloadContractPDF = async (req, res, next) => {
+  try {
+    const data = req.body;
+    if (!data) {
+      throw new CustomError("Missing required parameters", 400);
+    }
+
+    const filePath = await EmploymentContractService.downloadContractPDF(data);
+    const fileBuffer = fs.readFileSync(filePath);
+
+    const originalName = `contract_${data.employee_id || Date.now()}.pdf`;
+    const mimeType = "application/pdf";
+
+    const fileUrl = await uploadToBackblazeWithValidation(
+      fileBuffer,
+      originalName,
+      mimeType,
+      "contracts",
+      { "b2-content-disposition": `inline; filename="${originalName}"` }
+    );
+
+    fs.unlink(filePath, (err) => {
+      if (err) console.error("Error deleting temp contract PDF:", err);
+    });
+
+    if (!/^https?:\/\//i.test(fileUrl)) {
+      throw new CustomError("Invalid file URL returned from Backblaze", 500);
+    }
+
+    res.json({ url: fileUrl });
+  } catch (error) {
+    next(error);
+  }
+};
 
 module.exports = {
   createEmploymentContract,
