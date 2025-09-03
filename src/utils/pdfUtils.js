@@ -1,6 +1,7 @@
 const fs = require("fs");
 const logger = require("../Comman/logger");
 const path = require("path");
+const puppeteer = require("puppeteer");
 
 // HTML Template with placeholders
 const payslipTemplate = `<!DOCTYPE html>
@@ -513,12 +514,10 @@ const generatePayslipHTML = (data, filePath = null) => {
 /**
  * Generate HTML payslip and convert to PDF using puppeteer
  */
+
 const generatePayslipPDF = async (data, filePath) => {
   let browser = null;
-
   try {
-    const puppeteer = require("puppeteer");
-
     const htmlContent = await generatePayslipHTML(data);
 
     const dir = path.dirname(filePath);
@@ -527,25 +526,25 @@ const generatePayslipPDF = async (data, filePath) => {
     }
 
     browser = await puppeteer.launch({
-      executablePath: puppeteer.executablePath(),
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
       headless: true,
       args: [
         "--no-sandbox",
         "--disable-setuid-sandbox",
-        "--disable-dev-shm-usage", // Helps with Docker/limited memory environments
+        "--disable-dev-shm-usage",
         "--disable-extensions",
         "--disable-gpu",
       ],
     });
 
     const page = await browser.newPage();
-
-    // Set viewport for consistent rendering
-    await page.setViewport({ width: 1240, height: 1754 }); // A4 proportions
+    await page.setViewport({ width: 1240, height: 1754 });
 
     await page.setContent(htmlContent, {
       waitUntil: "networkidle0",
-      timeout: 30000, // 30 second timeout
+      timeout: 30000,
     });
 
     await page.pdf({
@@ -564,7 +563,6 @@ const generatePayslipPDF = async (data, filePath) => {
   } catch (error) {
     throw new Error(`PDF generation failed: ${error.message}`);
   } finally {
-    // Ensure browser is always closed
     if (browser) {
       try {
         await browser.close();
@@ -574,6 +572,44 @@ const generatePayslipPDF = async (data, filePath) => {
     }
   }
 };
+
+// // Helper function to find Chrome executable
+// function findChromePath() {
+//   const possiblePaths = [
+//     // Your custom .puppeteer directory
+//     path.join(
+//       process.cwd(),
+//       ".puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe"
+//     ),
+//     // Standard Puppeteer cache locations
+//     path.join(
+//       process.env.HOME || process.env.USERPROFILE,
+//       ".cache\\puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe"
+//     ),
+
+//     // System Chrome installations
+//     "C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe",
+//     "C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe",
+
+//     // Puppeteer's bundled Chromium
+//     puppeteer.executablePath(),
+
+//     // Environment variable
+//     process.env.CHROME_PATH,
+//     process.env.PUPPETEER_EXECUTABLE_PATH,
+//   ];
+
+//   for (const chromePath of possiblePaths) {
+//     if (chromePath && fs.existsSync(chromePath)) {
+//       console.log(`Found Chrome at: ${chromePath}`);
+//       return chromePath;
+//     }
+//   }
+
+//   throw new Error(
+//     "Chrome executable not found. Checked paths: " + possiblePaths.join(", ")
+//   );
+// }
 
 // Helper functions
 const formatDate = (date) => {
