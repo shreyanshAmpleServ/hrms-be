@@ -2,7 +2,8 @@ const fs = require("fs");
 const logger = require("../Comman/logger");
 const path = require("path");
 const puppeteer = require("puppeteer");
-
+const chromePath =
+  "../../.puppeteer/chrome/win64-138.0.7204.168/chrome-win64/chrome.exe";
 // HTML Template with placeholders
 const payslipTemplate = `<!DOCTYPE html>
 <html lang="en">
@@ -488,7 +489,6 @@ const generatePayslipHTML = (data, filePath = null) => {
         htmlContent = htmlContent.replace(placeholder, templateData[key]);
       });
 
-      console.log(data.company_logo, "company_logo");
       logger.debug("HTML content generated successfully");
 
       // If file path is provided, write to file
@@ -524,6 +524,8 @@ const generatePayslipPDF = async (data, filePath) => {
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
+
+    logger.error(process.cwd());
 
     browser = await puppeteer.launch({
       executablePath:
