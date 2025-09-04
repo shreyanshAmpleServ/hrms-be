@@ -55,4 +55,10 @@ router.patch(
   candidateMasterController.updateCandidateMasterStatus
 );
 
+router.post(
+  "/candidate-master/:id/create-employee",
+  authenticateToken,
+  candidateMasterController.createEmployeeFromCandidate
+);
+
 module.exports = router;

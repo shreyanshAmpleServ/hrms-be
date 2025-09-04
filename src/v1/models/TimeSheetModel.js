@@ -42,7 +42,7 @@ const createTimeSheet = async (data) => {
           select: { full_name: true, id: true },
         },
         time_sheet_project: {
-          select: { id: true, project_code: true, project_name: true },
+          select: { id: true, code: true, name: true },
         },
         time_sheet_task: {
           select: { id: true, task_code: true, task_name: true },

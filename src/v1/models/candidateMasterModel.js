@@ -1,6 +1,7 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
+const employeeModel = require("./EmployeeModel");
 
 // Serialize candidate master data
 const serializeCandidateMasterData = (data) => ({
@@ -289,7 +290,6 @@ const deleteCandidateMaster = async (id) => {
   }
 };
 
-// Get all candidate masters with pagination and search
 const getAllCandidateMaster = async (
   search,
   page,
@@ -364,7 +364,7 @@ const getAllCandidateMaster = async (
       totalCount,
     };
   } catch (error) {
-    console.error("getAllCandidateMaster ERROR:", error); // <- This is crucial
+    console.error("getAllCandidateMaster ERROR:", error);
 
     throw new CustomError("Error retrieving candidates", 503);
   }
@@ -417,6 +417,131 @@ const updateCandidateMasterStatus = async (id, data) => {
   }
 };
 
+const createEmployeeFromCandidate = async (
+  candidateId,
+  additionalData,
+  createdBy,
+  logInst
+) => {
+  try {
+    const candidate = await prisma.hrms_d_candidate_master.findUnique({
+      where: { id: parseInt(candidateId) },
+      include: {
+        candidate_master_applied_position: true,
+        candidate_application_source: true,
+        candidate_interview_stage: true,
+      },
+    });
+
+    if (!candidate) {
+      throw new CustomError("Candidate not found", 404);
+    }
+
+    if (candidate.status !== "A") {
+      throw new CustomError(
+        "Candidate must be hired or selected to create employee",
+        400
+      );
+    }
+
+    const existingEmployee = await prisma.hrms_d_employee.findFirst({
+      where: {
+        OR: [{ email: candidate.email }, { phone_number: candidate.phone }],
+      },
+    });
+
+    if (existingEmployee) {
+      throw new CustomError("Employee already exists for this candidate", 400);
+    }
+
+    const employeeCode = await generateEmployeeCode(candidate.full_name);
+
+    const employeeData = {
+      employee_code: employeeCode,
+      first_name: candidate.full_name.split(" ")[0] || "",
+      last_name: candidate.full_name.split(" ").slice(1).join(" ") || "",
+      full_name: candidate.full_name,
+      email: candidate.email,
+      phone_number: candidate.phone,
+      date_of_birth: candidate.date_of_birth,
+      gender: candidate.gender,
+      nationality: candidate.nationality,
+      profile_pic: candidate.profile_pic,
+
+      designation_id: candidate.applied_position_id,
+      join_date: candidate.actual_joining_date || new Date(),
+
+      employment_type: additionalData.employment_type || "Full-time",
+      employee_category: additionalData.employee_category || "Regular",
+      department_id: additionalData.department_id,
+      status: "Active",
+
+      ...additionalData,
+
+      createdby: createdBy,
+      log_inst: logInst,
+    };
+
+    if (!employeeData.department_id) {
+      throw new CustomError(
+        "Department ID is required to create employee",
+        400
+      );
+    }
+
+    const newEmployee = await employeeModel.createEmployee(employeeData);
+
+    await prisma.hrms_d_candidate_master.update({
+      where: { id: parseInt(candidateId) },
+      data: {
+        status: "Converted to Employee",
+        status_remarks: `Converted to employee with ID: ${newEmployee.id}`,
+        updatedate: new Date(),
+        updatedby: createdBy,
+      },
+    });
+
+    return {
+      employee: newEmployee,
+      candidate: candidate,
+      message: "Employee created successfully from candidate",
+    };
+  } catch (error) {
+    console.error("Error creating employee from candidate:", error);
+    if (error instanceof CustomError) {
+      throw error;
+    }
+    throw new CustomError(
+      `Error creating employee from candidate: ${error.message}`,
+      500
+    );
+  }
+};
+
+const generateEmployeeCode = async (fullName) => {
+  const nameParts = fullName.split(" ");
+  const firstName = nameParts[0] || "";
+  const lastName = nameParts[1] || "";
+
+  const initials = `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase();
+
+  const allCodes = await prisma.hrms_d_employee.findMany({
+    select: { employee_code: true },
+  });
+
+  let maxNumber = 0;
+  for (const entry of allCodes) {
+    const code = entry.employee_code;
+    const numberPart = code.replace(/^[A-Za-z]+/, "");
+    const parsed = parseInt(numberPart);
+    if (!isNaN(parsed) && parsed > maxNumber) {
+      maxNumber = parsed;
+    }
+  }
+
+  const nextNumber = maxNumber + 1;
+  return `EMP${initials}${String(nextNumber).padStart(3, "0")}`;
+};
 module.exports = {
   createCandidateMaster,
   findCandidateMasterById,
@@ -424,4 +549,5 @@ module.exports = {
   deleteCandidateMaster,
   getAllCandidateMaster,
   updateCandidateMasterStatus,
+  createEmployeeFromCandidate,
 };

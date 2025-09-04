@@ -847,32 +847,32 @@ model hrms_d_survey_response {
 }
 
 model hrms_d_time_sheet {
-  id                         Int                      @id @default(autoincrement())
+  id                         Int                    @id @default(autoincrement())
   employee_id                Int?
-  work_date                  DateTime?                @db.Date
-  project_name               String?                  @db.NVarChar(100)
-  task_description           String?                  @db.NVarChar(500)
-  hours_worked               Decimal?                 @db.Decimal(5, 2)
-  createdate                 DateTime?                @default(now(), map: "DF__hrms_d_ti__creat__42ACE4D4") @db.DateTime
+  work_date                  DateTime?              @db.Date
+  project_name               String?                @db.NVarChar(100)
+  task_description           String?                @db.NVarChar(500)
+  hours_worked               Decimal?               @db.Decimal(5, 2)
+  createdate                 DateTime?              @default(now(), map: "DF__hrms_d_ti__creat__42ACE4D4") @db.DateTime
   createdby                  Int
-  updatedate                 DateTime?                @db.DateTime
+  updatedate                 DateTime?              @db.DateTime
   updatedby                  Int?
   log_inst                   Int?
   approved_by                Int?
-  approved_on                DateTime?                @db.DateTime
+  approved_on                DateTime?              @db.DateTime
   project_id                 Int
-  remarks                    String?                  @db.NVarChar(250)
-  status                     String                   @default("Draft") @db.NVarChar(20)
+  remarks                    String?                @db.NVarChar(250)
+  status                     String                 @default("Draft") @db.NVarChar(20)
   task_id                    Int?
-  billable_flag              String?                  @db.Char(1)
-  work_location              String?                  @db.NVarChar(100)
-  submission_date            DateTime?                @db.DateTime
-  approval_status            String?                  @db.NVarChar(50)
-  timesheet_type             String?                  @db.NVarChar(50)
-  hrms_time_sheets_approved  hrms_d_employee?         @relation("ApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_approved_by")
-  hrms_time_sheets_submitted hrms_d_employee?         @relation("SubmittedBy", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_submitted_by")
-  time_sheet_project         hrms_m_timesheet_project @relation("ProjectTimeSheets", fields: [project_id], references: [id], onUpdate: NoAction)
-  time_sheet_task            hrms_m_timesheet_task?   @relation("TaskTimeSheets", fields: [task_id], references: [id], onUpdate: NoAction)
+  billable_flag              String?                @db.Char(1)
+  work_location              String?                @db.NVarChar(100)
+  submission_date            DateTime?              @db.DateTime
+  approval_status            String?                @db.NVarChar(50)
+  timesheet_type             String?                @db.NVarChar(50)
+  hrms_time_sheets_approved  hrms_d_employee?       @relation("ApprovedBy", fields: [approved_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_approved_by")
+  hrms_time_sheets_submitted hrms_d_employee?       @relation("SubmittedBy", fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_timesheet_submitted_by")
+  time_sheet_project         hrms_m_projects?       @relation("ProjectTimeSheets", fields: [project_id], references: [id], onUpdate: NoAction)
+  time_sheet_task            hrms_m_timesheet_task? @relation("TaskTimeSheets", fields: [task_id], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_training_feedback {
@@ -1863,7 +1863,6 @@ model hrms_m_timesheet_project {
   updatedate             DateTime?               @db.DateTime
   updatedby              Int?
   log_inst               Int?
-  time_sheet_project     hrms_d_time_sheet[]     @relation("ProjectTimeSheets")
   timesheet_task_project hrms_m_timesheet_task[] @relation("ProjectTasks")
 }
 
@@ -2393,6 +2392,7 @@ model hrms_m_projects {
   midmonth_payroll_processing_project hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProject")
   pay_component_project               hrms_m_pay_component[]
   projects_employee_detail            hrms_d_employee?                                @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  time_sheet_project                  hrms_d_time_sheet[]                             @relation("ProjectTimeSheets")
 }
 
 model hrms_d_activity_log {
