@@ -783,10 +783,7 @@ const getAllApprovalWorkFlow = async (
   }
 };
 
-const getAllApprovalWorkFlowByRequest = async (
-  request_type,
-  department_id = null
-) => {
+const getAllApprovalWorkFlowByRequest = async (request_type, department_id) => {
   try {
     let workflows;
 
