@@ -312,31 +312,84 @@ const deleteApprovalWorkFlow = async (req, res, next) => {
   }
 };
 
+// const getAllApprovalWorkFlowByRequest = async (req, res) => {
+//   try {
+//     const { request_type, department_id } = req.query;
+
+//     if (!request_type) {
+//       return res.status(400).json({
+//         success: false,
+//         message: "Request type is required",
+//       });
+//     }
+
+//     const data = await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
+//       request_type,
+//       department_id
+//     );
+
+//     const isGlobal = data.length > 0 && data[0].department_id === null;
+
+//     return res.status(200).json({
+//       success: true,
+//       data,
+//       meta: {
+//         request_type,
+//         department_id: department_id || null,
+//         is_global_workflow: isGlobal,
+//         total_approvers: data.length,
+//       },
+//     });
+//   } catch (error) {
+//     return res.status(error.status || 500).json({
+//       success: false,
+//       message: error.message,
+//     });
+//   }
+// };
+
 const getAllApprovalWorkFlowByRequest = async (req, res) => {
   try {
     const { request_type, department_id } = req.query;
 
     if (!request_type) {
-      return res.status(400).json({
+      return res.status(400).send({
         success: false,
         message: "Request type is required",
       });
+    }
+    if (department_id) {
+      const deptData =
+        await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
+          request_type,
+          department_id
+        );
+      if (deptData.length === 0) {
+        return res.status(200).send({
+          success: true,
+          data: [],
+          meta: {
+            request_type,
+            department_id,
+            is_global_workflow: false,
+            total_approvers: deptData.length,
+          },
+        });
+      }
     }
 
     const data = await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
       request_type,
       department_id
     );
-
-    const isGlobal = data.length > 0 && data[0].department_id === null;
-
-    return res.status(200).json({
+    const isGloabal = data.length > 0 && data[0].department_id === null;
+    return res.status(200).send({
       success: true,
       data,
       meta: {
         request_type,
         department_id: department_id || null,
-        is_global_workflow: isGlobal,
+        is_global_workflow: isGloabal,
         total_approvers: data.length,
       },
     });
@@ -347,7 +400,6 @@ const getAllApprovalWorkFlowByRequest = async (req, res) => {
     });
   }
 };
-
 const getDepartmentWorkflows = async (req, res, next) => {
   try {
     const { request_type, department_id } = req.query;
