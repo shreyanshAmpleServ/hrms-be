@@ -21,10 +21,243 @@ const serializeRequestsData = (data) => ({
   reference_id: data.reference_id ? Number(data.reference_id) : null,
 });
 
+// const createRequest = async (data) => {
+//   const { request_type, ...parentData } = data;
+//   try {
+//     if (!request_type) throw new CustomError("request_type is required", 400);
+
+//     const reqData = await prisma.hrms_d_requests.create({
+//       data: {
+//         ...serializeRequestsData({ request_type, ...parentData }),
+//         createdby: parentData.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: parentData.log_inst || 1,
+//       },
+//     });
+
+//     const workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+//       where: { request_type },
+//       orderBy: { sequence: "asc" },
+//     });
+
+//     if (!workflowSteps || workflowSteps.length === 0) {
+//       throw new CustomError(
+//         `No approval workflow defined for '${request_type}'`,
+//         400
+//       );
+//     }
+
+//     const approvalsToInsert = workflowSteps.map((step) => ({
+//       request_id: Number(reqData.id),
+//       approver_id: Number(step.approver_id),
+//       sequence: Number(step.sequence) || 1,
+//       status: "P",
+//       createdby: Number(parentData.createdby) || 1,
+//       createdate: new Date(),
+//       log_inst: Number(parentData.log_inst) || 1,
+//     }));
+//     if (
+//       approvalsToInsert.some((a) => isNaN(a.request_id) || isNaN(a.approver_id))
+//     ) {
+//       throw new CustomError("Approval step has invalid data (NaN values)", 400);
+//     }
+
+//     await prisma.hrms_d_requests_approval.createMany({
+//       data: approvalsToInsert,
+//     });
+
+//     const fullData = await prisma.hrms_d_requests.findUnique({
+//       where: { id: reqData.id },
+//       include: {
+//         requests_employee: {
+//           select: { id: true, full_name: true, employee_code: true },
+//         },
+//         request_approval_request: {
+//           select: {
+//             id: true,
+//             request_id: true,
+//             approver_id: true,
+//             sequence: true,
+//             status: true,
+//             action_at: true,
+//             createdate: true,
+//             createdby: true,
+//             updatedate: true,
+//             updatedby: true,
+//             log_inst: true,
+//             request_approval_approver: {
+//               select: { id: true, full_name: true, employee_code: true },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     const requester = await prisma.hrms_d_employee.findUnique({
+//       where: { id: parentData.requester_id },
+//       select: { full_name: true },
+//     });
+//     console.log("parentData.requester_id:", parentData.requester_id);
+//     console.log("requester found:", requester);
+//     console.log("requester full_name:", requester?.full_name);
+//     const firstApproverId = approvalsToInsert[0]?.approver_id;
+//     const firstApprover = await prisma.hrms_d_employee.findUnique({
+//       where: { id: firstApproverId },
+//       select: { email: true, full_name: true },
+//     });
+
+//     const company = await prisma.hrms_d_default_configurations.findUnique({
+//       where: { id: parentData.log_inst },
+//       select: { company_name: true },
+//     });
+//     const company_name = company?.company_name || "HRMS System";
+
+//     if (firstApprover?.email && requester?.full_name) {
+//       const request_detail = await getRequestDetailsByType(
+//         request_type,
+//         reqData.reference_id
+//       );
+
+//       const template = await generateEmailContent(
+//         request_type === "interview_stage"
+//           ? templateKeyMap.interviewRemark
+//           : templateKeyMap.notifyApprover,
+//         {
+//           employee_name: firstApprover.full_name,
+//           approver_name: firstApprover.full_name,
+//           requester_name: requester.full_name,
+//           request_type: request_type,
+//           action: "created",
+//           company_name,
+//           request_detail,
+//           stage_name: parentData.stage_name,
+//         }
+//       );
+
+//       await sendEmail({
+//         to: firstApprover.email,
+//         subject: template.subject,
+//         html: template.body,
+//         createdby: parentData.createdby,
+//         log_inst: parentData.log_inst,
+//       });
+
+//       console.log(`[Email Sent] → First Approver: ${firstApprover.email}`);
+//     }
+//     return fullData;
+//   } catch (error) {
+//     console.log(error);
+//     throw new CustomError(
+//       `Error creating request model: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
+const getWorkflowForRequest = async (request_type, requester_department_id) => {
+  try {
+    console.log(
+      `Looking for workflow: ${request_type} for department: ${requester_department_id}`
+    );
+
+    let workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+      where: {
+        request_type,
+        department_id: requester_department_id,
+        is_active: "Y",
+      },
+      orderBy: { sequence: "asc" },
+      include: {
+        approval_work_approver: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            hrms_employee_department: {
+              select: { department_name: true },
+            },
+          },
+        },
+        approval_work_department: {
+          select: { department_name: true },
+        },
+      },
+    });
+
+    let workflowType = "DEPARTMENT-SPECIFIC";
+
+    if (!workflowSteps || workflowSteps.length === 0) {
+      console.log(
+        ` No department-specific workflow found for ${request_type}, falling back to global workflow`
+      );
+
+      workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+        where: {
+          request_type,
+          department_id: null,
+          is_active: "Y",
+        },
+        orderBy: { sequence: "asc" },
+        include: {
+          approval_work_approver: {
+            select: {
+              id: true,
+              full_name: true,
+              employee_code: true,
+              hrms_employee_department: {
+                select: { department_name: true },
+              },
+            },
+          },
+        },
+      });
+
+      workflowType = "GLOBAL";
+    }
+
+    console.log(
+      `Found ${workflowType} workflow with ${workflowSteps.length} approvers`
+    );
+
+    return {
+      workflow: workflowSteps,
+      isGlobalWorkflow: workflowType === "GLOBAL",
+      workflowType,
+    };
+  } catch (error) {
+    throw new CustomError(`Error resolving workflow: ${error.message}`, 500);
+  }
+};
+
 const createRequest = async (data) => {
   const { request_type, ...parentData } = data;
+
   try {
     if (!request_type) throw new CustomError("request_type is required", 400);
+
+    const requester = await prisma.hrms_d_employee.findUnique({
+      where: { id: parentData.requester_id },
+      select: {
+        department_id: true,
+        full_name: true,
+        hrms_employee_department: {
+          select: {
+            id: true,
+            department_name: true,
+          },
+        },
+      },
+    });
+
+    if (!requester) {
+      throw new CustomError("Requester not found", 404);
+    }
+
+    console.log(
+      ` Requester: ${requester.full_name} from ${
+        requester.hrms_employee_department?.department_name || "No Department"
+      }`
+    );
 
     const reqData = await prisma.hrms_d_requests.create({
       data: {
@@ -35,27 +268,40 @@ const createRequest = async (data) => {
       },
     });
 
-    const workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
-      where: { request_type },
-      orderBy: { sequence: "asc" },
-    });
+    const {
+      workflow: workflowSteps,
+      isGlobalWorkflow,
+      workflowType,
+    } = await getWorkflowForRequest(request_type, requester.department_id);
 
     if (!workflowSteps || workflowSteps.length === 0) {
       throw new CustomError(
-        `No approval workflow defined for '${request_type}'`,
+        `No approval workflow defined for '${request_type}'${
+          requester.department_id
+            ? ` in department ${requester.hrms_employee_department?.department_name}`
+            : ""
+        } and no global fallback available`,
         400
       );
     }
 
-    const approvalsToInsert = workflowSteps.map((step) => ({
+    console.log(` Using ${workflowType} workflow for ${request_type}`);
+    if (!isGlobalWorkflow && requester.hrms_employee_department) {
+      console.log(
+        ` Department: ${requester.hrms_employee_department.department_name}`
+      );
+    }
+
+    const approvalsToInsert = workflowSteps.map((step, index) => ({
       request_id: Number(reqData.id),
       approver_id: Number(step.approver_id),
-      sequence: Number(step.sequence) || 1,
+      sequence: Number(step.sequence) || index + 1,
       status: "P",
       createdby: Number(parentData.createdby) || 1,
       createdate: new Date(),
       log_inst: Number(parentData.log_inst) || 1,
     }));
+
     if (
       approvalsToInsert.some((a) => isNaN(a.request_id) || isNaN(a.approver_id))
     ) {
@@ -66,11 +312,23 @@ const createRequest = async (data) => {
       data: approvalsToInsert,
     });
 
+    console.log(` Created ${approvalsToInsert.length} approval steps`);
+
     const fullData = await prisma.hrms_d_requests.findUnique({
       where: { id: reqData.id },
       include: {
         requests_employee: {
-          select: { id: true, full_name: true, employee_code: true },
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            hrms_employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
+          },
         },
         request_approval_request: {
           select: {
@@ -86,24 +344,34 @@ const createRequest = async (data) => {
             updatedby: true,
             log_inst: true,
             request_approval_approver: {
-              select: { id: true, full_name: true, employee_code: true },
+              select: {
+                id: true,
+                full_name: true,
+                employee_code: true,
+                hrms_employee_department: {
+                  select: {
+                    id: true,
+                    department_name: true,
+                  },
+                },
+              },
             },
           },
+          orderBy: { sequence: "asc" },
         },
       },
     });
 
-    const requester = await prisma.hrms_d_employee.findUnique({
-      where: { id: parentData.requester_id },
-      select: { full_name: true },
-    });
-    console.log("parentData.requester_id:", parentData.requester_id);
-    console.log("requester found:", requester);
-    console.log("requester full_name:", requester?.full_name);
     const firstApproverId = approvalsToInsert[0]?.approver_id;
     const firstApprover = await prisma.hrms_d_employee.findUnique({
       where: { id: firstApproverId },
-      select: { email: true, full_name: true },
+      select: {
+        email: true,
+        full_name: true,
+        hrms_employee_department: {
+          select: { department_name: true },
+        },
+      },
     });
 
     const company = await prisma.hrms_d_default_configurations.findUnique({
@@ -131,6 +399,11 @@ const createRequest = async (data) => {
           company_name,
           request_detail,
           stage_name: parentData.stage_name,
+          workflow_info: isGlobalWorkflow
+            ? "(Global Workflow)"
+            : `(${requester.hrms_employee_department?.department_name} Department Workflow)`,
+          approver_department:
+            firstApprover.hrms_employee_department?.department_name,
         }
       );
 
@@ -142,15 +415,20 @@ const createRequest = async (data) => {
         log_inst: parentData.log_inst,
       });
 
-      console.log(`[Email Sent] → First Approver: ${firstApprover.email}`);
+      console.log(
+        ` [Email Sent] ${workflowType} workflow → ${firstApprover.email}`
+      );
+      console.log(
+        `First Approver: ${firstApprover.full_name} (${
+          firstApprover.hrms_employee_department?.department_name || "No Dept"
+        })`
+      );
     }
+
     return fullData;
   } catch (error) {
-    console.log(error);
-    throw new CustomError(
-      `Error creating request model: ${error.message}`,
-      500
-    );
+    console.error(" Error creating request:", error);
+    throw new CustomError(`Error creating request: ${error.message}`, 500);
   }
 };
 
@@ -413,6 +691,431 @@ const findRequestByRequestTypeAndReferenceId = async (request) => {
   }
 };
 
+// const findRequestByRequestUsers = async (
+//   search = "",
+//   page = 1,
+//   size = 10,
+//   employee_id,
+//   requestType = "",
+//   status = "",
+//   requester_id,
+//   startDate,
+//   endDate,
+//   overall_status
+// ) => {
+//   page = !page || page == 0 ? 1 : page;
+//   size = size || 10;
+//   const skip = (page - 1) * size || 0;
+
+//   const filters = {};
+
+//   if (search) {
+//     filters.OR = [
+//       {
+//         request_type: { contains: search.toLowerCase() },
+//       },
+//       {
+//         request_data: { contains: search.toLowerCase() },
+//       },
+//     ];
+//   }
+
+//   if (requestType) {
+//     filters.request_type = { equals: requestType };
+//   }
+
+//   if (status) {
+//     filters.status = { equals: status };
+//   }
+
+//   if (overall_status) {
+//     filters.overall_status = { equals: overall_status };
+//   }
+
+//   if (requester_id) {
+//     filters.requester_id = { equals: requester_id };
+//   }
+
+//   if (startDate && endDate) {
+//     const start = new Date(startDate);
+//     const end = new Date(endDate);
+//     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//       filters.createdate = { gte: start, lte: end };
+//     }
+//   }
+
+//   try {
+//     const reqData = await prisma.hrms_d_requests.findMany({
+//       where: filters,
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//       include: {
+//         requests_employee: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//             employee_code: true,
+//             profile_pic: true,
+//             createdate: true,
+//           },
+//         },
+//         request_approval_request: {
+//           orderBy: { sequence: "asc" },
+//           select: {
+//             id: true,
+//             request_id: true,
+//             approver_id: true,
+//             sequence: true,
+//             status: true,
+//             action_at: true,
+//             createdate: true,
+//             request_approval_approver: {
+//               select: {
+//                 id: true,
+//                 full_name: true,
+//                 employee_code: true,
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     let data = [];
+
+//     await Promise.all(
+//       reqData.map(async (request) => {
+//         const requestType = request.request_type;
+//         const referenceId = request.reference_id;
+//         if (requestType === "interview_stage" && referenceId) {
+//           const interviewRemark =
+//             await prisma.hrms_m_interview_stage_remark.findUnique({
+//               where: { id: parseInt(referenceId) },
+//               select: {
+//                 id: true,
+//                 status: true,
+//                 stage_id: true,
+//                 remark: true,
+//                 stage_name: true,
+//                 interview_stage_candidate: {
+//                   select: {
+//                     id: true,
+//                     full_name: true,
+//                     candidate_code: true,
+//                   },
+//                 },
+//               },
+//             });
+//           if (interviewRemark) {
+//             data.push({
+//               ...request,
+//               createdate: request.createdate,
+//               reference: interviewRemark,
+//             });
+//           }
+//         }
+//         if (requestType === "leave_request" && referenceId) {
+//           const leaveRequest = await prisma.hrms_d_leave_application.findUnique(
+//             {
+//               where: { id: parseInt(referenceId) },
+//               select: {
+//                 id: true,
+//                 status: true,
+//                 leave_type_id: true,
+//                 start_date: true,
+//                 end_date: true,
+//                 reason: true,
+//                 leave_types: {
+//                   select: {
+//                     id: true,
+//                     leave_type: true,
+//                   },
+//                 },
+//               },
+//             }
+//           );
+//           if (leaveRequest) {
+//             data.push({
+//               ...request,
+//               createdate: request.createdate,
+//               reference: leaveRequest,
+//             });
+//           }
+//         }
+//         if (requestType === "loan_request" && referenceId) {
+//           const loanRequest = await prisma.hrms_d_loan_request.findUnique({
+//             where: { id: parseInt(referenceId) },
+//             select: {
+//               id: true,
+//               status: true,
+//               amount: true,
+//               emi_months: true,
+//               currency: true,
+//               loan_req_employee: {
+//                 select: {
+//                   id: true,
+//                   full_name: true,
+//                   employee_code: true,
+//                 },
+//               },
+//               loan_req_currency: {
+//                 select: {
+//                   id: true,
+//                   currency_code: true,
+//                   currency_name: true,
+//                 },
+//               },
+//               loan_emi_loan_request: {
+//                 select: {
+//                   id: true,
+//                   due_month: true,
+//                   due_year: true,
+//                   emi_amount: true,
+//                   status: true,
+//                   payslip_id: true,
+//                 },
+//               },
+//               loan_types: {
+//                 select: {
+//                   id: true,
+//                   loan_name: true,
+//                 },
+//               },
+//             },
+//           });
+//           if (loanRequest) {
+//             data.push({
+//               ...request,
+//               createdate: request.createdate,
+//               reference: loanRequest,
+//             });
+//           }
+//         }
+//         if (requestType === "advance_request" && referenceId) {
+//           const advancePayment =
+//             await prisma.hrms_d_advance_payment_entry.findUnique({
+//               where: { id: parseInt(referenceId) },
+//               select: {
+//                 id: true,
+//                 employee_id: true,
+//                 request_date: true,
+//                 amount_requested: true,
+//                 amount_approved: true,
+//                 approval_status: true,
+//                 approval_date: true,
+//                 approved_by: true,
+//                 reason: true,
+//                 repayment_schedule: true,
+//                 hrms_advance_payement_entry_employee: {
+//                   select: {
+//                     id: true,
+//                     full_name: true,
+//                     employee_code: true,
+//                     employee_currency: {
+//                       select: {
+//                         id: true,
+//                         currency_code: true,
+//                         currency_name: true,
+//                       },
+//                     },
+//                   },
+//                 },
+//                 hrms_advance_payement_entry_approvedBy: {
+//                   select: {
+//                     id: true,
+//                     full_name: true,
+//                   },
+//                 },
+//               },
+//             });
+//           if (advancePayment) {
+//             data.push({
+//               ...request,
+//               createdate: request.createdate,
+//               reference: advancePayment,
+//             });
+//           }
+//         }
+//         if (requestType === "asset_request" && referenceId) {
+//           const assetRequest = await prisma.hrms_d_asset_assignment.findUnique({
+//             where: { id: parseInt(referenceId) },
+//             select: {
+//               id: true,
+//               asset_type_id: true,
+//               asset_name: true,
+//               serial_number: true,
+//               issued_on: true,
+//               returned_on: true,
+//               status: true,
+//               asset_assignment_employee: {
+//                 select: {
+//                   id: true,
+//                   full_name: true,
+//                   employee_code: true,
+//                 },
+//               },
+//               asset_assignment_type: {
+//                 select: {
+//                   id: true,
+//                   id: true,
+//                   asset_type_name: true,
+//                   depreciation_rate: true,
+//                 },
+//               },
+//             },
+//           });
+//           if (assetRequest) {
+//             data.push({
+//               ...request,
+//               createdate: request.createdate,
+//               reference: assetRequest,
+//             });
+//           }
+//         }
+//         if (requestType === "probation_review" && referenceId) {
+//           const probationRequest =
+//             await prisma.hrms_d_probation_review.findUnique({
+//               where: { id: parseInt(referenceId) },
+//               select: {
+//                 id: true,
+//                 employee_id: true,
+//                 probation_end_date: true,
+//                 review_notes: true,
+//                 confirmation_status: true,
+//                 confirmation_date: true,
+//                 reviewer_id: true,
+//                 review_meeting_date: true,
+//                 performance_rating: true,
+//                 extension_required: true,
+//                 extension_reason: true,
+//                 extended_till_date: true,
+//                 next_review_date: true,
+//                 final_remarks: true,
+//                 probation_review_employee: {
+//                   select: {
+//                     id: true,
+//                     employee_code: true,
+//                     full_name: true,
+//                   },
+//                 },
+//                 probation_reviewer: {
+//                   select: {
+//                     id: true,
+//                     employee_code: true,
+//                     full_name: true,
+//                   },
+//                 },
+//               },
+//             });
+//           if (probationRequest) {
+//             data.push({
+//               ...request,
+//               createdate: request.createdate,
+//               reference: probationRequest,
+//             });
+//           }
+//         }
+//         if (requestType === "appraisal_review" && referenceId) {
+//           const appraisalRequest = await prisma.hrms_d_appraisal.findUnique({
+//             where: { id: parseInt(referenceId) },
+//             select: {
+//               id: true,
+//               employee_id: true,
+//               review_period: true,
+//               rating: true,
+//               reviewer_comments: true,
+//               appraisal_employee: {
+//                 select: {
+//                   full_name: true,
+//                   id: true,
+//                 },
+//               },
+//             },
+//           });
+//           if (appraisalRequest) {
+//             data.push({
+//               ...request,
+//               createdate: request.createdate,
+//               reference: appraisalRequest,
+//             });
+//           }
+//         }
+//         if (requestType === "leave_encashment" && referenceId) {
+//           const leaveEncashmentRequest =
+//             await prisma.hrms_d_leave_encashment.findUnique({
+//               where: { id: parseInt(referenceId) },
+//               select: {
+//                 id: true,
+//                 employee_id: true,
+//                 leave_type_id: true,
+//                 leave_days: true,
+//                 encashment_amount: true,
+//                 approval_status: true,
+//                 encashment_date: true,
+//                 basic_salary: true,
+//                 payroll_period: true,
+//                 total_amount: true,
+//                 entitled: true,
+//                 total_available: true,
+//                 used: true,
+//                 balance: true,
+//                 requested: true,
+//                 requested_date: true,
+//                 leave_encashment_employee: {
+//                   select: {
+//                     full_name: true,
+//                     id: true,
+//                   },
+//                 },
+//                 encashment_leave_types: {
+//                   select: {
+//                     leave_type: true,
+//                     id: true,
+//                   },
+//                 },
+//               },
+//             });
+//           if (leaveEncashmentRequest) {
+//             data.push({
+//               ...request,
+//               createdate: request.createdate,
+//               reference: leaveEncashmentRequest,
+//             });
+//           }
+//         }
+//       })
+//     );
+//     data.sort((a, b) => new Date(b.createdate) - new Date(a.createdate));
+//     const filteredData = data.filter((request) => {
+//       const approvals = request.request_approval_request;
+//       const approverIndex = approvals.findIndex(
+//         (approval) =>
+//           approval.approver_id === employee_id &&
+//           (status === "" || approval.status === status)
+//       );
+//       if (approverIndex === -1) {
+//         return false;
+//       }
+//       if (approverIndex === 0) {
+//         return true;
+//       }
+//       const prevApproval = approvals[approverIndex - 1];
+//       const shouldInclude = prevApproval?.status === "A";
+//       return shouldInclude;
+//     });
+
+//     const slideData = filteredData.slice(skip, skip + size);
+//     return {
+//       data: slideData,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(filteredData.length / size),
+//       totalCount: filteredData.length,
+//     };
+//   } catch (error) {
+//     throw new CustomError(`${error.message}`, 503);
+//   }
+// };
+
 const findRequestByRequestUsers = async (
   search = "",
   page = 1,
@@ -478,6 +1181,12 @@ const findRequestByRequestUsers = async (
             employee_code: true,
             profile_pic: true,
             createdate: true,
+            hrms_employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
           },
         },
         request_approval_request: {
@@ -495,6 +1204,12 @@ const findRequestByRequestUsers = async (
                 id: true,
                 full_name: true,
                 employee_code: true,
+                hrms_employee_department: {
+                  select: {
+                    id: true,
+                    department_name: true,
+                  },
+                },
               },
             },
           },
@@ -508,6 +1223,18 @@ const findRequestByRequestUsers = async (
       reqData.map(async (request) => {
         const requestType = request.request_type;
         const referenceId = request.reference_id;
+
+        request.workflow_context = {
+          requester_department:
+            request.requests_employee?.hrms_employee_department
+              ?.department_name || "No Department",
+          approver_departments: request.request_approval_request.map(
+            (apr) =>
+              apr.request_approval_approver?.hrms_employee_department
+                ?.department_name || "No Department"
+          ),
+        };
+
         if (requestType === "interview_stage" && referenceId) {
           const interviewRemark =
             await prisma.hrms_m_interview_stage_remark.findUnique({
@@ -535,6 +1262,7 @@ const findRequestByRequestUsers = async (
             });
           }
         }
+
         if (requestType === "leave_request" && referenceId) {
           const leaveRequest = await prisma.hrms_d_leave_application.findUnique(
             {
@@ -563,6 +1291,7 @@ const findRequestByRequestUsers = async (
             });
           }
         }
+
         if (requestType === "loan_request" && referenceId) {
           const loanRequest = await prisma.hrms_d_loan_request.findUnique({
             where: { id: parseInt(referenceId) },
@@ -612,6 +1341,7 @@ const findRequestByRequestUsers = async (
             });
           }
         }
+
         if (requestType === "advance_request" && referenceId) {
           const advancePayment =
             await prisma.hrms_d_advance_payment_entry.findUnique({
@@ -806,7 +1536,9 @@ const findRequestByRequestUsers = async (
         }
       })
     );
+
     data.sort((a, b) => new Date(b.createdate) - new Date(a.createdate));
+
     const filteredData = data.filter((request) => {
       const approvals = request.request_approval_request;
       const approverIndex = approvals.findIndex(
@@ -837,7 +1569,6 @@ const findRequestByRequestUsers = async (
     throw new CustomError(`${error.message}`, 503);
   }
 };
-
 const takeActionOnRequest = async ({
   request_id,
   request_approval_id,

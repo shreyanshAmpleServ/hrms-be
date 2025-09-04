@@ -1,0 +1,386 @@
+{
+  "timestamp": "2025-09-03T11:55:01.862Z",
+  "version": "1.0",
+  "data": [
+    {
+      "request_type": "advance_request",
+      "no_of_approvers": 2,
+      "is_active": "Y",
+      "request_approval_request": [
+        {
+          "id": 6,
+          "request_type": "advance_request",
+          "sequence": 1,
+          "approver_id": 15,
+          "is_active": "Y",
+          "createdate": "2025-08-05T04:48:00.313Z",
+          "createdby": 6,
+          "updatedate": "2025-09-02T07:19:46.593Z",
+          "updatedby": 68,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 15,
+            "name": "Super Admin",
+            "employee_code": "EMP-002",
+            "profile_pic": null,
+            "department": "Management"
+          }
+        },
+        {
+          "id": 39,
+          "request_type": "advance_request",
+          "sequence": 2,
+          "approver_id": 18,
+          "is_active": "Y",
+          "createdate": "2025-09-02T07:19:47.936Z",
+          "createdby": 68,
+          "updatedate": null,
+          "updatedby": null,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 18,
+            "name": "Sarah Wyatt",
+            "employee_code": "EMP-003",
+            "profile_pic": "https://DCC-HRMS.s3.us-east-005.backblazeb2.com/employee/d097f922-ae8c-48d8-8147-76da325c9a08.jpg",
+            "department": "Management"
+          }
+        }
+      ]
+    },
+    {
+      "request_type": "appraisal_review",
+      "no_of_approvers": 2,
+      "is_active": "Y",
+      "request_approval_request": [
+        {
+          "id": 21,
+          "request_type": "appraisal_review",
+          "sequence": 1,
+          "approver_id": 15,
+          "is_active": "Y",
+          "createdate": "2025-08-05T10:56:19.370Z",
+          "createdby": 6,
+          "updatedate": "2025-09-02T07:20:02.933Z",
+          "updatedby": 68,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 15,
+            "name": "Super Admin",
+            "employee_code": "EMP-002",
+            "profile_pic": null,
+            "department": "Management"
+          }
+        },
+        {
+          "id": 40,
+          "request_type": "appraisal_review",
+          "sequence": 2,
+          "approver_id": 18,
+          "is_active": "Y",
+          "createdate": "2025-09-02T07:20:04.273Z",
+          "createdby": 68,
+          "updatedate": null,
+          "updatedby": null,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 18,
+            "name": "Sarah Wyatt",
+            "employee_code": "EMP-003",
+            "profile_pic": "https://DCC-HRMS.s3.us-east-005.backblazeb2.com/employee/d097f922-ae8c-48d8-8147-76da325c9a08.jpg",
+            "department": "Management"
+          }
+        }
+      ]
+    },
+    {
+      "request_type": "asset_request",
+      "no_of_approvers": 2,
+      "is_active": "Y",
+      "request_approval_request": [
+        {
+          "id": 9,
+          "request_type": "asset_request",
+          "sequence": 1,
+          "approver_id": 15,
+          "is_active": "Y",
+          "createdate": "2025-08-05T07:30:57.560Z",
+          "createdby": 6,
+          "updatedate": "2025-09-02T07:20:29.176Z",
+          "updatedby": 68,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 15,
+            "name": "Super Admin",
+            "employee_code": "EMP-002",
+            "profile_pic": null,
+            "department": "Management"
+          }
+        },
+        {
+          "id": 41,
+          "request_type": "asset_request",
+          "sequence": 2,
+          "approver_id": 18,
+          "is_active": "Y",
+          "createdate": "2025-09-02T07:20:30.523Z",
+          "createdby": 68,
+          "updatedate": null,
+          "updatedby": null,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 18,
+            "name": "Sarah Wyatt",
+            "employee_code": "EMP-003",
+            "profile_pic": "https://DCC-HRMS.s3.us-east-005.backblazeb2.com/employee/d097f922-ae8c-48d8-8147-76da325c9a08.jpg",
+            "department": "Management"
+          }
+        }
+      ]
+    },
+    {
+      "request_type": "interview_stage",
+      "no_of_approvers": 1,
+      "is_active": "Y",
+      "request_approval_request": [
+        {
+          "id": 45,
+          "request_type": "interview_stage",
+          "sequence": 1,
+          "approver_id": 15,
+          "is_active": "Y",
+          "createdate": "2025-09-03T11:43:45.730Z",
+          "createdby": 6,
+          "updatedate": "2025-09-03T11:54:59.956Z",
+          "updatedby": 6,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 15,
+            "name": "Super Admin",
+            "employee_code": "EMP-002",
+            "profile_pic": null,
+            "department": "Management"
+          }
+        }
+      ]
+    },
+    {
+      "request_type": "leave_encashment",
+      "no_of_approvers": 2,
+      "is_active": "Y",
+      "request_approval_request": [
+        {
+          "id": 23,
+          "request_type": "leave_encashment",
+          "sequence": 1,
+          "approver_id": 15,
+          "is_active": "Y",
+          "createdate": "2025-08-05T11:43:07.950Z",
+          "createdby": 6,
+          "updatedate": null,
+          "updatedby": null,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 15,
+            "name": "Super Admin",
+            "employee_code": "EMP-002",
+            "profile_pic": null,
+            "department": "Management"
+          }
+        },
+        {
+          "id": 24,
+          "request_type": "leave_encashment",
+          "sequence": 2,
+          "approver_id": 19,
+          "is_active": "Y",
+          "createdate": "2025-08-05T11:43:08.926Z",
+          "createdby": 6,
+          "updatedate": null,
+          "updatedby": null,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 19,
+            "name": "Rajesh Panwar",
+            "employee_code": "EMP-004",
+            "profile_pic": "https://DCC-HRMS.s3.us-east-005.backblazeb2.com/employee/6f8a3688-9b36-4060-950c-57e1a2439cad.jpg",
+            "department": null
+          }
+        }
+      ]
+    },
+    {
+      "request_type": "leave_request",
+      "no_of_approvers": 2,
+      "is_active": "Y",
+      "request_approval_request": [
+        {
+          "id": 42,
+          "request_type": "leave_request",
+          "sequence": 1,
+          "approver_id": 61,
+          "is_active": "Y",
+          "createdate": "2025-09-03T10:35:01.810Z",
+          "createdby": 6,
+          "updatedate": "2025-09-03T11:48:56.903Z",
+          "updatedby": 6,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 61,
+            "name": "Alihussein Rajani",
+            "employee_code": "EMP-005",
+            "profile_pic": "https://DCC-HRMS.s3.us-east-005.backblazeb2.com/profile_pics/4647f3e1-72f7-4681-9fa2-002967795cd1.jpg",
+            "department": "Management"
+          }
+        },
+        {
+          "id": 1,
+          "request_type": "leave_request",
+          "sequence": 2,
+          "approver_id": 15,
+          "is_active": "Y",
+          "createdate": "2025-07-31T12:56:27.310Z",
+          "createdby": 6,
+          "updatedate": "2025-09-03T11:48:56.916Z",
+          "updatedby": 6,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 15,
+            "name": "Super Admin",
+            "employee_code": "EMP-002",
+            "profile_pic": null,
+            "department": "Management"
+          }
+        }
+      ]
+    },
+    {
+      "request_type": "loan_request",
+      "no_of_approvers": 3,
+      "is_active": "Y",
+      "request_approval_request": [
+        {
+          "id": 4,
+          "request_type": "loan_request",
+          "sequence": 1,
+          "approver_id": 15,
+          "is_active": "Y",
+          "createdate": "2025-08-04T11:22:29.350Z",
+          "createdby": 58,
+          "updatedate": "2025-08-04T12:59:20.976Z",
+          "updatedby": 6,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 15,
+            "name": "Super Admin",
+            "employee_code": "EMP-002",
+            "profile_pic": null,
+            "department": "Management"
+          }
+        },
+        {
+          "id": 3,
+          "request_type": "loan_request",
+          "sequence": 2,
+          "approver_id": 18,
+          "is_active": "Y",
+          "createdate": "2025-08-04T11:22:28.120Z",
+          "createdby": 58,
+          "updatedate": "2025-08-04T12:59:22.353Z",
+          "updatedby": 6,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 18,
+            "name": "Sarah Wyatt",
+            "employee_code": "EMP-003",
+            "profile_pic": "https://DCC-HRMS.s3.us-east-005.backblazeb2.com/employee/d097f922-ae8c-48d8-8147-76da325c9a08.jpg",
+            "department": "Management"
+          }
+        },
+        {
+          "id": 5,
+          "request_type": "loan_request",
+          "sequence": 3,
+          "approver_id": 19,
+          "is_active": "Y",
+          "createdate": "2025-08-04T11:22:30.393Z",
+          "createdby": 58,
+          "updatedate": "2025-08-04T12:59:23.596Z",
+          "updatedby": 6,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 19,
+            "name": "Rajesh Panwar",
+            "employee_code": "EMP-004",
+            "profile_pic": "https://DCC-HRMS.s3.us-east-005.backblazeb2.com/employee/6f8a3688-9b36-4060-950c-57e1a2439cad.jpg",
+            "department": null
+          }
+        }
+      ]
+    },
+    {
+      "request_type": "probation_review",
+      "no_of_approvers": 3,
+      "is_active": "Y",
+      "request_approval_request": [
+        {
+          "id": 15,
+          "request_type": "probation_review",
+          "sequence": 1,
+          "approver_id": 15,
+          "is_active": "Y",
+          "createdate": "2025-08-05T09:16:41.823Z",
+          "createdby": 6,
+          "updatedate": "2025-08-05T09:33:38.893Z",
+          "updatedby": 6,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 15,
+            "name": "Super Admin",
+            "employee_code": "EMP-002",
+            "profile_pic": null,
+            "department": "Management"
+          }
+        },
+        {
+          "id": 16,
+          "request_type": "probation_review",
+          "sequence": 2,
+          "approver_id": 19,
+          "is_active": "Y",
+          "createdate": "2025-08-05T09:16:42.810Z",
+          "createdby": 6,
+          "updatedate": "2025-08-05T09:33:40.206Z",
+          "updatedby": 6,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 19,
+            "name": "Rajesh Panwar",
+            "employee_code": "EMP-004",
+            "profile_pic": "https://DCC-HRMS.s3.us-east-005.backblazeb2.com/employee/6f8a3688-9b36-4060-950c-57e1a2439cad.jpg",
+            "department": null
+          }
+        },
+        {
+          "id": 18,
+          "request_type": "probation_review",
+          "sequence": 3,
+          "approver_id": 22,
+          "is_active": "Y",
+          "createdate": "2025-08-05T09:33:41.506Z",
+          "createdby": 6,
+          "updatedate": null,
+          "updatedby": null,
+          "log_inst": 1,
+          "approval_work_approver": {
+            "id": 22,
+            "name": "Alexa Edwards",
+            "employee_code": "EMP-011",
+            "profile_pic": null,
+            "department": "Quality Assurance1"
+          }
+        }
+      ]
+    }
+  ],
+  "totalCount": 8
+}

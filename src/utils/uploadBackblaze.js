@@ -550,6 +550,8 @@ const validateFile = (fileBuffer, originalName, mimeType, maxSizeMB = 10) => {
 
 //   return await uploadToBackblaze(fileBuffer, originalName, mimeType, folder);
 // };
+
+// 2. Second Version
 const uploadToBackblazeWithValidation = async (
   fileBuffer,
   originalName,

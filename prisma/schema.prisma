@@ -1099,18 +1099,19 @@ model hrms_m_currency_master {
 }
 
 model hrms_m_department_master {
-  id                            Int                       @id(map: "PK__hrms_m_d__3213E83F972A91BD") @default(autoincrement())
-  department_name               String?                   @db.NVarChar(255)
-  createdate                    DateTime?                 @default(now(), map: "DF__hrms_m_de__creat__19DFD96B") @db.DateTime
+  id                            Int                         @id(map: "PK__hrms_m_d__3213E83F972A91BD") @default(autoincrement())
+  department_name               String?                     @db.NVarChar(255)
+  createdate                    DateTime?                   @default(now(), map: "DF__hrms_m_de__creat__19DFD96B") @db.DateTime
   createdby                     Int
-  updatedate                    DateTime?                 @db.DateTime
+  updatedate                    DateTime?                   @db.DateTime
   updatedby                     Int?
   log_inst                      Int?
-  is_active                     String?                   @default("Y") @db.Char(1)
+  is_active                     String?                     @default("Y") @db.Char(1)
   hrms_employee_department      hrms_d_employee[]
   hrms_job_department           hrms_d_job_posting[]
   training_session_departmentID hrms_d_training_session[]
   shift_department_id           hrms_m_shift_master[]
+  approval_work_department      hrms_d_approval_work_flow[]
 }
 
 model hrms_m_designation_master {
@@ -2550,18 +2551,20 @@ model hrms_d_requests {
 }
 
 model hrms_d_approval_work_flow {
-  id                     Int              @id @default(autoincrement())
-  request_type           String?
-  sequence               Int
-  approver_id            Int
-  is_active              String?
-  remarks                String?          @db.VarChar(100)
-  createdate             DateTime         @default(now()) @db.DateTime
-  createdby              Int
-  updatedate             DateTime?        @db.DateTime
-  updatedby              Int?
-  log_inst               Int?
-  approval_work_approver hrms_d_employee? @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                       Int                       @id @default(autoincrement())
+  request_type             String?
+  sequence                 Int
+  approver_id              Int
+  department_id            Int?
+  is_active                String?
+  remarks                  String?                   @db.VarChar(100)
+  createdate               DateTime                  @default(now()) @db.DateTime
+  createdby                Int
+  updatedate               DateTime?                 @db.DateTime
+  updatedby                Int?
+  log_inst                 Int?
+  approval_work_approver   hrms_d_employee?          @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approval_work_department hrms_m_department_master? @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_requests_approval {
