@@ -42,7 +42,7 @@ const serializeCandidateMasterData = (data) => ({
   no_show_marked_date: data.no_show_marked_date
     ? new Date(data.no_show_marked_date)
     : null,
-  department_id: data.department_id,
+  department_id: Number(data.department_id),
 });
 
 // const createCandidateMaster = async (data) => {
