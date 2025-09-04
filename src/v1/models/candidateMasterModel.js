@@ -312,69 +312,127 @@ const getAllCandidateMaster = async (
   endDate
 ) => {
   try {
-    page = !page || page == 0 ? 1 : page;
-    size = size || 10;
-    const skip = (page - 1) * size || 0;
+    page = !page || page <= 0 ? 1 : parseInt(page);
+    size = !size || size <= 0 ? 10 : parseInt(size);
+    const skip = (page - 1) * size;
 
     const filters = {};
-    if (search) {
+
+    if (search && search.trim()) {
+      const searchTerm = search.trim().toLowerCase();
       filters.OR = [
-        { full_name: { contains: search.toLowerCase() } },
-        { email: { contains: search.toLowerCase() } },
-        { phone: { contains: search.toLowerCase() } },
-        { status: { contains: search.toLowerCase() } },
-        { candidate_code: { contains: search.toLowerCase() } },
+        { full_name: { contains: searchTerm, mode: "insensitive" } },
+        { email: { contains: searchTerm, mode: "insensitive" } },
+        { phone: { contains: searchTerm, mode: "insensitive" } },
+        { status: { contains: searchTerm, mode: "insensitive" } },
+        { candidate_code: { contains: searchTerm, mode: "insensitive" } },
       ];
     }
+
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
+
+      end.setHours(23, 59, 59, 999);
+
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = { gte: start, lte: end };
+        filters.createdate = {
+          gte: start,
+          lte: end,
+        };
       }
     }
 
-    const datas = await prisma.hrms_d_candidate_master.findMany({
-      where: filters,
-      skip,
-      take: size,
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      include: {
-        candidate_job_posting: {
-          select: {
-            id: true,
-            job_title: true,
+    const [datas, totalCount] = await Promise.all([
+      prisma.hrms_d_candidate_master.findMany({
+        where: filters,
+        skip,
+        take: size,
+        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+        include: {
+          candidate_job_posting: {
+            select: {
+              id: true,
+              job_title: true,
+            },
+          },
+          candidate_application_source: {
+            select: {
+              id: true,
+              source_name: true,
+            },
+          },
+          candidate_interview_stage: {
+            select: {
+              id: true,
+              stage_name: true,
+            },
+          },
+          candidate_master_applied_position: {
+            select: {
+              id: true,
+              designation_name: true,
+            },
+          },
+          candidate_department: {
+            select: {
+              id: true,
+              department_name: true,
+            },
+          },
+          interview_stage_candidate: {
+            select: {
+              id: true,
+              status: true,
+            },
           },
         },
-        candidate_application_source: {
-          select: {
-            id: true,
-            source_name: true,
+      }),
+      prisma.hrms_d_candidate_master.count({
+        where: filters,
+      }),
+    ]);
+
+    const stageCount = await prisma.hrms_m_interview_stage.count();
+
+    const candidatesToUpdate = [];
+
+    for (const candidate of datas) {
+      if (candidate.status !== "A") continue;
+      const remarkCount = await prisma.hrms_m_interview_stage_remark?.count({
+        where: { candidate_id: candidate.id },
+      });
+
+      if (remarkCount === stageCount) {
+        const allRemarksAreA = candidate.interview_stage_candidate.every(
+          (remark) => remark.status === "A"
+        );
+
+        if (allRemarksAreA) {
+          candidatesToUpdate.push(candidate.id);
+        }
+      }
+    }
+
+    if (candidatesToUpdate.length > 0) {
+      await prisma.hrms_d_candidate_master.updateMany({
+        where: {
+          id: {
+            in: candidatesToUpdate.map((id) => parseInt(id)),
           },
         },
-        candidate_interview_stage: {
-          select: {
-            id: true,
-            stage_name: true,
-          },
+        data: {
+          status: "A",
+          updatedate: new Date(),
         },
-        candidate_master_applied_position: {
-          select: {
-            id: true,
-            designation_name: true,
-          },
-        },
-        candidate_department: {
-          select: {
-            id: true,
-            department_name: true,
-          },
-        },
-      },
-    });
-    const totalCount = await prisma.hrms_d_candidate_master.count({
-      where: filters,
-    });
+      });
+
+      datas.forEach((candidate) => {
+        if (candidatesToUpdate.includes(candidate.id)) {
+          candidate.status = "A";
+        }
+      });
+    }
 
     return {
       data: datas,
@@ -382,11 +440,19 @@ const getAllCandidateMaster = async (
       size,
       totalPages: Math.ceil(totalCount / size),
       totalCount,
+      message:
+        candidatesToUpdate.length > 0
+          ? `Updated ${candidatesToUpdate.length} candidate(s) status to 'A'`
+          : null,
     };
   } catch (error) {
-    console.error("getAllCandidateMaster ERROR:", error);
-
-    throw new CustomError("Error retrieving candidates", 503);
+    if (error.code === "P2002") {
+      throw new CustomError("Duplicate entry found", 409);
+    } else if (error.code === "P2025") {
+      throw new CustomError("Record not found", 404);
+    } else {
+      throw new CustomError("Error retrieving candidates", 503);
+    }
   }
 };
 
@@ -487,13 +553,12 @@ const createEmployeeFromCandidate = async (
       gender: candidate.gender,
       nationality: candidate.nationality,
       profile_pic: candidate.profile_pic,
-
+      department_id: candidate.department_id,
       designation_id: candidate.applied_position_id,
       join_date: candidate.actual_joining_date || new Date(),
 
       employment_type: additionalData.employment_type || "Full-time",
       employee_category: additionalData.employee_category || "Regular",
-      department_id: additionalData.department_id,
       status: "Active",
 
       ...additionalData,
