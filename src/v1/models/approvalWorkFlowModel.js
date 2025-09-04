@@ -929,11 +929,36 @@ const getAllApprovalWorkFlowByRequest = async (
       return workflows;
     }
 
+    // workflows = await prisma.hrms_d_approval_work_flow.findMany({
+    //   where: {
+    //     request_type,
+    //     department_id: null,
+    //     is_active: "Y",
+    //   },
+    //   orderBy: { sequence: "asc" },
+    //   include: {
+    //     approval_work_approver: {
+    //       select: {
+    //         id: true,
+    //         full_name: true,
+    //         employee_code: true,
+    //         profile_pic: true,
+    //         hrms_employee_department: {
+    //           select: {
+    //             id: true,
+    //             department_name: true,
+    //           },
+    //         },
+    //       },
+    //     },
+    //   },
+    // });
+
     workflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: {
         request_type,
         department_id: null,
-        is_active: "Y",
+        OR: [{ is_active: "Y" }, { is_active: null }],
       },
       orderBy: { sequence: "asc" },
       include: {
