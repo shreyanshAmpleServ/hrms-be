@@ -643,34 +643,14 @@ const deleteApprovalWorkFlows = async (ids) => {
 //   page,
 //   size,
 //   startDate,
-//   endDate,
-//   department_id
+//   endDate
 // ) => {
 //   try {
-//     size = size || 1000;
 //     page = !page || page == 0 ? 1 : page;
-//     const skip = (page - 1) * size;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
 
 //     const filters = {};
-
-//     if (search) {
-//       filters.request_type = {
-//         contains: search.toLowerCase(),
-//         mode: "insensitive",
-//       };
-//     }
-
-//     if (department_id !== undefined) {
-//       if (
-//         department_id === "global" ||
-//         department_id === "null" ||
-//         department_id === null
-//       ) {
-//         filters.department_id = null;
-//       } else {
-//         filters.department_id = Number(department_id);
-//       }
-//     }
 
 //     if (startDate && endDate) {
 //       const start = new Date(startDate);
@@ -721,26 +701,31 @@ const deleteApprovalWorkFlows = async (ids) => {
 
 //     for (const wf of workflows) {
 //       const type = wf.request_type;
-//       const deptId = wf.department_id;
-//       const key = `${type}_${deptId || "global"}`;
 
-//       if (!grouped[key]) {
-//         grouped[key] = {
+//       if (!grouped[type]) {
+//         grouped[type] = {
 //           request_type: type,
-//           department_id: deptId,
-//           department_name:
-//             wf.approval_work_department?.department_name ||
-//             "Global (All Departments)",
-//           is_global: deptId === null,
+//           departments: [],
 //           no_of_approvers: 0,
 //           is_active: wf.is_active,
 //           request_approval_request: [],
 //         };
 //       }
 
-//       grouped[key].request_approval_request.push({
+//       const deptName =
+//         wf.approval_work_department?.department_name ||
+//         "Global (All Departments)";
+
+//       if (!grouped[type].departments.some((d) => d.id === wf.department_id)) {
+//         grouped[type].departments.push({
+//           id: wf.department_id,
+//           name: deptName,
+//           is_global: wf.department_id === null,
+//         });
+//       }
+
+//       grouped[type].request_approval_request.push({
 //         id: wf.id,
-//         request_type: wf.request_type,
 //         sequence: wf.sequence,
 //         approver_id: wf.approver_id,
 //         department_id: wf.department_id,
@@ -761,7 +746,7 @@ const deleteApprovalWorkFlows = async (ids) => {
 //         },
 //       });
 
-//       grouped[key].no_of_approvers += 1;
+//       grouped[type].no_of_approvers += 1;
 //     }
 
 //     return {
@@ -772,10 +757,6 @@ const deleteApprovalWorkFlows = async (ids) => {
 //       totalCount,
 //       summary: {
 //         total_workflows: Object.keys(grouped).length,
-//         global_workflows: Object.values(grouped).filter((g) => g.is_global)
-//           .length,
-//         department_workflows: Object.values(grouped).filter((g) => !g.is_global)
-//           .length,
 //       },
 //     };
 //   } catch (error) {
@@ -792,7 +773,6 @@ const getAllApprovalWorkFlow = async (
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
-    const skip = (page - 1) * size || 0;
 
     const filters = {};
 
@@ -806,8 +786,6 @@ const getAllApprovalWorkFlow = async (
 
     const workflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: filters,
-      skip,
-      take: size,
       orderBy: [
         { request_type: "asc" },
         { department_id: "asc" },
@@ -837,12 +815,7 @@ const getAllApprovalWorkFlow = async (
       },
     });
 
-    const totalCount = await prisma.hrms_d_approval_work_flow.count({
-      where: filters,
-    });
-
     const grouped = {};
-
     for (const wf of workflows) {
       const type = wf.request_type;
 
@@ -893,14 +866,20 @@ const getAllApprovalWorkFlow = async (
       grouped[type].no_of_approvers += 1;
     }
 
+    const groupedArray = Object.values(grouped);
+
+    const totalCount = groupedArray.length;
+    const totalPages = Math.ceil(totalCount / size);
+    const paginatedData = groupedArray.slice((page - 1) * size, page * size);
+
     return {
-      data: Object.values(grouped),
+      data: paginatedData,
       currentPage: page,
       size,
-      totalPages: Math.ceil(totalCount / size),
+      totalPages,
       totalCount,
       summary: {
-        total_workflows: Object.keys(grouped).length,
+        total_workflows: totalCount,
       },
     };
   } catch (error) {
