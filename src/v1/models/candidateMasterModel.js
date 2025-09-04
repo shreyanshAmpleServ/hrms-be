@@ -197,8 +197,10 @@ const createCandidateMaster = async (data) => {
           },
         },
         candidate_department: {
-          id: true,
-          department_name: true,
+          select: {
+            id: true,
+            department_name: true,
+          },
         },
       },
     });
@@ -261,8 +263,10 @@ const updateCandidateMaster = async (id, data) => {
         },
 
         candidate_department: {
-          id: true,
-          department_name: true,
+          select: {
+            id: true,
+            department_name: true,
+          },
         },
       },
 
@@ -361,8 +365,10 @@ const getAllCandidateMaster = async (
           },
         },
         candidate_department: {
-          id: true,
-          department_name: true,
+          select: {
+            id: true,
+            department_name: true,
+          },
         },
       },
     });
