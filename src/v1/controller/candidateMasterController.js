@@ -197,8 +197,8 @@ const updateCandidateMasterStatus = async (req, res, next) => {
 
     const status = req.body.status;
     const status_remarks = req.body.status_remarks || "";
-    const autoCreateEmployee = req.body.autoCreateEmployee || false; // New flag
-    const employeeData = req.body.employeeData || {}; // Additional employee data
+    const autoCreateEmployee = req.body.autoCreateEmployee || false;
+    const employeeData = req.body.employeeData || {};
 
     const data = {
       status,
@@ -212,8 +212,7 @@ const updateCandidateMasterStatus = async (req, res, next) => {
       data
     );
 
-    // Check if we need to auto-create employee after status update
-    if (status === "Hired" && autoCreateEmployee) {
+    if (status === "A" && autoCreateEmployee) {
       try {
         const employeeResult =
           await candidateMasterService.createEmployeeFromCandidate(
@@ -225,7 +224,6 @@ const updateCandidateMasterStatus = async (req, res, next) => {
         reqData.employee = employeeResult;
       } catch (employeeError) {
         console.error("Error creating employee from candidate:", employeeError);
-        // Don't fail the status update if employee creation fails
       }
     }
 

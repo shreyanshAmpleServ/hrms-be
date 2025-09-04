@@ -790,17 +790,11 @@ const getAllApprovalWorkFlow = async (
   endDate
 ) => {
   try {
-    size = size || 1000;
     page = !page || page == 0 ? 1 : page;
-    const skip = (page - 1) * size;
+    size = size || 10;
+    const skip = (page - 1) * size || 0;
 
     const filters = {};
-
-    if (search) {
-      filters.request_type = {
-        contains: search.toLowerCase(),
-      };
-    }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -855,14 +849,13 @@ const getAllApprovalWorkFlow = async (
       if (!grouped[type]) {
         grouped[type] = {
           request_type: type,
-          departments: [], // will hold multiple dept names
+          departments: [],
           no_of_approvers: 0,
           is_active: wf.is_active,
           request_approval_request: [],
         };
       }
 
-      // add department if not already included
       const deptName =
         wf.approval_work_department?.department_name ||
         "Global (All Departments)";
@@ -875,7 +868,6 @@ const getAllApprovalWorkFlow = async (
         });
       }
 
-      // collect approver sequence details
       grouped[type].request_approval_request.push({
         id: wf.id,
         sequence: wf.sequence,

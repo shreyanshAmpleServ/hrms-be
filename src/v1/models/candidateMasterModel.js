@@ -396,9 +396,9 @@ const updateCandidateMasterStatus = async (id, data) => {
       updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
-    if (data.status === "Approved") {
+    if (data.status === "A") {
       updateData.status_remarks = data.status_remarks || "";
-    } else if (data.status === "Rejected") {
+    } else if (data.status === "R") {
       updateData.status_remarks = data.status_remarks || "";
     } else {
       updateData.status_remarks = "";
@@ -494,7 +494,7 @@ const createEmployeeFromCandidate = async (
     await prisma.hrms_d_candidate_master.update({
       where: { id: parseInt(candidateId) },
       data: {
-        status: "Converted to Employee",
+        status: "A",
         status_remarks: `Converted to employee with ID: ${newEmployee.id}`,
         updatedate: new Date(),
         updatedby: createdBy,
