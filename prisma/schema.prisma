@@ -1112,6 +1112,7 @@ model hrms_m_department_master {
   training_session_departmentID hrms_d_training_session[]
   shift_department_id           hrms_m_shift_master[]
   approval_work_department      hrms_d_approval_work_flow[]
+  candidate_department          hrms_d_candidate_master[]
 }
 
 model hrms_m_designation_master {
@@ -2249,6 +2250,7 @@ model hrms_d_candidate_master {
   phone                             String?                         @db.NVarChar(20)
   date_of_birth                     DateTime?                       @db.Date
   gender                            String?                         @db.Char(1)
+  department_id                     Int?
   nationality                       String?                         @db.NVarChar(100)
   resume_path                       String?                         @db.NVarChar(255)
   applied_position_id               Int?
@@ -2282,6 +2284,7 @@ model hrms_d_candidate_master {
   offered_candidate                 hrms_d_offer_letter[]
   resume_candidate                  hrms_d_resume[]
   interview_stage_candidate         hrms_m_interview_stage_remark[]
+  candidate_department              hrms_m_department_master?       @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_m_application_source {

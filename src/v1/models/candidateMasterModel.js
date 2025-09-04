@@ -42,6 +42,7 @@ const serializeCandidateMasterData = (data) => ({
   no_show_marked_date: data.no_show_marked_date
     ? new Date(data.no_show_marked_date)
     : null,
+  department_id: data.department_id,
 });
 
 // const createCandidateMaster = async (data) => {
@@ -195,6 +196,10 @@ const createCandidateMaster = async (data) => {
             designation_name: true,
           },
         },
+        candidate_department: {
+          id: true,
+          department_name: true,
+        },
       },
     });
 
@@ -253,6 +258,11 @@ const updateCandidateMaster = async (id, data) => {
             id: true,
             designation_name: true,
           },
+        },
+
+        candidate_department: {
+          id: true,
+          department_name: true,
         },
       },
 
@@ -349,6 +359,10 @@ const getAllCandidateMaster = async (
             id: true,
             designation_name: true,
           },
+        },
+        candidate_department: {
+          id: true,
+          department_name: true,
         },
       },
     });
