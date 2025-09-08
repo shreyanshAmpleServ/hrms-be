@@ -98,14 +98,9 @@ const findNotificationSetupById = async (id) => {
                 id: true,
                 employee_code: true,
                 full_name: true,
-                // department: true,  // ❌ Remove this line - field doesn't exist
                 email: true,
-                // Use the relationship instead:
-                hrms_employee_department: {
-                  select: {
-                    department_name: true,
-                  },
-                },
+                profile_pic: true,
+                department_name: true,
               },
             },
           },
@@ -227,7 +222,14 @@ const getAllNotificationSetup = async (
         hrms_d_notification_assigned: {
           include: {
             assigned_employee: {
-              select: { id: true, full_name: true, email: true },
+              select: {
+                id: true,
+                employee_code: true,
+                full_name: true,
+                email: true,
+                profile_pic: true,
+                department_name: true,
+              },
             },
           },
           orderBy: { sort_order: "asc" },
