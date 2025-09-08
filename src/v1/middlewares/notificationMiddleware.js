@@ -275,8 +275,10 @@ const handleNotificationTrigger = async (req, responseData) => {
             assigned_employee: {
               select: {
                 id: true,
+                employee_code: true,
                 full_name: true,
                 email: true,
+                profile_pic: true,
                 department_name: true,
               },
             },
