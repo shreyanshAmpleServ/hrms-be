@@ -1,4 +1,5 @@
 const EmploymentContractService = require("../services/EmploymentContractService");
+const EmploymentContractModel = require("../models/employmentContractModel");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const {
@@ -7,7 +8,6 @@ const {
   uploadToBackblazeWithValidation,
 } = require("../../utils/uploadBackblaze");
 const fs = require("fs");
-
 const createEmploymentContract = async (req, res, next) => {
   try {
     let imageUrl = null;
@@ -183,19 +183,41 @@ const downloadContractPDF = async (req, res, next) => {
       throw new CustomError("Invalid file URL returned from Backblaze", 500);
     }
 
-    setTimeout(async () => {
-      try {
-        await deleteFromBackblaze(fileUrl);
-        console.log(
-          `Contract file auto-deleted from Backblaze after 20 seconds`
-        );
-      } catch (error) {
-        console.error(
-          "Error auto-deleting contract file from Backblaze:",
-          error
-        );
-      }
-    }, 10000);
+    const description = `Contract signed on ${new Date(
+      data.startDate
+    ).toLocaleDateString()} for ${
+      data.contractType || "Full Time"
+    } term, valid until ${new Date(
+      new Date(data.startDate).setFullYear(
+        new Date(data.startDate).getFullYear() + 1
+      )
+    ).toLocaleDateString()}`;
+    await EmploymentContractModel.createEmploymentContract({
+      candidate_id: Number(data.employeeId) || null,
+      contract_start_date: new Date(data.startDate).toISOString(),
+      contract_end_date: new Date(
+        new Date(data.startDate).setFullYear(
+          new Date(data.startDate).getFullYear() + 1
+        )
+      ).toISOString(),
+      contract_type: data.contractType || "Full Time",
+      document_path: fileUrl,
+      description: description,
+    });
+
+    // setTimeout(async () => {
+    //   try {
+    //     await deleteFromBackblaze(fileUrl);
+    //     console.log(
+    //       `Contract file auto-deleted from Backblaze after 20 seconds`
+    //     );
+    //   } catch (error) {
+    //     console.error(
+    //       "Error auto-deleting contract file from Backblaze:",
+    //       error
+    //     );
+    //   }
+    // }, 10000);
 
     res.json({ url: fileUrl });
   } catch (error) {

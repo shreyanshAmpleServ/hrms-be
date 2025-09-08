@@ -9,7 +9,6 @@ const { generateEmailContent } = require("../../utils/emailTemplates");
 const prisma = new PrismaClient();
 
 const notificationLogModel = require("./notificationLogModel");
-const { date } = require("zod/v4");
 
 const serializeJobData = (data) => {
   return {
@@ -282,9 +281,8 @@ const getAllEmploymentContract = async (
           },
         },
       },
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      orderBy: [{ createdate: "desc" }, { updatedate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_employment_contract.count();
     const totalCount = await prisma.hrms_d_employment_contract.count({
       where: filters,
     });
