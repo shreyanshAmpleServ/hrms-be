@@ -108,6 +108,133 @@ const handleNotificationTrigger = async (req, responseData) => {
   }
 };
 
+// const processNotificationSetup = async (
+//   setup,
+//   action,
+//   model,
+//   responseData,
+//   req
+// ) => {
+//   const { template, hrms_d_notification_assigned } = setup;
+
+//   let templateKey;
+//   if (template && template.key) {
+//     templateKey = template.key;
+//   } else {
+//     templateKey = getDefaultTemplateKey(action);
+//     console.log(
+//       ` Using fallback template key: ${templateKey} for setup: ${setup.title}`
+//     );
+//   }
+
+//   console.log(
+//     `Processing notifications for ${hrms_d_notification_assigned.length} users`
+//   );
+
+//   const uniqueUsers = hrms_d_notification_assigned.filter(
+//     (assignment, index, arr) =>
+//       index ===
+//       arr.findIndex(
+//         (a) => a.assigned_employee.email === assignment.assigned_employee.email
+//       )
+//   );
+
+//   console.log(
+//     `After user deduplication: ${uniqueUsers.length} unique recipients`
+//   );
+
+//   for (const assignment of uniqueUsers) {
+//     const employee = assignment.assigned_employee;
+
+//     if (!employee.email) {
+//       console.log(` No email found for ${employee.full_name}`);
+//       continue;
+//     }
+
+//     let notificationLog;
+//     try {
+//       const company = await prisma.hrms_d_default_configurations.findFirst({
+//         select: { company_name: true },
+//       });
+//       const company_name = company?.company_name || "HRMS System";
+
+//       const employeeDetails = await prisma.hrms_d_employee.findUnique({
+//         where: { id: employee.id },
+//         select: {
+//           hrms_employee_department: {
+//             select: { department_name: true },
+//           },
+//         },
+//       });
+
+//       const emailContent = await generateEmailContent(templateKey, {
+//         employee_name: employee.full_name,
+//         notification_title: setup.title || "System Notification",
+//         action_type: formatRequestType(getComponentName(model)),
+//         action: action,
+//         company_name: company_name,
+//         triggers: getActiveTriggers(setup),
+//         department_name:
+//           employeeDetails?.hrms_employee_department?.department_name ||
+//           "General",
+//         setup_date: new Date().toLocaleDateString(),
+//         datetime: new Date().toLocaleString(),
+//         request_type: formatRequestType(getComponentName(model)),
+
+//         ...responseData?.data,
+//       });
+
+//       notificationLog = await prisma.hrms_d_notification_log.create({
+//         data: {
+//           employee_id: employee.id,
+//           message_title: emailContent.subject,
+//           message_body: emailContent.body,
+//           channel: "email",
+//           sent_on: new Date(),
+//           status: "pending",
+//           createdby: req.user?.id || 1,
+//           createdate: new Date(),
+//           log_inst: req.user?.log_inst || 1,
+//         },
+//       });
+
+//       await sendEmail({
+//         to: employee.email,
+//         subject: emailContent.subject,
+//         html: emailContent.body,
+//         createdby: req.user?.id || 1,
+//         log_inst: req.user?.log_inst || 1,
+//       });
+
+//       await prisma.hrms_d_notification_log.update({
+//         where: { id: notificationLog.id },
+//         data: {
+//           status: "sent",
+//           sent_on: new Date(),
+//         },
+//       });
+
+//       console.log(
+//         ` Notification sent to ${employee.full_name} (${employee.email}) for ${action} ${model}`
+//       );
+//     } catch (emailError) {
+//       console.error(
+//         ` Failed to send notification to ${employee.full_name}:`,
+//         emailError
+//       );
+
+//       if (notificationLog) {
+//         await prisma.hrms_d_notification_log.update({
+//           where: { id: notificationLog.id },
+//           data: {
+//             status: "failed",
+//           },
+//         });
+//       }
+//     }
+//   }
+// };
+
 const processNotificationSetup = async (
   setup,
   action,
@@ -123,12 +250,40 @@ const processNotificationSetup = async (
   } else {
     templateKey = getDefaultTemplateKey(action);
     console.log(
-      ` Using fallback template key: ${templateKey} for setup: ${setup.title}`
+      `Using fallback template key: ${templateKey} for setup: ${setup.title}`
     );
   }
 
+  let requesterInfo = null;
+  try {
+    if (responseData?.data) {
+      const employeeId =
+        responseData.data.employee_id ||
+        responseData.data.leave_employee?.id ||
+        responseData.data.createdby;
+
+      if (employeeId) {
+        console.log(
+          ` Looking up requester info for employee ID: ${employeeId}`
+        );
+        requesterInfo = await prisma.hrms_d_employee.findUnique({
+          where: { id: parseInt(employeeId) },
+          select: {
+            full_name: true,
+            hrms_employee_department: {
+              select: { department_name: true },
+            },
+          },
+        });
+        console.log(` Found requester: ${requesterInfo?.full_name}`);
+      }
+    }
+  } catch (error) {
+    console.error(" Error fetching requester info:", error);
+  }
+
   console.log(
-    `Processing notifications for ${hrms_d_notification_assigned.length} users`
+    ` Processing notifications for ${hrms_d_notification_assigned.length} users`
   );
 
   const uniqueUsers = hrms_d_notification_assigned.filter(
@@ -140,7 +295,7 @@ const processNotificationSetup = async (
   );
 
   console.log(
-    `After user deduplication: ${uniqueUsers.length} unique recipients`
+    ` After user deduplication: ${uniqueUsers.length} unique recipients`
   );
 
   for (const assignment of uniqueUsers) {
@@ -169,6 +324,10 @@ const processNotificationSetup = async (
 
       const emailContent = await generateEmailContent(templateKey, {
         employee_name: employee.full_name,
+        requester_name: requesterInfo?.full_name || "System User",
+        requester_department:
+          requesterInfo?.hrms_employee_department?.department_name ||
+          "Unknown Department",
         notification_title: setup.title || "System Notification",
         action_type: formatRequestType(getComponentName(model)),
         action: action,
@@ -180,7 +339,6 @@ const processNotificationSetup = async (
         setup_date: new Date().toLocaleDateString(),
         datetime: new Date().toLocaleString(),
         request_type: formatRequestType(getComponentName(model)),
-
         ...responseData?.data,
       });
 
@@ -226,9 +384,7 @@ const processNotificationSetup = async (
       if (notificationLog) {
         await prisma.hrms_d_notification_log.update({
           where: { id: notificationLog.id },
-          data: {
-            status: "failed",
-          },
+          data: { status: "failed" },
         });
       }
     }
