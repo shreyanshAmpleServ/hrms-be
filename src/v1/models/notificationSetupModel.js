@@ -128,9 +128,7 @@ const updateNotificationSetup = async (id, data) => {
       },
     });
 
-    // Update assigned users
     if (assignedUsers.length > 0) {
-      // Delete existing assignments
       await prisma.hrms_d_notification_assigned_user.deleteMany({
         where: { notification_setup_id: parseInt(id) },
       });
