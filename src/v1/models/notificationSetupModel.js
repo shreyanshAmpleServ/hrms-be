@@ -226,7 +226,11 @@ const getAllNotificationSetup = async (
                 full_name: true,
                 email: true,
                 profile_pic: true,
-                department_name: true,
+                hrms_employee_department: {
+                  select: {
+                    department_name: true,
+                  },
+                },
               },
             },
           },
