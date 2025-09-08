@@ -1,267 +1,192 @@
-// // Add this route to your existing candidate routes
-// router.post(
-//   "/candidate-master/:id/create-employee",
-//   authenticateToken,
-//   candidateMasterController.createEmployeeFromCandidate
-// );
+// controllers/notificationSetupController.js
+const notificationSetupService = require("../services/notificationSetupService");
+const CustomError = require("../../utils/CustomError");
 
-// // controler
-// const createEmployeeFromCandidate = async (req, res, next) => {
-//   try {
-//     const candidateId = req.params.id;
-//     const additionalEmployeeData = req.body; // Any additional fields needed for employee
+const getAvailableUsers = async (req, res, next) => {
+  try {
+    const users = await prisma.hrms_d_employee.findMany({
+      select: {
+        id: true,
+        employee_code: true,
+        full_name: true,
+        department: true,
+        designation: true,
+        email: true,
+      },
+      where: {
+        is_active: "Y",
+      },
+      orderBy: [{ department: "asc" }, { full_name: "asc" }],
+    });
 
-//     const result = await candidateMasterService.createEmployeeFromCandidate(
-//       candidateId,
-//       additionalEmployeeData,
-//       req.user.id,
-//       req.user.log_inst
-//     );
+    // Format for your UI
+    const formattedUsers = users.map((user) => ({
+      id: user.id,
+      name: user.full_name,
+      code: user.employee_code,
+      department: user.department || "General",
+      designation: user.designation,
+      email: user.email,
+      initial: user.full_name.charAt(0).toUpperCase(),
+    }));
 
-//     res
-//       .status(201)
-//       .success("Employee created successfully from candidate", result);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+    res
+      .status(200)
+      .success("Available users retrieved successfully", formattedUsers);
+  } catch (error) {
+    next(error);
+  }
+};
 
-// // Update your existing updateCandidateMasterStatus to include auto-employee creation
-// const updateCandidateMasterStatus = async (req, res, next) => {
-//   try {
-//     console.log("Approver ID from token:", req.user.employee_id);
+const getActionTypes = async (req, res, next) => {
+  try {
+    const actionTypes = [
+      { value: "leave", label: "Leave Request" },
+      { value: "asset", label: "Asset Management" },
+      { value: "employee", label: "Employee Management" },
+      { value: "attendance", label: "Attendance" },
+      { value: "payroll", label: "Payroll" },
+    ];
 
-//     const status = req.body.status;
-//     const status_remarks = req.body.status_remarks || "";
-//     const autoCreateEmployee = req.body.autoCreateEmployee || false; // New flag
-//     const employeeData = req.body.employeeData || {}; // Additional employee data
+    res.status(200).success("Action types retrieved successfully", actionTypes);
+  } catch (error) {
+    next(error);
+  }
+};
 
-//     const data = {
-//       status,
-//       status_remarks,
-//       updatedby: req.user.employee_id,
-//       updatedate: new Date(),
-//     };
+const createNotificationSetup = async (req, res, next) => {
+  try {
+    const {
+      title,
+      action_type,
+      status,
+      notification_triggers,
+      assigned_users,
+      template_id,
+    } = req.body;
 
-//     const reqData = await candidateMasterService.updateCandidateMasterStatus(
-//       req.params.id,
-//       data
-//     );
+    // Validate inputs
+    if (
+      !title ||
+      !action_type ||
+      !assigned_users ||
+      assigned_users.length === 0
+    ) {
+      throw new CustomError(
+        "Title, action type, and at least one assigned user are required",
+        400
+      );
+    }
 
-//     // Check if we need to auto-create employee after status update
-//     if (status === "Hired" && autoCreateEmployee) {
-//       try {
-//         const employeeResult =
-//           await candidateMasterService.createEmployeeFromCandidate(
-//             req.params.id,
-//             employeeData,
-//             req.user.id,
-//             req.user.log_inst
-//           );
-//         reqData.employee = employeeResult;
-//       } catch (employeeError) {
-//         console.error("Error creating employee from candidate:", employeeError);
-//         // Don't fail the status update if employee creation fails
-//       }
-//     }
+    if (
+      !notification_triggers ||
+      (!notification_triggers.onCreate &&
+        !notification_triggers.onUpdate &&
+        !notification_triggers.onDelete)
+    ) {
+      throw new CustomError(
+        "At least one notification trigger must be selected",
+        400
+      );
+    }
 
-//     res
-//       .status(200)
-//       .success("Candidate Master status updated successfully", reqData);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+    const data = {
+      title: title.trim(),
+      action_type: action_type,
+      action_create: notification_triggers.onCreate || false,
+      action_update: notification_triggers.onUpdate || false,
+      action_delete: notification_triggers.onDelete || false,
+      template_id: template_id || null,
+      is_active: status === "Active" ? "Y" : "N",
+      assigned_users: assigned_users.map((userId) => ({ employee_id: userId })),
+    };
 
-// // Export the new function
-// module.exports = {
-//   createCandidateMaster,
-//   findCandidateMasterById,
-//   updateCandidateMaster,
-//   deleteCandidateMaster,
-//   getAllCandidateMaster,
-//   updateCandidateMasterStatus,
-//   createEmployeeFromCandidate, // Add this
-// };
+    const result = await notificationSetupService.createNotificationSetup(data);
+    res.status(201).success("Notification setup created successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
 
-// //servicd
-// const employeeModel = require("../models/employeeModel.js"); // Import employee model
+const getAllNotificationSetups = async (req, res, next) => {
+  try {
+    const { page, size, search, startDate, endDate, is_active } = req.query;
+    const data = await notificationSetupService.getAllNotificationSetup(
+      Number(page),
+      Number(size),
+      search,
+      startDate,
+      endDate,
+      is_active
+    );
+    res.status(200).success("Notification setups retrieved successfully", data);
+  } catch (error) {
+    next(error);
+  }
+};
 
-// const createEmployeeFromCandidate = async (
-//   candidateId,
-//   additionalData,
-//   createdBy,
-//   logInst
-// ) => {
-//   return await candidateMasterModel.createEmployeeFromCandidate(
-//     candidateId,
-//     additionalData,
-//     createdBy,
-//     logInst
-//   );
-// };
+const findNotificationSetup = async (req, res, next) => {
+  try {
+    const reqData = await notificationSetupService.findNotificationSetupById(
+      req.params.id
+    );
+    res
+      .status(200)
+      .success("Notification setup retrieved successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
 
-// // Export the new function
-// module.exports = {
-//   createCandidateMaster,
-//   getCandidateMasterById,
-//   updateCandidateMaster,
-//   deleteCandidateMaster,
-//   updateCandidateMasterStatus,
-//   getAllCandidateMaster,
-//   createEmployeeFromCandidate, // Add this
-// };
+const updateNotificationSetup = async (req, res, next) => {
+  try {
+    const {
+      title,
+      action_type,
+      status,
+      notification_triggers,
+      assigned_users,
+      template_id,
+    } = req.body;
 
-// // model
-// const employeeModel = require("./employeeModel.js"); // Import employee model
+    const data = {
+      title: title?.trim(),
+      action_type: action_type,
+      action_create: notification_triggers?.onCreate || false,
+      action_update: notification_triggers?.onUpdate || false,
+      action_delete: notification_triggers?.onDelete || false,
+      template_id: template_id,
+      is_active: status === "Active" ? "Y" : "N",
+      assigned_users: assigned_users
+        ? assigned_users.map((userId) => ({ employee_id: userId }))
+        : [],
+    };
 
-// const createEmployeeFromCandidate = async (
-//   candidateId,
-//   additionalData,
-//   createdBy,
-//   logInst
-// ) => {
-//   try {
-//     // Get candidate data
-//     const candidate = await prisma.hrms_d_candidate_master.findUnique({
-//       where: { id: parseInt(candidateId) },
-//       include: {
-//         candidate_master_applied_position: true,
-//         candidate_application_source: true,
-//         candidate_interview_stage: true,
-//       },
-//     });
+    const result = await notificationSetupService.updateNotificationSetup(
+      req.params.id,
+      data
+    );
+    res.status(200).success("Notification setup updated successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
 
-//     if (!candidate) {
-//       throw new CustomError("Candidate not found", 404);
-//     }
+const deleteNotificationSetup = async (req, res, next) => {
+  try {
+    await notificationSetupService.deleteNotificationSetup(req.params.id);
+    res.status(200).success("Notification setup deleted successfully", null);
+  } catch (error) {
+    next(error);
+  }
+};
 
-//     // Check if candidate is in final stage or hired status
-//     if (candidate.status !== "Hired" && candidate.status !== "Selected") {
-//       throw new CustomError(
-//         "Candidate must be hired or selected to create employee",
-//         400
-//       );
-//     }
-
-//     // Check if employee already exists for this candidate
-//     const existingEmployee = await prisma.hrms_d_employee.findFirst({
-//       where: {
-//         OR: [{ email: candidate.email }, { phone_number: candidate.phone }],
-//       },
-//     });
-
-//     if (existingEmployee) {
-//       throw new CustomError("Employee already exists for this candidate", 400);
-//     }
-
-//     // Generate employee code
-//     const employeeCode = await generateEmployeeCode(candidate.full_name);
-
-//     // Map candidate data to employee structure
-//     const employeeData = {
-//       employee_code: employeeCode,
-//       first_name: candidate.full_name.split(" ")[0] || "",
-//       last_name: candidate.full_name.split(" ").slice(1).join(" ") || "",
-//       full_name: candidate.full_name,
-//       email: candidate.email,
-//       phone_number: candidate.phone,
-//       date_of_birth: candidate.date_of_birth,
-//       gender: candidate.gender,
-//       nationality: candidate.nationality,
-//       profile_pic: candidate.profile_pic,
-
-//       // Map from candidate relationships
-//       designation_id: candidate.applied_position_id,
-//       join_date: candidate.actual_joining_date || new Date(),
-
-//       // Default values for required employee fields
-//       employment_type: additionalData.employment_type || "Full-time",
-//       employee_category: additionalData.employee_category || "Regular",
-//       department_id: additionalData.department_id, // Must be provided
-//       status: "Active",
-
-//       // Merge any additional data provided
-//       ...additionalData,
-
-//       // System fields
-//       createdby: createdBy,
-//       log_inst: logInst,
-//     };
-
-//     // Validate required employee fields
-//     if (!employeeData.department_id) {
-//       throw new CustomError(
-//         "Department ID is required to create employee",
-//         400
-//       );
-//     }
-
-//     // Create employee using existing employee model
-//     const newEmployee = await employeeModel.createEmployee(employeeData);
-
-//     // Update candidate with employee reference (optional)
-//     await prisma.hrms_d_candidate_master.update({
-//       where: { id: parseInt(candidateId) },
-//       data: {
-//         status: "Converted to Employee",
-//         status_remarks: `Converted to employee with ID: ${newEmployee.id}`,
-//         updatedate: new Date(),
-//         updatedby: createdBy,
-//       },
-//     });
-
-//     return {
-//       employee: newEmployee,
-//       candidate: candidate,
-//       message: "Employee created successfully from candidate",
-//     };
-//   } catch (error) {
-//     console.error("Error creating employee from candidate:", error);
-//     if (error instanceof CustomError) {
-//       throw error;
-//     }
-//     throw new CustomError(
-//       `Error creating employee from candidate: ${error.message}`,
-//       500
-//     );
-//   }
-// };
-
-// // Helper function to generate employee code
-// const generateEmployeeCode = async (fullName) => {
-//   const nameParts = fullName.split(" ");
-//   const firstName = nameParts[0] || "";
-//   const lastName = nameParts[1] || "";
-
-//   const initials = `${firstName[0] || ""}${lastName[0] || ""}`.toUpperCase();
-
-//   // Get all existing employee codes
-//   const allCodes = await prisma.hrms_d_employee.findMany({
-//     select: { employee_code: true },
-//   });
-
-//   let maxNumber = 0;
-//   for (const entry of allCodes) {
-//     const code = entry.employee_code;
-//     const numberPart = code.replace(/^[A-Za-z]+/, "");
-//     const parsed = parseInt(numberPart);
-//     if (!isNaN(parsed) && parsed > maxNumber) {
-//       maxNumber = parsed;
-//     }
-//   }
-
-//   const nextNumber = maxNumber + 1;
-//   return `EMP${initials}${String(nextNumber).padStart(3, "0")}`;
-// };
-
-// // Export the new function
-// module.exports = {
-//   createCandidateMaster,
-//   findCandidateMasterById,
-//   updateCandidateMaster,
-//   deleteCandidateMaster,
-//   getAllCandidateMaster,
-//   updateCandidateMasterStatus,
-//   createEmployeeFromCandidate, // Add this
-// };
+module.exports = {
+  createNotificationSetup,
+  findNotificationSetup,
+  getAllNotificationSetups,
+  updateNotificationSetup,
+  deleteNotificationSetup,
+  getAvailableUsers,
+  getActionTypes,
+};

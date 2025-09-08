@@ -8,6 +8,9 @@ const templateKeyMap = {
   interviewRemarkAccepted: "interview_remark_accepted",
   interviewRemarkRejected: "interview_remark_rejected",
   notifyNextRemarkApprover: "notify_next_remark_approver",
+  notificationSetup: "notification_setup",
+  notificationSetupUpdated: "notification_setup_updated",
+  notificationSetupDeleted: "notification_setup_deleted",
 };
 
 module.exports = { templateKeyMap };

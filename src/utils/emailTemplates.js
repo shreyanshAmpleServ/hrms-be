@@ -155,6 +155,10 @@ const autoMapVariables = (template, vars) => {
 };
 
 const generateEmailContent = async (key, variables = {}) => {
+  console.log(" generateEmailContent called with:");
+  console.log("Key:", key);
+  console.log("Variables:", variables);
+
   const template = await prisma.hrms_d_templates.findUnique({ where: { key } });
 
   if (!template) throw new Error(`Email template with key "${key}" not found.`);
