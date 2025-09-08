@@ -10,8 +10,11 @@ const serializeNotificationSetupData = (data) => ({
   action_delete: data.action_delete || false,
   template_id: data.template_id || null,
   is_active: data.is_active || "Y",
+  channel_email: data.channel_email || false,
+  channel_system: data.channel_system || false,
+  channel_whatsapp: data.channel_whatsapp || false,
+  channel_sms: data.channel_sms || false,
 });
-
 const createNotificationSetup = async (data) => {
   const assignedUsers = data.assigned_users || [];
   try {

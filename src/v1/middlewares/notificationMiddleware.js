@@ -38,75 +38,75 @@ const setupNotificationMiddleware = async (req, res, next) => {
   next();
 };
 
-const handleNotificationTrigger = async (req, responseData) => {
-  try {
-    const action = getActionFromRequest(req);
-    const model = getModelFromRoute(req.route.path);
+// const handleNotificationTrigger = async (req, responseData) => {
+//   try {
+//     const action = getActionFromRequest(req);
+//     const model = getModelFromRoute(req.route.path);
 
-    if (!shouldTriggerNotification(model, action)) {
-      return;
-    }
+//     if (!shouldTriggerNotification(model, action)) {
+//       return;
+//     }
 
-    console.log(` Triggering notification for: ${action} ${model}`);
+//     console.log(` Triggering notification for: ${action} ${model}`);
 
-    const actionConditions = [];
-    if (action === "create") actionConditions.push({ action_create: true });
-    if (action === "update") actionConditions.push({ action_update: true });
-    if (action === "delete") actionConditions.push({ action_delete: true });
+//     const actionConditions = [];
+//     if (action === "create") actionConditions.push({ action_create: true });
+//     if (action === "update") actionConditions.push({ action_update: true });
+//     if (action === "delete") actionConditions.push({ action_delete: true });
 
-    const notificationSetups = await prisma.hrms_d_notification_setup.findMany({
-      where: {
-        action_type: getComponentName(model),
-        is_active: "Y",
-        OR: actionConditions,
-      },
-      distinct: ["title", "action_type"],
-      include: {
-        template: true,
-        hrms_d_notification_assigned: {
-          include: {
-            assigned_employee: {
-              select: { id: true, full_name: true, email: true },
-            },
-          },
-          orderBy: { sort_order: "asc" },
-        },
-      },
-    });
+//     const notificationSetups = await prisma.hrms_d_notification_setup.findMany({
+//       where: {
+//         action_type: getComponentName(model),
+//         is_active: "Y",
+//         OR: actionConditions,
+//       },
+//       distinct: ["title", "action_type"],
+//       include: {
+//         template: true,
+//         hrms_d_notification_assigned: {
+//           include: {
+//             assigned_employee: {
+//               select: { id: true, full_name: true, email: true },
+//             },
+//           },
+//           orderBy: { sort_order: "asc" },
+//         },
+//       },
+//     });
 
-    console.log(
-      ` Found ${notificationSetups.length} unique notification setups to process`
-    );
+//     console.log(
+//       ` Found ${notificationSetups.length} unique notification setups to process`
+//     );
 
-    const uniqueSetups = notificationSetups.filter((setup) => {
-      const setupKey = `${setup.id}-${action}-${
-        responseData?.data?.id || Date.now()
-      }`;
-      if (processedNotifications.has(setupKey)) {
-        console.log(` Skipping already processed setup: ${setup.title}`);
-        return false;
-      }
-      processedNotifications.add(setupKey);
-      return true;
-    });
+//     const uniqueSetups = notificationSetups.filter((setup) => {
+//       const setupKey = `${setup.id}-${action}-${
+//         responseData?.data?.id || Date.now()
+//       }`;
+//       if (processedNotifications.has(setupKey)) {
+//         console.log(` Skipping already processed setup: ${setup.title}`);
+//         return false;
+//       }
+//       processedNotifications.add(setupKey);
+//       return true;
+//     });
 
-    if (processedNotifications.size > 1000) {
-      const entries = Array.from(processedNotifications);
-      processedNotifications.clear();
-      entries.slice(-500).forEach((entry) => processedNotifications.add(entry));
-    }
+//     if (processedNotifications.size > 1000) {
+//       const entries = Array.from(processedNotifications);
+//       processedNotifications.clear();
+//       entries.slice(-500).forEach((entry) => processedNotifications.add(entry));
+//     }
 
-    console.log(
-      ` Processing ${uniqueSetups.length} unique setups after deduplication`
-    );
+//     console.log(
+//       ` Processing ${uniqueSetups.length} unique setups after deduplication`
+//     );
 
-    for (const setup of uniqueSetups) {
-      await processNotificationSetup(setup, action, model, responseData, req);
-    }
-  } catch (error) {
-    console.error("Error handling notification trigger:", error);
-  }
-};
+//     for (const setup of uniqueSetups) {
+//       await processNotificationSetup(setup, action, model, responseData, req);
+//     }
+//   } catch (error) {
+//     console.error("Error handling notification trigger:", error);
+//   }
+// };
 
 // const processNotificationSetup = async (
 //   setup,
@@ -234,6 +234,91 @@ const handleNotificationTrigger = async (req, responseData) => {
 //     }
 //   }
 // };
+
+const handleNotificationTrigger = async (req, responseData) => {
+  try {
+    const action = getActionFromRequest(req);
+    const model = getModelFromRoute(req.route.path);
+
+    if (!shouldTriggerNotification(model, action)) {
+      return;
+    }
+
+    console.log(` Triggering notification for: ${action} ${model}`);
+
+    const actionConditions = [];
+    if (action === "create") actionConditions.push({ action_create: true });
+    if (action === "update") actionConditions.push({ action_update: true });
+    if (action === "delete") actionConditions.push({ action_delete: true });
+
+    if (actionConditions.length === 0) {
+      console.log(
+        ` No action conditions for ${action}, skipping notifications`
+      );
+      return;
+    }
+    console.log(
+      ` Action: ${action}, looking for setups with action_${action}: true`
+    );
+
+    const notificationSetups = await prisma.hrms_d_notification_setup.findMany({
+      where: {
+        action_type: getComponentName(model),
+        is_active: "Y",
+        OR: actionConditions, // ✅ This should exclude your setup when action_delete is false
+      },
+      distinct: ["title", "action_type"],
+      include: {
+        template: true,
+        hrms_d_notification_assigned: {
+          include: {
+            assigned_employee: {
+              select: {
+                id: true,
+                full_name: true,
+                email: true,
+                department_name: true,
+              },
+            },
+          },
+          orderBy: { sort_order: "asc" },
+        },
+      },
+    });
+    console.log(
+      `Found setups:`,
+      notificationSetups.map((s) => ({
+        id: s.id,
+        title: s.title,
+        action_delete: s.action_delete,
+        action_create: s.action_create,
+        action_update: s.action_update,
+      }))
+    );
+    console.log(
+      `Found ${notificationSetups.length} unique notification setups to process`
+    );
+
+    notificationSetups.forEach((setup) => {
+      console.log(
+        ` Setup: ${setup.title}, action_delete: ${setup.action_delete}, action_create: ${setup.action_create}, action_update: ${setup.action_update}`
+      );
+    });
+
+    if (notificationSetups.length === 0) {
+      console.log(
+        ` No notification setups found for ${action} ${model}, skipping`
+      );
+      return;
+    }
+
+    for (const setup of notificationSetups) {
+      await processNotificationSetup(setup, action, model, responseData, req);
+    }
+  } catch (error) {
+    console.error("Error handling notification trigger:", error);
+  }
+};
 
 const processNotificationSetup = async (
   setup,

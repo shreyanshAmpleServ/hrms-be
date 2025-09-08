@@ -2609,6 +2609,10 @@ model hrms_d_notification_setup {
   action_update                Boolean                             @default(false)
   action_delete                Boolean                             @default(false)
   template_id                  Int?
+  channel_email                Boolean                             @default(false)
+  channel_system               Boolean                             @default(false)
+  channel_whatsapp             Boolean                             @default(false)
+  channel_sms                  Boolean                             @default(false)
   is_active                    String                              @default("Y", map: "DF__hrms_d_noti__is_ac__3D5E1FD6") @db.Char(1)
   created_at                   DateTime                            @default(now(), map: "DF__hrms_d_noti__creat__3E52440F") @db.DateTime
   updated_at                   DateTime                            @default(now(), map: "DF__hrms_d_noti__updat__3F466848") @updatedAt @db.DateTime

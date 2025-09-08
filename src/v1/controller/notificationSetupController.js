@@ -8,11 +8,60 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 // const createNotificationSetup = async (req, res, next) => {
 //   try {
-//     let reqData = { ...req.body };
-//     const data = await notificationSetupService.createNotificationSetup(
-//       reqData
-//     );
-//     res.status(201).success("Notification setup created successfully", data);
+//     const {
+//       title,
+//       action_type,
+//       status,
+//       notification_triggers,
+//       assigned_users,
+//       template_id,
+//     } = req.body;
+
+//     if (
+//       !title ||
+//       !action_type ||
+//       !assigned_users ||
+//       assigned_users.length === 0
+//     ) {
+//       throw new CustomError(
+//         "Title, action type, and at least one assigned user are required",
+//         400
+//       );
+//     }
+
+//     if (
+//       !notification_triggers ||
+//       (!notification_triggers.onCreate &&
+//         !notification_triggers.onUpdate &&
+//         !notification_triggers.onDelete)
+//     ) {
+//       throw new CustomError(
+//         "At least one notification trigger must be selected",
+//         400
+//       );
+//     }
+
+//     const data = {
+//       title: title.trim(),
+//       action_type: action_type,
+//       action_create: notification_triggers.onCreate || false,
+//       action_update: notification_triggers.onUpdate || false,
+//       action_delete: notification_triggers.onDelete || false,
+//       template_id: template_id || null,
+//       is_active: status === "Active" ? "Y" : "N",
+//       assigned_users: assigned_users.map((userId) => ({ employee_id: userId })),
+//     };
+
+//     const result = await notificationSetupService.createNotificationSetup(data);
+
+//     await sendNotificationSetupEmails({
+//       notificationSetup: result,
+//       action: "created",
+//       assigned_users,
+//       template_id,
+//     });
+
+//     res.status(201).success("Notification setup created successfully", result);
 //   } catch (error) {
 //     next(error);
 //   }
@@ -27,51 +76,48 @@ const createNotificationSetup = async (req, res, next) => {
       notification_triggers,
       assigned_users,
       template_id,
+      channels,
     } = req.body;
 
-    if (
-      !title ||
-      !action_type ||
-      !assigned_users ||
-      assigned_users.length === 0
-    ) {
-      throw new CustomError(
-        "Title, action type, and at least one assigned user are required",
-        400
-      );
-    }
+    const existingSetup = await prisma.hrms_d_notification_setup.findFirst({
+      where: {
+        action_type: action_type,
+        is_active: "Y",
+      },
+    });
 
-    if (
-      !notification_triggers ||
-      (!notification_triggers.onCreate &&
-        !notification_triggers.onUpdate &&
-        !notification_triggers.onDelete)
-    ) {
-      throw new CustomError(
-        "At least one notification trigger must be selected",
-        400
-      );
+    if (existingSetup) {
+      return res
+        .status(400)
+        .error(
+          `Notification setup with title "${title}" for action type "${action_type}" already exists`
+        );
     }
-
+    if (!channels || (!channels.email && !channels.system)) {
+      return res.status(400).send({
+        success: false,
+        message:
+          "At least one notification channel (email or system) must be selected",
+      });
+    }
     const data = {
-      title: title.trim(),
+      title: title?.trim(),
       action_type: action_type,
-      action_create: notification_triggers.onCreate || false,
-      action_update: notification_triggers.onUpdate || false,
-      action_delete: notification_triggers.onDelete || false,
-      template_id: template_id || null,
+      action_create: notification_triggers?.create || false,
+      action_update: notification_triggers?.update || false,
+      action_delete: notification_triggers?.delete || false,
+      template_id: template_id,
       is_active: status === "Active" ? "Y" : "N",
-      assigned_users: assigned_users.map((userId) => ({ employee_id: userId })),
+      channel_email: channels?.email || false,
+      channel_system: channels?.system || false,
+      channel_whatsapp: channels?.whatsapp || false,
+      channel_sms: channels?.sms || false,
+      assigned_users: assigned_users
+        ? assigned_users.map((userId) => ({ employee_id: userId }))
+        : [],
     };
 
     const result = await notificationSetupService.createNotificationSetup(data);
-
-    await sendNotificationSetupEmails({
-      notificationSetup: result,
-      action: "created",
-      assigned_users,
-      template_id,
-    });
 
     res.status(201).success("Notification setup created successfully", result);
   } catch (error) {
@@ -204,16 +250,21 @@ const updateNotificationSetup = async (req, res, next) => {
       notification_triggers,
       assigned_users,
       template_id,
+      channels,
     } = req.body;
 
     const data = {
       title: title?.trim(),
       action_type: action_type,
-      action_create: notification_triggers?.onCreate || false,
-      action_update: notification_triggers?.onUpdate || false,
-      action_delete: notification_triggers?.onDelete || false,
+      action_create: notification_triggers?.create || false,
+      action_update: notification_triggers?.update || false,
+      action_delete: notification_triggers?.delete || false,
       template_id: template_id,
       is_active: status === "Active" ? "Y" : "N",
+      channel_email: channels?.email || false,
+      channel_system: channels?.system || false,
+      channel_whatsapp: channels?.whatsapp || false,
+      channel_sms: channels?.sms || false,
       assigned_users: assigned_users
         ? assigned_users.map((userId) => ({ employee_id: userId }))
         : [],
@@ -223,15 +274,6 @@ const updateNotificationSetup = async (req, res, next) => {
       req.params.id,
       data
     );
-
-    if (assigned_users && assigned_users.length > 0) {
-      await sendNotificationSetupEmails({
-        notificationSetup: result,
-        action: "updated",
-        assigned_users,
-        template_id: templateKeyMap.notificationSetupUpdated,
-      });
-    }
 
     res.status(200).success("Notification setup updated successfully", result);
   } catch (error) {
@@ -366,6 +408,22 @@ const getActionTypes = async (req, res, next) => {
     next(error);
   }
 };
+
+const getNotificationChannels = async (req, res, next) => {
+  try {
+    const channels = [
+      { value: "email", label: "Email", enabled: true },
+      { value: "system", label: "System Notification", enabled: true },
+      { value: "whatsapp", label: "WhatsApp", enabled: false }, // Future implementation
+      { value: "sms", label: "SMS", enabled: false }, // Future implementation
+    ];
+    res
+      .status(200)
+      .success("Notification channels retrieved successfully", channels);
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   createNotificationSetup,
   findNotificationSetupById,
@@ -374,4 +432,5 @@ module.exports = {
   deleteNotificationSetup,
   getAvailableUsers,
   getActionTypes,
+  getNotificationChannels,
 };
