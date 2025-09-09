@@ -11,6 +11,9 @@ const templateKeyMap = {
   notificationSetupCreated: "notification_setup_created",
   notificationSetupUpdated: "notification_setup_updated",
   notificationSetupDeleted: "notification_setup_deleted",
+  systemNotificationSetupCreated: "system_notification_created",
+  systemNotificationSetupUpdated: "system_notification_updated",
+  systemNotificationSetupDeleted: "system_notification_deleted",
 };
 
 module.exports = { templateKeyMap };
