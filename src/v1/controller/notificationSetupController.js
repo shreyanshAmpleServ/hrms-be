@@ -315,19 +315,7 @@ const deleteNotificationSetup = async (req, res, next) => {
       throw new CustomError("Notification setup not found", 404);
     }
 
-    const assignedUsers = existingSetup.assigned_users || [];
-    const userIds = assignedUsers.map((user) => user.employee_id);
-
     await notificationSetupService.deleteNotificationSetup(req.params.id);
-
-    if (userIds.length > 0) {
-      await sendNotificationSetupEmails({
-        notificationSetup: existingSetup,
-        action: "deleted",
-        assigned_users: userIds,
-        template_id: templateKeyMap.notificationSetupDeleted,
-      });
-    }
 
     res.status(200).success("Notification setup deleted successfully", null);
   } catch (error) {

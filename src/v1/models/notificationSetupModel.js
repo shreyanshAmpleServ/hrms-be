@@ -82,7 +82,6 @@ const createNotificationSetup = async (data) => {
 //   }
 // };
 
-// In your notificationSetupService.js file
 const findNotificationSetupById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_notification_setup.findUnique({
@@ -100,7 +99,12 @@ const findNotificationSetupById = async (id) => {
                 full_name: true,
                 email: true,
                 profile_pic: true,
-                department_name: true,
+                // Access department through relationship instead of direct field
+                hrms_employee_department: {
+                  select: {
+                    department_name: true,
+                  },
+                },
               },
             },
           },
@@ -133,7 +137,6 @@ const updateNotificationSetup = async (id, data) => {
         where: { notification_setup_id: parseInt(id) },
       });
 
-      // Create new assignments
       await prisma.hrms_d_notification_assigned_user.createMany({
         data: assignedUsers.map((user, index) => ({
           notification_setup_id: parseInt(id),
