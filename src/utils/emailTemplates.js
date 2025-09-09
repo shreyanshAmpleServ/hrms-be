@@ -120,14 +120,10 @@ const autoMapVariables = (template, vars) => {
   placeholders.forEach((key) => {
     if (!mapped[key]) {
       const aliasMap = {
-        employee_name: [
-          "employee_name",
-          "user_name",
-          "staff_name",
-          "candidate_name",
-        ],
+        employee_name: ["employee_name", "staff_name", "candidate_name"],
         candidate_name: ["candidate_name"],
         requester_name: ["applicant_name", "initiator_name"],
+        user_name: ["user_name"],
         approver_name: ["manager_name", "reviewer_name"],
         days: ["remaining_days", "days"],
       };

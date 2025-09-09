@@ -39,6 +39,16 @@ const getUserWithRole = async (userId, is_password = false) => {
           },
         },
       },
+      user_employee: {
+        select: {
+          full_name: true,
+          profile_pic: true,
+          email: true,
+          hrms_employee_department: {
+            select: { department_name: true },
+          },
+        },
+      },
     },
   });
 
@@ -53,6 +63,7 @@ const getUserWithRole = async (userId, is_password = false) => {
     role: user.hrms_d_user_role?.[0]?.hrms_m_role?.role_name || null,
     permissions: permission || null,
     role_id: user.hrms_d_user_role?.[0]?.hrms_m_role?.id || null,
+    user_employee: user.user_employee || null,
   };
 };
 

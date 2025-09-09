@@ -724,9 +724,9 @@ const processNotification = async (
 
     let requesterInfo = null;
     try {
-      if (req.user?.id) {
+      if (req.user?.employee_id) {
         requesterInfo = await prisma.hrms_d_employee.findUnique({
-          where: { id: req.user.id },
+          where: { id: req.user.employee_id },
           select: {
             id: true,
             full_name: true,
@@ -762,14 +762,12 @@ const processNotification = async (
       console.error("Error fetching requester info:", error);
     }
 
-    const requester_name =
-      requesterInfo?.full_name || req.user?.full_name || "System User";
+    const requester_name = req.user?.user_employee?.full_name || "User";
     const requester_department =
-      requesterInfo?.hrms_employee_department?.department_name || " Department";
+      req.user?.user_employee?.hrms_employee_department?.department_name ||
+      "General";
 
-    console.log(
-      `Requester identified as: ${requester_name} from ${requester_department}`
-    );
+    console.log(`Department identified as:`, req.user?.user_employee);
 
     let shouldSendNotification = false;
     let templateKey = null;
@@ -808,19 +806,14 @@ const processNotification = async (
         const emailTemplateData = {
           employee_name: assignedEmployee.full_name,
           recipient_name: assignedEmployee.full_name,
-
-          requester_name: requester_name,
+          user_name: requester_name,
           requester_department: requester_department,
-
-          action_type: formatActionType(action_type),
-          action: formatAction(action),
+          action_type: action_type,
+          action: action,
           company_name,
           department_name: requester_department,
-          notification_title: `${formatActionType(action_type)} ${formatAction(
-            action
-          )}`,
+          notification_title: `${action_type} ${formatAction(action)}`,
           datetime: new Date().toLocaleString(),
-
           ...responseData?.data,
         };
 
