@@ -283,7 +283,7 @@ const getAllLeaveApplication = async (
       totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving leave applications", 503);
+    throw new CustomError("Error retrieving leave application", 503);
   }
 };
 
