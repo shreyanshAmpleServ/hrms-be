@@ -6,6 +6,7 @@ const { authenticateToken } = require("../middlewares/authMiddleware.js");
 router.post(
   "/request-approval",
   authenticateToken,
+
   requestApprovalController.createRequestApproval
 );
 router.get(

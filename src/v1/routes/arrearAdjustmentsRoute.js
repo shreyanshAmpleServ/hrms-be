@@ -2,11 +2,16 @@ const express = require("express");
 const router = express.Router();
 const arrearAdjustmentsController = require("../controller/arrearAdjustmentsContoller.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware");
 
 // Create arrear adjustment routes
 router.post(
   "/arrear-adjustment",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Arrear Adjustments", "create"),
   arrearAdjustmentsController.createArrearAdjustment
 );
 
@@ -28,6 +33,8 @@ router.get(
 router.put(
   "/arrear-adjustment/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Arrear Adjustments", "update"),
   arrearAdjustmentsController.updateArrearAdjustment
 );
 
@@ -35,6 +42,8 @@ router.put(
 router.delete(
   "/arrear-adjustment/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Arrear Adjustments", "delete"),
   arrearAdjustmentsController.deleteArrearAdjustment
 );
 

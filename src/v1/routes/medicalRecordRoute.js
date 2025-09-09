@@ -3,6 +3,9 @@ const router = express.Router();
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 const medicalRecordController = require("../controller/medicalRecordController.js");
 const upload = require("../middlewares/UploadFileMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 router.post(
   "/medical-record",
@@ -11,6 +14,8 @@ router.post(
     { name: "prescription_path", maxCount: 1 },
   ]),
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Medical Record", "create"),
   medicalRecordController.createMedicalRecord
 );
 
@@ -27,6 +32,8 @@ router.put(
     { name: "prescription_path", maxCount: 1 },
   ]),
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Medical Record", "update"),
   medicalRecordController.updateMedicalRecord
 );
 
@@ -39,6 +46,8 @@ router.get(
 router.delete(
   "/medical-record/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Medical Record", "delete"),
   medicalRecordController.deleteMedicalRecord
 );
 module.exports = router;

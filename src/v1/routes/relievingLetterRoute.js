@@ -2,15 +2,26 @@ const express = require("express");
 const router = express.Router();
 const relievingLetterController = require("../controller/relievingLetterController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 // Create relieving letter routes
 router.post(
   "/relieving-letter",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Relieving Letter Generation",
+      "create"
+    ),
   relievingLetterController.createRelievingLetter
 );
 
-// Get all relieving letters routes
+// Get all Relieving Letter Generation routes
 router.get(
   "/relieving-letter",
   authenticateToken,
@@ -28,6 +39,14 @@ router.get(
 router.put(
   "/relieving-letter/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Relieving Letter Generation",
+      "update"
+    ),
   relievingLetterController.updateRelievingLetter
 );
 
@@ -35,6 +54,14 @@ router.put(
 router.delete(
   "/relieving-letter/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Relieving Letter Generation",
+      "delete"
+    ),
   relievingLetterController.deleteRelievingLetter
 );
 

@@ -1,7 +1,6 @@
 const EmployeeService = require("../services/EmployeeService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const { generateFullUrl } = require("../../utils/helper");
 const {
   deleteFromBackblaze,
   uploadToBackblaze,
@@ -10,8 +9,6 @@ const {
 const createEmployee = async (req, res, next) => {
   try {
     let profilePicUrl = null;
-    let nidaFileUrl = null;
-    let nssfFileUrl = null;
 
     if (req.files?.profile_pic?.[0]) {
       const file = req.files.profile_pic[0];
@@ -23,31 +20,9 @@ const createEmployee = async (req, res, next) => {
       );
     }
 
-    if (req.files?.nida_file?.[0]) {
-      const file = req.files.nida_file[0];
-      nidaFileUrl = await uploadToBackblaze(
-        file.buffer,
-        file.originalname,
-        file.mimetype,
-        "nida_files"
-      );
-    }
-
-    if (req.files?.nssf_file?.[0]) {
-      const file = req.files.nssf_file[0];
-      nssfFileUrl = await uploadToBackblaze(
-        file.buffer,
-        file.originalname,
-        file.mimetype,
-        "nssf_files"
-      );
-    }
-
     const employeeData = {
       ...req.body,
       profile_pic: profilePicUrl,
-      nida_file: nidaFileUrl,
-      nssf_file: nssfFileUrl,
       createdby: req.user.employee_id,
       log_inst: req.user.log_inst || req.user.employee_id,
     };
@@ -87,28 +62,6 @@ const updateEmployee = async (req, res, next) => {
         : null,
     };
 
-    const replaceFile = async (existingFileUrl, file, folder) => {
-      if (existingFileUrl) {
-        try {
-          await deleteFromBackblaze(existingFileUrl);
-          console.log(`Old file deleted: ${existingFileUrl}`);
-        } catch (err) {
-          console.warn(
-            `Failed to delete old file: ${existingFileUrl}`,
-            err.message
-          );
-        }
-      }
-
-      const fileName = `${folder}/${Date.now()}-${file.originalname}`;
-      const uploadRes = await uploadToBackblaze(
-        file.buffer,
-        fileName,
-        file.mimetype
-      );
-      return uploadRes.downloadUrl;
-    };
-
     if (req.files?.profile_pic) {
       const profilePic = req.files.profile_pic[0];
       const fileUrl = await uploadToBackblaze(
@@ -121,36 +74,6 @@ const updateEmployee = async (req, res, next) => {
 
       if (existingData.profile_pic) {
         await deleteFromBackblaze(existingData.profile_pic);
-      }
-    }
-
-    if (req.files?.nssf_file) {
-      const nssfFile = req.files.nssf_file[0];
-      const fileUrl = await uploadToBackblaze(
-        nssfFile.buffer,
-        nssfFile.originalname,
-        nssfFile.mimetype,
-        "nssf_files"
-      );
-      data.nssf_file = fileUrl;
-
-      if (existingData.nssf_file) {
-        await deleteFromBackblaze(existingData.nssf_file);
-      }
-    }
-
-    if (req.files?.nida_file) {
-      const nidaFile = req.files.nida_file[0];
-      const fileUrl = await uploadToBackblaze(
-        nidaFile.buffer,
-        nidaFile.originalname,
-        nidaFile.mimetype,
-        "nida_files"
-      );
-      data.nida_file = fileUrl;
-
-      if (existingData.nida_file) {
-        await deleteFromBackblaze(existingData.nida_file);
       }
     }
 

@@ -2,11 +2,16 @@ const express = require("express");
 const router = express.Router();
 const assetAssignmentController = require("../controller/assetAssignmentController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware");
 
 // Create asset assignment routes
 router.post(
   "/asset-assignment",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Asset Assignments", "create"),
   assetAssignmentController.createAssetAssignment
 );
 
@@ -28,6 +33,8 @@ router.get(
 router.put(
   "/asset-assignment/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Asset Assignments", "update"),
   assetAssignmentController.updateAssetAssignment
 );
 
@@ -35,6 +42,8 @@ router.put(
 router.delete(
   "/asset-assignment/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Asset Assignments", "delete"),
   assetAssignmentController.deleteAssetAssignment
 );
 

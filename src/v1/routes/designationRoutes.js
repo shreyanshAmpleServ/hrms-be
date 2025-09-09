@@ -1,13 +1,16 @@
-// Country Routes
 const express = require("express");
 const designationController = require("../controller/designationController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
-
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware");
 const router = express.Router();
 
 router.post(
   "/designation",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Designation", "create"),
   designationController.createDesignation
 );
 router.get(
@@ -18,11 +21,15 @@ router.get(
 router.put(
   "/designation/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Designation", "update"),
   designationController.updateDesignation
 );
 router.delete(
   "/designation/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Designation", "delete"),
   designationController.deleteDesignation
 );
 router.get(

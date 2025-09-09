@@ -2,28 +2,17 @@ const express = require("express");
 const EmployeeController = require("../controller/EmployeeController"); // Assuming the controller is named EmployeeController.js
 const { authenticateToken } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/UploadFileMiddleware");
-
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 const router = express.Router();
 
 router.post(
   "/employee",
   authenticateToken,
-  upload.fields([
-    { name: "profile_pic", maxCount: 1 },
-    { name: "nssf_file", maxCount: 1 },
-    { name: "nida_file", maxCount: 1 },
-  ]),
-  (req, res, next) => {
-    console.log("Files received:", req.files);
-    if (req.files.profile_pic) {
-      console.log(
-        "Profile pic buffer size:",
-        req.files.profile_pic[0].buffer.length
-      );
-    }
-    console.log("Body data:", req.body);
-    next();
-  },
+  upload.fields([{ name: "profile_pic", maxCount: 1 }]),
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Employee", "create"),
   EmployeeController.createEmployee
 );
 
@@ -38,22 +27,9 @@ router.get(
 router.put(
   "/employee/:id",
   authenticateToken,
-  upload.fields([
-    { name: "profile_pic", maxCount: 1 },
-    { name: "nssf_file", maxCount: 1 },
-    { name: "nida_file", maxCount: 1 },
-  ]),
-  (req, res, next) => {
-    console.log("Files received:", req.files);
-    if (req.files.profile_pic) {
-      console.log(
-        "Profile pic buffer size:",
-        req.files.profile_pic[0].buffer.length
-      );
-    }
-    console.log("Body data:", req.body);
-    next();
-  },
+  upload.fields([{ name: "profile_pic", maxCount: 1 }]),
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Employee", "update"),
   EmployeeController.updateEmployee
 );
 
@@ -62,6 +38,8 @@ router.delete(
   "/employee/:id",
   authenticateToken,
   upload.single("profile_pic"),
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Employee", "delete"),
   EmployeeController.deleteEmployee
 );
 

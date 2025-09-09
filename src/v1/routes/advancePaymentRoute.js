@@ -2,11 +2,15 @@ const express = require("express");
 const router = express.Router();
 const advancePayment = require("../controller/advancePaymentController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
-
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware");
 // Create advance payment routes
 router.post(
   "/advance-payment",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Advance Payments", "create"),
   advancePayment.createAdvancePayment
 );
 
@@ -28,6 +32,8 @@ router.get(
 router.put(
   "/advance-payment/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Advance Payments", "update"),
   advancePayment.updateAdvancePayment
 );
 
@@ -35,12 +41,16 @@ router.put(
 router.delete(
   "/advance-payment/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Advance Payments", "delete"),
   advancePayment.deleteAdvancePayment
 );
 
 router.patch(
   "/advance-payment/:idstatus",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Advance Payments", "update"),
   advancePayment.updateAdvancePaymentStatus
 );
 

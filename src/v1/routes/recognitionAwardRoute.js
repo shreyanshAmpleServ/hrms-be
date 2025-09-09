@@ -2,12 +2,16 @@ const express = require("express");
 const router = express.Router();
 const recognitionAwardController = require("../controller/recognitionAwardController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 // Create recognition award routes
 router.post(
   "/recognition-award",
   authenticateToken,
-
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Recognition Awards", "create"),
   recognitionAwardController.createRecognitionAward
 );
 
@@ -29,6 +33,8 @@ router.get(
 router.put(
   "/recognition-award/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Recognition Awards", "update"),
   recognitionAwardController.updateRecognitionAward
 );
 
@@ -36,6 +42,8 @@ router.put(
 router.delete(
   "/recognition-award/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Recognition Awards", "delete"),
   recognitionAwardController.deleteRecognitionAward
 );
 

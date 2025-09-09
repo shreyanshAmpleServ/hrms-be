@@ -2,11 +2,21 @@ const express = require("express");
 const router = express.Router();
 const disciplinaryActionController = require("../controller/disciplinaryActionController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
-
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 // Create disciplinary action routes
 router.post(
   "/disciplinary-action",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Disciplinary Action Log",
+      "create"
+    ),
 
   disciplinaryActionController.createDisciplinaryAction
 );
@@ -29,6 +39,14 @@ router.get(
 router.put(
   "/disciplinary-action/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Disciplinary Action Log",
+      "update"
+    ),
   disciplinaryActionController.updateDisciplinaryAction
 );
 
@@ -36,12 +54,28 @@ router.put(
 router.delete(
   "/disciplinary-action/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Disciplinary Action Log",
+      "delete"
+    ),
   disciplinaryActionController.deleteDisciplinaryAction
 );
 
 router.patch(
   "/disciplinary-action/:id/status",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Disciplinary Action Log",
+      "update"
+    ),
   disciplinaryActionController.updateDisciplinaryActionStatus
 );
 

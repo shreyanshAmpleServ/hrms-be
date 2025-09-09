@@ -2,12 +2,22 @@ const express = require("express");
 const router = express.Router();
 const exitClearanceController = require("../controller/exitClearanceController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 // Create exit clearance routes
 router.post(
   "/exit-clearance",
   authenticateToken,
-
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Exit Clearance Checklist",
+      "create"
+    ),
   exitClearanceController.createExitClearance
 );
 
@@ -29,6 +39,14 @@ router.get(
 router.put(
   "/exit-clearance/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Exit Clearance Checklist",
+      "update"
+    ),
   exitClearanceController.updateExitClearance
 );
 
@@ -36,12 +54,22 @@ router.put(
 router.delete(
   "/exit-clearance/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Exit Clearance Checklist",
+      "delete"
+    ),
   exitClearanceController.deleteExitClearance
 );
 
 router.post(
   "/exit-clearance/exit-clearance-bulk",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Exit Clearance", "create"),
   exitClearanceController.checkBulkClearance
 );
 module.exports = router;

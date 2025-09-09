@@ -2,11 +2,16 @@ const express = require("express");
 const router = express.Router();
 const helpdeskTicket = require("../controller/helpdeskTicketController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 // Create helpdesk ticket routes
 router.post(
   "/helpdesk-ticket",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Helpdesk Ticket", "create"),
   helpdeskTicket.createHelpdeskTicket
 );
 
@@ -28,6 +33,8 @@ router.get(
 router.put(
   "/helpdesk-ticket/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Helpdesk Ticket", "update"),
   helpdeskTicket.updateHelpdeskTicket
 );
 
@@ -35,6 +42,8 @@ router.put(
 router.delete(
   "/helpdesk-ticket/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Helpdesk Ticket", "delete"),
   helpdeskTicket.deleteHelpdeskTicket
 );
 

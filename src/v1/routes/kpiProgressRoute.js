@@ -2,12 +2,16 @@ const express = require("express");
 const router = express.Router();
 const kpiProgressController = require("../controller/kpiProgressController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 // Create KPI progress routes
 router.post(
   "/kpi-progress",
   authenticateToken,
-
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "KPI Progress Entry", "create"),
   kpiProgressController.createKpiProgress
 );
 
@@ -29,6 +33,8 @@ router.get(
 router.put(
   "/kpi-progress/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "KPI Progress Entry", "update"),
   kpiProgressController.updateKpiProgress
 );
 
@@ -36,6 +42,8 @@ router.put(
 router.delete(
   "/kpi-progress/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "KPI Progress Entry", "delete"),
   kpiProgressController.deleteKpiProgress
 );
 

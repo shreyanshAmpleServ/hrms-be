@@ -4,7 +4,9 @@ const {
   sendAnniversaryEmail,
 } = require("../controller/workAnniversaryController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
-
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 const router = express.Router();
 
 router.get(
@@ -16,6 +18,8 @@ router.get(
 router.post(
   "/anniversary/send/:employeeId",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Work Anniversary", "send"),
   sendAnniversaryEmail
 );
 

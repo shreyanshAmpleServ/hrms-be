@@ -2,12 +2,16 @@ const express = require("express");
 const router = express.Router();
 const timeSheetProjectController = require("../controller/timeSheetProjectController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 // Create time sheet project routes
 router.post(
   "/timesheet-project",
   authenticateToken,
-
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Time Sheet Project", "create"),
   timeSheetProjectController.createTimeSheetProject
 );
 
@@ -29,6 +33,8 @@ router.get(
 router.put(
   "/timesheet-project/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Time Sheet Project", "update"),
   timeSheetProjectController.updateTimeSheetProject
 );
 
@@ -36,6 +42,8 @@ router.put(
 router.delete(
   "/timesheet-project/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Time Sheet Project", "delete"),
   timeSheetProjectController.deleteTimeSheetProject
 );
 

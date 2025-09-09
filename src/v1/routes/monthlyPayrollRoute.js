@@ -2,7 +2,9 @@ const express = require("express");
 const router = express.Router();
 const monthlyPayrollController = require("../controller/monthlyPayrollController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
-
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 router.get(
   "/monthly-payroll/run-sp",
   authenticateToken,
@@ -42,12 +44,16 @@ router.get(
 router.post(
   "/monthly-payroll",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Monthly Payroll", "create"),
   monthlyPayrollController.createMonthlyPayroll
 );
 
 router.post(
   "/generate-monthly-payroll",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Monthly Payroll", "create"),
   monthlyPayrollController.createOrUpdateMonthlyPayroll
 );
 
@@ -72,12 +78,16 @@ router.get(
 router.put(
   "/monthly-payroll/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Monthly Payroll", "update"),
   monthlyPayrollController.updateMonthlyPayroll
 );
 
 router.delete(
   "/monthly-payroll/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Monthly Payroll", "delete"),
   monthlyPayrollController.deleteMonthlyPayroll
 );
 

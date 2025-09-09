@@ -3,12 +3,24 @@ const EmploymentContractController = require("../controller/EmploymentContractCo
 const { authenticateToken } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/UploadFileMiddleware");
 
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware");
+
 const router = express.Router();
 
 router.post(
   "/employment-contract",
   authenticateToken,
   upload.single("document_path"),
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Employment Contract",
+      "create"
+    ),
   EmploymentContractController.createEmploymentContract
 );
 router.get(
@@ -20,11 +32,27 @@ router.put(
   "/employment-contract/:id",
   authenticateToken,
   upload.single("document_path"),
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Employment Contract",
+      "update"
+    ),
   EmploymentContractController.updateEmploymentContract
 );
 router.delete(
   "/employment-contract/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Employment Contract",
+      "delete"
+    ),
   EmploymentContractController.deleteEmploymentContract
 );
 router.get(

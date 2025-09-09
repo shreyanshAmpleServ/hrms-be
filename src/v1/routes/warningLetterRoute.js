@@ -3,16 +3,17 @@ const router = express.Router();
 const warningLetterController = require("../controller/warningLetterController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 const upload = require("../middlewares/uploadMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 // Create warning letter routes (upload middleware needed)
 router.post(
   "/warning-letter",
   authenticateToken,
-  (req, res, next) => {
-    console.log("Incoming files:", req.files, "Single file:", req.file);
-    next();
-  },
   upload.single("attachment_path"),
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Warning Letters", "create"),
   warningLetterController.createWarningLetter
 );
 
@@ -34,11 +35,9 @@ router.get(
 router.put(
   "/warning-letter/:id",
   authenticateToken,
-  (req, res, next) => {
-    console.log("Incoming files:", req.files, "Single file:", req.file);
-    next();
-  },
   upload.single("attachment_path"),
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Warning Letters", "update"),
   warningLetterController.updateWarningLetter
 );
 
@@ -46,6 +45,8 @@ router.put(
 router.delete(
   "/warning-letter/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Warning Letters", "delete"),
   warningLetterController.deleteWarningLetter
 );
 

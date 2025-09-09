@@ -4,40 +4,64 @@ const documentUploadController = require("../controller/documentUploadController
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 const upload = require("../middlewares/UploadFileMiddleware");
 
-//Creaet document upload
+//Creaet att
 router.post(
   "/document-upload",
   authenticateToken,
   upload.single("document_path"),
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Employee Attachments",
+      "create"
+    ),
   documentUploadController.createDocument
 );
 
-// Get all document uploads routes
+// Get all atts routes
 router.get(
   "/document-upload",
   authenticateToken,
   documentUploadController.getAllDocuments
 );
 
-// Get a single document upload by ID
+// Get a single att by ID
 router.get(
   "/document-upload/:id",
   authenticateToken,
   documentUploadController.getDocumentById
 );
 
-// Update a document upload by ID
+// Update a att by ID
 router.put(
   "/document-upload/:id",
   authenticateToken,
   upload.single("document_path"),
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Employee Attachments",
+      "update"
+    ),
   documentUploadController.updateDocument
 );
 
-// Delete document upload by ID
+// Delete att by ID
 router.delete(
   "/document-upload/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(
+      req,
+      res,
+      next,
+      "Employee Attachments",
+      "delete"
+    ),
   documentUploadController.deleteDocument
 );
 

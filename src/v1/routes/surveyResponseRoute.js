@@ -2,11 +2,16 @@ const express = require("express");
 const router = express.Router();
 const surveyResponse = require("../controller/surveyResponseController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 
 // Create survey response routes
 router.post(
   "/survey-response",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Survey Response", "create"),
   surveyResponse.createSurveyResponse
 );
 
@@ -28,6 +33,8 @@ router.get(
 router.put(
   "/survey-response/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Survey Response", "update"),
   surveyResponse.updateSurveyResponse
 );
 
@@ -35,6 +42,8 @@ router.put(
 router.delete(
   "/survey-response/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Survey Response", "delete"),
   surveyResponse.deleteSurveyResponse
 );
 

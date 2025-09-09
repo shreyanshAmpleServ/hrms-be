@@ -2,11 +2,15 @@ const express = require("express");
 const router = express.Router();
 const exitInterview = require("../controller/exitInterviewController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
-
+const {
+  setupNotificationMiddleware,
+} = require("../middlewares/notificationMiddleware.js");
 // Create exit interview routes
 router.post(
   "/exit-interview",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Exit Interview", "create"),
   exitInterview.createExitInterview
 );
 
@@ -28,6 +32,8 @@ router.get(
 router.put(
   "/exit-interview/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Exit Interview", "update"),
   exitInterview.updateExitInterview
 );
 
@@ -35,6 +41,8 @@ router.put(
 router.delete(
   "/exit-interview/:id",
   authenticateToken,
+  (req, res, next) =>
+    setupNotificationMiddleware(req, res, next, "Exit Interview", "delete"),
   exitInterview.deleteExitInterview
 );
 
