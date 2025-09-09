@@ -1,12 +1,10 @@
 const { PrismaClient } = require("@prisma/client");
 const sendEmail = require("../../utils/mailer.js");
 const { generateEmailContent } = require("../../utils/emailTemplates.js");
-const { templateKeyMap } = require("../../utils/templateKeyMap.js");
 
 const prisma = new PrismaClient();
 
 const processedRequests = new Set();
-const processedNotifications = new Set();
 
 const setupNotificationMiddleware = async (req, res, next) => {
   const originalJson = res.json.bind(res);
@@ -265,7 +263,7 @@ const handleNotificationTrigger = async (req, responseData) => {
       where: {
         action_type: getComponentName(model),
         is_active: "Y",
-        OR: actionConditions, // ✅ This should exclude your setup when action_delete is false
+        OR: actionConditions,
       },
       distinct: ["title", "action_type"],
       include: {
