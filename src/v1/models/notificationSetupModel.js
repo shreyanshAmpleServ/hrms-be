@@ -47,41 +47,6 @@ const createNotificationSetup = async (data) => {
   }
 };
 
-// const findNotificationSetupById = async (id) => {
-//   try {
-//     const reqData = await prisma.hrms_d_notification_setup.findUnique({
-//       where: { id: parseInt(id) },
-//       include: {
-//         template: true,
-//         hrms_d_notification_assigned: {
-//           include: {
-//             assigned_employee: {
-//               select: {
-//                 id: true,
-//                 employee_code: true,
-//                 full_name: true,
-//                 department: true,
-//                 email: true,
-//               },
-//             },
-//           },
-//           orderBy: { sort_order: "asc" },
-//         },
-//       },
-//     });
-
-//     if (!reqData) {
-//       throw new CustomError("Notification setup not found", 404);
-//     }
-//     return reqData;
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error finding notification setup by ID: ${error.message}`,
-//       503
-//     );
-//   }
-// };
-
 const findNotificationSetupById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_notification_setup.findUnique({

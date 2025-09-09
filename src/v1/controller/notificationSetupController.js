@@ -12,7 +12,7 @@ const prisma = new PrismaClient();
 //       title,
 //       action_type,
 //       status,
-//       notification_triggers,
+//       actions,
 //       assigned_users,
 //       template_id,
 //     } = req.body;
@@ -30,10 +30,10 @@ const prisma = new PrismaClient();
 //     }
 
 //     if (
-//       !notification_triggers ||
-//       (!notification_triggers.onCreate &&
-//         !notification_triggers.onUpdate &&
-//         !notification_triggers.onDelete)
+//       !actions ||
+//       (!actions.onCreate &&
+//         !actions.onUpdate &&
+//         !actions.onDelete)
 //     ) {
 //       throw new CustomError(
 //         "At least one notification trigger must be selected",
@@ -44,9 +44,9 @@ const prisma = new PrismaClient();
 //     const data = {
 //       title: title.trim(),
 //       action_type: action_type,
-//       action_create: notification_triggers.onCreate || false,
-//       action_update: notification_triggers.onUpdate || false,
-//       action_delete: notification_triggers.onDelete || false,
+//       action_create: actions.onCreate || false,
+//       action_update: actions.onUpdate || false,
+//       action_delete: actions.onDelete || false,
 //       template_id: template_id || null,
 //       is_active: status === "Active" ? "Y" : "N",
 //       assigned_users: assigned_users.map((userId) => ({ employee_id: userId })),
@@ -72,11 +72,11 @@ const createNotificationSetup = async (req, res, next) => {
     const {
       title,
       action_type,
-      status,
-      notification_triggers,
+      actions,
       assigned_users,
       template_id,
       channels,
+      is_active,
     } = req.body;
 
     const existingSetup = await prisma.hrms_d_notification_setup.findFirst({
@@ -93,6 +93,7 @@ const createNotificationSetup = async (req, res, next) => {
           `Notification setup with title "${title}" for action type "${action_type}" already exists`
         );
     }
+
     if (!channels || (!channels.email && !channels.system)) {
       return res.status(400).send({
         success: false,
@@ -100,14 +101,15 @@ const createNotificationSetup = async (req, res, next) => {
           "At least one notification channel (email or system) must be selected",
       });
     }
+
     const data = {
       title: title?.trim(),
       action_type: action_type,
-      action_create: notification_triggers?.create || false,
-      action_update: notification_triggers?.update || false,
-      action_delete: notification_triggers?.delete || false,
+      action_create: actions?.create || false,
+      action_update: actions?.update || false,
+      action_delete: actions?.delete || false,
       template_id: template_id,
-      is_active: status === "Active" ? "Y" : "N",
+      is_active: is_active === "Y" ? "Y" : "N",
       channel_email: channels?.email || false,
       channel_system: channels?.system || false,
       channel_whatsapp: channels?.whatsapp || false,
@@ -200,19 +202,6 @@ const getActiveTriggers = (notificationSetup) => {
   return triggers.join(", ");
 };
 
-// const findNotificationSetupById = async (req, res, next) => {
-//   try {
-//     const data = await notificationSetupService.findNotificationSetupById(
-//       req.params.id
-//     );
-//     if (!data) throw new CustomError("Notification setup not found", 404);
-
-//     res.status(200).success(null, data);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
 const findNotificationSetupById = async (req, res, next) => {
   try {
     const reqData = await notificationSetupService.findNotificationSetupById(
@@ -246,7 +235,7 @@ const updateNotificationSetup = async (req, res, next) => {
       title,
       action_type,
       status,
-      notification_triggers,
+      actions,
       assigned_users,
       template_id,
       channels,
@@ -255,9 +244,10 @@ const updateNotificationSetup = async (req, res, next) => {
     const data = {
       title: title?.trim(),
       action_type: action_type,
-      action_create: notification_triggers?.create || false,
-      action_update: notification_triggers?.update || false,
-      action_delete: notification_triggers?.delete || false,
+      // Fix: Use correct field names
+      action_create: actions?.create || false,
+      action_update: actions?.update || false,
+      action_delete: actions?.delete || false,
       template_id: template_id,
       is_active: status === "Active" ? "Y" : "N",
       channel_email: channels?.email || false,
