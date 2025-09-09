@@ -1,12 +1,10 @@
 const express = require("express");
 const employeeDashboardController = require("../controller/employeeDashboardController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
-const { authorizeRole } = require("../middlewares/authorizeRoleMiddleware.js");
 
-const employee = [authenticateToken, authorizeRole(["Employee", "Admin"])];
+const employee = [authenticateToken];
 
 const router = express.Router();
-//coomit
 router.get(
   "/employeeDashboard/employee-leaves",
   employee,
