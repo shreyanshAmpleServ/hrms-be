@@ -244,7 +244,6 @@ const updateNotificationSetup = async (req, res, next) => {
     const data = {
       title: title?.trim(),
       action_type: action_type,
-      // Fix: Use correct field names
       action_create: actions?.create || false,
       action_update: actions?.update || false,
       action_delete: actions?.delete || false,
@@ -391,8 +390,8 @@ const getNotificationChannels = async (req, res, next) => {
     const channels = [
       { value: "email", label: "Email", enabled: true },
       { value: "system", label: "System Notification", enabled: true },
-      { value: "whatsapp", label: "WhatsApp", enabled: false }, // Future implementation
-      { value: "sms", label: "SMS", enabled: false }, // Future implementation
+      { value: "whatsapp", label: "WhatsApp", enabled: false },
+      { value: "sms", label: "SMS", enabled: false },
     ];
     res
       .status(200)

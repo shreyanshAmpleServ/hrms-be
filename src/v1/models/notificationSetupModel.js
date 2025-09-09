@@ -64,7 +64,6 @@ const findNotificationSetupById = async (id) => {
                 full_name: true,
                 email: true,
                 profile_pic: true,
-                // Access department through relationship instead of direct field
                 hrms_employee_department: {
                   select: {
                     department_name: true,
