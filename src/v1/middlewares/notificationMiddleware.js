@@ -6,32 +6,122 @@ const prisma = new PrismaClient();
 
 const processedRequests = new Set();
 
-const setupNotificationMiddleware = async (req, res, next) => {
-  const originalJson = res.json.bind(res);
+const setupNotificationMiddleware = async (
+  req,
+  res,
+  next,
+  action_type,
+  action
+) => {
+  // const originalJson = res.json.bind(res);
 
-  const requestKey = `${req.method}:${req.originalUrl}:${Date.now()}`;
+  console.log(action_type, action);
 
-  res.json = function (data) {
-    if (
-      res.statusCode >= 200 &&
-      res.statusCode < 300 &&
-      !processedRequests.has(requestKey)
-    ) {
-      processedRequests.add(requestKey);
+  const findNotificationSetup =
+    await prisma.hrms_d_notification_setup.findFirst({
+      where: {
+        action_type,
+        is_active: "Y",
+      },
+      include: {
+        hrms_d_notification_assigned: {
+          include: {
+            assigned_employee: {
+              select: { id: true, full_name: true, email: true },
+            },
+          },
+        },
+      },
+    });
 
-      if (processedRequests.size > 1000) {
-        const entries = Array.from(processedRequests);
-        processedRequests.clear();
-        entries.slice(-500).forEach((entry) => processedRequests.add(entry));
+  console.log(findNotificationSetup);
+
+  const assigned_employees =
+    findNotificationSetup?.hrms_d_notification_assigned;
+
+  console.log(assigned_employees);
+
+  const department_name = "Management";
+  const company_name = "Ampleserv Technologies Pvt. Ltd.";
+
+  if (action === "create" && findNotificationSetup?.action_create) {
+    const template = await generateEmailContent(
+      templateKeyMap.notificationSetupCreated,
+      {
+        action_type,
+        employee_name: req.user.full_name,
+        action,
+        company_name,
+        department_name,
       }
-
-      handleNotificationTrigger(req, data).catch((error) => {
-        console.error("Notification error:", error);
+    );
+    console.log("Notification created email sent");
+    assigned_employees?.map(async (item) => {
+      await sendEmail({
+        to: item.assigned_employee.email,
+        subject: template.subject,
+        html: template.body,
+        log_inst: req.user.log_inst,
       });
-    }
+    });
+    console.log("Notification sent successfully");
+  } else if (action === "update" && findNotificationSetup?.action_update) {
+    const template = await generateEmailContent(
+      templateKeyMap.notificationSetupUpdated,
+      {
+        action_type,
+      }
+    );
+    assigned_employees?.map(async (item) => {
+      await sendEmail({
+        to: item.assigned_employee.email,
+        subject: template.subject,
+        html: template.body,
+        log_inst: req.user.log_inst,
+      });
+    });
+  } else if (action === "delete" && findNotificationSetup?.action_delete) {
+    const template = await generateEmailContent(
+      templateKeyMap.notificationSetupDeleted,
+      {
+        action_type,
+      }
+    );
+    assigned_employees?.map(async (item) => {
+      await sendEmail({
+        to: item.assigned_employee.email,
+        subject: template.subject,
+        html: template.body,
+        log_inst: req.user.log_inst,
+      });
+    });
+  } else {
+    console.log("Wrong action type or action not enabled");
+  }
 
-    return originalJson(data);
-  };
+  // const requestKey = `${req.method}:${req.originalUrl}:${Date.now()}`;
+
+  // res.json = function (data) {
+  //   if (
+  //     res.statusCode >= 200 &&
+  //     res.statusCode < 300 &&
+  //     !processedRequests.has(requestKey)
+  //   ) {
+  //     processedRequests.add(requestKey);
+
+  //     if (processedRequests.size > 1000) {
+  //       const entries = Array.from(processedRequests);
+  //       processedRequests.clear();
+  //       entries.slice(-500).forEach((entry) => processedRequests.add(entry));
+  //     }
+
+  //     handleNotificationTrigger(req, data, action_type, action).catch((error) => {
+  //       console.error("Notification error:", error);
+  //     });
+  //   }
+
+  //   return originalJson(data);
+  // };
 
   next();
 };
