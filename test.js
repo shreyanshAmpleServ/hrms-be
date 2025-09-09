@@ -1,192 +1,252 @@
-// controllers/notificationSetupController.js
-const notificationSetupService = require("../services/notificationSetupService");
-const CustomError = require("../../utils/CustomError");
+const { PrismaClient } = require("@prisma/client");
+const { generateEmailContent } = require("./emailTemplates");
+const sendEmail = require("./mailer");
+const prisma = new PrismaClient();
 
-const getAvailableUsers = async (req, res, next) => {
-  try {
-    const users = await prisma.hrms_d_employee.findMany({
+class NotificationService {
+  // Main function to send notifications based on channels
+  static async sendNotifications({
+    notificationSetup,
+    recipientIds,
+    data,
+    action = "triggered",
+  }) {
+    try {
+      const recipients = await this.getRecipients(recipientIds);
+      const channels = this.getActiveChannels(notificationSetup);
+
+      console.log(
+        `[Notification] Sending to ${
+          recipients.length
+        } recipients via channels: ${channels.join(", ")}`
+      );
+
+      // Send notifications through selected channels
+      const promises = [];
+
+      if (channels.includes("email")) {
+        promises.push(
+          this.sendEmailNotifications(
+            notificationSetup,
+            recipients,
+            data,
+            action
+          )
+        );
+      }
+
+      if (channels.includes("system")) {
+        promises.push(
+          this.sendSystemNotifications(
+            notificationSetup,
+            recipients,
+            data,
+            action
+          )
+        );
+      }
+
+      // Future implementations
+      if (channels.includes("whatsapp")) {
+        promises.push(
+          this.sendWhatsAppNotifications(
+            notificationSetup,
+            recipients,
+            data,
+            action
+          )
+        );
+      }
+
+      if (channels.includes("sms")) {
+        promises.push(
+          this.sendSMSNotifications(notificationSetup, recipients, data, action)
+        );
+      }
+
+      await Promise.allSettled(promises);
+      console.log(
+        `[Notification] Successfully processed notifications for setup: ${notificationSetup.title}`
+      );
+    } catch (error) {
+      console.error("[Notification Error]:", error);
+    }
+  }
+
+  // Get active channels from notification setup
+  static getActiveChannels(notificationSetup) {
+    const channels = [];
+    if (notificationSetup.channel_email) channels.push("email");
+    if (notificationSetup.channel_system) channels.push("system");
+    if (notificationSetup.channel_whatsapp) channels.push("whatsapp");
+    if (notificationSetup.channel_sms) channels.push("sms");
+    return channels;
+  }
+
+  // Get recipient details
+  static async getRecipients(recipientIds) {
+    return await prisma.hrms_d_employee.findMany({
+      where: { id: { in: recipientIds } },
       select: {
         id: true,
-        employee_code: true,
         full_name: true,
-        department: true,
-        designation: true,
         email: true,
+        phone: true,
+        hrms_employee_department: {
+          select: { department_name: true },
+        },
       },
-      where: {
-        is_active: "Y",
-      },
-      orderBy: [{ department: "asc" }, { full_name: "asc" }],
+    });
+  }
+
+  // Email notifications (existing logic)
+  static async sendEmailNotifications(
+    notificationSetup,
+    recipients,
+    data,
+    action
+  ) {
+    try {
+      const company = await prisma.hrms_d_default_configurations.findFirst({
+        select: { company_name: true },
+      });
+      const company_name = company?.company_name || "HRMS System";
+
+      for (const recipient of recipients) {
+        if (recipient.email) {
+          const template = await generateEmailContent(
+            notificationSetup.template_id,
+            {
+              employee_name: recipient.full_name,
+              notification_title: notificationSetup.title,
+              action_type: this.formatActionType(notificationSetup.action_type),
+              action: action,
+              company_name,
+              department_name:
+                recipient.hrms_employee_department?.department_name,
+              ...data,
+            }
+          );
+
+          await sendEmail({
+            to: recipient.email,
+            subject: template.subject,
+            html: template.body,
+          });
+
+          console.log(`[Email Sent] → ${recipient.email}`);
+        }
+      }
+    } catch (error) {
+      console.error("Email notification error:", error);
+    }
+  }
+
+  // System notifications (new implementation)
+  static async sendSystemNotifications(
+    notificationSetup,
+    recipients,
+    data,
+    action
+  ) {
+    try {
+      const template = await this.getTemplate(notificationSetup.template_id);
+
+      const notifications = recipients.map((recipient) => ({
+        employee_id: recipient.id,
+        message_title: this.processTemplate(
+          template?.subject || notificationSetup.title,
+          {
+            employee_name: recipient.full_name,
+            action_type: this.formatActionType(notificationSetup.action_type),
+            ...data,
+          }
+        ),
+        message_body: this.processTemplate(
+          template?.body || `${notificationSetup.title} notification`,
+          {
+            employee_name: recipient.full_name,
+            action_type: this.formatActionType(notificationSetup.action_type),
+            action: action,
+            ...data,
+          }
+        ),
+        channel: "system",
+        sent_on: new Date(),
+        status: "sent",
+        createdate: new Date(),
+        createdby: data.createdby || 1,
+        log_inst: data.log_inst || null,
+      }));
+
+      await prisma.hrms_d_notification_log.createMany({
+        data: notifications,
+      });
+
+      console.log(
+        `[System Notifications] Created ${notifications.length} system notifications`
+      );
+    } catch (error) {
+      console.error("System notification error:", error);
+    }
+  }
+
+  // Get template details
+  static async getTemplate(templateId) {
+    if (!templateId) return null;
+
+    return await prisma.hrms_d_templates.findUnique({
+      where: { id: templateId },
+      select: { subject: true, body: true },
+    });
+  }
+
+  // Process template with variables
+  static processTemplate(template, variables) {
+    if (!template) return "";
+
+    let processed = template;
+    Object.keys(variables).forEach((key) => {
+      const regex = new RegExp(`{{${key}}}`, "g");
+      processed = processed.replace(regex, variables[key] || "");
     });
 
-    // Format for your UI
-    const formattedUsers = users.map((user) => ({
-      id: user.id,
-      name: user.full_name,
-      code: user.employee_code,
-      department: user.department || "General",
-      designation: user.designation,
-      email: user.email,
-      initial: user.full_name.charAt(0).toUpperCase(),
-    }));
-
-    res
-      .status(200)
-      .success("Available users retrieved successfully", formattedUsers);
-  } catch (error) {
-    next(error);
+    return processed;
   }
-};
 
-const getActionTypes = async (req, res, next) => {
-  try {
-    const actionTypes = [
-      { value: "leave", label: "Leave Request" },
-      { value: "asset", label: "Asset Management" },
-      { value: "employee", label: "Employee Management" },
-      { value: "attendance", label: "Attendance" },
-      { value: "payroll", label: "Payroll" },
-    ];
-
-    res.status(200).success("Action types retrieved successfully", actionTypes);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const createNotificationSetup = async (req, res, next) => {
-  try {
-    const {
-      title,
-      action_type,
-      status,
-      notification_triggers,
-      assigned_users,
-      template_id,
-    } = req.body;
-
-    // Validate inputs
-    if (
-      !title ||
-      !action_type ||
-      !assigned_users ||
-      assigned_users.length === 0
-    ) {
-      throw new CustomError(
-        "Title, action type, and at least one assigned user are required",
-        400
-      );
-    }
-
-    if (
-      !notification_triggers ||
-      (!notification_triggers.onCreate &&
-        !notification_triggers.onUpdate &&
-        !notification_triggers.onDelete)
-    ) {
-      throw new CustomError(
-        "At least one notification trigger must be selected",
-        400
-      );
-    }
-
-    const data = {
-      title: title.trim(),
-      action_type: action_type,
-      action_create: notification_triggers.onCreate || false,
-      action_update: notification_triggers.onUpdate || false,
-      action_delete: notification_triggers.onDelete || false,
-      template_id: template_id || null,
-      is_active: status === "Active" ? "Y" : "N",
-      assigned_users: assigned_users.map((userId) => ({ employee_id: userId })),
+  // Format action type
+  static formatActionType(type) {
+    const actionTypeMap = {
+      leave: "Leave Request",
+      asset: "Asset Management",
+      employee: "Employee Management",
+      attendance: "Attendance",
+      payroll: "Payroll",
     };
-
-    const result = await notificationSetupService.createNotificationSetup(data);
-    res.status(201).success("Notification setup created successfully", result);
-  } catch (error) {
-    next(error);
+    return actionTypeMap[type] || type.charAt(0).toUpperCase() + type.slice(1);
   }
-};
 
-const getAllNotificationSetups = async (req, res, next) => {
-  try {
-    const { page, size, search, startDate, endDate, is_active } = req.query;
-    const data = await notificationSetupService.getAllNotificationSetup(
-      Number(page),
-      Number(size),
-      search,
-      startDate,
-      endDate,
-      is_active
-    );
-    res.status(200).success("Notification setups retrieved successfully", data);
-  } catch (error) {
-    next(error);
+  // Placeholder for future WhatsApp implementation
+  static async sendWhatsAppNotifications(
+    notificationSetup,
+    recipients,
+    data,
+    action
+  ) {
+    console.log("[WhatsApp] Feature not implemented yet");
+    // Future implementation
   }
-};
 
-const findNotificationSetup = async (req, res, next) => {
-  try {
-    const reqData = await notificationSetupService.findNotificationSetupById(
-      req.params.id
-    );
-    res
-      .status(200)
-      .success("Notification setup retrieved successfully", reqData);
-  } catch (error) {
-    next(error);
+  // Placeholder for future SMS implementation
+  static async sendSMSNotifications(
+    notificationSetup,
+    recipients,
+    data,
+    action
+  ) {
+    console.log("[SMS] Feature not implemented yet");
+    // Future implementation
   }
-};
+}
 
-const updateNotificationSetup = async (req, res, next) => {
-  try {
-    const {
-      title,
-      action_type,
-      status,
-      notification_triggers,
-      assigned_users,
-      template_id,
-    } = req.body;
-
-    const data = {
-      title: title?.trim(),
-      action_type: action_type,
-      action_create: notification_triggers?.onCreate || false,
-      action_update: notification_triggers?.onUpdate || false,
-      action_delete: notification_triggers?.onDelete || false,
-      template_id: template_id,
-      is_active: status === "Active" ? "Y" : "N",
-      assigned_users: assigned_users
-        ? assigned_users.map((userId) => ({ employee_id: userId }))
-        : [],
-    };
-
-    const result = await notificationSetupService.updateNotificationSetup(
-      req.params.id,
-      data
-    );
-    res.status(200).success("Notification setup updated successfully", result);
-  } catch (error) {
-    next(error);
-  }
-};
-
-const deleteNotificationSetup = async (req, res, next) => {
-  try {
-    await notificationSetupService.deleteNotificationSetup(req.params.id);
-    res.status(200).success("Notification setup deleted successfully", null);
-  } catch (error) {
-    next(error);
-  }
-};
-
-module.exports = {
-  createNotificationSetup,
-  findNotificationSetup,
-  getAllNotificationSetups,
-  updateNotificationSetup,
-  deleteNotificationSetup,
-  getAvailableUsers,
-  getActionTypes,
-};
+module.exports = NotificationService;

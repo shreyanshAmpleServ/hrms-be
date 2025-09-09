@@ -167,7 +167,6 @@ const sendNotificationSetupEmails = async ({
             setup_date: new Date().toLocaleDateString(),
           }
         );
-
         await sendEmail({
           to: user.email,
           subject: template.subject,
