@@ -641,6 +641,831 @@
 
 // module.exports = { setupNotificationMiddleware };
 
+// II without channel
+// const { PrismaClient } = require("@prisma/client");
+// const sendEmail = require("../../utils/mailer.js");
+// const { generateEmailContent } = require("../../utils/emailTemplates.js");
+
+// const prisma = new PrismaClient();
+
+// const templateKeyMap = {
+//   notificationSetupCreated: "notification_setup_created",
+//   notificationSetupUpdated: "notification_setup_updated",
+//   notificationSetupDeleted: "notification_setup_deleted",
+// };
+
+// const setupNotificationMiddleware = (req, res, next, action_type, action) => {
+//   const originalJson = res.json.bind(res);
+
+//   res.json = function (data) {
+//     const result = originalJson(data);
+
+//     if (res.statusCode >= 200 && res.statusCode < 300) {
+//       processNotification(req, res, data, action_type, action).catch(
+//         (error) => {
+//           console.error("Notification processing error:", error);
+//         }
+//       );
+//     }
+
+//     return result;
+//   };
+
+//   next();
+// };
+
+// const processNotification = async (
+//   req,
+//   res,
+//   responseData,
+//   action_type,
+//   action
+// ) => {
+//   try {
+//     console.log(
+//       `Processing notification for action_type: ${action_type}, action: ${action}`
+//     );
+
+//     const findNotificationSetup =
+//       await prisma.hrms_d_notification_setup.findFirst({
+//         where: {
+//           action_type,
+//           is_active: "Y",
+//         },
+//         include: {
+//           hrms_d_notification_assigned: {
+//             include: {
+//               assigned_employee: {
+//                 select: { id: true, full_name: true, email: true },
+//               },
+//             },
+//           },
+//         },
+//       });
+
+//     if (!findNotificationSetup) {
+//       console.log(
+//         `No notification setup found for action_type: ${action_type}`
+//       );
+//       return;
+//     }
+
+//     const assigned_employees =
+//       findNotificationSetup.hrms_d_notification_assigned;
+
+//     if (!assigned_employees || assigned_employees.length === 0) {
+//       console.log(`No assigned employees found for notification setup`);
+//       return;
+//     }
+
+//     const company = await prisma.hrms_d_default_configurations.findFirst({
+//       select: { company_name: true },
+//     });
+//     const company_name = company?.company_name || "Company";
+
+//     let requesterInfo = null;
+//     try {
+//       if (req.user?.employee_id) {
+//         requesterInfo = await prisma.hrms_d_employee.findUnique({
+//           where: { id: req.user.employee_id },
+//           select: {
+//             id: true,
+//             full_name: true,
+//             email: true,
+//             hrms_employee_department: {
+//               select: { department_name: true },
+//             },
+//           },
+//         });
+//       }
+
+//       if (!requesterInfo && responseData?.data) {
+//         const employeeId =
+//           responseData.data.employee_id ||
+//           responseData.data.leave_employee?.id ||
+//           responseData.data.createdby;
+
+//         if (employeeId) {
+//           requesterInfo = await prisma.hrms_d_employee.findUnique({
+//             where: { id: parseInt(employeeId) },
+//             select: {
+//               id: true,
+//               full_name: true,
+//               email: true,
+//               hrms_employee_department: {
+//                 select: { department_name: true },
+//               },
+//             },
+//           });
+//         }
+//       }
+//     } catch (error) {
+//       console.error("Error fetching requester info:", error);
+//     }
+
+//     const requester_name = req.user?.user_employee?.full_name || "User";
+//     const requester_department =
+//       req.user?.user_employee?.hrms_employee_department?.department_name ||
+//       "General";
+
+//     console.log(`Department identified as:`, req.user?.user_employee);
+
+//     let shouldSendNotification = false;
+//     let templateKey = null;
+
+//     if (action === "create" && findNotificationSetup.action_create) {
+//       shouldSendNotification = true;
+//       templateKey = templateKeyMap.notificationSetupCreated;
+//     } else if (action === "update" && findNotificationSetup.action_update) {
+//       shouldSendNotification = true;
+//       templateKey = templateKeyMap.notificationSetupUpdated;
+//     } else if (action === "delete" && findNotificationSetup.action_delete) {
+//       shouldSendNotification = true;
+//       templateKey = templateKeyMap.notificationSetupDeleted;
+//     }
+
+//     if (!shouldSendNotification) {
+//       console.log(`Notification not enabled for action: ${action}`);
+//       return;
+//     }
+
+//     console.log(
+//       `Sending notifications to ${assigned_employees.length} employees`
+//     );
+
+//     const notificationPromises = assigned_employees.map(async (item) => {
+//       try {
+//         const assignedEmployee = item.assigned_employee;
+
+//         if (!assignedEmployee.email) {
+//           console.log(
+//             `No email found for employee: ${assignedEmployee.full_name}`
+//           );
+//           return;
+//         }
+
+//         const emailTemplateData = {
+//           employee_name: assignedEmployee.full_name,
+//           recipient_name: assignedEmployee.full_name,
+//           user_name: requester_name,
+//           requester_department: requester_department,
+//           action_type: action_type,
+//           action: action,
+//           company_name,
+//           department_name: requester_department,
+//           notification_title: `${action_type} ${formatAction(action)}`,
+//           datetime: new Date().toLocaleString(),
+//           ...responseData?.data,
+//         };
+
+//         console.log(
+//           `Sending notification to: ${assignedEmployee.full_name} about request by: ${requester_name}`
+//         );
+
+//         const template = await generateEmailContent(
+//           templateKey,
+//           emailTemplateData
+//         );
+
+//         const notificationLog = await prisma.hrms_d_notification_log.create({
+//           data: {
+//             employee_id: assignedEmployee.id,
+//             message_title: template.subject,
+//             message_body: template.body,
+//             channel: "email",
+//             status: "pending",
+//             createdby: req.user?.id || 1,
+//             createdate: new Date(),
+//             log_inst: req.user?.log_inst || 1,
+//           },
+//         });
+
+//         await sendEmail({
+//           to: assignedEmployee.email,
+//           subject: template.subject,
+//           html: template.body,
+//           log_inst: req.user?.log_inst || 1,
+//         });
+
+//         await prisma.hrms_d_notification_log.update({
+//           where: { id: notificationLog.id },
+//           data: {
+//             status: "sent",
+//             sent_on: new Date(),
+//           },
+//         });
+
+//         console.log(
+//           `Notification sent successfully to: ${assignedEmployee.email}`
+//         );
+//       } catch (emailError) {
+//         console.error(
+//           `Failed to send notification to ${item.assigned_employee.email}:`,
+//           emailError
+//         );
+
+//         try {
+//           await prisma.hrms_d_notification_log.updateMany({
+//             where: {
+//               employee_id: item.assigned_employee.id,
+//               status: "pending",
+//               message_title: { contains: formatActionType(action_type) },
+//             },
+//             data: { status: "failed" },
+//           });
+//         } catch (updateError) {
+//           console.error(
+//             "Failed to update notification log status:",
+//             updateError
+//           );
+//         }
+//       }
+//     });
+
+//     await Promise.allSettled(notificationPromises);
+//     console.log("All notifications processed");
+//   } catch (error) {
+//     console.error("Error in processNotification:", error);
+//   }
+// };
+
+// const formatActionType = (actionType) => {
+//   return actionType.charAt(0).toUpperCase() + actionType.slice(1);
+// };
+
+// const formatAction = (action) => {
+//   const actionMap = {
+//     create: "Created",
+//     update: "Updated",
+//     delete: "Deleted",
+//   };
+//   return actionMap[action] || action;
+// };
+
+// module.exports = { setupNotificationMiddleware };
+
+//III.1-with diff template(Old)
+// const { PrismaClient } = require("@prisma/client");
+// const sendEmail = require("../../utils/mailer.js");
+// const { generateEmailContent } = require("../../utils/emailTemplates.js");
+
+// const prisma = new PrismaClient();
+
+// const templateKeyMap = {
+//   notificationSetupCreated: "notification_setup_created",
+//   notificationSetupUpdated: "notification_setup_updated",
+//   notificationSetupDeleted: "notification_setup_deleted",
+// };
+
+// const setupNotificationMiddleware = (req, res, next, action_type, action) => {
+//   const originalJson = res.json.bind(res);
+
+//   res.json = function (data) {
+//     const result = originalJson(data);
+
+//     if (res.statusCode >= 200 && res.statusCode < 300) {
+//       processNotification(req, res, data, action_type, action).catch(
+//         (error) => {
+//           console.error("Notification processing error:", error);
+//         }
+//       );
+//     }
+
+//     return result;
+//   };
+
+//   next();
+// };
+
+// const processNotification = async (
+//   req,
+//   res,
+//   responseData,
+//   action_type,
+//   action
+// ) => {
+//   try {
+//     console.log(
+//       `Processing notification for action_type: ${action_type}, action: ${action}`
+//     );
+
+//     const findNotificationSetup =
+//       await prisma.hrms_d_notification_setup.findFirst({
+//         where: {
+//           action_type,
+//           is_active: "Y",
+//         },
+//         include: {
+//           hrms_d_notification_assigned: {
+//             include: {
+//               assigned_employee: {
+//                 select: {
+//                   id: true,
+//                   full_name: true,
+//                   email: true,
+//                   hrms_employee_department: {
+//                     select: { department_name: true },
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       });
+
+//     if (!findNotificationSetup) {
+//       console.log(
+//         `No notification setup found for action_type: ${action_type}`
+//       );
+//       return;
+//     }
+
+//     const assigned_employees =
+//       findNotificationSetup.hrms_d_notification_assigned;
+
+//     if (!assigned_employees || assigned_employees.length === 0) {
+//       console.log(`No assigned employees found for notification setup`);
+//       return;
+//     }
+
+//     const enabledChannels = getEnabledChannels(findNotificationSetup);
+
+//     console.log(` Enabled channels: ${enabledChannels.join(", ")}`);
+
+//     if (enabledChannels.length === 0) {
+//       console.log(" No channels enabled, skipping notifications");
+//       return;
+//     }
+
+//     const company = await prisma.hrms_d_default_configurations.findFirst({
+//       select: { company_name: true },
+//     });
+//     const company_name = company?.company_name || "Company";
+
+//     let requesterInfo = null;
+//     try {
+//       const recordId = req.params?.id;
+//       if (
+//         recordId &&
+//         action_type &&
+//         (action === "update" || action === "delete")
+//       ) {
+//         let originalRecord = null;
+
+//         try {
+//           if (action_type === "Leave Application") {
+//             originalRecord = await prisma.hrms_d_leave_application.findUnique({
+//               where: { id: parseInt(recordId) },
+//               select: {
+//                 id: true,
+//                 employee_id: true,
+//                 createdby: true,
+//                 leave_employee: {
+//                   select: { id: true, full_name: true },
+//                 },
+//               },
+//             });
+//           }
+
+//           if (originalRecord) {
+//             responseData = responseData || {};
+//             responseData.data = {
+//               ...responseData.data,
+//               employee_id:
+//                 originalRecord.employee_id || originalRecord.createdby,
+//               leave_employee: originalRecord.leave_employee,
+//               createdby: originalRecord.createdby,
+//             };
+//           }
+//         } catch (fetchError) {
+//           console.log("Could not fetch original record:", fetchError.message);
+//         }
+//       }
+
+//       if (responseData?.data) {
+//         const employeeId =
+//           responseData.data.employee_id ||
+//           responseData.data.leave_employee?.id ||
+//           responseData.data.createdby ||
+//           responseData.data.updatedby;
+
+//         if (employeeId) {
+//           requesterInfo = await prisma.hrms_d_employee.findUnique({
+//             where: { id: parseInt(employeeId) },
+//             select: {
+//               id: true,
+//               full_name: true,
+//               email: true,
+//               hrms_employee_department: {
+//                 select: { department_name: true },
+//               },
+//             },
+//           });
+//         }
+//       }
+
+//       if (!requesterInfo && req.user?.employee_id) {
+//         requesterInfo = await prisma.hrms_d_employee.findUnique({
+//           where: { id: req.user.employee_id },
+//           select: {
+//             id: true,
+//             full_name: true,
+//             email: true,
+//             hrms_employee_department: {
+//               select: { department_name: true },
+//             },
+//           },
+//         });
+//       }
+
+//       if (!requesterInfo && req.user?.user_employee) {
+//         requesterInfo = req.user.user_employee;
+//       }
+//     } catch (error) {
+//       console.error("Error fetching requester info:", error);
+//     }
+
+//     const requester_name =
+//       requesterInfo?.full_name ||
+//       req.user?.user_employee?.full_name ||
+//       "System User";
+
+//     const requester_department =
+//       requesterInfo?.hrms_employee_department?.department_name ||
+//       req.user?.user_employee?.hrms_employee_department?.department_name ||
+//       "General";
+
+//     console.log(
+//       ` Final Requester: ${requester_name} from ${requester_department}`
+//     );
+
+//     let shouldSendNotification = false;
+//     let templateKey = null;
+
+//     if (action === "create" && findNotificationSetup.action_create) {
+//       shouldSendNotification = true;
+//       templateKey = templateKeyMap.notificationSetupCreated;
+//     } else if (action === "update" && findNotificationSetup.action_update) {
+//       shouldSendNotification = true;
+//       templateKey = templateKeyMap.notificationSetupUpdated;
+//     } else if (action === "delete" && findNotificationSetup.action_delete) {
+//       shouldSendNotification = true;
+//       templateKey = templateKeyMap.notificationSetupDeleted;
+//     }
+
+//     if (!shouldSendNotification) {
+//       console.log(`Notification not enabled for action: ${action}`);
+//       return;
+//     }
+
+//     console.log(
+//       `Sending notifications to ${
+//         assigned_employees.length
+//       } employees via ${enabledChannels.join(", ")}`
+//     );
+
+//     const notificationPromises = assigned_employees.map(async (item) => {
+//       const assignedEmployee = item.assigned_employee;
+
+//       const emailTemplateData = {
+//         employee_name: assignedEmployee.full_name,
+//         recipient_name: assignedEmployee.full_name,
+//         recipient_department:
+//           assignedEmployee.hrms_employee_department?.department_name ||
+//           "General",
+//         user_name: requester_name,
+//         requester_name: requester_name,
+//         requester_department: requester_department,
+//         action_type: action_type,
+//         action: action,
+//         company_name,
+//         department_name: requester_department,
+//         notification_title: `${action_type} ${formatAction(action)}`,
+//         datetime: new Date().toLocaleString(),
+//         ...responseData?.data,
+//       };
+
+//       console.log(
+//         `Processing notifications for: ${assignedEmployee.full_name} about request by: ${requester_name}`
+//       );
+
+//       const channelPromises = [];
+
+//       if (enabledChannels.includes("email")) {
+//         console.log(
+//           ` CALLING sendEmailNotification for ${assignedEmployee.full_name}`
+//         );
+//         channelPromises.push(
+//           sendEmailNotification(
+//             assignedEmployee,
+//             emailTemplateData,
+//             templateKey,
+//             req
+//           )
+//         );
+//       }
+
+//       if (enabledChannels.includes("system")) {
+//         console.log(
+//           `CALLING sendSystemNotification for ${assignedEmployee.full_name}`
+//         );
+//         channelPromises.push(
+//           sendSystemNotification(
+//             assignedEmployee,
+//             emailTemplateData,
+//             templateKey,
+//             req
+//           )
+//         );
+//       }
+
+//       if (enabledChannels.includes("sms")) {
+//         console.log(
+//           ` CALLING sendSMSNotification for ${assignedEmployee.full_name}`
+//         );
+//         channelPromises.push(
+//           sendSMSNotification(
+//             assignedEmployee,
+//             emailTemplateData,
+//             templateKey,
+//             req
+//           )
+//         );
+//       }
+
+//       if (enabledChannels.includes("whatsapp")) {
+//         console.log(
+//           ` CALLING sendWhatsAppNotification for ${assignedEmployee.full_name}`
+//         );
+//         channelPromises.push(
+//           sendWhatsAppNotification(
+//             assignedEmployee,
+//             emailTemplateData,
+//             templateKey,
+//             req
+//           )
+//         );
+//       }
+
+//       return Promise.allSettled(channelPromises);
+//     });
+
+//     await Promise.allSettled(notificationPromises);
+//     console.log("All notifications processed");
+//   } catch (error) {
+//     console.error("Error in processNotification:", error);
+//   }
+// };
+
+// const getEnabledChannels = (notificationSetup) => {
+//   console.log("Raw channel values:", {
+//     email: notificationSetup.channel_email,
+//     system: notificationSetup.channel_system,
+//     whatsapp: notificationSetup.channel_whatsapp,
+//     sms: notificationSetup.channel_sms,
+//   });
+
+//   const channels = [];
+
+//   const normalizeBoolean = (value) => {
+//     if (typeof value === "string") {
+//       return value.toLowerCase() === "true";
+//     }
+//     if (typeof value === "boolean") {
+//       return value;
+//     }
+//     return Boolean(value);
+//   };
+
+//   if (normalizeBoolean(notificationSetup.channel_email)) {
+//     channels.push("email");
+//     console.log("Added EMAIL channel");
+//   }
+
+//   if (normalizeBoolean(notificationSetup.channel_system)) {
+//     channels.push("system");
+//     console.log("Added SYSTEM channel");
+//   } else {
+//     console.log(" SYSTEM channel disabled - NOT adding");
+//   }
+
+//   if (normalizeBoolean(notificationSetup.channel_whatsapp)) {
+//     channels.push("whatsapp");
+//     console.log("Added WHATSAPP channel");
+//   }
+
+//   if (normalizeBoolean(notificationSetup.channel_sms)) {
+//     channels.push("sms");
+//     console.log("Added SMS channel");
+//   }
+
+//   console.log("Final enabled channels:", channels);
+
+//   return channels.length > 0 ? channels : ["email"];
+// };
+
+// const sendEmailNotification = async (
+//   assignedEmployee,
+//   templateData,
+//   templateKey,
+//   req
+// ) => {
+//   try {
+//     if (!assignedEmployee.email) {
+//       console.log(`No email found for employee: ${assignedEmployee.full_name}`);
+//       return;
+//     }
+
+//     console.log(
+//       ` Sending email notification to: ${assignedEmployee.full_name}`
+//     );
+
+//     const template = await generateEmailContent(templateKey, templateData);
+
+//     // const notificationLog = await prisma.hrms_d_notification_log.create({
+//     //   data: {
+//     //     employee_id: assignedEmployee.id,
+//     //     message_title: template.subject,
+//     //     message_body: template.body,
+//     //     channel: "email",
+//     //     status: "pending",
+//     //     createdby: req.user?.id || 1,
+//     //     createdate: new Date(),
+//     //     log_inst: req.user?.log_inst || 1,
+//     //   },
+//     // });
+
+//     await sendEmail({
+//       to: assignedEmployee.email,
+//       subject: template.subject,
+//       html: template.body,
+//       log_inst: req.user?.log_inst || 1,
+//     });
+
+//     // await prisma.hrms_d_notification_log.update({
+//     //   where: { id: notificationLog.id },
+//     //   data: {
+//     //     status: "sent",
+//     //     sent_on: new Date(),
+//     //   },
+//     // });
+
+//     console.log(
+//       ` Email notification sent successfully to: ${assignedEmployee.email}`
+//     );
+//   } catch (emailError) {
+//     console.error(
+//       `Failed to send email notification to ${assignedEmployee.email}:`,
+//       emailError
+//     );
+
+//     try {
+//       // await prisma.hrms_d_notification_log.updateMany({
+//       //   where: {
+//       //     employee_id: assignedEmployee.id,
+//       //     status: "pending",
+//       //     channel: "email",
+//       //     message_title: {
+//       //       contains: formatActionType(templateData.action_type),
+//       //     },
+//       //   },
+//       //   data: { status: "failed" },
+//       // });
+//     } catch (updateError) {
+//       console.error(
+//         "Failed to update email notification log status:",
+//         updateError
+//       );
+//     }
+//   }
+// };
+
+// const sendSystemNotification = async (
+//   assignedEmployee,
+//   templateData,
+//   templateKey,
+//   req
+// ) => {
+//   try {
+//     console.log(
+//       `Sending system notification to: ${assignedEmployee.full_name}`
+//     );
+
+//     const template = await generateEmailContent(templateKey, templateData);
+
+//     await prisma.hrms_d_notification_log.create({
+//       data: {
+//         employee_id: assignedEmployee.id,
+//         message_title: template.subject,
+//         message_body: stripHtmlTags(template.body),
+//         channel: "system",
+//         status: "sent",
+//         sent_on: new Date(),
+//         createdby: req.user?.id || 1,
+//         createdate: new Date(),
+//         log_inst: req.user?.log_inst || 1,
+//       },
+//     });
+
+//     console.log(
+//       ` System notification created successfully for: ${assignedEmployee.full_name}`
+//     );
+//   } catch (systemError) {
+//     console.error(
+//       `Failed to send system notification to ${assignedEmployee.full_name}:`,
+//       systemError
+//     );
+//   }
+// };
+
+// const sendSMSNotification = async (
+//   assignedEmployee,
+//   templateData,
+//   templateKey,
+//   req
+// ) => {
+//   try {
+//     console.log(` SMS notification queued for: ${assignedEmployee.full_name}`);
+
+//     await prisma.hrms_d_notification_log.create({
+//       data: {
+//         employee_id: assignedEmployee.id,
+//         message_title: `${templateData.action_type} ${templateData.action}`,
+//         message_body: `SMS: ${templateData.notification_title}`,
+//         channel: "sms",
+//         status: "pending",
+//         createdby: req.user?.id || 1,
+//         createdate: new Date(),
+//         log_inst: req.user?.log_inst || 1,
+//       },
+//     });
+
+//     console.log(`📱 SMS notification logged for future processing`);
+//   } catch (error) {
+//     console.error(
+//       `SMS notification error for ${assignedEmployee.full_name}:`,
+//       error
+//     );
+//   }
+// };
+
+// const sendWhatsAppNotification = async (
+//   assignedEmployee,
+//   templateData,
+//   templateKey,
+//   req
+// ) => {
+//   try {
+//     console.log(
+//       `📲 WhatsApp notification queued for: ${assignedEmployee.full_name}`
+//     );
+
+//     await prisma.hrms_d_notification_log.create({
+//       data: {
+//         employee_id: assignedEmployee.id,
+//         message_title: `${templateData.action_type} ${templateData.action}`,
+//         message_body: `WhatsApp: ${templateData.notification_title}`,
+//         channel: "whatsapp",
+//         status: "pending",
+//         createdby: req.user?.id || 1,
+//         createdate: new Date(),
+//         log_inst: req.user?.log_inst || 1,
+//       },
+//     });
+
+//     console.log(`WhatsApp notification logged for future processing`);
+//   } catch (error) {
+//     console.error(
+//       ` WhatsApp notification error for ${assignedEmployee.full_name}:`,
+//       error
+//     );
+//   }
+// };
+
+// const stripHtmlTags = (html) => {
+//   if (!html) return "";
+//   return html
+//     .replace(/<[^>]*>/g, "")
+//     .replace(/\s+/g, " ")
+//     .trim();
+// };
+
+// const formatActionType = (actionType) => {
+//   return actionType.charAt(0).toUpperCase() + actionType.slice(1);
+// };
+
+// const formatAction = (action) => {
+//   const actionMap = {
+//     create: "Created",
+//     update: "Updated",
+//     delete: "Deleted",
+//   };
+//   return actionMap[action] || action;
+// };
+
+// module.exports = { setupNotificationMiddleware };
+
+//III.2-with diff template(New)
 const { PrismaClient } = require("@prisma/client");
 const sendEmail = require("../../utils/mailer.js");
 const { generateEmailContent } = require("../../utils/emailTemplates.js");
@@ -648,9 +1473,37 @@ const { generateEmailContent } = require("../../utils/emailTemplates.js");
 const prisma = new PrismaClient();
 
 const templateKeyMap = {
-  notificationSetupCreated: "notification_setup_created",
-  notificationSetupUpdated: "notification_setup_updated",
-  notificationSetupDeleted: "notification_setup_deleted",
+  email: {
+    notificationSetupCreated: "notification_setup_created",
+    notificationSetupUpdated: "notification_setup_updated",
+    notificationSetupDeleted: "notification_setup_deleted",
+  },
+  system: {
+    systemNotificationSetupCreated: "system_notification_created",
+    systemNotificationSetupUpdated: "system_notification_updated",
+    systemNotificationSetupDeleted: "system_notification_deleted",
+  },
+};
+
+const getTemplateKeyForChannel = (action, channel) => {
+  const actionMap = {
+    email: {
+      create: "notificationSetupCreated",
+      update: "notificationSetupUpdated",
+      delete: "notificationSetupDeleted",
+    },
+    system: {
+      create: "systemNotificationSetupCreated",
+      update: "systemNotificationSetupUpdated",
+      delete: "systemNotificationSetupDeleted",
+    },
+  };
+
+  const templateAction = actionMap[channel]?.[action];
+  return (
+    templateKeyMap[channel]?.[templateAction] ||
+    templateKeyMap.email.notificationSetupCreated
+  );
 };
 
 const setupNotificationMiddleware = (req, res, next, action_type, action) => {
@@ -695,7 +1548,14 @@ const processNotification = async (
           hrms_d_notification_assigned: {
             include: {
               assigned_employee: {
-                select: { id: true, full_name: true, email: true },
+                select: {
+                  id: true,
+                  full_name: true,
+                  email: true,
+                  hrms_employee_department: {
+                    select: { department_name: true },
+                  },
+                },
               },
             },
           },
@@ -716,6 +1576,8 @@ const processNotification = async (
       console.log(`No assigned employees found for notification setup`);
       return;
     }
+
+    const enabledChannels = getEnabledChannels(findNotificationSetup);
 
     const company = await prisma.hrms_d_default_configurations.findFirst({
       select: { company_name: true },
@@ -762,25 +1624,26 @@ const processNotification = async (
       console.error("Error fetching requester info:", error);
     }
 
-    const requester_name = req.user?.user_employee?.full_name || "User";
+    const requester_name =
+      requesterInfo?.full_name ||
+      req.user?.user_employee?.full_name ||
+      "System User";
+
     const requester_department =
+      requesterInfo?.hrms_employee_department?.department_name ||
       req.user?.user_employee?.hrms_employee_department?.department_name ||
       "General";
 
     console.log(`Department identified as:`, req.user?.user_employee);
 
     let shouldSendNotification = false;
-    let templateKey = null;
 
     if (action === "create" && findNotificationSetup.action_create) {
       shouldSendNotification = true;
-      templateKey = templateKeyMap.notificationSetupCreated;
     } else if (action === "update" && findNotificationSetup.action_update) {
       shouldSendNotification = true;
-      templateKey = templateKeyMap.notificationSetupUpdated;
     } else if (action === "delete" && findNotificationSetup.action_delete) {
       shouldSendNotification = true;
-      templateKey = templateKeyMap.notificationSetupDeleted;
     }
 
     if (!shouldSendNotification) {
@@ -793,92 +1656,51 @@ const processNotification = async (
     );
 
     const notificationPromises = assigned_employees.map(async (item) => {
-      try {
-        const assignedEmployee = item.assigned_employee;
+      const assignedEmployee = item.assigned_employee;
 
-        if (!assignedEmployee.email) {
-          console.log(
-            `No email found for employee: ${assignedEmployee.full_name}`
-          );
-          return;
-        }
+      const emailTemplateData = {
+        employee_name: assignedEmployee.full_name,
+        recipient_name: assignedEmployee.full_name,
+        recipient_department:
+          assignedEmployee.hrms_employee_department?.department_name ||
+          "General",
+        user_name: requester_name,
+        requester_name: requester_name,
+        requester_department: requester_department,
+        action_type: action_type,
+        action: action,
+        company_name,
+        department_name: requester_department,
+        notification_title: `${action_type} ${formatAction(action)}`,
+        datetime: new Date().toLocaleString(),
+        ...responseData?.data,
+      };
 
-        const emailTemplateData = {
-          employee_name: assignedEmployee.full_name,
-          recipient_name: assignedEmployee.full_name,
-          user_name: requester_name,
-          requester_department: requester_department,
-          action_type: action_type,
-          action: action,
-          company_name,
-          department_name: requester_department,
-          notification_title: `${action_type} ${formatAction(action)}`,
-          datetime: new Date().toLocaleString(),
-          ...responseData?.data,
-        };
+      const channelPromises = [];
 
-        console.log(
-          `Sending notification to: ${assignedEmployee.full_name} about request by: ${requester_name}`
+      if (enabledChannels.includes("email")) {
+        channelPromises.push(
+          sendEmailNotification(
+            assignedEmployee,
+            emailTemplateData,
+            action,
+            req
+          )
         );
-
-        const template = await generateEmailContent(
-          templateKey,
-          emailTemplateData
-        );
-
-        const notificationLog = await prisma.hrms_d_notification_log.create({
-          data: {
-            employee_id: assignedEmployee.id,
-            message_title: template.subject,
-            message_body: template.body,
-            channel: "email",
-            status: "pending",
-            createdby: req.user?.id || 1,
-            createdate: new Date(),
-            log_inst: req.user?.log_inst || 1,
-          },
-        });
-
-        await sendEmail({
-          to: assignedEmployee.email,
-          subject: template.subject,
-          html: template.body,
-          log_inst: req.user?.log_inst || 1,
-        });
-
-        await prisma.hrms_d_notification_log.update({
-          where: { id: notificationLog.id },
-          data: {
-            status: "sent",
-            sent_on: new Date(),
-          },
-        });
-
-        console.log(
-          `Notification sent successfully to: ${assignedEmployee.email}`
-        );
-      } catch (emailError) {
-        console.error(
-          `Failed to send notification to ${item.assigned_employee.email}:`,
-          emailError
-        );
-
-        try {
-          await prisma.hrms_d_notification_log.updateMany({
-            where: {
-              employee_id: item.assigned_employee.id,
-              status: "pending",
-              message_title: { contains: formatActionType(action_type) },
-            },
-            data: { status: "failed" },
-          });
-        } catch (updateError) {
-          console.error(
-            "Failed to update notification log status:",
-            updateError
-          );
-        }
       }
+
+      if (enabledChannels.includes("system")) {
+        channelPromises.push(
+          sendSystemNotification(
+            assignedEmployee,
+            emailTemplateData,
+            action,
+            req
+          )
+        );
+      }
+
+      return Promise.allSettled(channelPromises);
     });
 
     await Promise.allSettled(notificationPromises);
@@ -886,6 +1708,149 @@ const processNotification = async (
   } catch (error) {
     console.error("Error in processNotification:", error);
   }
+};
+
+const getEnabledChannels = (notificationSetup) => {
+  const channels = [];
+
+  const normalizeBoolean = (value) => {
+    if (typeof value === "string") {
+      return value.toLowerCase() === "true";
+    }
+    if (typeof value === "boolean") {
+      return value;
+    }
+    return Boolean(value);
+  };
+
+  if (normalizeBoolean(notificationSetup.channel_email)) {
+    channels.push("email");
+  }
+
+  if (normalizeBoolean(notificationSetup.channel_system)) {
+    channels.push("system");
+  }
+
+  return channels.length > 0 ? channels : ["email"];
+};
+
+const sendEmailNotification = async (
+  assignedEmployee,
+  templateData,
+  action,
+  req
+) => {
+  try {
+    if (!assignedEmployee.email) {
+      console.log(`No email found for employee: ${assignedEmployee.full_name}`);
+      return;
+    }
+
+    const emailTemplateKey = getTemplateKeyForChannel(action, "email");
+    const template = await generateEmailContent(emailTemplateKey, templateData);
+
+    // const notificationLog = await prisma.hrms_d_notification_log.create({
+    //   data: {
+    //     employee_id: assignedEmployee.id,
+    //     message_title: template.subject,
+    //     message_body: template.body,
+    //     channel: "email",
+    //     status: "pending",
+    //     createdby: req.user?.id || 1,
+    //     createdate: new Date(),
+    //     log_inst: req.user?.log_inst || 1,
+    //   },
+    // });
+
+    await sendEmail({
+      to: assignedEmployee.email,
+      subject: template.subject,
+      html: template.body,
+      log_inst: req.user?.log_inst || 1,
+    });
+
+    // await prisma.hrms_d_notification_log.update({
+    //   where: { id: notificationLog.id },
+    //   data: {
+    //     status: "sent",
+    //     sent_on: new Date(),
+    //   },
+    // });
+
+    console.log(
+      `Email notification sent successfully to: ${assignedEmployee.email}`
+    );
+  } catch (emailError) {
+    console.error(
+      `Failed to send email notification to ${assignedEmployee.email}:`,
+      emailError
+    );
+
+    try {
+      // await prisma.hrms_d_notification_log.updateMany({
+      //   where: {
+      //     employee_id: assignedEmployee.id,
+      //     status: "pending",
+      //     channel: "email",
+      //     message_title: {
+      //       contains: formatActionType(templateData.action_type),
+      //     },
+      //   },
+      //   data: { status: "failed" },
+      // });
+    } catch (updateError) {
+      console.error(
+        "Failed to update email notification log status:",
+        updateError
+      );
+    }
+  }
+};
+
+const sendSystemNotification = async (
+  assignedEmployee,
+  templateData,
+  action,
+  req
+) => {
+  try {
+    const systemTemplateKey = getTemplateKeyForChannel(action, "system");
+    const template = await generateEmailContent(
+      systemTemplateKey,
+      templateData
+    );
+
+    await prisma.hrms_d_notification_log.create({
+      data: {
+        employee_id: assignedEmployee.id,
+        message_title: template.subject,
+        message_body: stripHtmlTags(template.body),
+        channel: "system",
+        status: "sent",
+        sent_on: new Date(),
+        createdby: req.user?.id || 1,
+        createdate: new Date(),
+        log_inst: req.user?.log_inst || 1,
+      },
+    });
+
+    console.log(
+      `System notification sent successfully to: ${assignedEmployee.full_name}`
+    );
+  } catch (systemError) {
+    console.error(
+      `Failed to send system notification to ${assignedEmployee.full_name}:`,
+      systemError
+    );
+  }
+};
+
+const stripHtmlTags = (html) => {
+  if (!html) return "";
+  return html
+    .replace(/<[^>]*>/g, "")
+    .replace(/\s+/g, " ")
+    .trim();
 };
 
 const formatActionType = (actionType) => {
