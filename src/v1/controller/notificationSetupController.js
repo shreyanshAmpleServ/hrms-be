@@ -239,6 +239,7 @@ const updateNotificationSetup = async (req, res, next) => {
       assigned_users,
       template_id,
       channels,
+      is_active,
     } = req.body;
 
     const data = {
@@ -248,7 +249,7 @@ const updateNotificationSetup = async (req, res, next) => {
       action_update: actions?.update || false,
       action_delete: actions?.delete || false,
       template_id: template_id,
-      is_active: status === "Active" ? "Y" : "N",
+      is_active: is_active === "Y" ? "Y" : "N",
       channel_email: channels?.email || false,
       channel_system: channels?.system || false,
       channel_whatsapp: channels?.whatsapp || false,
