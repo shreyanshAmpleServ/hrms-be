@@ -64,7 +64,7 @@ const sendEmail = async ({ to, subject, html, log_inst }) => {
     const transporter = nodemailer.createTransport({
       host: config.smtp_host || process.env.SMTP_HOST,
       port,
-      secure: port === 465, // only true for SSL
+      secure: port === 465,
       auth: {
         user: config.smtp_username || process.env.SMTP_USERNAME,
         pass: config.smtp_password || process.env.SMTP_PASSWORD,
@@ -90,7 +90,7 @@ const sendEmail = async ({ to, subject, html, log_inst }) => {
 
     console.log(`Email sent to: ${to}`);
   } catch (err) {
-    console.error("❌ Email error:", err);
+    console.error("Email error:", err);
     throw new Error(`Email failed: ${err.message}`);
   }
 };

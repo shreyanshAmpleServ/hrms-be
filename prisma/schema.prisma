@@ -363,6 +363,8 @@ model hrms_d_employee {
   assigned_employee                               hrms_d_notification_assigned_user[]
   nida_file                                       String?                                           @db.VarChar(255)
   nssf_file                                       String?                                           @db.VarChar(255)
+  alert_workflow_actions_recipient                hrms_d_alert_workflow_action[]                    @relation("AlertActionRecipients")
+  alert_workflow_actions_alert_recipient          hrms_d_alert_workflow_action[]                    @relation("AlertActionAlertRecipients")
 }
 
 model hrms_d_employee_address {
@@ -2589,16 +2591,17 @@ model hrms_d_requests_approval {
 }
 
 model hrms_d_templates {
-  id                        Int                         @id @default(autoincrement())
-  name                      String                      @unique @db.VarChar(50)
-  key                       String                      @unique @db.VarChar(100)
-  subject                   String                      @db.VarChar(100)
-  body                      String                      @db.Text
-  createdate                DateTime                    @default(now()) @db.DateTime
+  id                        Int                            @id @default(autoincrement())
+  name                      String                         @unique @db.VarChar(50)
+  key                       String                         @unique @db.VarChar(100)
+  subject                   String                         @db.VarChar(100)
+  body                      String                         @db.Text
+  createdate                DateTime                       @default(now()) @db.DateTime
   createdby                 Int
-  updatedate                DateTime?                   @db.DateTime
+  updatedate                DateTime?                      @db.DateTime
   updatedby                 Int?
   hrms_d_notification_setup hrms_d_notification_setup[]
+  alert_workflow_template   hrms_d_alert_workflow_action[]
 }
 
 model hrms_d_notification_setup {
@@ -2627,5 +2630,58 @@ model hrms_d_notification_assigned_user {
   sort_order                Int                       @default(0)
   created_at                DateTime                  @default(now(), map: "DF__hrms_d_noti__creat__403A8C42") @db.DateTime
   hrms_d_notification_setup hrms_d_notification_setup @relation(fields: [notification_setup_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  assigned_employee         hrms_d_employee           @relation(fields: [employee_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  assigned_employee         hrms_d_employee           @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model hrms_d_alert_workflow {
+  id                        Int                            @id @default(autoincrement())
+  name                      String                         @db.NVarChar(100)
+  description               String?                        @db.NVarChar(255)
+  target_type               String                         @db.NVarChar(20)
+  target                    String                         @db.NVarChar(20)
+  schedule_cron             String?                        @db.NVarChar(50)
+  is_active                 String                         @default("Y") @db.Char(1)
+  conditions                String                         @default("[]") // store JSON as string
+  actions                   String                         @default("[]") // store JSON as string
+  condition_type            String?                        @db.NVarChar(50)
+  condition_op              String?                        @db.NVarChar(10)
+  condition_value           String?                        @db.NVarChar(50)
+  createdate                DateTime                       @default(now()) @db.DateTime
+  createdby                 Int
+  updatedate                DateTime?                      @db.DateTime
+  updatedby                 Int?
+  created_at                DateTime?                      @default(now()) @db.DateTime
+  log_inst                  Int                            @default(1)
+  alert_workflow_actions    hrms_d_alert_workflow_action[]
+  alert_workflow_alert_logs hrms_d_alert_log[]
+}
+
+model hrms_d_alert_workflow_action {
+  id                      Int                    @id @default(autoincrement())
+  workflow_id             Int
+  action_type             String                 @db.NVarChar(20)
+  template_id             Int
+  created_at              DateTime               @default(now()) @db.DateTime
+  created_by              Int
+  log_inst                Int                    @default(1)
+  rrecipients             hrms_d_employee[]      @relation("AlertActionRecipients")
+  alert_recipients        hrms_d_employee[]      @relation("AlertActionAlertRecipients")
+  alert_workflow_actions  hrms_d_alert_workflow? @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  alert_workflow_template hrms_d_templates?      @relation(fields: [template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model hrms_d_alert_log {
+  id           Int       @id @default(autoincrement())
+  workflow_id  Int
+  recipient_id Int
+  channel_code String    @db.NVarChar(20)
+  status       String    @db.NVarChar(20)
+  attempted_at DateTime  @default(now()) @db.DateTime
+  delivered_at DateTime?
+  details      String?
+
+  error_message             String?                @db.NVarChar(Max)
+  retry_count               Int                    @default(0)
+  created_at                DateTime               @default(now()) @db.DateTime
+  alert_workflow_alert_logs hrms_d_alert_workflow? @relation(fields: [workflow_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }

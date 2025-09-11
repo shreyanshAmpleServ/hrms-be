@@ -142,6 +142,7 @@ const emailTemplatesRoute = require("../v1/routes/emailTemplatesRoute.js");
 const birthdayRoute = require("../v1/routes/birthdayRoute.js");
 const workAnniversaryRoute = require("../v1/routes/workAnniversaryRoute.js");
 const notificationSetupRoute = require("../v1/routes/notificationSetupRoute.js");
+const alertWorkflowRoutes = require("../v1/routes/alertWorkflowRoutes.js");
 const router = express.Router();
 
 // Version 1 API
@@ -288,6 +289,7 @@ router.use("/v1", emailTemplatesRoute);
 router.use("/v1", birthdayRoute);
 router.use("/v1", workAnniversaryRoute);
 router.use("/v1", notificationSetupRoute);
+router.use("/v1", alertWorkflowRoutes);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
