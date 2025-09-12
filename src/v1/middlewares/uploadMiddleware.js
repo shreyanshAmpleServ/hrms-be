@@ -82,7 +82,7 @@ module.exports = upload;
 // };
 
 // const upload = multer({
-//   storage: multer.memoryStorage(), // ✅ Use memory storage for buffer access
+//   storage: multer.memoryStorage(), //  Use memory storage for buffer access
 //   fileFilter,
 //   limits: { fileSize: 1024 * 1024 * 3 },
 // });

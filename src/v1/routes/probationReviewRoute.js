@@ -10,8 +10,6 @@ const {
 router.post(
   "/probation-review",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Probation Review", "create"),
   probationReviewController.createProbationReview
 );
 
@@ -33,8 +31,8 @@ router.get(
 router.put(
   "/probation-review/:id",
   (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Probation Review", "update"),
-  authenticateToken,
+    // setupNotificationMiddleware(req, res, next, "Probation Review", "update"),
+    authenticateToken,
   probationReviewController.updateProbationReview
 );
 
@@ -42,8 +40,8 @@ router.put(
 router.delete(
   "/probation-review/:id",
   (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Probation Review", "delete"),
-  authenticateToken,
+    // setupNotificationMiddleware(req, res, next, "Probation Review", "delete"),
+    authenticateToken,
   probationReviewController.deleteProbationReview
 );
 

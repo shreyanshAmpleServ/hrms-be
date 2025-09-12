@@ -33,7 +33,7 @@ const updateUser = async (id, data) => {
       const isMatch = await bcrypt.compare(
         data?.currentPassword,
         user.password
-      ); // ✅
+      );
 
       if (!isMatch) {
         throw new Error("Current password is incorrect"); // ❌ Reject if wrong

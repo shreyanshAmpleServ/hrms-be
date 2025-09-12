@@ -13,14 +13,14 @@ router.post(
   "/employment-contract",
   authenticateToken,
   upload.single("document_path"),
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Employment Contract",
-      "create"
-    ),
+  // (req, res, next) =>
+  //   setupNotificationMiddleware(
+  //     req,
+  //     res,
+  //     next,
+  //     "Employment Contract",
+  //     "create"
+  //   ),
   EmploymentContractController.createEmploymentContract
 );
 router.get(
@@ -32,27 +32,27 @@ router.put(
   "/employment-contract/:id",
   authenticateToken,
   upload.single("document_path"),
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Employment Contract",
-      "update"
-    ),
+  // (req, res, next) =>
+  //   setupNotificationMiddleware(
+  //     req,
+  //     res,
+  //     next,
+  //     "Employment Contract",
+  //     "update"
+  //   ),
   EmploymentContractController.updateEmploymentContract
 );
 router.delete(
   "/employment-contract/:id",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Employment Contract",
-      "delete"
-    ),
+  // (req, res, next) =>
+  //   setupNotificationMiddleware(
+  //     req,
+  //     res,
+  //     next,
+  //     "Employment Contract",
+  //     "delete"
+  //   ),
   EmploymentContractController.deleteEmploymentContract
 );
 router.get(

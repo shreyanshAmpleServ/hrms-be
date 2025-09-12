@@ -80,6 +80,36 @@ const triggerAlertWorkflow = async (req, res, next) => {
   }
 };
 
+const getAlertWorkflowFields = async (req, res, next) => {
+  try {
+    const fields = [
+      { name: "name", type: "string" },
+      { name: "description", type: "string" },
+      {
+        name: "target_type",
+        type: "string",
+        values: ["employee", "department"],
+      },
+      { name: "target", type: "string" },
+      { name: "schedule_cron", type: "string" },
+      { name: "is_active", type: "string", values: ["Y", "N"] },
+      { name: "condition_type", type: "string" },
+      { name: "condition_op", type: "string" },
+      { name: "condition_value", type: "string" },
+      { name: "conditions", type: "array" },
+      { name: "actions", type: "array" },
+      { name: "createdby", type: "number" },
+      { name: "createdate", type: "date" },
+      { name: "log_inst", type: "number" },
+      { name: "updatedby", type: "number" },
+      { name: "updatedate", type: "date" },
+    ];
+    res.status(200).success("Fields fetched successfully", fields);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createAlertWorkflow,
   getAllAlertWorkflows,
@@ -87,4 +117,5 @@ module.exports = {
   updateAlertWorkflow,
   deleteAlertWorkflow,
   triggerAlertWorkflow,
+  getAlertWorkflowFields,
 };

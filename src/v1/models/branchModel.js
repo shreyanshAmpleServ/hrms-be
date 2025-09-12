@@ -165,7 +165,7 @@ const getAllBranch = async (
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
-    // ✅ Count total
+    //  Count total
     const totalCount = await prisma.hrms_m_branch_master.count({
       where: filters,
     });

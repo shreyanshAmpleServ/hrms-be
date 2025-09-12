@@ -284,7 +284,6 @@ const findUserById = async (id) => {
 // Delete a user
 const deleteUser = async (id) => {
   try {
-    // Delete related records
     await prisma.hrms_d_user_role.deleteMany({
       where: { user_id: parseInt(id) },
     });
@@ -312,7 +311,7 @@ const deleteUser = async (id) => {
 //     const skip = (page - 1) * size;
 //     const filters = {};
 
-//     // 🔍 Search filtering
+//     //  Search filtering
 //     if (search) {
 //       filters.OR = [
 //         { username: { contains: search.toLowerCase() } },
@@ -336,7 +335,7 @@ const deleteUser = async (id) => {
 //       }
 //     }
 
-//     // ✅ is_active filtering
+//     //  is_active filtering
 //     if (typeof is_active === "boolean") {
 //       filters.is_active = is_active ? "Y" : "N";
 //     } else if (typeof is_active === "string") {
@@ -346,8 +345,9 @@ const deleteUser = async (id) => {
 //         filters.is_active = "N";
 //       }
 //     }
+// will it work for other like
 
-//     // 🔄 Fetch users
+//     //  Fetch users
 //     const usersList = await prisma.hrms_m_user.findMany({
 //       where: filters,
 //       skip,
@@ -363,7 +363,7 @@ const deleteUser = async (id) => {
 //       },
 //     });
 
-//     // 📊 Count
+//     // Count
 //     const totalCount = await prisma.hrms_m_user.count({ where: filters });
 
 //     return {

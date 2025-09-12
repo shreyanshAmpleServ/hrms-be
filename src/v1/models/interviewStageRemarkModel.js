@@ -350,11 +350,11 @@ module.exports = {
 
 //   // 3) Notify ALL approvers for this stage (sequence = sort_order + 1)
 //   const sequence = seqFromSortOrder(result.interview_stage_stage_id.sort_order);
-//   console.log("🔍 Fetching approvers for sequence:", sequence);
+//   console.log(" Fetching approvers for sequence:", sequence);
 
 //   const approvers = await getWorkflowApprovers("interview_stage", sequence);
 //   console.log(
-//     "👉 Approvers Found:",
+//     " Approvers Found:",
 //     approvers.map((a) => ({
 //       id: a.approval_work_approver.id,
 //       name: a.approval_work_approver.full_name,
@@ -380,7 +380,7 @@ module.exports = {
 //         }
 //       );
 
-//       console.log("📧 EMAIL PREVIEW (assigned):", {
+//       console.log("EMAIL PREVIEW (assigned):", {
 //         to: approver.email,
 //         subject:
 //           emailContent.subject ||
