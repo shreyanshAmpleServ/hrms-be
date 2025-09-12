@@ -170,7 +170,7 @@ const runWorkflow = async (workflowId, workflow) => {
     });
 
     console.log(
-      ` ${eligible.length} employees are eligible for workflow ${workflowId}`
+      `${eligible.length} employees are eligible for workflow ${workflowId}`
     );
     if (eligible.length > 0) {
       console.log(
@@ -218,35 +218,63 @@ const runWorkflow = async (workflowId, workflow) => {
 async function getTargetEmployees(workflow) {
   const baseWhere = { status: "Active" };
 
+  console.log(
+    ` Target Type: ${workflow.target_type}, Target: ${workflow.target}`
+  );
+
+  const commonIncludes = {
+    user_employee: {
+      include: {
+        hrms_d_user_role: {
+          include: {
+            hrms_m_role: true,
+          },
+        },
+      },
+    },
+    hrms_employee_designation: true,
+    hrms_employee_department: true,
+
+    contracted_employee: {
+      orderBy: { contract_end_date: "desc" },
+      take: 1,
+      select: {
+        id: true,
+        contract_start_date: true,
+        contract_end_date: true,
+        contract_type: true,
+        description: true,
+      },
+    },
+
+    hrms_daily_attendance_employee: {
+      where: {
+        attendance_date: {
+          gte: new Date(new Date().setHours(0, 0, 0, 0)),
+          lte: new Date(new Date().setHours(23, 59, 59, 999)),
+        },
+      },
+      orderBy: { attendance_date: "desc" },
+      take: 1,
+    },
+
+    w_employee: {
+      orderBy: { createdate: "desc" },
+      take: 1,
+    },
+
+    hrms_d_training_session: {
+      orderBy: { createdate: "desc" },
+      take: 1,
+    },
+  };
+
   if (workflow.target_type === "Role" && workflow.target) {
     const roles = workflow.target.split(",").map((r) => r.trim());
     console.log(` Targeting roles by name: ${roles.join(", ")}`);
 
     const employees = await prisma.hrms_d_employee.findMany({
-      include: {
-        user_employee: {
-          include: {
-            hrms_d_user_role: {
-              include: {
-                hrms_m_role: true,
-              },
-            },
-          },
-        },
-        hrms_employee_designation: true,
-        hrms_employee_department: true,
-
-        hrms_daily_attendance_employee: {
-          where: {
-            attendance_date: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0)),
-              lte: new Date(new Date().setHours(23, 59, 59, 999)),
-            },
-          },
-          orderBy: { attendance_date: "desc" },
-          take: 1,
-        },
-      },
+      include: commonIncludes,
       where: {
         ...baseWhere,
         user_employee: {
@@ -269,32 +297,10 @@ async function getTargetEmployees(workflow) {
     const departmentIds = workflow.target
       .split(",")
       .map((id) => parseInt(id.trim()));
-    console.log(`Targeting departments by ID: ${departmentIds.join(", ")}`);
+    console.log(` Targeting departments by ID: ${departmentIds.join(", ")}`);
 
     const employees = await prisma.hrms_d_employee.findMany({
-      include: {
-        user_employee: {
-          include: {
-            hrms_d_user_role: {
-              include: {
-                hrms_m_role: true,
-              },
-            },
-          },
-        },
-        hrms_employee_designation: true,
-        hrms_employee_department: true,
-        hrms_daily_attendance_employee: {
-          where: {
-            attendance_date: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0)),
-              lte: new Date(new Date().setHours(23, 59, 59, 999)),
-            },
-          },
-          orderBy: { attendance_date: "desc" },
-          take: 1,
-        },
-      },
+      include: commonIncludes,
       where: {
         ...baseWhere,
         department_id: { in: departmentIds },
@@ -310,187 +316,27 @@ async function getTargetEmployees(workflow) {
     console.log(` Targeting designations by ID: ${designationIds.join(", ")}`);
 
     const employees = await prisma.hrms_d_employee.findMany({
-      include: {
-        user_employee: {
-          include: {
-            hrms_d_user_role: {
-              include: {
-                hrms_m_role: true,
-              },
-            },
-          },
-        },
-        hrms_employee_designation: true,
-        hrms_employee_department: true,
-        hrms_daily_attendance_employee: {
-          where: {
-            attendance_date: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0)),
-              lte: new Date(new Date().setHours(23, 59, 59, 999)),
-            },
-          },
-          orderBy: { attendance_date: "desc" },
-          take: 1,
-        },
-      },
+      include: commonIncludes,
       where: {
         ...baseWhere,
         designation_id: { in: designationIds },
       },
     });
 
-    console.log(`Found ${employees.length} employees with target designations`);
-    return employees;
-  } else if (workflow.target_type === "Branch" && workflow.target) {
-    const branchIds = workflow.target
-      .split(",")
-      .map((id) => parseInt(id.trim()));
-    console.log(` Targeting branches by ID: ${branchIds.join(", ")}`);
-
-    const employees = await prisma.hrms_d_employee.findMany({
-      include: {
-        user_employee: {
-          include: {
-            hrms_d_user_role: {
-              include: {
-                hrms_m_role: true,
-              },
-            },
-          },
-        },
-        hrms_employee_designation: true,
-        hrms_employee_department: true,
-        hrms_daily_attendance_employee: {
-          where: {
-            attendance_date: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0)),
-              lte: new Date(new Date().setHours(23, 59, 59, 999)),
-            },
-          },
-          orderBy: { attendance_date: "desc" },
-          take: 1,
-        },
-      },
-      where: {
-        ...baseWhere,
-        hrms_employee_department: {
-          branch_id: { in: branchIds },
-        },
-      },
-    });
-
-    console.log(` Found ${employees.length} employees in target branches`);
-    return employees;
-  } else if (workflow.target_type === "Manager" && workflow.target) {
-    const managerIds = workflow.target
-      .split(",")
-      .map((id) => parseInt(id.trim()));
     console.log(
-      `Targeting employees under managers by ID: ${managerIds.join(", ")}`
+      ` Found ${employees.length} employees with target designations`
     );
-
-    const employees = await prisma.hrms_d_employee.findMany({
-      include: {
-        user_employee: {
-          include: {
-            hrms_d_user_role: {
-              include: {
-                hrms_m_role: true,
-              },
-            },
-          },
-        },
-        hrms_employee_designation: true,
-        hrms_employee_department: true,
-        hrms_manager: true,
-        hrms_daily_attendance_employee: {
-          where: {
-            attendance_date: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0)),
-              lte: new Date(new Date().setHours(23, 59, 59, 999)),
-            },
-          },
-          orderBy: { attendance_date: "desc" },
-          take: 1,
-        },
-      },
-      where: {
-        ...baseWhere,
-        manager_id: { in: managerIds },
-      },
-    });
-
-    console.log(` Found ${employees.length} employees under target managers`);
     return employees;
-  } else if (workflow.target_type === "Employee" && workflow.target) {
-    const employeeIds = workflow.target
-      .split(",")
-      .map((id) => parseInt(id.trim()));
-    console.log(
-      ` Targeting specific employees by ID: ${employeeIds.join(", ")}`
-    );
-
+  } else {
+    console.log(`📋 No specific targeting - getting all active employees`);
     const employees = await prisma.hrms_d_employee.findMany({
-      include: {
-        user_employee: {
-          include: {
-            hrms_d_user_role: {
-              include: {
-                hrms_m_role: true,
-              },
-            },
-          },
-        },
-        hrms_employee_designation: true,
-        hrms_employee_department: true,
-        hrms_daily_attendance_employee: {
-          where: {
-            attendance_date: {
-              gte: new Date(new Date().setHours(0, 0, 0, 0)),
-              lte: new Date(new Date().setHours(23, 59, 59, 999)),
-            },
-          },
-          orderBy: { attendance_date: "desc" },
-          take: 1,
-        },
-      },
-      where: {
-        ...baseWhere,
-        id: { in: employeeIds },
-      },
+      include: commonIncludes,
+      where: baseWhere,
     });
 
-    console.log(` Found ${employees.length} specific target employees`);
+    console.log(`📋 Found ${employees.length} total active employees`);
     return employees;
   }
-
-  console.log(` Targeting all active employees (no specific target)`);
-  return await prisma.hrms_d_employee.findMany({
-    where: baseWhere,
-    include: {
-      user_employee: {
-        include: {
-          hrms_d_user_role: {
-            include: {
-              hrms_m_role: true,
-            },
-          },
-        },
-      },
-      hrms_employee_designation: true,
-      hrms_employee_department: true,
-      hrms_daily_attendance_employee: {
-        where: {
-          attendance_date: {
-            gte: new Date(new Date().setHours(0, 0, 0, 0)),
-            lte: new Date(new Date().setHours(23, 59, 59, 999)),
-          },
-        },
-        orderBy: { attendance_date: "desc" },
-        take: 1,
-      },
-    },
-  });
 }
 
 module.exports = {

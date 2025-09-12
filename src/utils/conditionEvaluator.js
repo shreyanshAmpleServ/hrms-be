@@ -11,7 +11,6 @@ module.exports.evaluateConditions = (employee, conditions) => {
 
     console.log(`   Checking: ${field} ${operator} ${value}`);
 
-    //  attendance cond
     if (field === "attendance_marked") {
       const attendanceCount =
         employee.hrms_daily_attendance_employee?.length || 0;
@@ -40,37 +39,131 @@ module.exports.evaluateConditions = (employee, conditions) => {
       empValue = todayAttendance?.status || "Not Marked";
       console.log(`   Attendance status: ${empValue}`);
     } else if (field === "working_hours") {
-      // Check working hours
       const todayAttendance = employee.hrms_daily_attendance_employee?.[0];
       empValue = todayAttendance?.working_hours
         ? parseFloat(todayAttendance.working_hours)
         : 0;
       console.log(`   Working hours: ${empValue}`);
-    } else if (field === "probation_end_date") {
-      let probationEndDate = employee.probation_end_date;
-      if (probationEndDate) {
-        const daysUntilExpiry = Math.ceil(
-          (new Date(probationEndDate) - new Date()) / (1000 * 60 * 60 * 24)
-        );
-        empValue = daysUntilExpiry;
-      } else {
-        empValue = null;
-      }
     } else if (
-      field === "contract_expiry_date" ||
-      field === "contract_end_date"
+      field === "contract_end_date" ||
+      field === "contract_expiry_date"
     ) {
-      let contractEndDate = employee.contract_end_date;
+      let contractEndDate = null;
+
+      if (employee.contracted_employee?.length > 0) {
+        const latestContract = employee.contracted_employee[0];
+        contractEndDate = latestContract.contract_end_date;
+        console.log(`   Contract from relation: ${contractEndDate}`);
+      }
+
+      if (!contractEndDate && employee.contract_end_date) {
+        contractEndDate = employee.contract_end_date;
+        console.log(`   Contract from employee field: ${contractEndDate}`);
+      }
+
+      empValue = contractEndDate ? formatDate(contractEndDate) : null;
+      console.log(`   Contract end date: ${empValue}`);
+    } else if (field === "days_until_contract_expiry") {
+      let contractEndDate = null;
+
+      if (employee.contracted_employee?.length > 0) {
+        const latestContract = employee.contracted_employee[0];
+        contractEndDate = latestContract.contract_end_date;
+      }
+
+      if (!contractEndDate && employee.contract_end_date) {
+        contractEndDate = employee.contract_end_date;
+      }
+
       if (contractEndDate) {
-        const daysUntilExpiry = Math.ceil(
+        const daysUntil = Math.ceil(
           (new Date(contractEndDate) - new Date()) / (1000 * 60 * 60 * 24)
         );
-        empValue = daysUntilExpiry;
+        empValue = daysUntil;
       } else {
         empValue = null;
       }
+      console.log(`   Days until contract expiry: ${empValue}`);
+    } else if (field === "contract_type") {
+      let contractType = null;
+
+      if (employee.contracted_employee?.length > 0) {
+        const latestContract = employee.contracted_employee[0];
+        contractType = latestContract.contract_type;
+      }
+
+      empValue = contractType || "No Contract";
+      console.log(`   Contract type: ${empValue}`);
+    } else if (field === "has_active_contract") {
+      let hasActiveContract = false;
+
+      if (employee.contracted_employee?.length > 0) {
+        const latestContract = employee.contracted_employee[0];
+        if (latestContract.contract_end_date) {
+          const contractEndDate = new Date(latestContract.contract_end_date);
+          const today = new Date();
+          hasActiveContract = contractEndDate > today;
+        }
+      }
+
+      empValue = hasActiveContract;
+      console.log(`   Has active contract: ${empValue}`);
+    } else if (field === "contract_start_date") {
+      let contractStartDate = null;
+
+      if (employee.contracted_employee?.length > 0) {
+        const latestContract = employee.contracted_employee[0];
+        contractStartDate = latestContract.contract_start_date;
+      }
+
+      empValue = contractStartDate ? formatDate(contractStartDate) : null;
+      console.log(`   Contract start date: ${empValue}`);
+    } else if (field === "probation_end_date") {
+      let probationEndDate = employee.probation_end_date;
+      if (!probationEndDate && employee.w_employee?.length > 0) {
+        const latestReview = employee.w_employee[0];
+        probationEndDate = latestReview.probation_end_date;
+      }
+      empValue = probationEndDate ? formatDate(probationEndDate) : null;
+      console.log(`   Probation end date: ${empValue}`);
+    } else if (field === "days_until_probation_end") {
+      let probationEndDate = employee.probation_end_date;
+      if (!probationEndDate && employee.w_employee?.length > 0) {
+        const latestReview = employee.w_employee[0];
+        probationEndDate = latestReview.probation_end_date;
+      }
+
+      if (probationEndDate) {
+        const daysUntil = Math.ceil(
+          (new Date(probationEndDate) - new Date()) / (1000 * 60 * 60 * 24)
+        );
+        empValue = daysUntil;
+      } else {
+        empValue = null;
+      }
+      console.log(`   Days until probation end: ${empValue}`);
+    } else if (field === "department_name") {
+      empValue = employee.hrms_employee_department?.department_name;
+      console.log(`   Department: ${empValue}`);
+    } else if (field === "designation_name") {
+      empValue = employee.hrms_employee_designation?.designation_name;
+      console.log(`   Designation: ${empValue}`);
+    } else if (field === "join_date") {
+      empValue = employee.join_date ? formatDate(employee.join_date) : null;
+      console.log(`   Join date: ${empValue}`);
+    } else if (field === "days_since_joining") {
+      if (employee.join_date) {
+        const daysSince = Math.floor(
+          (new Date() - new Date(employee.join_date)) / (1000 * 60 * 60 * 24)
+        );
+        empValue = daysSince;
+      } else {
+        empValue = null;
+      }
+      console.log(`   Days since joining: ${empValue}`);
     } else {
       empValue = employee[field];
+      console.log(`   Direct field ${field}: ${empValue}`);
     }
 
     console.log(`   Employee value: ${empValue}, Expected: ${value}`);
@@ -89,6 +182,14 @@ module.exports.evaluateConditions = (employee, conditions) => {
     else if (operator === ">=") conditionMet = empValue >= value;
     else if (operator === "<") conditionMet = empValue < value;
     else if (operator === ">") conditionMet = empValue > value;
+    else if (operator === "contains")
+      conditionMet = String(empValue)
+        .toLowerCase()
+        .includes(String(value).toLowerCase());
+    else if (operator === "not_contains")
+      conditionMet = !String(empValue)
+        .toLowerCase()
+        .includes(String(value).toLowerCase());
 
     console.log(`   Condition result: ${conditionMet}`);
 
@@ -100,6 +201,15 @@ module.exports.evaluateConditions = (employee, conditions) => {
     }
   }
 
-  console.log(`  Employee ${employee.full_name} meets ALL conditions`);
+  console.log(` Employee ${employee.full_name} meets ALL conditions`);
   return true;
 };
+
+function formatDate(date) {
+  if (!date) return null;
+  try {
+    return new Date(date).toISOString().split("T")[0]; // YYYY-MM-DD format
+  } catch (error) {
+    return null;
+  }
+}
