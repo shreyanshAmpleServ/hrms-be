@@ -174,6 +174,10 @@ const findLeaveBalanceByEmployeeId = async (employeeId) => {
     const leaveBalance = await prisma.hrms_d_leave_balance.findFirst({
       where: { employee_id: Number(employeeId) },
     });
+
+    if (!leaveBalance)
+      throw new CustomError("Leave balance not assigned to this employee", 404);
+
     const details = await prisma.hrms_d_leave_balance_details.findMany({
       where: { parent_id: Number(leaveBalance?.id) },
       include: {
@@ -182,8 +186,6 @@ const findLeaveBalanceByEmployeeId = async (employeeId) => {
         },
       },
     });
-
-    if (!leaveBalance) throw new CustomError("Leave balance not found", 404);
 
     return { ...leaveBalance, leaveBalances: details };
   } catch (error) {
