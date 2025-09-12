@@ -180,7 +180,11 @@ const runWorkflow = async (workflowId, workflow) => {
       );
     }
 
-    const actionResults = await executeActions(eligible, workflow.actions);
+    const actionResults = await executeActions(
+      eligible,
+      workflow.actions,
+      workflow.conditions
+    );
 
     await prisma.hrms_d_alert_log.update({
       where: { id: log.id },
@@ -328,13 +332,13 @@ async function getTargetEmployees(workflow) {
     );
     return employees;
   } else {
-    console.log(`📋 No specific targeting - getting all active employees`);
+    console.log(` No specific targeting - getting all active employees`);
     const employees = await prisma.hrms_d_employee.findMany({
       include: commonIncludes,
       where: baseWhere,
     });
 
-    console.log(`📋 Found ${employees.length} total active employees`);
+    console.log(` Found ${employees.length} total active employees`);
     return employees;
   }
 }

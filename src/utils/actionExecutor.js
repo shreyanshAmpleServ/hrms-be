@@ -260,7 +260,7 @@
 //               .map((e) => e.full_name),
 //           });
 //         } else {
-//           logger.warn("❌ No recipients specified in action");
+//           logger.warn(" No recipients specified in action");
 //           results.push({
 //             type: action.type,
 //             status: "FAILED",
@@ -358,6 +358,29 @@ const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const sendEmail = require("./../utils/mailer.js");
 
+function determineAlertTypeFromWorkflow(workflowConditions) {
+  if (!workflowConditions || workflowConditions.length === 0) {
+    return "Alert";
+  }
+
+  for (const condition of workflowConditions) {
+    const field = condition.field;
+
+    if (field === "probation_end_date") {
+      return "Probation";
+    } else if (field === "attendance_marked" || field === "has_checked_in") {
+      return "Attendance";
+    } else if (
+      field === "contract_end_date" ||
+      field === "contract_expiry_date"
+    ) {
+      return "Contract";
+    }
+  }
+
+  return "Alert";
+}
+
 function createUniversalPlaceholderMappings(
   eligibleEmployee,
   recipient,
@@ -372,21 +395,26 @@ function createUniversalPlaceholderMappings(
     probationEndDate = latestReview.probation_end_date;
   }
 
-  //attendance= this creted for emp
+  let alertDate = "N/A";
+  if (alertType === "Probation") {
+    alertDate = probationEndDate;
+  } else if (alertType === "Contract") {
+    alertDate = eligibleEmployee.contracted_employee?.[0]?.contract_end_date;
+  } else if (alertType === "Attendance") {
+    alertDate = new Date();
+  }
+
   const todayAttendance = eligibleEmployee.hrms_daily_attendance_employee?.[0];
   const attendanceStatus = todayAttendance?.status || "Not Marked";
 
   return {
-    //  emp inf
     employee_name: eligibleEmployee.full_name || "Employee",
     emp_name: eligibleEmployee.full_name || "Employee",
     employee_code: eligibleEmployee.employee_code || "N/A",
     full_name: eligibleEmployee.full_name || "Employee",
 
-    //   recipt info
     recipient_name: recipient.full_name || "Recipient",
 
-    //  deg info
     job_title:
       eligibleEmployee.hrms_employee_designation?.designation_name || "N/A",
     designation_name:
@@ -396,26 +424,24 @@ function createUniversalPlaceholderMappings(
     department_name:
       eligibleEmployee.hrms_employee_department?.department_name || "N/A",
 
-    // date
     current_date: formatDate(new Date()),
     today_date: formatDate(new Date()),
+    alert_date: formatDate(alertDate),
 
-    // attendance info
     attendance_status: attendanceStatus,
     attendance_date: formatDate(new Date()),
 
-    // alert info
     type: alertType,
     alert_type: alertType,
 
-    // company
-    company_name: companyInfo.company_name || "Company",
-    company_email: companyInfo.contact_email || "hr@company.com",
+    company_name: companyInfo.company_name || "AmpleServ Technologies Pvt Ltd.",
+    company_email: companyInfo.contact_email || "hr@ampleserv.com",
+    contact_person: "HR Department",
   };
 }
 
 function formatDate(date) {
-  if (!date) return "N/A";
+  if (!date || date === "N/A") return "N/A";
   try {
     return new Date(date).toLocaleDateString("en-GB", {
       day: "numeric",
@@ -436,28 +462,6 @@ function replaceAllPlaceholders(text, placeholders) {
   }
 
   return result;
-}
-
-function determineAlertType(employee) {
-  if (employee.hrms_daily_attendance_employee?.length === 0) {
-    return "Attendance";
-  }
-
-  if (
-    employee.probation_end_date ||
-    (employee.w_employee && employee.w_employee.length > 0)
-  ) {
-    return "Probation";
-  }
-
-  if (
-    employee.contract_end_date ||
-    (employee.contracted_employee && employee.contracted_employee.length > 0)
-  ) {
-    return "Contract";
-  }
-
-  return "Alert";
 }
 
 async function sendSystemNotification(
@@ -502,10 +506,17 @@ async function sendSystemNotification(
   }
 }
 
-async function executeActions(employees, actions = []) {
+async function executeActions(
+  employees,
+  actions = [],
+  workflowConditions = []
+) {
   console.log(` Processing actions for ${employees.length} eligible employees`);
 
   const results = [];
+
+  const alertType = determineAlertTypeFromWorkflow(workflowConditions);
+  console.log(` Alert Type determined from workflow: ${alertType}`);
 
   for (const action of actions) {
     const { type, recipients, template } = action;
@@ -513,7 +524,7 @@ async function executeActions(employees, actions = []) {
     try {
       if (action.type === "Email") {
         console.log(
-          `Sending emails to ${action.recipients.length} assigned recipients`
+          ` Sending emails to ${action.recipients.length} assigned recipients`
         );
 
         const emailTemplate = await prisma.hrms_d_templates.findUnique({
@@ -532,14 +543,11 @@ async function executeActions(employees, actions = []) {
           },
         });
 
-        // company info
         const companyInfo = await prisma.hrms_m_company_master.findFirst({
           where: { is_active: "Y" },
         });
 
         for (const eligibleEmployee of employees) {
-          const alertType = determineAlertType(eligibleEmployee);
-
           for (const recipient of recipientEmployees) {
             if (recipient.email) {
               const placeholders = createUniversalPlaceholderMappings(
@@ -566,7 +574,7 @@ async function executeActions(employees, actions = []) {
               });
 
               logger.info(
-                `Alert email sent to ${recipient.full_name} (${recipient.email}) regarding ${eligibleEmployee.full_name}`
+                `${alertType} alert email sent to ${recipient.full_name} (${recipient.email}) regarding ${eligibleEmployee.full_name}`
               );
             }
           }
@@ -599,8 +607,6 @@ async function executeActions(employees, actions = []) {
         });
 
         for (const eligibleEmployee of employees) {
-          const alertType = determineAlertType(eligibleEmployee);
-
           for (const recipient of recipientEmployees) {
             const placeholders = createUniversalPlaceholderMappings(
               eligibleEmployee,

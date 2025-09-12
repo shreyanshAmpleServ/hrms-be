@@ -36,7 +36,7 @@ const updateUser = async (id, data) => {
       );
 
       if (!isMatch) {
-        throw new Error("Current password is incorrect"); // ❌ Reject if wrong
+        throw new Error("Current password is incorrect");
       }
       const { currentPassword, ...datas } = data;
       data = { ...datas };

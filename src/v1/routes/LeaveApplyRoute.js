@@ -11,8 +11,8 @@ router.post(
   "/leave-application",
   upload.single("document_attachment"),
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Leave Application", "create"),
+  // (req, res, next) =>
+  //   setupNotificationMiddleware(req, res, next, "Leave Application", "create"),
   LeaveApplyController.createLeaveApplication
 );
 router.get(
@@ -24,15 +24,15 @@ router.put(
   "/leave-application/:id",
   upload.single("document_attachment"),
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Leave Application", "update"),
+  // (req, res, next) =>
+  //   setupNotificationMiddleware(req, res, next, "Leave Application", "update"),
   LeaveApplyController.updateLeaveApplication
 );
 router.delete(
   "/leave-application/:id",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Leave Application", "delete"),
+  // (req, res, next) =>
+  //   setupNotificationMiddleware(req, res, next, "Leave Application", "delete"),
   LeaveApplyController.deleteLeaveApplication
 );
 router.get(
@@ -44,8 +44,8 @@ router.get(
 router.patch(
   "/leave-application/:id/status",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Leave Application", "update"),
+  // (req, res, next) =>
+  //   setupNotificationMiddleware(req, res, next, "Leave Application", "update"),
   LeaveApplyController.updateLeaveStatus
 );
 

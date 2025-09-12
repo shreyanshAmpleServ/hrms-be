@@ -18,7 +18,7 @@
 //       }
 //     );
 //   } catch (err) {
-//     console.error("❌ Auth failed directly:", err.message);
+//     console.error(" Auth failed directly:", err.message);
 //   }
 // };
 
@@ -95,7 +95,7 @@
 
 // //     return true;
 // //   } catch (err) {
-// //     console.error("❌ Failed to delete from B2:", err.message);
+// //     console.error(" Failed to delete from B2:", err.message);
 // //     throw err;
 // //   }
 // // };
@@ -143,7 +143,7 @@
 
 //     return true;
 //   } catch (err) {
-//     console.error("❌ Failed to delete from B2:", err.message);
+//     console.error("Failed to delete from B2:", err.message);
 //     throw err;
 //   }
 // };
