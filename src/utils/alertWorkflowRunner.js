@@ -379,7 +379,7 @@ async function getTargetEmployees(workflow) {
       },
     });
 
-    console.log(`📋 Found ${employees.length} employees in target branches`);
+    console.log(` Found ${employees.length} employees in target branches`);
     return employees;
   } else if (workflow.target_type === "Manager" && workflow.target) {
     const managerIds = workflow.target
