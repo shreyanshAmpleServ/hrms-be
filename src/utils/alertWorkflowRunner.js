@@ -383,7 +383,21 @@ async function getTargetEmployees(workflow) {
       take: 10,
     },
   };
+  if (
+    workflow.target_type === "All" ||
+    !workflow.target_type ||
+    workflow.target_type === ""
+  ) {
+    console.log(` Targeting ALL active employees`);
 
+    const employees = await prisma.hrms_d_employee.findMany({
+      include: commonIncludes,
+      where: baseWhere,
+    });
+
+    console.log(` Found ${employees.length} total active employees`);
+    return employees;
+  }
   if (workflow.target_type === "Role" && workflow.target) {
     const roles = workflow.target.split(",").map((r) => r.trim());
     console.log(` Targeting roles by name: ${roles.join(", ")}`);
