@@ -2644,9 +2644,6 @@ model hrms_d_alert_workflow {
   is_active                 String                         @default("Y") @db.Char(1)
   conditions                String                         @default("[]") // store JSON as string
   actions                   String                         @default("[]") // store JSON as string
-  condition_type            String?                        @db.NVarChar(50)
-  condition_op              String?                        @db.NVarChar(10)
-  condition_value           String?                        @db.NVarChar(50)
   createdate                DateTime                       @default(now()) @db.DateTime
   createdby                 Int
   updatedate                DateTime?                      @db.DateTime
