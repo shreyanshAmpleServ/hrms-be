@@ -430,10 +430,10 @@ function createUniversalPlaceholderMappings(
 
     type: alertType,
     alert_type: alertType,
+    Notification_subject: alertType,
 
-    company_name: companyInfo.company_name || "AmpleServ Technologies Pvt Ltd.",
-    company_email: companyInfo.contact_email || "hr@ampleserv.com",
-    contact_person: "HR Department",
+    company_name: companyInfo.company_name || "",
+    company_email: companyInfo.contact_email || "",
   };
 }
 

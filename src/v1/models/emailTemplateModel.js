@@ -6,6 +6,8 @@ const prisma = new PrismaClient();
 const serializeEmailTemplateData = (data) => ({
   name: data.name,
   key: data.key,
+  channel: data.channel || "Other",
+  type: data.type || "Other",
   subject: data.subject,
   body: data.body || "",
   createdby: data.createdby ? Number(data.createdby) : 1,
@@ -23,7 +25,13 @@ const validateEmailTemplateData = async (data) => {
   if (!data.name || data.name.trim() === "") {
     errors.push("Name is mandatory and cannot be empty");
   }
+  if (data.channel && data.channel.trim() === "") {
+    errors.push("Channel cannot be empty if provided");
+  }
 
+  if (data.type && data.type.trim() === "") {
+    errors.push("Type cannot be empty if provided");
+  }
   if (data.name) {
     const existingName = await prisma.hrms_d_templates.findFirst({
       where: {
