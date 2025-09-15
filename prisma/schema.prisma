@@ -401,6 +401,7 @@ model hrms_d_employee_suggestion {
 
 model hrms_d_employment_contract {
   id                   Int                      @id(map: "PK__hrms_d_e__3213E83F506FAF63") @default(autoincrement())
+  employee_id          Int?
   contract_start_date  DateTime?                @db.Date
   contract_end_date    DateTime?                @db.Date
   contract_type        String?                  @db.VarChar(50)
@@ -414,7 +415,7 @@ model hrms_d_employment_contract {
   candidate_id         Int?
   hrms_d_employeeId    Int?
   contracted_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  hrms_d_employee      hrms_d_employee?         @relation(fields: [hrms_d_employeeId], references: [id])
+  hrms_d_employee      hrms_d_employee?         @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_exit_clearance {

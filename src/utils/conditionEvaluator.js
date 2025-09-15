@@ -251,7 +251,7 @@ module.exports.evaluateConditions = (employee, conditions) => {
         }
       } else {
         empValue = null;
-        console.log(`   Probation end date: null`);
+        console.log(`Probation end date: null`);
       }
     } else if (field === "attendance_marked") {
       const today = new Date().toISOString().split("T")[0];
@@ -280,13 +280,14 @@ module.exports.evaluateConditions = (employee, conditions) => {
         empValue = false;
       }
       console.log(`   Has checked in for ${today}: ${empValue}`);
-    } else if (
-      field === "contract_end_date" ||
-      field === "contract_expiry_date"
-    ) {
+    } else if (field === "contract_end_date") {
       let contractEndDate = null;
       if (employee.contracted_employee?.length > 0) {
-        const latestContract = employee.contracted_employee[0];
+        const latestContract = employee.contracted_employee.sort(
+          (a, b) =>
+            new Date(b.contract_end_date || 0) -
+            new Date(a.contract_end_date || 0)
+        )[0];
         contractEndDate = latestContract.contract_end_date;
       }
 
@@ -301,6 +302,15 @@ module.exports.evaluateConditions = (employee, conditions) => {
               contractEndDate
             )} (${daysUntil} days from now)`
           );
+
+          if (daysUntil < 0) {
+            console.log(
+              `    Contract already expired ${Math.abs(
+                daysUntil
+              )} days ago - skipping`
+            );
+            empValue = null;
+          }
         } else {
           empValue = formatDate(contractEndDate);
           console.log(`   Contract end date: ${empValue}`);

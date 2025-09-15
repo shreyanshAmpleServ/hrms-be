@@ -219,6 +219,130 @@ const runWorkflow = async (workflowId, workflow) => {
   }
 };
 
+// async function getTargetEmployees(workflow) {
+//   const baseWhere = { status: "Active" };
+
+//   console.log(
+//     ` Target Type: ${workflow.target_type}, Target: ${workflow.target}`
+//   );
+
+//   const commonIncludes = {
+//     user_employee: {
+//       include: {
+//         hrms_d_user_role: {
+//           include: {
+//             hrms_m_role: true,
+//           },
+//         },
+//       },
+//     },
+//     hrms_employee_designation: true,
+//     hrms_employee_department: true,
+
+//     contracted_employee: {
+//       orderBy: { contract_end_date: "desc" },
+//       take: 1,
+//       select: {
+//         id: true,
+//         contract_start_date: true,
+//         contract_end_date: true,
+//         contract_type: true,
+//         description: true,
+//       },
+//     },
+
+//     hrms_daily_attendance_employee: {
+//       where: {
+//         attendance_date: {
+//           gte: new Date(new Date().setHours(0, 0, 0, 0)),
+//           lte: new Date(new Date().setHours(23, 59, 59, 999)),
+//         },
+//       },
+//       orderBy: { attendance_date: "desc" },
+//       take: 1,
+//     },
+
+//     w_employee: {
+//       orderBy: { createdate: "desc" },
+//       take: 1,
+//     },
+
+//     hrms_d_training_session: {
+//       orderBy: { createdate: "desc" },
+//       take: 1,
+//     },
+//   };
+
+//   if (workflow.target_type === "Role" && workflow.target) {
+//     const roles = workflow.target.split(",").map((r) => r.trim());
+//     console.log(` Targeting roles by name: ${roles.join(", ")}`);
+
+//     const employees = await prisma.hrms_d_employee.findMany({
+//       include: commonIncludes,
+//       where: {
+//         ...baseWhere,
+//         user_employee: {
+//           some: {
+//             hrms_d_user_role: {
+//               some: {
+//                 hrms_m_role: {
+//                   role_name: { in: roles },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     console.log(` Found ${employees.length} employees with target roles`);
+//     return employees;
+//   } else if (workflow.target_type === "Department" && workflow.target) {
+//     const departmentIds = workflow.target
+//       .split(",")
+//       .map((id) => parseInt(id.trim()));
+//     console.log(` Targeting departments by ID: ${departmentIds.join(", ")}`);
+
+//     const employees = await prisma.hrms_d_employee.findMany({
+//       include: commonIncludes,
+//       where: {
+//         ...baseWhere,
+//         department_id: { in: departmentIds },
+//       },
+//     });
+
+//     console.log(` Found ${employees.length} employees in target departments`);
+//     return employees;
+//   } else if (workflow.target_type === "Designation" && workflow.target) {
+//     const designationIds = workflow.target
+//       .split(",")
+//       .map((id) => parseInt(id.trim()));
+//     console.log(` Targeting designations by ID: ${designationIds.join(", ")}`);
+
+//     const employees = await prisma.hrms_d_employee.findMany({
+//       include: commonIncludes,
+//       where: {
+//         ...baseWhere,
+//         designation_id: { in: designationIds },
+//       },
+//     });
+
+//     console.log(
+//       ` Found ${employees.length} employees with target designations`
+//     );
+//     return employees;
+//   } else {
+//     console.log(` No specific targeting - getting all active employees`);
+//     const employees = await prisma.hrms_d_employee.findMany({
+//       include: commonIncludes,
+//       where: baseWhere,
+//     });
+
+//     console.log(` Found ${employees.length} total active employees`);
+//     return employees;
+//   }
+// }
+
 async function getTargetEmployees(workflow) {
   const baseWhere = { status: "Active" };
 
@@ -239,37 +363,24 @@ async function getTargetEmployees(workflow) {
     hrms_employee_designation: true,
     hrms_employee_department: true,
 
-    contracted_employee: {
-      orderBy: { contract_end_date: "desc" },
-      take: 1,
-      select: {
-        id: true,
-        contract_start_date: true,
-        contract_end_date: true,
-        contract_type: true,
-        description: true,
-      },
-    },
-
-    hrms_daily_attendance_employee: {
-      where: {
-        attendance_date: {
-          gte: new Date(new Date().setHours(0, 0, 0, 0)),
-          lte: new Date(new Date().setHours(23, 59, 59, 999)),
-        },
-      },
-      orderBy: { attendance_date: "desc" },
-      take: 1,
-    },
-
     w_employee: {
       orderBy: { createdate: "desc" },
       take: 1,
     },
 
-    hrms_d_training_session: {
-      orderBy: { createdate: "desc" },
-      take: 1,
+    contracted_employee: {
+      orderBy: { contract_end_date: "desc" },
+      take: 5,
+    },
+
+    hrms_daily_attendance_employee: {
+      where: {
+        attendance_date: {
+          gte: new Date(new Date().setDate(new Date().getDate() - 7)),
+        },
+      },
+      orderBy: { attendance_date: "desc" },
+      take: 10,
     },
   };
 
@@ -300,7 +411,7 @@ async function getTargetEmployees(workflow) {
   } else if (workflow.target_type === "Department" && workflow.target) {
     const departmentIds = workflow.target
       .split(",")
-      .map((id) => parseInt(id.trim()));
+      .map((d) => parseInt(d.trim()));
     console.log(` Targeting departments by ID: ${departmentIds.join(", ")}`);
 
     const employees = await prisma.hrms_d_employee.findMany({
@@ -316,7 +427,7 @@ async function getTargetEmployees(workflow) {
   } else if (workflow.target_type === "Designation" && workflow.target) {
     const designationIds = workflow.target
       .split(",")
-      .map((id) => parseInt(id.trim()));
+      .map((d) => parseInt(d.trim()));
     console.log(` Targeting designations by ID: ${designationIds.join(", ")}`);
 
     const employees = await prisma.hrms_d_employee.findMany({
@@ -327,20 +438,32 @@ async function getTargetEmployees(workflow) {
       },
     });
 
-    console.log(
-      ` Found ${employees.length} employees with target designations`
-    );
+    console.log(` Found ${employees.length} employees in target designations`);
     return employees;
-  } else {
-    console.log(` No specific targeting - getting all active employees`);
+  } else if (workflow.target_type === "Employee" && workflow.target) {
+    const employeeIds = workflow.target
+      .split(",")
+      .map((e) => parseInt(e.trim()));
+    console.log(
+      ` Targeting individual employees by ID: ${employeeIds.join(", ")}`
+    );
+
     const employees = await prisma.hrms_d_employee.findMany({
       include: commonIncludes,
-      where: baseWhere,
+      where: {
+        ...baseWhere,
+        id: { in: employeeIds },
+      },
     });
 
-    console.log(` Found ${employees.length} total active employees`);
+    console.log(` Found ${employees.length} individual target employees`);
     return employees;
   }
+
+  return await prisma.hrms_d_employee.findMany({
+    include: commonIncludes,
+    where: baseWhere,
+  });
 }
 
 module.exports = {

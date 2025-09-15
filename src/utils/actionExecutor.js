@@ -370,10 +370,7 @@ function determineAlertTypeFromWorkflow(workflowConditions) {
       return "Probation";
     } else if (field === "attendance_marked" || field === "has_checked_in") {
       return "Attendance";
-    } else if (
-      field === "contract_end_date" ||
-      field === "contract_expiry_date"
-    ) {
+    } else if (field === "contract_end_date") {
       return "Contract";
     }
   }
