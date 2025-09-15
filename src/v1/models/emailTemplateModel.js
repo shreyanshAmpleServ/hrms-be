@@ -30,8 +30,10 @@ const validateEmailTemplateData = async (data) => {
         name: data.name.trim(),
       },
     });
-    if (existingName.id !== Number(data.id)) {
-      errors.push("Template name already exists");
+    if (existingName) {
+      if (existingName.id !== Number(data.id)) {
+        errors.push("Template name already exists");
+      }
     }
   }
 
@@ -41,6 +43,10 @@ const validateEmailTemplateData = async (data) => {
         key: data.key.trim(),
       },
     });
+
+    if (!existingKey) {
+      errors.push("Template key already exists");
+    }
     if (existingKey.id !== Number(data.id)) {
       errors.push("Template key already exists");
     }
@@ -106,9 +112,8 @@ const updateEmailTemplate = async (id, data) => {
     });
     return result;
   } catch (error) {
-    if (error instanceof CustomError) {
-      throw error;
-    }
+    console.log(error);
+
     throw new CustomError(
       `Error updating email template: ${error.message}`,
       500
