@@ -492,7 +492,6 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
 
     console.log("Contract data built:", JSON.stringify(contractData, null, 2));
 
-    console.log("About to call generateContractHTML...");
     const html = await generateContractHTML(contractData);
 
     console.log("HTML generation completed");
@@ -511,7 +510,6 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
         .json({ error: "Failed to generate contract HTML" });
     }
 
-    // Set proper headers and send HTML as response
     console.log("Setting headers and sending response...");
     res.setHeader("Content-Type", "text/html");
     res.send(html);
