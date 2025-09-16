@@ -376,7 +376,9 @@ const sendContractToCandidate = async (req, res, next) => {
       data: { token, token_expiry: expiry },
     });
 
-    const signingLink = `${process.env.API_URL}/api/v1/contracts/${contractId}/sign?token=${token}`;
+    const signingLink = `${
+      process.env.FRONTEND_URL || "http://localhost:3000"
+    }/sign-contract?contract_id=${contractId}&token=${token}`;
     const html = `
       <p>Dear ${candidateName},</p>
       <p>Your employment contract is ready for signing.</p>

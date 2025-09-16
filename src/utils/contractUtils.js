@@ -106,7 +106,7 @@ const contractTemplate = `<!DOCTYPE html>
             break-after: avoid;
         }
 
-        .header {
+        .contract-header-main {
             display: flex;
             justify-content: space-between;
             align-items: flex-start;
@@ -491,7 +491,7 @@ const contractTemplate = `<!DOCTYPE html>
 <body>
     <div class="contract">
         <!-- Header Section -->
-        <div class="header avoid-break">
+        <div class="contract-header-main avoid-break">
             <div class="logo-section">
                 {{companyLogoHtml}}
             </div>
