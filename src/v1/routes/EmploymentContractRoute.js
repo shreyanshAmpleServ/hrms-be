@@ -71,6 +71,7 @@ router.get(
 );
 router.post(
   "/contracts/:id/sign",
+  upload.single("signature"),
   EmploymentContractController.signEmploymentContractByCandidate
 );
 module.exports = router;
