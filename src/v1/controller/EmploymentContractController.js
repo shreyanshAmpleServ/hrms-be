@@ -237,15 +237,66 @@ const downloadContractPDF = async (req, res, next) => {
   }
 };
 
+// const sendContractToCandidate = async (req, res, next) => {
+//   try {
+//     const { contractId, candidateEmail, candidateName, log_inst } = req.body;
+
+//     const token = crypto.randomBytes(32).toString("hex");
+//     const expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+
+//     await prisma.hrms_d_employment_contract.update({
+//       where: { id: contractId },
+//       data: { token, token_expiry: expiry },
+//     });
+
+//     const signingLink = `${process.env.API_URL}/api/v1/contracts/${contractId}/sign?token=${token}`;
+//     const html = `
+//       <p>Dear ${candidateName},</p>
+//       <p>Your employment contract is ready for signing.</p>
+//       <p><a href="${signingLink}" target="_blank">Click here to sign your contract</a></p>
+//       <p>This link expires on <b>${expiry.toDateString()}</b>.</p>
+//       <p>Regards,<br/>HR Team</p>
+//     `;
+
+//     await sendEmail({
+//       to: candidateEmail,
+//       subject: "Employment Contract - Please Sign",
+//       html,
+//       log_inst,
+//     });
+
+//     res.status(200).send({ success: true, message: "Email sent successfully" });
+//   } catch (error) {
+//     console.log("Error in sending mail", error);
+
+//     next(error);
+//   }
+// };
+
 const sendContractToCandidate = async (req, res, next) => {
   try {
-    const { contractId, candidateEmail, candidateName, log_inst } = req.body;
+    const contractId = req.params.id;
+    const { log_inst } = req.body;
+
+    const contract = await prisma.hrms_d_employment_contract.findUnique({
+      where: { id: Number(contractId) },
+      include: {
+        contracted_candidate: true,
+      },
+    });
+
+    if (!contract || !contract.contracted_candidate) {
+      throw new CustomError("Candidate not found for this contract", 404);
+    }
+
+    const candidateEmail = contract.contracted_candidate.email;
+    const candidateName = contract.contracted_candidate.full_name;
 
     const token = crypto.randomBytes(32).toString("hex");
     const expiry = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
 
     await prisma.hrms_d_employment_contract.update({
-      where: { id: contractId },
+      where: { id: Number(contractId) },
       data: { token, token_expiry: expiry },
     });
 
@@ -268,11 +319,9 @@ const sendContractToCandidate = async (req, res, next) => {
     res.status(200).send({ success: true, message: "Email sent successfully" });
   } catch (error) {
     console.log("Error in sending mail", error);
-
     next(error);
   }
 };
-
 const showEmploymentContractForCandidate = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -338,7 +387,6 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
     let benefits = [];
     let deductions = [];
 
-    console.log("=== EMPLOYEE COMPENSATION DEBUG ===");
     console.log(
       "Pay component headers found:",
       employee.hrms_d_employee_pay_component_assignment_header?.length || 0

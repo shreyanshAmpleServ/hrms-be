@@ -62,7 +62,7 @@ router.post(
 );
 
 router.post(
-  "/contracts/send",
+  "/contracts/:id/send",
   EmploymentContractController.sendContractToCandidate
 );
 router.get(
