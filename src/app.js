@@ -11,9 +11,21 @@ dotenv.config();
 
 const app = express();
 
-app.use(express.json());
+app.use(
+  express.json({
+    limit: "10mb",
+    verify: (req, res, buf) => {
+      console.log(` Request size: ${buf.length} bytes`);
+    },
+  })
+);
 
-app.use(express.urlencoded({ extended: true }));
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "10mb",
+  })
+);
 app.use(cookieParser());
 app.use(
   cors({

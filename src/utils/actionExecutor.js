@@ -430,7 +430,7 @@ function createUniversalPlaceholderMappings(
 
     type: alertType,
     alert_type: alertType,
-    Notification_subject: alertType,
+    notification_subject: alertType,
 
     company_name: companyInfo.company_name || "",
     company_email: companyInfo.contact_email || "",

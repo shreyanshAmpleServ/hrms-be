@@ -1,6 +1,64 @@
 const fs = require("fs");
 const logger = require("../Comman/logger");
 
+const showEmploymentContractForCandidate = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const { token } = req.query;
+
+    const contract = await prisma.hrms_d_employment_contract.findUnique({
+      where: { id: Number(id) },
+    });
+
+    if (!contract) throw new CustomError("Contract Not Found", 404);
+    if (contract.token !== token)
+      throw new CustomError("Invalid or expired link", 401);
+    if (contract.token_expiry && new Date() > contract.token_expiry)
+      throw new CustomError("Link expired", 401);
+
+    // Prepare data for contract utils
+    const contractData = {
+      contractNumber: contract.contract_number,
+      date: contract.created_at,
+      companyName: contract.company_name,
+      companyAddress: contract.company_address,
+      companyCity: contract.company_city,
+      companyState: contract.company_state,
+      companyZip: contract.company_zip,
+      companyPhone: contract.company_phone,
+      companyEmail: contract.company_email,
+      employeeName: contract.employee_name,
+      employeeNationality: contract.employee_nationality,
+      employeePhone: contract.employee_phone,
+      employeeEmail: contract.employee_email,
+      position: contract.position,
+      department: contract.department,
+      contractType: contract.contract_type,
+      startDate: contract.start_date,
+      workingHours: contract.working_hours,
+      probationPeriod: contract.probation_period,
+      noticePeriod: contract.notice_period,
+      baseSalary: contract.base_salary,
+      currency: contract.currency,
+      paymentFrequency: contract.payment_frequency,
+      benefits: contract.benefits || [],
+      deductions: contract.deductions || [],
+      additionalTerms: contract.additional_terms,
+      notes: contract.notes,
+      companyLogo: contract.company_logo,
+      companySignature: contract.company_signature,
+    };
+
+    // Generate HTML using contract utils
+    const htmlContent = await generateContractHTML(contractData);
+
+    // Send HTML directly in response
+    res.setHeader("Content-Type", "text/html");
+    res.send(htmlContent);
+  } catch (error) {
+    next(error);
+  }
+};
 // HTML Template for Employment Contract with proper signature alignment
 const contractTemplate = `<!DOCTYPE html>
 <html lang="en">
@@ -891,4 +949,5 @@ const escapeHtml = (text) => {
 module.exports = {
   generateContractHTML,
   generateContractPDF,
+  showEmploymentContractForCandidate,
 };

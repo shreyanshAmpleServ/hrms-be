@@ -3,10 +3,6 @@ const EmploymentContractController = require("../controller/EmploymentContractCo
 const { authenticateToken } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/UploadFileMiddleware");
 
-const {
-  setupNotificationMiddleware,
-} = require("../middlewares/notificationMiddleware");
-
 const router = express.Router();
 
 router.post(
@@ -65,4 +61,16 @@ router.post(
   EmploymentContractController.downloadContractPDF
 );
 
+router.post(
+  "/contracts/send",
+  EmploymentContractController.sendContractToCandidate
+);
+router.get(
+  "/contracts/:id/sign",
+  EmploymentContractController.showEmploymentContractForCandidate
+);
+router.post(
+  "/contracts/:id/sign",
+  EmploymentContractController.signEmploymentContractByCandidate
+);
 module.exports = router;
