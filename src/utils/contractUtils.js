@@ -1,6 +1,67 @@
 const fs = require("fs");
 const logger = require("../Comman/logger");
 
+// const showEmploymentContractForCandidate = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { token } = req.query;
+
+//     const contract = await prisma.hrms_d_employment_contract.findUnique({
+//       where: { id: Number(id) },
+//     });
+
+//     if (!contract) throw new CustomError("Contract Not Found", 404);
+//     if (contract.token !== token)
+//       throw new CustomError("Invalid or expired link", 401);
+//     if (contract.token_expiry && new Date() > contract.token_expiry)
+//       throw new CustomError("Link expired", 401);
+
+//     // Prepare data for contract utils
+//     const contractData = {
+//       contractNumber: contract.contract_number,
+//       date: contract.created_at,
+//       companyName: contract.company_name,
+//       companyAddress: contract.company_address,
+//       companyCity: contract.company_city,
+//       companyState: contract.company_state,
+//       companyZip: contract.company_zip,
+//       companyPhone: contract.company_phone,
+//       companyEmail: contract.company_email,
+//       employeeName: contract.employee_name,
+//       employeeNationality: contract.employee_nationality,
+//       employeePhone: contract.employee_phone,
+//       employeeSignature: contract.signature,
+//       employeeEmail: contract.employee_email,
+//       position: contract.position,
+//       department: contract.department,
+//       contractType: contract.contract_type,
+//       startDate: contract.start_date,
+//       workingHours: contract.working_hours,
+//       probationPeriod: contract.probation_period,
+//       noticePeriod: contract.notice_period,
+//       baseSalary: contract.base_salary,
+//       currency: contract.currency,
+//       paymentFrequency: contract.payment_frequency,
+//       benefits: contract.benefits || [],
+//       deductions: contract.deductions || [],
+//       additionalTerms: contract.additional_terms,
+//       notes: contract.notes,
+//       companyLogo: contract.company_logo,
+//       companySignature: contract.company_signature,
+//     };
+
+//     // Generate HTML using contract utils
+//     const htmlContent = await generateContractHTML(contractData);
+
+//     // Send HTML directly in response
+//     res.setHeader("Content-Type", "text/html");
+//     res.send(htmlContent);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+// HTML Template for Employment Contract with proper signature alignment
+
 const showEmploymentContractForCandidate = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -47,6 +108,7 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
       notes: contract.notes,
       companyLogo: contract.company_logo,
       companySignature: contract.company_signature,
+      employeeSignature: contract.signature, // *** ADD THIS LINE ***
     };
 
     // Generate HTML using contract utils
@@ -59,7 +121,7 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
     next(error);
   }
 };
-// HTML Template for Employment Contract with proper signature alignment
+
 const contractTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -350,7 +412,11 @@ const contractTemplate = `<!DOCTYPE html>
             page-break-inside: avoid;
             break-inside: avoid;
         }
-
+.employee-signature {
+    max-height: 50px;
+    max-width: 150px;
+    object-fit: contain;
+}
         .signature-block {
             text-align: center;
             padding: 10px;
@@ -374,11 +440,11 @@ const contractTemplate = `<!DOCTYPE html>
             z-index: 1;
         }
 
-        .company-signature {
-            max-height: 50px;
-            max-width: 150px;
-            object-fit: contain;
-        }
+    .company-signature, .employee-signature {
+    max-height: 50px;
+    max-width: 150px;
+    object-fit: contain;
+}
 
         .signature-line {
             border-bottom: 1px solid #2c3e50;
@@ -647,22 +713,23 @@ const contractTemplate = `<!DOCTYPE html>
         <!-- Additional Notes -->
         {{notesSection}}
 
-        <!-- Enhanced Signature Section with Proper Alignment -->
-        <div class="signature-section avoid-break">
-            <div class="signature-block avoid-break">
-                <div class="signature-line"></div>
-                <div class="signature-label">Employee Signature</div>
-                <div class="signature-name">{{employeeName}}</div>
-                <div class="signature-date">Date: _______________</div>
-            </div>
-            <div class="signature-block avoid-break {{companySignatureClass}}">
-                {{companySignHtml}}
-                <div class="signature-line"></div>
-                <div class="signature-label">Company Representative</div>
-                <div class="signature-name">{{companyName}}</div>
-                <div class="signature-date">Date: _______________</div>
-            </div>
-        </div>
+      <!-- Enhanced Signature Section with Proper Alignment -->
+<div class="signature-section avoid-break">
+    <div class="signature-block avoid-break {{employeeSignatureClass}}">
+        {{employeeSignHtml}}                       <!-- *** ADD THIS LINE *** -->
+        <div class="signature-line"></div>
+        <div class="signature-label">Employee Signature</div>
+        <div class="signature-name">{{employeeName}}</div>
+        <div class="signature-date">Date: _______________</div>
+    </div>
+    <div class="signature-block avoid-break {{companySignatureClass}}">
+        {{companySignHtml}}
+        <div class="signature-line"></div>
+        <div class="signature-label">Company Representative</div>
+        <div class="signature-name">{{companyName}}</div>
+        <div class="signature-date">Date: _______________</div>
+    </div>
+</div>
 
         <!-- Footer -->
         <div class="footer avoid-break">
@@ -789,8 +856,17 @@ ${deductionsRows}
             </div>`
         : "";
 
+      const employeeSignHtml = data.employeeSignature
+        ? `<div class="signature-image-container">
+         <img src="${data.employeeSignature}" alt="Employee Signature" class="employee-signature">
+     </div>`
+        : "";
+
       // Add class to signature block if signature is present
       const companySignatureClass = data.companySignature
+        ? "has-signature"
+        : "";
+      const employeeSignatureClass = data.employeeSignature
         ? "has-signature"
         : "";
 
@@ -830,6 +906,8 @@ ${deductionsRows}
         additionalTerms: data.additionalTerms,
         companySignHtml: companySignHtml,
         companySignatureClass: companySignatureClass,
+        employeeSignHtml: employeeSignHtml, // *** ADD THIS ***
+        employeeSignatureClass: employeeSignatureClass, // *** ADD THIS ***
       };
 
       // Replace all placeholders in template
