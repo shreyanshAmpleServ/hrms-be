@@ -15,7 +15,7 @@ const saveContractPayComponents = async (contractId, components, userId) => {
     data: components.map((c) => ({
       contract_id: contractId,
       pay_component_id: c.pay_component_id,
-      amount: new Prisma.Decimal(c.amount), // 👈 Safe for Decimal(18,4)
+      amount: new Prisma.Decimal(c.amount),
       currency_id: c.currency_id || null,
       createdby: userId,
       log_inst: 1,

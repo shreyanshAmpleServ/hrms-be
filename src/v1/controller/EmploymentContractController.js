@@ -1023,11 +1023,10 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
 
     const contract = await prisma.hrms_d_employment_contract.findUnique({
       where: { id: Number(id) },
-      // *** INCLUDE CONTRACT PAY COMPONENTS FOR CANDIDATES ***
       include: {
         pay_component_contract: {
           include: {
-            pay_component_for_contract: true, // Include actual pay component details
+            pay_component_for_contract: true,
           },
         },
       },
@@ -1130,7 +1129,6 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
     let deductions = [];
 
     if (personType === "employee") {
-      console.log("=== PROCESSING EMPLOYEE COMPENSATION ===");
       console.log(
         "Pay component headers found:",
         person.hrms_d_employee_pay_component_assignment_header?.length || 0
@@ -1223,9 +1221,6 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
         console.log("No pay component headers found for employee");
       }
     } else if (personType === "candidate") {
-      console.log("=== PROCESSING CANDIDATE COMPENSATION FROM CONTRACT ===");
-
-      // *** PRIORITY 1: USE CONTRACT-SPECIFIC PAY COMPONENTS FOR CANDIDATE ***
       if (
         contract.pay_component_contract &&
         contract.pay_component_contract.length > 0
@@ -1248,7 +1243,6 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
           });
         });
 
-        // Process contract pay components
         benefits = contract.pay_component_contract
           .filter(
             (contractPc) =>
@@ -1301,7 +1295,6 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
           "No contract-specific pay components found, checking other sources"
         );
 
-        // *** FALLBACK: CHECK CONTRACT FIELDS AND JOB POSTING ***
         if (contract.base_salary) {
           benefits.push({
             description: "Base Salary",
@@ -1395,7 +1388,6 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
     // }
 
     let personCurrency = "INR";
-    console.log("=== DETERMINING CURRENCY ===");
 
     if (personType === "employee") {
       console.log(
@@ -1609,7 +1601,6 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       }
     }
 
-    // *** STEP 2: GET EMPLOYEE DATA (SAME AS VIEWING FUNCTION) ***
     let employee = null;
     const employeeId = contract.employee_id || contract.hrms_d_employeeId;
 
@@ -1648,7 +1639,6 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
     let benefits = [];
     let deductions = [];
 
-    console.log("=== GETTING EMPLOYEE COMPENSATION FOR SIGNING ===");
     console.log(
       "Pay component headers found:",
       employee.hrms_d_employee_pay_component_assignment_header?.length || 0
@@ -1760,7 +1750,6 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
     }
 
     let employeeCurrency = "INR";
-    console.log("=== EMPLOYEE CURRENCY FOR SIGNING ===");
     console.log("Employee currency field:", employee?.currency);
     console.log(
       "Employee employee_currency field:",
