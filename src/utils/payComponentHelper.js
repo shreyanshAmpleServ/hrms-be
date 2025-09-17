@@ -3,7 +3,7 @@ const prisma = new PrismaClient();
 
 const saveContractPayComponents = async (contractId, components, userId) => {
   if (!components || components.length === 0) {
-    console.log("⚠️ No pay components to save");
+    console.log("No pay components to save");
     return;
   }
 
