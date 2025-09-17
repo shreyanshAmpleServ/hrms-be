@@ -80,87 +80,6 @@ const findEmploymentContractById = async (id) => {
   }
 };
 
-/**
- * Sends contract expiry alert email to employee
- * @description Finds contract by ID and sends personalized expiry alert email
- * @async
- * @param {number} contractId - Contract ID to send alert for
- * @returns {Promise<Object>} Contract data with candidate information
- */
-const contractExpiryAlertFn = async (contractId) => {
-  try {
-    const reqData = await prisma.hrms_d_employment_contract.findUnique({
-      where: { id: parseInt(contractId) },
-      select: {
-        id: true,
-        contract_end_date: true,
-        contract_type: true,
-        contracted_candidate: {
-          select: {
-            full_name: true,
-            email: true,
-            id: true,
-          },
-        },
-      },
-    });
-
-    if (!reqData) {
-      throw new CustomError("Employment contract not found", 404);
-    }
-
-    if (!reqData.contracted_candidate?.email) {
-      throw new CustomError("Employee email not found", 404);
-    }
-
-    /**
-     * Calculate days until expiry using date-only comparison (ignore time)
-     * @description Uses startOf('day') to ensure consistent day calculation
-     */
-    const contractEndDate = moment(reqData.contract_end_date).startOf("day");
-    const today = moment().startOf("day");
-    const daysUntilExpiry = contractEndDate.diff(today, "days");
-
-    const template = await generateEmailContent(
-      templateKeyMap.contractExpiryAlert,
-      {
-        employee_name: reqData.contracted_candidate.full_name,
-        days: daysUntilExpiry,
-      }
-    );
-    await sendEmail({
-      to: reqData.contracted_candidate.email,
-      subject: template.subject,
-      html: template.body,
-      log_inst: 1,
-    });
-
-    await notificationLogModel.createNotificationLog({
-      employee_id: 15,
-      message_title: "Contract Expiry Alert",
-      message_body: `The employment contract of ${reqData.contracted_candidate.full_name} is scheduled to expire in ${daysUntilExpiry} day(s).
-Please review and take the necessary action for renewal or transition.`,
-      channel: "email",
-      sent_on: new Date(),
-      status: "S",
-      createdby: 1,
-      log_inst: 1,
-    });
-
-    logger.info(
-      `Contract expiry alert sent successfully to ${reqData.contracted_candidate.full_name} (${reqData.contracted_candidate.email}) - ${daysUntilExpiry} days remaining`
-    );
-
-    return reqData;
-  } catch (error) {
-    logger.error(`Error in contractExpiryAlertFn:`, error);
-    throw new CustomError(
-      `Error sending contract expiry alert: ${error.message}`,
-      503
-    );
-  }
-};
-
 // Update a employment contract
 const updateEmploymentContract = async (id, data) => {
   try {
@@ -305,5 +224,4 @@ module.exports = {
   updateEmploymentContract,
   deleteEmploymentContract,
   getAllEmploymentContract,
-  contractExpiryAlertFn,
 };

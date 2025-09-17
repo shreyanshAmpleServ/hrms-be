@@ -8,11 +8,7 @@ router.post(
   authenticateToken,
   alertWorkflowController.createAlertWorkflow
 );
-router.get(
-  "/alert-workflow/fields",
-  authenticateToken,
-  alertWorkflowController.getAlertWorkflowFields
-);
+
 router.get(
   "/alert-workflow",
   authenticateToken,
