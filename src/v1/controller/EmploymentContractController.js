@@ -262,6 +262,7 @@ const sendContractToCandidate = async (req, res, next) => {
     next(error);
   }
 };
+
 // const showEmploymentContractForCandidate = async (req, res, next) => {
 //   try {
 //     const { id } = req.params;
@@ -1574,6 +1575,435 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
   }
 };
 
+// const signEmploymentContractByCandidate = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     const { token } = req.query;
+//     const signatureFile = req.file;
+
+//     console.log("Contract ID:", id);
+//     console.log("Token provided:", !!token);
+//     console.log("Signature file provided:", !!signatureFile);
+
+//     const contract = await prisma.hrms_d_employment_contract.findUnique({
+//       where: { id: Number(id) },
+//     });
+
+//     if (!contract) {
+//       throw new CustomError("Contract Not Found", 404);
+//     }
+
+//     if (contract.token) {
+//       if (contract.token !== token) {
+//         throw new CustomError("Invalid or expired link", 401);
+//       }
+//       if (contract.token_expiry && new Date() > contract.token_expiry) {
+//         throw new CustomError("Link expired", 401);
+//       }
+//     }
+
+//     let employee = null;
+//     const employeeId = contract.employee_id || contract.hrms_d_employeeId;
+
+//     if (employeeId) {
+//       console.log("Looking for employee ID:", employeeId);
+
+//       employee = await prisma.hrms_d_employee.findUnique({
+//         where: { id: employeeId },
+//         include: {
+//           hrms_employee_designation: true,
+//           hrms_employee_department: true,
+//           hrms_d_employee_pay_component_assignment_header: {
+//             where: { status: "Active" },
+//             include: {
+//               hrms_d_employee_pay_component_assignment_line: {
+//                 include: {
+//                   pay_component_for_line: true,
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       });
+//     }
+
+//     if (!employee) {
+//       console.log("Employee not found for contract");
+//       throw new CustomError("Employee not found for this contract", 404);
+//     }
+
+//     console.log("Employee found:", employee.full_name);
+//     console.log("Employee ID:", employee.id);
+
+//     const companyConfig =
+//       await prisma.hrms_d_default_configurations.findFirst();
+//     let benefits = [];
+//     let deductions = [];
+
+//     console.log(
+//       "Pay component headers found:",
+//       employee.hrms_d_employee_pay_component_assignment_header?.length || 0
+//     );
+
+//     if (
+//       employee.hrms_d_employee_pay_component_assignment_header &&
+//       employee.hrms_d_employee_pay_component_assignment_header.length > 0
+//     ) {
+//       const payComponentLines =
+//         employee.hrms_d_employee_pay_component_assignment_header.flatMap(
+//           (header) => header.hrms_d_employee_pay_component_assignment_line
+//         );
+
+//       benefits = payComponentLines
+//         .filter(
+//           (pc) =>
+//             pc.pay_component_for_line &&
+//             pc.pay_component_for_line.is_active === "Y" &&
+//             pc.pay_component_for_line.pay_or_deduct === "P"
+//         )
+//         .map((pc) => ({
+//           description: pc.pay_component_for_line.component_name,
+//           type: "Benefit",
+//           amount: pc.amount.toString(),
+//           frequency: "Annual",
+//         }));
+
+//       deductions = payComponentLines
+//         .filter(
+//           (pc) =>
+//             pc.pay_component_for_line &&
+//             pc.pay_component_for_line.is_active === "Y" &&
+//             pc.pay_component_for_line.pay_or_deduct === "D"
+//         )
+//         .map((pc) => ({
+//           description: pc.pay_component_for_line.component_name,
+//           type: "Deduction",
+//           amount: pc.amount.toString(),
+//           period: "Annual",
+//         }));
+
+//       console.log(" Employee benefits for signing:", benefits.length);
+//       console.log(" Employee deductions for signing:", deductions.length);
+
+//       if (benefits.length > 0) {
+//         console.log(
+//           "Benefits:",
+//           benefits.map((b) => `${b.description}: ${b.amount}`)
+//         );
+//       }
+//       if (deductions.length > 0) {
+//         console.log(
+//           "Deductions:",
+//           deductions.map((d) => `${d.description}: ${d.amount}`)
+//         );
+//       }
+//     } else {
+//       console.log(" No pay component headers found, using fallback");
+//     }
+
+//     if (benefits.length === 0 && deductions.length === 0) {
+//       console.log("Using default pay components fallback for signing");
+
+//       try {
+//         const defaultPayComponents = await prisma.hrms_m_pay_component.findMany(
+//           {
+//             where: { is_active: "Y" },
+//             orderBy: { component_name: "asc" },
+//             take: 10,
+//           }
+//         );
+
+//         benefits = defaultPayComponents
+//           .filter((pc) => pc.pay_or_deduct === "P")
+//           .map((pc) => ({
+//             description: pc.component_name,
+//             type: "Benefit",
+//             amount: "0",
+//             frequency: "Annual",
+//           }));
+
+//         deductions = defaultPayComponents
+//           .filter((pc) => pc.pay_or_deduct === "D")
+//           .map((pc) => ({
+//             description: pc.component_name,
+//             type: "Deduction",
+//             amount: "0",
+//             period: "Annual",
+//           }));
+//       } catch (error) {
+//         benefits = [
+//           {
+//             description: "Basic Salary",
+//             type: "Benefit",
+//             amount: "0",
+//             frequency: "Annual",
+//           },
+//         ];
+//         deductions = [
+//           {
+//             description: "Income Tax",
+//             type: "Deduction",
+//             amount: "0",
+//             period: "Annual",
+//           },
+//         ];
+//       }
+//     }
+
+//     let employeeCurrency = "INR";
+//     console.log("Employee currency field:", employee?.currency);
+//     console.log(
+//       "Employee employee_currency field:",
+//       employee?.employee_currency
+//     );
+
+//     employeeCurrency =
+//       employee?.currency || employee?.employee_currency || "INR";
+//     console.log("Final currency from employee:", employeeCurrency);
+
+//     let signatureUrl = null;
+//     let signatureSource = "";
+
+//     if (signatureFile) {
+//       console.log("Processing new employee signature file upload...");
+
+//       if (!signatureFile.mimetype.startsWith("image/")) {
+//         throw new CustomError(
+//           "Only image files are allowed for signatures",
+//           400
+//         );
+//       }
+
+//       const signatureFileName = `signature_employee_${employeeId}_${Date.now()}.${signatureFile.originalname
+//         .split(".")
+//         .pop()}`;
+
+//       signatureUrl = await uploadToBackblaze(
+//         signatureFile.buffer,
+//         signatureFileName,
+//         signatureFile.mimetype,
+//         "signatures"
+//       );
+
+//       signatureSource = "new_file_upload";
+//       console.log("New employee signature uploaded:", signatureUrl);
+//     } else {
+//       const existingSignature = contract.signature;
+//       if (existingSignature) {
+//         signatureUrl = existingSignature;
+//         signatureSource = "existing_signature";
+//       } else {
+//         throw new CustomError(
+//           "No signature provided. Please upload a signature file.",
+//           400
+//         );
+//       }
+//     }
+
+//     let signedDocumentUrl = contract.document_path;
+
+//     try {
+//       console.log("Regenerating contract with dynamic employee data...");
+
+//       const contractData = {
+//         contractNumber: contract.id || "N/A",
+//         date: contract.createdate || new Date(),
+
+//         companyName: companyConfig?.company_name || "N/A",
+//         companyAddress: companyConfig?.street_address || "N/A",
+//         companyCity: companyConfig?.city || "N/A",
+//         companyState: companyConfig?.province || "N/A",
+//         companyZip: companyConfig?.zip_code || "N/A",
+//         companyPhone: companyConfig?.phone_number || "N/A",
+//         companyEmail: companyConfig?.email || "N/A",
+//         companyLogo: companyConfig?.company_logo || "",
+//         companySignature: companyConfig?.company_signature || "",
+
+//         employeeName: employee.full_name || "N/A",
+//         employeeNationality: employee.nationality || "N/A",
+//         employeePhone: employee.phone_number || "N/A",
+//         employeeEmail: employee.email || employee.official_email || "N/A",
+
+//         position: employee.hrms_employee_designation?.designation_name || "N/A",
+//         department: employee.hrms_employee_department?.department_name || "N/A",
+//         contractType:
+//           contract.contract_type || employee.employment_type || "N/A",
+//         startDate: contract.contract_start_date
+//           ? contract.contract_start_date.toLocaleDateString("en-US")
+//           : employee.join_date
+//           ? employee.join_date.toLocaleDateString("en-US")
+//           : "N/A",
+//         endDate: contract.contract_end_date
+//           ? contract.contract_end_date.toLocaleDateString("en-US")
+//           : "N/A",
+//         workingHours: companyConfig?.full_day_working_hours || "8",
+//         probationPeriod: companyConfig?.local_employee_probation_period || "3",
+//         noticePeriod: companyConfig?.local_employee_notice_period || "30",
+//         paymentFrequency: "Annual",
+
+//         baseSalary: "0",
+//         currency: employeeCurrency,
+//         benefits: benefits,
+//         deductions: deductions,
+
+//         additionalTerms:
+//           companyConfig?.terms_and_conditions ||
+//           "Standard employment terms and conditions apply.",
+//         notes: companyConfig?.notes || "",
+//         employeeSignature: signatureUrl,
+//       };
+
+//       console.log("Contract data prepared with dynamic employee values:", {
+//         employeeName: contractData.employeeName,
+//         position: contractData.position,
+//         currency: contractData.currency,
+//         benefits: contractData.benefits.length,
+//         deductions: contractData.deductions.length,
+//       });
+
+//       const tempDir = path.join(__dirname, "../temp");
+//       if (!fs.existsSync(tempDir)) {
+//         fs.mkdirSync(tempDir, { recursive: true });
+//         console.log("Created temp directory:", tempDir);
+//       }
+
+//       const signedFileName = `signed_contract_employee_${id}_${Date.now()}.pdf`;
+//       const signedPdfPath = path.join(tempDir, signedFileName);
+
+//       console.log("Generating employee PDF at path:", signedPdfPath);
+
+//       await generateContractPDF(contractData, signedPdfPath);
+
+//       if (!fs.existsSync(signedPdfPath)) {
+//         throw new CustomError("PDF generation failed - file not created", 500);
+//       }
+
+//       const signedPdfBuffer = fs.readFileSync(signedPdfPath);
+
+//       signedDocumentUrl = await uploadToBackblazeWithValidation(
+//         signedPdfBuffer,
+//         signedFileName,
+//         "application/pdf",
+//         "contracts",
+//         { "b2-content-disposition": `inline; filename="${signedFileName}"` }
+//       );
+
+//       console.log(
+//         "Employee signed PDF uploaded successfully:",
+//         signedDocumentUrl
+//       );
+
+//       fs.unlink(signedPdfPath, (err) => {
+//         if (err) console.error("Error deleting temp employee PDF:", err);
+//         else console.log("Temporary employee PDF file deleted successfully");
+//       });
+
+//       if (contract.document_path !== signedDocumentUrl) {
+//         try {
+//           await deleteFromBackblaze(contract.document_path);
+//           console.log("Original unsigned document deleted successfully");
+//         } catch (deleteError) {
+//           console.warn(
+//             "Warning: Failed to delete original document:",
+//             deleteError.message
+//           );
+//         }
+//       }
+//     } catch (contractError) {
+//       console.error(
+//         "Error regenerating contract with employee signature:",
+//         contractError
+//       );
+//       throw new CustomError(
+//         "Failed to create signed employee contract document",
+//         500
+//       );
+//     }
+
+//     const updateData = {
+//       signature: signatureUrl,
+//       document_path: signedDocumentUrl,
+//       updatedate: new Date(),
+//       updatedby: employeeId,
+//       token: null,
+//       token_expiry: null,
+//     };
+
+//     console.log("Contract ID:", id);
+//     console.log("Employee ID:", employeeId);
+//     console.log("Previous document_path:", contract.document_path);
+//     console.log("New document_path:", signedDocumentUrl);
+
+//     const updatedContract = await prisma.hrms_d_employment_contract.update({
+//       where: { id: Number(id) },
+//       data: updateData,
+//     });
+
+//     // *** STEP 8: RETURN RESPONSE WITH DYNAMIC EMPLOYEE DATA ***
+//     const responseData = {
+//       contractId: updatedContract.id,
+//       employeeId: employeeId, // *** Employee ID ***
+//       signed: true,
+//       signatureUrl: updatedContract.signature,
+//       signedDocumentUrl: updatedContract.document_path,
+//       updateDate: updatedContract.updatedate,
+//       signatureSource: signatureSource,
+
+//       // *** DYNAMIC EMPLOYEE DETAILS ***
+//       employeeDetails: {
+//         id: employee.id,
+//         fullName: employee.full_name,
+//         email: employee.email || employee.official_email,
+//         phone: employee.phone_number,
+//         nationality: employee.nationality,
+//         position: employee.hrms_employee_designation?.designation_name,
+//         department: employee.hrms_employee_department?.department_name,
+//         employmentType: employee.employment_type,
+//         joinDate: employee.join_date,
+//         currency: employeeCurrency,
+//       },
+
+//       // *** DYNAMIC COMPENSATION DETAILS ***
+//       compensationDetails: {
+//         benefits: benefits,
+//         deductions: deductions,
+//         totalBenefits: benefits.reduce(
+//           (sum, b) => sum + parseFloat(b.amount),
+//           0
+//         ),
+//         totalDeductions: deductions.reduce(
+//           (sum, d) => sum + parseFloat(d.amount),
+//           0
+//         ),
+//         currency: employeeCurrency,
+//       },
+
+//       originalDocumentReplaced: contract.document_path !== signedDocumentUrl,
+//       fileDetails: signatureFile
+//         ? {
+//             originalName: signatureFile.originalname,
+//             mimeType: signatureFile.mimetype,
+//             size: signatureFile.size,
+//           }
+//         : null,
+//     };
+
+//     const successMessage =
+//       signatureSource === "new_file_upload"
+//         ? `Employee contract signed successfully with uploaded signature: ${signatureFile.originalname}`
+//         : "Employee contract signed successfully using existing signature";
+
+//     res.status(200).json({
+//       success: true,
+//       message: successMessage,
+//       data: responseData,
+//     });
+//   } catch (error) {
+//     console.error("Error in signEmploymentContractByEmployee:", error);
+//     next(error);
+//   }
+// };
+
 const signEmploymentContractByCandidate = async (req, res, next) => {
   try {
     const { id } = req.params;
@@ -1586,6 +2016,13 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
 
     const contract = await prisma.hrms_d_employment_contract.findUnique({
       where: { id: Number(id) },
+      include: {
+        pay_component_contract: {
+          include: {
+            pay_component_for_contract: true,
+          },
+        },
+      },
     });
 
     if (!contract) {
@@ -1601,17 +2038,29 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       }
     }
 
-    let employee = null;
+    console.log("Contract employee_id:", contract.employee_id);
+    console.log("Contract hrms_d_employeeId:", contract.hrms_d_employeeId);
+    console.log("Contract candidate_id:", contract.candidate_id);
+    console.log(
+      "Contract pay components found:",
+      contract.pay_component_contract?.length || 0
+    );
+
+    let person = null;
+    let personType = null;
+    let personId = null;
+
     const employeeId = contract.employee_id || contract.hrms_d_employeeId;
 
     if (employeeId) {
       console.log("Looking for employee ID:", employeeId);
 
-      employee = await prisma.hrms_d_employee.findUnique({
+      person = await prisma.hrms_d_employee.findUnique({
         where: { id: employeeId },
         include: {
           hrms_employee_designation: true,
           hrms_employee_department: true,
+          employee_currency: true,
           hrms_d_employee_pay_component_assignment_header: {
             where: { status: "Active" },
             include: {
@@ -1624,147 +2073,298 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
           },
         },
       });
+
+      if (person) {
+        personType = "employee";
+        personId = employeeId;
+        console.log("Employee found:", person.full_name);
+        console.log("Using EMPLOYEE data for signing (Priority 1)");
+      }
     }
 
-    if (!employee) {
-      console.log("Employee not found for contract");
-      throw new CustomError("Employee not found for this contract", 404);
+    if (!person && contract.candidate_id) {
+      console.log(
+        "No employee found, looking for candidate ID:",
+        contract.candidate_id
+      );
+
+      person = await prisma.hrms_d_candidate_master.findUnique({
+        where: { id: contract.candidate_id },
+        include: {
+          candidate_master_applied_position: true,
+          candidate_department: true,
+          candidate_job_posting: true,
+          candidate_application_source: true,
+        },
+      });
+
+      if (person) {
+        personType = "candidate";
+        personId = contract.candidate_id;
+        console.log("Candidate found:", person.full_name);
+        console.log("Using CANDIDATE data for signing (Priority 2)");
+      }
     }
 
-    console.log("Employee found:", employee.full_name);
-    console.log("Employee ID:", employee.id);
+    if (!person) {
+      console.log("Neither employee nor candidate found for contract");
+      throw new CustomError(
+        "No employee or candidate found for this contract",
+        404
+      );
+    }
+
+    console.log(
+      `Final signing decision: Using ${personType.toUpperCase()} data`
+    );
+    console.log(`${personType} found:`, person.full_name);
+    console.log(`${personType} ID:`, personId);
 
     const companyConfig =
       await prisma.hrms_d_default_configurations.findFirst();
     let benefits = [];
     let deductions = [];
 
-    console.log(
-      "Pay component headers found:",
-      employee.hrms_d_employee_pay_component_assignment_header?.length || 0
-    );
+    if (personType === "employee") {
+      console.log(
+        "Pay component headers found:",
+        person.hrms_d_employee_pay_component_assignment_header?.length || 0
+      );
 
-    if (
-      employee.hrms_d_employee_pay_component_assignment_header &&
-      employee.hrms_d_employee_pay_component_assignment_header.length > 0
-    ) {
-      const payComponentLines =
-        employee.hrms_d_employee_pay_component_assignment_header.flatMap(
-          (header) => header.hrms_d_employee_pay_component_assignment_line
-        );
+      if (
+        person.hrms_d_employee_pay_component_assignment_header &&
+        person.hrms_d_employee_pay_component_assignment_header.length > 0
+      ) {
+        const payComponentLines =
+          person.hrms_d_employee_pay_component_assignment_header.flatMap(
+            (header) => header.hrms_d_employee_pay_component_assignment_line
+          );
 
-      benefits = payComponentLines
-        .filter(
-          (pc) =>
-            pc.pay_component_for_line &&
-            pc.pay_component_for_line.is_active === "Y" &&
-            pc.pay_component_for_line.pay_or_deduct === "P"
-        )
-        .map((pc) => ({
-          description: pc.pay_component_for_line.component_name,
-          type: "Benefit",
-          amount: pc.amount.toString(),
-          frequency: "Annual",
-        }));
+        benefits = payComponentLines
+          .filter(
+            (pc) =>
+              pc.pay_component_for_line &&
+              pc.pay_component_for_line.is_active === "Y" &&
+              pc.pay_component_for_line.pay_or_deduct === "P"
+          )
+          .map((pc) => ({
+            description: pc.pay_component_for_line.component_name,
+            type: "Benefit",
+            amount: pc.amount.toString(),
+            frequency: "Annual",
+          }));
 
-      deductions = payComponentLines
-        .filter(
-          (pc) =>
-            pc.pay_component_for_line &&
-            pc.pay_component_for_line.is_active === "Y" &&
-            pc.pay_component_for_line.pay_or_deduct === "D"
-        )
-        .map((pc) => ({
-          description: pc.pay_component_for_line.component_name,
-          type: "Deduction",
-          amount: pc.amount.toString(),
-          period: "Annual",
-        }));
+        deductions = payComponentLines
+          .filter(
+            (pc) =>
+              pc.pay_component_for_line &&
+              pc.pay_component_for_line.is_active === "Y" &&
+              pc.pay_component_for_line.pay_or_deduct === "D"
+          )
+          .map((pc) => ({
+            description: pc.pay_component_for_line.component_name,
+            type: "Deduction",
+            amount: pc.amount.toString(),
+            period: "Annual",
+          }));
 
-      console.log(" Employee benefits for signing:", benefits.length);
-      console.log(" Employee deductions for signing:", deductions.length);
+        console.log(`${personType} benefits for signing:`, benefits.length);
+        console.log(`${personType} deductions for signing:`, deductions.length);
 
-      if (benefits.length > 0) {
-        console.log(
-          "Benefits:",
-          benefits.map((b) => `${b.description}: ${b.amount}`)
-        );
+        if (benefits.length > 0) {
+          console.log(
+            "Benefits:",
+            benefits.map((b) => `${b.description}: ${b.amount}`)
+          );
+        }
+        if (deductions.length > 0) {
+          console.log(
+            "Deductions:",
+            deductions.map((d) => `${d.description}: ${d.amount}`)
+          );
+        }
+      } else {
+        console.log("No pay component headers found for employee");
       }
-      if (deductions.length > 0) {
+    } else if (personType === "candidate") {
+      if (
+        contract.pay_component_contract &&
+        contract.pay_component_contract.length > 0
+      ) {
         console.log(
-          "Deductions:",
-          deductions.map((d) => `${d.description}: ${d.amount}`)
+          "Using contract-specific pay components for signing:",
+          contract.pay_component_contract.length
         );
-      }
-    } else {
-      console.log(" No pay component headers found, using fallback");
-    }
 
-    if (benefits.length === 0 && deductions.length === 0) {
-      console.log("Using default pay components fallback for signing");
+        benefits = contract.pay_component_contract
+          .filter(
+            (contractPc) =>
+              contractPc.pay_component_for_contract &&
+              contractPc.pay_component_for_contract.is_active === "Y" &&
+              contractPc.pay_component_for_contract.pay_or_deduct === "P"
+          )
+          .map((contractPc) => ({
+            description: contractPc.pay_component_for_contract.component_name,
+            type: "Benefit",
+            amount: contractPc.amount.toString(),
+            frequency: "Annual",
+            componentId: contractPc.pay_component_id,
+            contractComponentId: contractPc.id,
+          }));
 
-      try {
-        const defaultPayComponents = await prisma.hrms_m_pay_component.findMany(
-          {
-            where: { is_active: "Y" },
-            orderBy: { component_name: "asc" },
-            take: 10,
+        deductions = contract.pay_component_contract
+          .filter(
+            (contractPc) =>
+              contractPc.pay_component_for_contract &&
+              contractPc.pay_component_for_contract.is_active === "Y" &&
+              contractPc.pay_component_for_contract.pay_or_deduct === "D"
+          )
+          .map((contractPc) => ({
+            description: contractPc.pay_component_for_contract.component_name,
+            type: "Deduction",
+            amount: contractPc.amount.toString(),
+            period: "Annual",
+            componentId: contractPc.pay_component_id,
+            contractComponentId: contractPc.id,
+          }));
+
+        console.log(
+          "Candidate contract benefits for signing:",
+          benefits.length
+        );
+        console.log(
+          "Candidate contract deductions for signing:",
+          deductions.length
+        );
+      } else {
+        if (contract.base_salary) {
+          benefits.push({
+            description: "Base Salary",
+            type: "Benefit",
+            amount: contract.base_salary.toString(),
+            frequency: "Annual",
+            source: "contract_field",
+          });
+        }
+
+        if (person.candidate_job_posting) {
+          const jobPosting = person.candidate_job_posting;
+          if (jobPosting.min_salary && jobPosting.min_salary > 0) {
+            benefits.push({
+              description: "Offered Salary Range (Min)",
+              type: "Benefit",
+              amount: jobPosting.min_salary.toString(),
+              frequency: "Annual",
+              source: "job_posting",
+            });
           }
-        );
 
-        benefits = defaultPayComponents
-          .filter((pc) => pc.pay_or_deduct === "P")
-          .map((pc) => ({
-            description: pc.component_name,
-            type: "Benefit",
-            amount: "0",
-            frequency: "Annual",
-          }));
-
-        deductions = defaultPayComponents
-          .filter((pc) => pc.pay_or_deduct === "D")
-          .map((pc) => ({
-            description: pc.component_name,
-            type: "Deduction",
-            amount: "0",
-            period: "Annual",
-          }));
-      } catch (error) {
-        benefits = [
-          {
-            description: "Basic Salary",
-            type: "Benefit",
-            amount: "0",
-            frequency: "Annual",
-          },
-        ];
-        deductions = [
-          {
-            description: "Income Tax",
-            type: "Deduction",
-            amount: "0",
-            period: "Annual",
-          },
-        ];
+          if (jobPosting.max_salary && jobPosting.max_salary > 0) {
+            benefits.push({
+              description: "Offered Salary Range (Max)",
+              type: "Benefit",
+              amount: jobPosting.max_salary.toString(),
+              frequency: "Annual",
+              source: "job_posting",
+            });
+          }
+        }
       }
     }
 
-    let employeeCurrency = "INR";
-    console.log("Employee currency field:", employee?.currency);
-    console.log(
-      "Employee employee_currency field:",
-      employee?.employee_currency
-    );
+    // default-> me remove krna hai
+    //     // if (benefits.length === 0 && deductions.length === 0) {
+    //   console.log(
+    //     `Using default pay components fallback for ${personType} signing`
+    //   );
 
-    employeeCurrency =
-      employee?.currency || employee?.employee_currency || "INR";
-    console.log("Final currency from employee:", employeeCurrency);
+    //   try {
+    //     const defaultPayComponents = await prisma.hrms_m_pay_component.findMany(
+    //       {
+    //         where: { is_active: "Y" },
+    //         orderBy: { component_name: "asc" },
+    //         take: 10,
+    //       }
+    //     );
+
+    //     benefits = defaultPayComponents
+    //       .filter((pc) => pc.pay_or_deduct === "P")
+    //       .map((pc) => ({
+    //         description: pc.component_name,
+    //         type: "Benefit",
+    //         amount: "0",
+    //         frequency: "Annual",
+    //         source: "default",
+    //       }));
+
+    //     deductions = defaultPayComponents
+    //       .filter((pc) => pc.pay_or_deduct === "D")
+    //       .map((pc) => ({
+    //         description: pc.component_name,
+    //         type: "Deduction",
+    //         amount: "0",
+    //         period: "Annual",
+    //         source: "default",
+    //       }));
+    //   } catch (error) {
+    //     benefits = [
+    //       {
+    //         description: "Basic Salary",
+    //         type: "Benefit",
+    //         amount: "0",
+    //         frequency: "Annual",
+    //         source: "hardcoded_fallback",
+    //       },
+    //     ];
+    //     deductions = [
+    //       {
+    //         description: "Income Tax",
+    //         type: "Deduction",
+    //         amount: "0",
+    //         period: "Annual",
+    //         source: "hardcoded_fallback",
+    //       },
+    //     ];
+    //   }
+    // }
+
+    let personCurrency = "INR";
+    console.log(` ${personType.toUpperCase()} currency for signing`);
+
+    if (personType === "employee") {
+      console.log(
+        "Employee currency relation:",
+        person.employee_currency?.currency_code
+      );
+      console.log("Employee currency_id field:", person.currency_id);
+      personCurrency =
+        person.employee_currency?.currency_code ||
+        person.employee_currency?.currency_name ||
+        "INR";
+    } else if (personType === "candidate") {
+      if (
+        contract.pay_component_contract &&
+        contract.pay_component_contract.length > 0
+      ) {
+        const firstComponent = contract.pay_component_contract[0];
+        if (firstComponent.currency_id) {
+          console.log(
+            "Found currency_id in contract pay component:",
+            firstComponent.currency_id
+          );
+        }
+      }
+      console.log("Using contract or default currency for candidate");
+      personCurrency = contract.currency || "INR";
+    }
+
+    console.log(`Final currency for ${personType}:`, personCurrency);
 
     let signatureUrl = null;
     let signatureSource = "";
 
     if (signatureFile) {
-      console.log("Processing new employee signature file upload...");
+      console.log(`Processing new ${personType} signature file upload...`);
 
       if (!signatureFile.mimetype.startsWith("image/")) {
         throw new CustomError(
@@ -1773,7 +2373,7 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
         );
       }
 
-      const signatureFileName = `signature_employee_${employeeId}_${Date.now()}.${signatureFile.originalname
+      const signatureFileName = `signature_${personType}_${personId}_${Date.now()}.${signatureFile.originalname
         .split(".")
         .pop()}`;
 
@@ -1785,7 +2385,7 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       );
 
       signatureSource = "new_file_upload";
-      console.log("New employee signature uploaded:", signatureUrl);
+      console.log(`New ${personType} signature uploaded:`, signatureUrl);
     } else {
       const existingSignature = contract.signature;
       if (existingSignature) {
@@ -1802,7 +2402,7 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
     let signedDocumentUrl = contract.document_path;
 
     try {
-      console.log("Regenerating contract with dynamic employee data...");
+      console.log(`Regenerating contract with dynamic ${personType} data...`);
 
       const contractData = {
         contractNumber: contract.id || "N/A",
@@ -1818,30 +2418,62 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
         companyLogo: companyConfig?.company_logo || "",
         companySignature: companyConfig?.company_signature || "",
 
-        employeeName: employee.full_name || "N/A",
-        employeeNationality: employee.nationality || "N/A",
-        employeePhone: employee.phone_number || "N/A",
-        employeeEmail: employee.email || employee.official_email || "N/A",
+        employeeName:
+          personType === "candidate"
+            ? person.full_name || "N/A"
+            : person.full_name ||
+              (person.first_name && person.last_name
+                ? `${person.first_name} ${person.last_name}`
+                : "") ||
+              "N/A",
 
-        position: employee.hrms_employee_designation?.designation_name || "N/A",
-        department: employee.hrms_employee_department?.department_name || "N/A",
+        employeeNationality: person.nationality || "N/A",
+
+        employeePhone:
+          personType === "candidate"
+            ? person.phone || "N/A"
+            : person.phone_number || "N/A",
+
+        employeeEmail:
+          personType === "candidate"
+            ? person.email || "N/A"
+            : person.email || person.official_email || "N/A",
+
+        position:
+          personType === "employee"
+            ? person.hrms_employee_designation?.designation_name || "N/A"
+            : person.candidate_master_applied_position?.designation_name ||
+              "N/A",
+
+        department:
+          personType === "employee"
+            ? person.hrms_employee_department?.department_name || "N/A"
+            : person.candidate_department?.department_name || "N/A",
+
         contractType:
-          contract.contract_type || employee.employment_type || "N/A",
+          contract.contract_type ||
+          (personType === "employee" ? person.employment_type : "Full-time") ||
+          "N/A",
+
         startDate: contract.contract_start_date
           ? contract.contract_start_date.toLocaleDateString("en-US")
-          : employee.join_date
-          ? employee.join_date.toLocaleDateString("en-US")
+          : personType === "employee" && person.join_date
+          ? person.join_date.toLocaleDateString("en-US")
+          : personType === "candidate" && person.expected_joining_date
+          ? person.expected_joining_date.toLocaleDateString("en-US")
           : "N/A",
+
         endDate: contract.contract_end_date
           ? contract.contract_end_date.toLocaleDateString("en-US")
           : "N/A",
+
         workingHours: companyConfig?.full_day_working_hours || "8",
         probationPeriod: companyConfig?.local_employee_probation_period || "3",
         noticePeriod: companyConfig?.local_employee_notice_period || "30",
         paymentFrequency: "Annual",
 
         baseSalary: "0",
-        currency: employeeCurrency,
+        currency: personCurrency,
         benefits: benefits,
         deductions: deductions,
 
@@ -1850,10 +2482,14 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
           "Standard employment terms and conditions apply.",
         notes: companyConfig?.notes || "",
         employeeSignature: signatureUrl,
+
+        personType: personType,
+        personId: personId,
       };
 
-      console.log("Contract data prepared with dynamic employee values:", {
-        employeeName: contractData.employeeName,
+      console.log(`Contract data prepared with dynamic ${personType} values:`, {
+        personType: contractData.personType,
+        personName: contractData.employeeName,
         position: contractData.position,
         currency: contractData.currency,
         benefits: contractData.benefits.length,
@@ -1866,10 +2502,10 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
         console.log("Created temp directory:", tempDir);
       }
 
-      const signedFileName = `signed_contract_employee_${id}_${Date.now()}.pdf`;
+      const signedFileName = `signed_contract_${personType}_${id}_${Date.now()}.pdf`;
       const signedPdfPath = path.join(tempDir, signedFileName);
 
-      console.log("Generating employee PDF at path:", signedPdfPath);
+      console.log(`Generating ${personType} PDF at path:`, signedPdfPath);
 
       await generateContractPDF(contractData, signedPdfPath);
 
@@ -1888,13 +2524,14 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       );
 
       console.log(
-        "Employee signed PDF uploaded successfully:",
+        `${personType} signed PDF uploaded successfully:`,
         signedDocumentUrl
       );
 
       fs.unlink(signedPdfPath, (err) => {
-        if (err) console.error("Error deleting temp employee PDF:", err);
-        else console.log("Temporary employee PDF file deleted successfully");
+        if (err) console.error(`Error deleting temp ${personType} PDF:`, err);
+        else
+          console.log(`Temporary ${personType} PDF file deleted successfully`);
       });
 
       if (contract.document_path !== signedDocumentUrl) {
@@ -1910,11 +2547,11 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       }
     } catch (contractError) {
       console.error(
-        "Error regenerating contract with employee signature:",
+        `Error regenerating contract with ${personType} signature:`,
         contractError
       );
       throw new CustomError(
-        "Failed to create signed employee contract document",
+        `Failed to create signed ${personType} contract document`,
         500
       );
     }
@@ -1923,13 +2560,13 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       signature: signatureUrl,
       document_path: signedDocumentUrl,
       updatedate: new Date(),
-      updatedby: employeeId,
+      updatedby: personId,
       token: null,
       token_expiry: null,
     };
 
     console.log("Contract ID:", id);
-    console.log("Employee ID:", employeeId);
+    console.log(`${personType} ID:`, personId);
     console.log("Previous document_path:", contract.document_path);
     console.log("New document_path:", signedDocumentUrl);
 
@@ -1938,31 +2575,62 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       data: updateData,
     });
 
-    // *** STEP 8: RETURN RESPONSE WITH DYNAMIC EMPLOYEE DATA ***
     const responseData = {
       contractId: updatedContract.id,
-      employeeId: employeeId, // *** Employee ID ***
+      personId: personId,
+      personType: personType,
       signed: true,
       signatureUrl: updatedContract.signature,
       signedDocumentUrl: updatedContract.document_path,
       updateDate: updatedContract.updatedate,
       signatureSource: signatureSource,
 
-      // *** DYNAMIC EMPLOYEE DETAILS ***
-      employeeDetails: {
-        id: employee.id,
-        fullName: employee.full_name,
-        email: employee.email || employee.official_email,
-        phone: employee.phone_number,
-        nationality: employee.nationality,
-        position: employee.hrms_employee_designation?.designation_name,
-        department: employee.hrms_employee_department?.department_name,
-        employmentType: employee.employment_type,
-        joinDate: employee.join_date,
-        currency: employeeCurrency,
+      personDetails: {
+        id: person.id,
+        fullName:
+          personType === "candidate"
+            ? person.full_name
+            : person.full_name ||
+              (person.first_name && person.last_name
+                ? `${person.first_name} ${person.last_name}`
+                : ""),
+        email:
+          personType === "candidate"
+            ? person.email
+            : person.email || person.official_email,
+        phone: personType === "candidate" ? person.phone : person.phone_number,
+        nationality: person.nationality,
+        position:
+          personType === "employee"
+            ? person.hrms_employee_designation?.designation_name
+            : person.candidate_master_applied_position?.designation_name,
+        department:
+          personType === "employee"
+            ? person.hrms_employee_department?.department_name
+            : person.candidate_department?.department_name,
+        employmentType:
+          personType === "employee" ? person.employment_type : "Full-time",
+        joinDate:
+          personType === "employee"
+            ? person.join_date
+            : person.expected_joining_date,
+        currency: personCurrency,
+
+        ...(personType === "candidate" && {
+          candidateCode: person.candidate_code,
+          applicationDate: person.date_of_application,
+          applicationSource: person.candidate_application_source?.source_name,
+          status: person.status,
+        }),
+
+        ...(personType === "employee" && {
+          employeeCode: person.employee_code,
+          employeeCategory: person.employee_category,
+          confirmDate: person.confirm_date,
+          workLocation: person.work_location,
+        }),
       },
 
-      // *** DYNAMIC COMPENSATION DETAILS ***
       compensationDetails: {
         benefits: benefits,
         deductions: deductions,
@@ -1974,7 +2642,13 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
           (sum, d) => sum + parseFloat(d.amount),
           0
         ),
-        currency: employeeCurrency,
+        currency: personCurrency,
+        compensationSource:
+          personType === "employee"
+            ? "employee_assignment"
+            : contract.pay_component_contract?.length > 0
+            ? "contract_specific"
+            : "fallback",
       },
 
       originalDocumentReplaced: contract.document_path !== signedDocumentUrl,
@@ -1989,8 +2663,8 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
 
     const successMessage =
       signatureSource === "new_file_upload"
-        ? `Employee contract signed successfully with uploaded signature: ${signatureFile.originalname}`
-        : "Employee contract signed successfully using existing signature";
+        ? `${personType} contract signed successfully with uploaded signature: ${signatureFile.originalname}`
+        : `${personType} contract signed successfully using existing signature`;
 
     res.status(200).json({
       success: true,
@@ -1998,7 +2672,7 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       data: responseData,
     });
   } catch (error) {
-    console.error("Error in signEmploymentContractByEmployee:", error);
+    console.error(`Error in sign EmploymentContract:`, error);
     next(error);
   }
 };
