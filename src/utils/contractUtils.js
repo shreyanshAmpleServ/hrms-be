@@ -716,18 +716,19 @@ const contractTemplate = `<!DOCTYPE html>
       <!-- Enhanced Signature Section with Proper Alignment -->
 <div class="signature-section avoid-break">
     <div class="signature-block avoid-break {{employeeSignatureClass}}">
-        {{employeeSignHtml}}                       <!-- *** ADD THIS LINE *** -->
+    <div class="signature-image-container">
+        {{employeeSignHtml}}
+    </div>                 
         <div class="signature-line"></div>
         <div class="signature-label">Employee Signature</div>
         <div class="signature-name">{{employeeName}}</div>
-        <div class="signature-date">Date: _______________</div>
     </div>
+
     <div class="signature-block avoid-break {{companySignatureClass}}">
         {{companySignHtml}}
         <div class="signature-line"></div>
         <div class="signature-label">Company Representative</div>
         <div class="signature-name">{{companyName}}</div>
-        <div class="signature-date">Date: _______________</div>
     </div>
 </div>
 
@@ -857,9 +858,7 @@ ${deductionsRows}
         : "";
 
       const employeeSignHtml = data.employeeSignature
-        ? `<div class="signature-image-container">
-         <img src="${data.employeeSignature}" alt="Employee Signature" class="employee-signature">
-     </div>`
+        ? `<img src="${data.employeeSignature}" alt="Employee Signature" class="employee-signature">`
         : "";
 
       // Add class to signature block if signature is present
