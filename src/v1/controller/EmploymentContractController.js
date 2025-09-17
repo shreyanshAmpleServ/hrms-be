@@ -1035,11 +1035,18 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
 
     if (!contract) throw new CustomError("Contract Not Found", 404);
 
+    // Enhanced token validation
     if (contract.token) {
-      if (contract.token !== token)
+      if (!token || contract.token !== token) {
         throw new CustomError("Invalid or expired link", 401);
+      }
+
       if (contract.token_expiry && new Date() > contract.token_expiry) {
         throw new CustomError("Link expired", 401);
+      }
+    } else {
+      if (token) {
+        throw new CustomError("Invalid token for this contract", 401);
       }
     }
 
@@ -2029,13 +2036,32 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
       throw new CustomError("Contract Not Found", 404);
     }
 
-    if (contract.token) {
-      if (contract.token !== token) {
-        throw new CustomError("Invalid or expired link", 401);
-      }
-      if (contract.token_expiry && new Date() > contract.token_expiry) {
-        throw new CustomError("Link expired", 401);
-      }
+    // if (contract.token) {
+    //   if (contract.token !== token) {
+    //     throw new CustomError("Invalid or expired link", 401);
+    //   }
+    //   if (contract.token_expiry && new Date() > contract.token_expiry) {
+    //     throw new CustomError("Link expired", 401);
+    //   }
+    // }
+
+    if (contract.signature) {
+      throw new CustomError(
+        "Contract has already been signed and cannot be signed again",
+        400
+      );
+    }
+
+    if (!contract.token) {
+      throw new CustomError("Invalid or expired link", 401);
+    }
+
+    if (contract.token !== token) {
+      throw new CustomError("Invalid or expired link", 401);
+    }
+
+    if (contract.token_expiry && new Date() > contract.token_expiry) {
+      throw new CustomError("Link expired", 401);
     }
 
     console.log("Contract employee_id:", contract.employee_id);
