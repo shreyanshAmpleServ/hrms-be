@@ -64,7 +64,7 @@ const updateAnnouncement = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_announcement.update({
       where: { id: parseInt(id) },
-      include: {},
+
       data: {
         ...serializeAnnouncementData(data),
         updatedby: data.updatedby || 1,
@@ -74,11 +74,10 @@ const updateAnnouncement = async (id, data) => {
 
     return {
       ...updatedEntry,
-      target_values: JSON_parse(updatedEntry.target_values || "[]"),
+      target_values: JSON.parse(updatedEntry.target_values || "[]"),
     };
   } catch (error) {
     console.log("Error in updating announcement", error);
-
     throw new CustomError(`Error updating announcement: ${error.message}`, 500);
   }
 };
