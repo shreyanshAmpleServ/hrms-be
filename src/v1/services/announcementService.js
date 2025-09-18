@@ -306,7 +306,7 @@ const getEmployeeAnnouncement = async (employeeId) => {
 
     if (!employee) {
       console.warn(` Employee ${employeeId} not found`);
-      return null;
+      return [];
     }
 
     console.log(` Employee Details:`, {
@@ -327,9 +327,11 @@ const getEmployeeAnnouncement = async (employeeId) => {
 
     console.log(` Found ${announcements.length} total active announcements`);
 
+    const matchingAnnouncements = [];
+
     for (const announcement of announcements) {
       console.log(
-        `\n Checking announcement ${announcement.id}: "${announcement.title}"`
+        ` Checking announcement ${announcement.id}: "${announcement.title}"`
       );
       console.log(`   Target Type: ${announcement.target_type}`);
       console.log(`   Target Values: ${announcement.target_values}`);
@@ -348,17 +350,19 @@ const getEmployeeAnnouncement = async (employeeId) => {
       console.log(`   Is employee ${employeeId} targeted? ${isTargeted}`);
 
       if (isTargeted) {
-        console.log(` Found matching announcement: ${announcement.title}`);
-        return {
+        matchingAnnouncements.push({
           ...announcement,
           target_values: JSON.parse(announcement.target_values || "[]"),
           isForMe: true,
-        };
+        });
       }
     }
 
-    console.log(` No announcements found for employee ${employeeId}`);
-    return null;
+    console.log(
+      ` Found ${matchingAnnouncements.length} announcements for employee ${employeeId}`
+    );
+
+    return matchingAnnouncements;
   } catch (error) {
     console.error(` Error fetching employee announcement:`, error);
     throw new Error(`Error fetching employee announcement: ${error.message}`);
