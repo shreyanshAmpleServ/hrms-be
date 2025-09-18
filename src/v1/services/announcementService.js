@@ -48,11 +48,10 @@ const createAnnouncement = async (data) => {
         data.createdby
       );
     } else {
-      console.log(`⚡ Scheduled time has passed, executing immediately`);
+      console.log(` Scheduled time has passed, executing immediately`);
       await processAnnouncementDisplay(announcement.id);
     }
   } else {
-    // No scheduling - execute immediately
     await processAnnouncementDisplay(announcement.id);
   }
 
@@ -132,11 +131,10 @@ const scheduleAnnouncementForTime = async (announcementId, scheduledAt) => {
     async () => {
       try {
         console.log(
-          `🚀 Cron executing announcement ${announcementId} at ${new Date().toISOString()}`
+          ` Cron executing announcement ${announcementId} at ${new Date().toISOString()}`
         );
         await processAnnouncementDisplay(announcementId);
 
-        // Clean up job
         if (jobs[announcementId]) {
           jobs[announcementId].stop();
           delete jobs[announcementId];
@@ -195,7 +193,6 @@ const processAnnouncementDisplay = async (announcementId) => {
         has_image: !!announcement.image_url,
         executed_at: new Date().toISOString(),
         target_employees: targetEmployees.slice(0, 5).map((emp) => ({
-          // Log first 5 employees only
           id: emp.id,
           name: emp.full_name,
           email: emp.email,
