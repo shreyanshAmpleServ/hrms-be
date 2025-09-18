@@ -54,9 +54,9 @@ router.get(
   announcementController.getScheduledJobsStatus
 );
 
-router.get("/all/announcements", announcementController.getPublicAnnouncements);
+router.get("/announcements", announcementController.getPublicAnnouncements);
 router.get(
-  "/all/announcement/:id",
+  "/announcements/:id",
   announcementController.getPublicAnnouncementById
 );
 
