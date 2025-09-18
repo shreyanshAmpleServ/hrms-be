@@ -2046,10 +2046,7 @@ const signEmploymentContractByCandidate = async (req, res, next) => {
     // }
 
     if (contract.signature) {
-      throw new CustomError(
-        "Contract has already been signed and cannot be signed again",
-        400
-      );
+      throw new CustomError("Contract is already signed", 400);
     }
 
     if (!contract.token) {
