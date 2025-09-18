@@ -655,6 +655,7 @@ const getPublicAnnouncements = async (
         target_values: true,
         scheduled_at: true,
         is_active: true,
+        createdby: true,
         createdate: true,
         updatedate: true,
       },

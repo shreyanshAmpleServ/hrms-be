@@ -62,7 +62,7 @@ const findAnnouncementById = async (id) => {
 
 const updateAnnouncement = async (id, data) => {
   try {
-    const updatedEntry = await hrms_d_announcement.update({
+    const updatedEntry = await prisma.hrms_d_announcement.update({
       where: { id: parseInt(id) },
       include: {},
       data: {
