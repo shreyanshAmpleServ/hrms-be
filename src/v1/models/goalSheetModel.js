@@ -4,19 +4,32 @@ const { parse } = require("dotenv");
 const prisma = new PrismaClient();
 
 // Serialize goal sheet assignment data
-const serializeGoalSheetAssignmentData = (data) => ({
-  employee_id: Number(data.employee_id),
-  appraisal_cycle_id: Number(data.appraisal_cycle_id),
-  goal_category_id: data.goal_category_id
-    ? Number(data.goal_category_id)
-    : null,
-  goal_description: data.goal_description || "",
-  weightage: data.weightage ? Number(data.weightage) : 0,
-  target_value: data.target_value || "",
-  measurement_criteria: data.measurement_criteria || "",
-  due_date: data.due_date ? new Date(data.due_date) : null,
-  status: data.status || "Draft",
-});
+const serializeGoalSheetAssignmentData = (data) => {
+  const parsed = {};
+
+  if (!isNaN(Number(data.employee_id))) {
+    parsed.employee_id = Number(data.employee_id);
+  }
+
+  if (!isNaN(Number(data.appraisal_cycle_id))) {
+    parsed.appraisal_cycle_id = Number(data.appraisal_cycle_id);
+  }
+
+  if (data.goal_category_id !== undefined) {
+    parsed.goal_category_id = data.goal_category_id
+      ? Number(data.goal_category_id)
+      : null;
+  }
+
+  parsed.goal_description = data.goal_description || "";
+  parsed.weightage = data.weightage ? Number(data.weightage) : 0;
+  parsed.target_value = data.target_value || "";
+  parsed.measurement_criteria = data.measurement_criteria || "";
+  parsed.due_date = data.due_date ? new Date(data.due_date) : null;
+  parsed.status = data.status || "Draft";
+
+  return parsed;
+};
 
 // Create a new goal sheet assignment
 const createGoalSheet = async (data) => {

@@ -2705,3 +2705,36 @@ model hrms_d_pay_component_contract {
   pay_component_contract     hrms_d_employment_contract? @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_for_contract hrms_m_pay_component?       @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
 }
+
+model hrms_d_announcement {
+  id                           Int                       @id @default(autoincrement())
+  title                        String                    @db.NVarChar(200)
+  description                  String?                   @db.NText
+  image_url                    String?                   @db.NVarChar(500)
+  priority                     String                    @default("Normal") @db.NVarChar(20)
+  scheduled_at                 DateTime?                 @db.DateTime
+  target_type                  String                    @db.NVarChar(50)
+  target_values                String?                   @db.NText
+  is_active                    String                    @default("Y") @db.Char(1)
+  createdate                   DateTime                  @default(now()) @db.DateTime
+  createdby                    Int
+  updatedate                   DateTime?                 @db.DateTime
+  updatedby                    Int?
+  log_inst                     Int                       @default(1)
+  announcement_logs            hrms_d_announcement_log[]
+}
+
+model hrms_d_announcement_log {
+  id                Int                  @id @default(autoincrement())
+  announcement_id   Int
+  action            String               @db.NVarChar(50) // Created, Scheduled, Sent, Updated, Cancelled
+  details           String?              @db.NText
+  status            String               @db.NVarChar(20) // Success, Failed, Processing
+  error_message     String?              @db.NVarChar(500)
+  processed_count   Int                  @default(0)
+  failed_count      Int                  @default(0)
+  recipient_emails  String?              @db.NText // JSON array of sent emails
+  createdate        DateTime             @default(now()) @db.DateTime
+  createdby         Int?
+  announcement_logs hrms_d_announcement? @relation(fields: [announcement_id], references: [id], onDelete: Cascade)
+}
