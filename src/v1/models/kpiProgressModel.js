@@ -9,11 +9,11 @@ const serializeKpiProgressEntryData = (data) => {
   return {
     employee_id: Number(data.employee_id),
     goal_id: Number(data.goal_id),
-    entry_date: data.entry_date ? data.entry_date : new Date(),
+    entry_date: data.entry_date ? new Date(data.entry_date) : new Date(),
     progress_value: data.progress_value || "",
     remarks: data.remarks || "",
     reviewed_by: reviewedBy,
-    reviewed_on: reviewedBy ? new Date() : null, // 👈 Set current date if reviewed_by is present
+    reviewed_on: data.reviewed_on ? new Date(data.reviewed_on) : null,
   };
 };
 
