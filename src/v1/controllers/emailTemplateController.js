@@ -1,6 +1,4 @@
 const emailTemplateService = require("../services/emailTemplateService.js");
-const CustomError = require("../../utils/CustomError");
-const { logActivity } = require("../../utils/activityLogger");
 const moment = require("moment");
 
 const createEmailTemplate = async (req, res) => {
