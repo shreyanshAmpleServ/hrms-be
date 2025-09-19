@@ -365,6 +365,8 @@ model hrms_d_employee {
   nssf_file                                       String?                                           @db.VarChar(255)
   alert_workflow_actions_recipient                hrms_d_alert_workflow_action[]                    @relation("AlertActionRecipients")
   alert_workflow_actions_alert_recipient          hrms_d_alert_workflow_action[]                    @relation("AlertActionAlertRecipients")
+  early_leave_requests                            hrms_d_early_leave[]
+  early_leave_approvals                           hrms_d_early_leave[]                              @relation("ApprovedByUser")
 }
 
 model hrms_d_employee_address {
@@ -2707,21 +2709,21 @@ model hrms_d_pay_component_contract {
 }
 
 model hrms_d_announcement {
-  id                           Int                       @id @default(autoincrement())
-  title                        String                    @db.NVarChar(200)
-  description                  String?                   @db.NText
-  image_url                    String?                   @db.NVarChar(500)
-  priority                     String                    @default("Normal") @db.NVarChar(20)
-  scheduled_at                 DateTime?                 @db.DateTime
-  target_type                  String                    @db.NVarChar(50)
-  target_values                String?                   @db.NText
-  is_active                    String                    @default("Y") @db.Char(1)
-  createdate                   DateTime                  @default(now()) @db.DateTime
-  createdby                    Int
-  updatedate                   DateTime?                 @db.DateTime
-  updatedby                    Int?
-  log_inst                     Int                       @default(1)
-  announcement_logs            hrms_d_announcement_log[]
+  id                Int                       @id @default(autoincrement())
+  title             String                    @db.NVarChar(200)
+  description       String?                   @db.NText
+  image_url         String?                   @db.NVarChar(500)
+  priority          String                    @default("Normal") @db.NVarChar(20)
+  scheduled_at      DateTime?                 @db.DateTime
+  target_type       String                    @db.NVarChar(50)
+  target_values     String?                   @db.NText
+  is_active         String                    @default("Y") @db.Char(1)
+  createdate        DateTime                  @default(now()) @db.DateTime
+  createdby         Int
+  updatedate        DateTime?                 @db.DateTime
+  updatedby         Int?
+  log_inst          Int                       @default(1)
+  announcement_logs hrms_d_announcement_log[]
 }
 
 model hrms_d_announcement_log {
@@ -2737,4 +2739,25 @@ model hrms_d_announcement_log {
   createdate        DateTime             @default(now()) @db.DateTime
   createdby         Int?
   announcement_logs hrms_d_announcement? @relation(fields: [announcement_id], references: [id], onDelete: Cascade)
+}
+
+model hrms_d_early_leave {
+  id               Int       @id @default(autoincrement())
+  employee_id      Int
+  leave_date       DateTime  @db.Date
+  early_leave_time String    @db.NVarChar(10)
+  reason           String    @db.NVarChar(500)
+  status           String    @default("Pending") @db.NVarChar(20)
+  approved_by      Int?
+  approved_date    DateTime? @db.DateTime
+  remarks          String?   @db.NVarChar(500)
+  log_inst         Int       @default(1)
+  createdate       DateTime  @default(now()) @db.DateTime
+  updatedate       DateTime? @db.DateTime
+  createdby        Int       @default(1)
+  updatedby        Int?
+
+  // Relations
+  early_leave_employee    hrms_d_employee  @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK_hrms_d_early_leave_employee")
+  early_leave_approved_by hrms_d_employee? @relation("ApprovedByUser", fields: [approved_by], references: [id], onUpdate: NoAction, map: "FK_hrms_d_early_leave_approved_by")
 }
