@@ -393,7 +393,7 @@ const getEmployeeAnnouncement = async (employeeId) => {
 
     if (!employee) {
       console.log(` Employee ${employeeId} not found`);
-      return [];
+      return { data: [] };
     }
 
     const today = new Date();
@@ -474,7 +474,7 @@ const getEmployeeAnnouncement = async (employeeId) => {
     console.log(
       `Final result: ${matchingAnnouncements.length} TODAY's announcements for employee ${employeeId}`
     );
-    return matchingAnnouncements;
+    return { data: matchingAnnouncements };
   } catch (error) {
     console.error(` Error fetching employee announcements:`, error);
     throw new Error(`Error fetching employee announcements: ${error.message}`);

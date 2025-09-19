@@ -206,17 +206,23 @@ const processAnnouncementNow = async (req, res, next) => {
 
 const getMyAnnouncement = async (req, res, next) => {
   try {
-    console.log(` Employee ${req.user.id} requesting today's announcements`);
-
-    const data = await announcementService.getEmployeeAnnouncement(
-      req.user.employee_id
+    const employeeId = req.user.employee_id;
+    const result = await announcementService.getEmployeeAnnouncement(
+      employeeId
     );
-
-    const todayAnnouncement = data && data.length > 0 ? data[0] : null;
-
-    res.status(200).success(null, todayAnnouncement);
+    res.json({
+      success: true,
+      data: Array.isArray(result?.data) ? result.data : [],
+      message: "Success",
+      status: 200,
+    });
   } catch (error) {
-    next(error);
+    res.status(500).json({
+      success: false,
+      data: [],
+      message: error.message,
+      status: 500,
+    });
   }
 };
 
