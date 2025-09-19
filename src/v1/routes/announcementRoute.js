@@ -3,6 +3,7 @@ const router = express.Router();
 const announcementController = require("../controller/announcementController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 const upload = require("../middlewares/UploadFileMiddleware.js");
+const { testDirectAuth } = require("../../utils/uploadBackblaze.js");
 
 router.post(
   "/announcement",
@@ -11,11 +12,12 @@ router.post(
   announcementController.createAnnouncement
 );
 
-router.get(
-  "/announcement",
-  authenticateToken,
-  announcementController.getAllAnnouncement
-);
+router.get("/announcement", authenticateToken, testDirectAuth);
+// router.get(
+//   "/announcement",
+//   authenticateToken,
+//   announcementController.getAllAnnouncement
+// );
 
 router.get(
   "/announcement/:id",
@@ -47,7 +49,6 @@ router.get(
   authenticateToken,
   announcementController.getMyAnnouncement
 );
-
 router.get(
   "/scheduled-jobs-status",
   authenticateToken,

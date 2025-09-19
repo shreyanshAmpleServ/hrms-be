@@ -8,38 +8,58 @@ const {
 
 const createAnnouncement = async (req, res, next) => {
   try {
-    console.log(" Creating announcement:", req.body.title);
+    // console.log(" Reque//st body:", req.body);
+
+    if (!req.files) {
+      console.log(" No files found in request");
+    } else {
+      console.log(" Files received:", Object.keys(req.files));
+    }
 
     let announcementImageUrl = null;
 
     if (req.files?.announcement_image?.[0]) {
       const file = req.files.announcement_image[0];
-      console.log(" Uploading announcement image:", file.originalname);
+      console.log(" Found announcement image:", {
+        fieldname: file.fieldname,
+        originalname: file.originalname,
+        mimetype: file.mimetype,
+        size: file.size,
+      });
 
       try {
+        console.log("⬆ Uploading image to Backblaze...");
         announcementImageUrl = await uploadToBackblaze(
           file.buffer,
           file.originalname,
           file.mimetype,
           "announcement_images"
         );
-        console.log(" Image uploaded successfully:", announcementImageUrl);
+        console.log("Image uploaded successfully:", announcementImageUrl);
       } catch (uploadError) {
-        console.error(" Failed to upload image:", uploadError.message);
+        console.error(" Failed to upload image:", uploadError);
         throw new CustomError("Failed to upload announcement image", 500);
       }
+    } else {
+      console.log("ℹ No announcement image provided in request");
     }
 
     const data = {
       ...req.body,
-      image_url: announcementImageUrl || req.body.image_url,
-      createdby: req.user.id,
-      log_inst: req.user.log_inst,
+      image_url: announcementImageUrl || req.body.image_url || null,
+      createdby: req.user?.id || null,
+      log_inst: req.user?.log_inst || null,
     };
 
+    console.log(" Final data to save:", data);
+
     const reqData = await announcementService.createAnnouncement(data);
+
+    console.log("Announcement created successfully:", reqData);
+
     res.status(201).success("Announcement processed successfully", reqData);
   } catch (error) {
+    console.error(" Error in createAnnouncement:", error);
     next(error);
   }
 };
