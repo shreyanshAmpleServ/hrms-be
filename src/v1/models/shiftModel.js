@@ -32,7 +32,7 @@ const serializeShiftMasterData = (data) => ({
   daily_working_hours: data.daily_working_hours
     ? Number(data.daily_working_hours)
     : null,
-  // department_id: data.department_id ? Number(data.department_id) : null,
+  department_id: data.department_id ? Number(data.department_id) : null,
   number_of_working_days: data.number_of_working_days
     ? Number(data.number_of_working_days)
     : null,

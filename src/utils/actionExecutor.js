@@ -353,10 +353,13 @@
 // }
 
 // module.exports = { executeActions };
+
+//II
 const logger = require("../Comman/logger");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
 const sendEmail = require("./../utils/mailer.js");
+const { late } = require("zod");
 
 function determineAlertTypeFromWorkflow(workflowConditions) {
   if (!workflowConditions || workflowConditions.length === 0) {
@@ -404,6 +407,34 @@ function createUniversalPlaceholderMappings(
   const todayAttendance = eligibleEmployee.hrms_daily_attendance_employee?.[0];
   const attendanceStatus = todayAttendance?.status || "Not Marked";
 
+  const shift = eligibleEmployee.employee_shift_id;
+  const shiftStartTime = shift?.start_time || "09:00:00";
+  const shiftEndTime = shift?.end_time || "17:00:00";
+  const workingHours = parseFloat(shift?.daily_working_hours || 8);
+
+  const checkInTime = todayAttendance?.check_in_time;
+  const checkOutTime = todayAttendance?.check_out_time;
+
+  const minutesLate = checkInTime
+    ? calculateMinutesLateValue(checkInTime, shiftStartTime)
+    : 0;
+  const lateDuration = minutesLate > 0 ? `${minutesLate} minutes` : "On Time";
+  const lateMessage = checkInTime
+    ? minutesLate > 0
+      ? `arrived ${minutesLate} minutes late at ${formatTimeValue(
+          checkInTime
+        )} (Expected: ${shiftStartTime})`
+      : `arrived on time at ${formatTimeValue(checkInTime)}`
+    : "has not checked in yet";
+
+  const expectedCheckoutTime = checkInTime
+    ? calculateExpectedCheckoutTimeValue(
+        checkInTime,
+        workingHours,
+        shift?.lunch_time || 60
+      )
+    : shiftEndTime;
+
   return {
     employee_name: eligibleEmployee.full_name || "Employee",
     emp_name: eligibleEmployee.full_name || "Employee",
@@ -424,9 +455,21 @@ function createUniversalPlaceholderMappings(
     current_date: formatDate(new Date()),
     today_date: formatDate(new Date()),
     alert_date: formatDate(alertDate),
-
+    current_time: formatTimeValue(new Date()),
+    current_date_time: new Date().toLocaleString(),
     attendance_status: attendanceStatus,
     attendance_date: formatDate(new Date()),
+    check_in_time: checkInTime
+      ? formatTimeValue(checkInTime)
+      : "Not Checked In",
+    check_out_time: checkOutTime
+      ? formatTimeValue(checkOutTime)
+      : "Not Checked Out",
+    minutes_late: minutesLate,
+    late_duration: lateDuration,
+    late_message: lateMessage,
+    expected_checkout_time: expectedCheckoutTime,
+    remarks: todayAttendance?.remarks || "",
 
     type: alertType,
     alert_type: alertType,
@@ -435,6 +478,21 @@ function createUniversalPlaceholderMappings(
     company_name: companyInfo.company_name || "",
     company_email: companyInfo.contact_email || "",
   };
+}
+
+function formatTimeValue(datetime) {
+  if (!datetime) return "";
+  try {
+    const date = new Date(datetime);
+    return date.toLocaleTimeString("en-GB", {
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+  } catch (error) {
+    console.error("Error formatting time:", error);
+    return datetime.toString();
+  }
 }
 
 function formatDate(date) {
@@ -450,6 +508,59 @@ function formatDate(date) {
   }
 }
 
+function calculateMinutesLateValue(checkInTime, shiftStartTime) {
+  try {
+    if (!checkInTime || !shiftStartTime) return 0;
+
+    const today = new Date().toISOString().split("T")[0];
+
+    let checkInDateTime;
+    if (checkInTime instanceof Date) {
+      checkInDateTime = checkInTime;
+    } else {
+      if (checkInTime.includes("T") || checkInTime.includes(" ")) {
+        checkInDateTime = new Date(checkInTime);
+      } else {
+        checkInDateTime = new Date(`${today}T${checkInTime}`);
+      }
+    }
+
+    const expectedDateTime = new Date(`${today}T${shiftStartTime}`);
+    const diffMs = checkInDateTime - expectedDateTime;
+    const diffMinutes = Math.floor(diffMs / (1000 * 60));
+
+    return Math.max(0, diffMinutes);
+  } catch (error) {
+    console.error("Error calculating minutes late:", error);
+    return 0;
+  }
+}
+
+function calculateExpectedCheckoutTimeValue(
+  checkInTime,
+  workingHours,
+  lunchTimeMinutes
+) {
+  try {
+    let checkInDateTime;
+    if (checkInTime instanceof Date) {
+      checkInDateTime = new Date(checkInTime);
+    } else {
+      checkInDateTime = new Date(checkInTime);
+    }
+
+    const expectedCheckout = new Date(checkInDateTime);
+    expectedCheckout.setHours(expectedCheckout.getHours() + workingHours);
+    expectedCheckout.setMinutes(
+      expectedCheckout.getMinutes() + lunchTimeMinutes
+    );
+
+    return formatTimeValue(expectedCheckout);
+  } catch (error) {
+    console.error("Error calculating expected checkout:", error);
+    return "17:00:00";
+  }
+}
 function replaceAllPlaceholders(text, placeholders) {
   let result = text;
 
