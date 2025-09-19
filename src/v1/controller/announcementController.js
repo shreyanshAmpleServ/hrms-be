@@ -61,7 +61,6 @@ const updateAnnouncement = async (req, res, next) => {
     const existingAnnouncement = await announcementService.findAnnouncementById(
       req.params.id
     );
-
     let announcementImageUrl = existingAnnouncement.image_url;
 
     if (req.files?.announcement_image?.[0]) {
@@ -180,12 +179,42 @@ const processAnnouncementNow = async (req, res, next) => {
   }
 };
 
+// const getMyAnnouncement = async (req, res, next) => {
+//   try {
+//     const data = await announcementService.getEmployeeAnnouncement(
+//       req.user.employee_id
+//     );
+//     res.status(200).success(null, data);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
+// const getMyAnnouncements = async (req, res, next) => {
+//   try {
+//     const { page, size } = req.query;
+//     const data = await announcementService.getEmployeeAnnouncements(
+//       req.user.id,
+//       Number(page) || 1,
+//       Number(size) || 10
+//     );
+//     res.status(200).success(null, data);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const getMyAnnouncement = async (req, res, next) => {
   try {
+    console.log(` Employee ${req.user.id} requesting today's announcements`);
+
     const data = await announcementService.getEmployeeAnnouncement(
       req.user.employee_id
     );
-    res.status(200).success(null, data);
+
+    const todayAnnouncement = data && data.length > 0 ? data[0] : null;
+
+    res.status(200).success(null, todayAnnouncement);
   } catch (error) {
     next(error);
   }
@@ -194,11 +223,16 @@ const getMyAnnouncement = async (req, res, next) => {
 const getMyAnnouncements = async (req, res, next) => {
   try {
     const { page, size } = req.query;
+    console.log(
+      ` Employee ${req.user.id} requesting paginated today's announcements`
+    );
+
     const data = await announcementService.getEmployeeAnnouncements(
       req.user.id,
       Number(page) || 1,
       Number(size) || 10
     );
+
     res.status(200).success(null, data);
   } catch (error) {
     next(error);
@@ -289,6 +323,6 @@ module.exports = {
   getMyAnnouncement,
   getMyAnnouncements,
   getScheduledJobsStatus,
-  getPublicAnnouncements, // ✅ NEW
+  getPublicAnnouncements,
   getPublicAnnouncementById,
 };

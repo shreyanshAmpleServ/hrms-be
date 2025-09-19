@@ -284,9 +284,96 @@ const initializeScheduledAnnouncements = async () => {
   }
 };
 
+// const getEmployeeAnnouncement = async (employeeId) => {
+//   try {
+//     console.log(` Getting announcements for employee ID: ${employeeId}`);
+
+//     const employee = await prisma.hrms_d_employee.findUnique({
+//       where: { id: parseInt(employeeId) },
+//       include: {
+//         hrms_employee_department: true,
+//         user_employee: {
+//           include: {
+//             hrms_d_user_role: {
+//               include: {
+//                 hrms_m_role: true,
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     if (!employee) {
+//       console.warn(` Employee ${employeeId} not found`);
+//       return [];
+//     }
+
+//     console.log(` Employee Details:`, {
+//       id: employee.id,
+//       name: employee.full_name,
+//       department_id: employee.department_id,
+//       work_location: employee.work_location,
+//       roles: employee.user_employee?.[0]?.hrms_d_user_role?.map((ur) => ({
+//         role_id: ur.role_id,
+//         role_name: ur.hrms_m_role?.role_name,
+//       })),
+//     });
+
+//     const announcements = await prisma.hrms_d_announcement.findMany({
+//       where: { is_active: "Y" },
+//       orderBy: { updatedate: "desc" },
+//     });
+
+//     console.log(` Found ${announcements.length} total active announcements`);
+
+//     const matchingAnnouncements = [];
+
+//     for (const announcement of announcements) {
+//       console.log(
+//         ` Checking announcement ${announcement.id}: "${announcement.title}"`
+//       );
+//       console.log(`   Target Type: ${announcement.target_type}`);
+//       console.log(`   Target Values: ${announcement.target_values}`);
+
+//       const targetEmployees = await getTargetEmployees(
+//         announcement.target_type,
+//         JSON.parse(announcement.target_values || "[]")
+//       );
+
+//       console.log(`   Found ${targetEmployees.length} target employees`);
+
+//       const isTargeted = targetEmployees.some(
+//         (emp) => emp.id === parseInt(employeeId)
+//       );
+
+//       console.log(`   Is employee ${employeeId} targeted? ${isTargeted}`);
+
+//       if (isTargeted) {
+//         matchingAnnouncements.push({
+//           ...announcement,
+//           target_values: JSON.parse(announcement.target_values || "[]"),
+//           isForMe: true,
+//         });
+//       }
+//     }
+
+//     console.log(
+//       ` Found ${matchingAnnouncements.length} announcements for employee ${employeeId}`
+//     );
+
+//     return matchingAnnouncements;
+//   } catch (error) {
+//     console.error(` Error fetching employee announcement:`, error);
+//     throw new Error(`Error fetching employee announcement: ${error.message}`);
+//   }
+// };
+
 const getEmployeeAnnouncement = async (employeeId) => {
   try {
-    console.log(` Getting announcements for employee ID: ${employeeId}`);
+    console.log(
+      ` Getting TODAY's announcements for employee ID: ${employeeId}`
+    );
 
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(employeeId) },
@@ -305,84 +392,148 @@ const getEmployeeAnnouncement = async (employeeId) => {
     });
 
     if (!employee) {
-      console.warn(` Employee ${employeeId} not found`);
+      console.log(` Employee ${employeeId} not found`);
       return [];
     }
 
-    console.log(` Employee Details:`, {
-      id: employee.id,
-      name: employee.full_name,
-      department_id: employee.department_id,
-      work_location: employee.work_location,
-      roles: employee.user_employee?.[0]?.hrms_d_user_role?.map((ur) => ({
-        role_id: ur.role_id,
-        role_name: ur.hrms_m_role?.role_name,
-      })),
-    });
+    const today = new Date();
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const endOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59,
+      999
+    );
+
+    console.log(
+      ` Filtering announcements for today: ${startOfToday.toISOString()} to ${endOfToday.toISOString()}`
+    );
 
     const announcements = await prisma.hrms_d_announcement.findMany({
-      where: { is_active: "Y" },
-      orderBy: { updatedate: "desc" },
+      where: {
+        is_active: "Y",
+        OR: [
+          {
+            scheduled_at: null,
+            createdate: {
+              gte: startOfToday,
+              lte: endOfToday,
+            },
+          },
+          {
+            scheduled_at: {
+              gte: startOfToday,
+              lte: endOfToday,
+            },
+          },
+        ],
+      },
+      orderBy: [{ scheduled_at: "desc" }, { createdate: "desc" }],
     });
 
-    console.log(` Found ${announcements.length} total active announcements`);
+    console.log(` Found ${announcements.length} announcements for today`);
 
     const matchingAnnouncements = [];
 
     for (const announcement of announcements) {
       console.log(
-        ` Checking announcement ${announcement.id}: "${announcement.title}"`
+        ` Checking today's announcement ${announcement.id}: "${announcement.title}"`
       );
-      console.log(`   Target Type: ${announcement.target_type}`);
-      console.log(`   Target Values: ${announcement.target_values}`);
+      console.log(`   Created: ${announcement.createdate}`);
+      console.log(`   Scheduled: ${announcement.scheduled_at || "Immediate"}`);
 
       const targetEmployees = await getTargetEmployees(
         announcement.target_type,
         JSON.parse(announcement.target_values || "[]")
       );
 
-      console.log(`   Found ${targetEmployees.length} target employees`);
-
       const isTargeted = targetEmployees.some(
         (emp) => emp.id === parseInt(employeeId)
       );
-
-      console.log(`   Is employee ${employeeId} targeted? ${isTargeted}`);
 
       if (isTargeted) {
         matchingAnnouncements.push({
           ...announcement,
           target_values: JSON.parse(announcement.target_values || "[]"),
           isForMe: true,
+          isToday: true,
         });
+        console.log(
+          `Employee ${employeeId} can see today's announcement: ${announcement.title}`
+        );
       }
     }
 
     console.log(
-      ` Found ${matchingAnnouncements.length} announcements for employee ${employeeId}`
+      `Final result: ${matchingAnnouncements.length} TODAY's announcements for employee ${employeeId}`
     );
-
     return matchingAnnouncements;
   } catch (error) {
-    console.error(` Error fetching employee announcement:`, error);
-    throw new Error(`Error fetching employee announcement: ${error.message}`);
+    console.error(` Error fetching employee announcements:`, error);
+    throw new Error(`Error fetching employee announcements: ${error.message}`);
   }
 };
 
 const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
   try {
+    console.log(
+      `Getting paginated TODAY's announcements for employee ${employeeId}`
+    );
+
     const skip = (page - 1) * size;
 
-    const allAnnouncements = await prisma.hrms_d_announcement.findMany({
+    const today = new Date();
+    const startOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate()
+    );
+    const endOfToday = new Date(
+      today.getFullYear(),
+      today.getMonth(),
+      today.getDate(),
+      23,
+      59,
+      59,
+      999
+    );
+
+    const allTodayAnnouncements = await prisma.hrms_d_announcement.findMany({
       where: {
         is_active: "Y",
+        OR: [
+          {
+            scheduled_at: null,
+            createdate: {
+              gte: startOfToday,
+              lte: endOfToday,
+            },
+          },
+          {
+            scheduled_at: {
+              gte: startOfToday,
+              lte: endOfToday,
+            },
+          },
+        ],
       },
-      orderBy: { updatedate: "desc" },
+      orderBy: [{ scheduled_at: "desc" }, { createdate: "desc" }],
     });
+
+    console.log(
+      ` Found ${allTodayAnnouncements.length} total announcements for today`
+    );
 
     const targetedAnnouncements = [];
 
-    for (const announcement of allAnnouncements) {
+    for (const announcement of allTodayAnnouncements) {
       const targetEmployees = await getTargetEmployees(
         announcement.target_type,
         JSON.parse(announcement.target_values || "[]")
@@ -396,6 +547,105 @@ const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
         targetedAnnouncements.push({
           ...announcement,
           target_values: JSON.parse(announcement.target_values || "[]"),
+          isToday: true,
+        });
+      }
+    }
+
+    console.log(
+      ` Found ${targetedAnnouncements.length} targeted TODAY's announcements for employee ${employeeId}`
+    );
+
+    const paginatedAnnouncements = targetedAnnouncements.slice(
+      skip,
+      skip + size
+    );
+
+    return {
+      data: paginatedAnnouncements,
+      currentPage: page,
+      size,
+      totalPages: Math.ceil(targetedAnnouncements.length / size),
+      totalCount: targetedAnnouncements.length,
+      filterInfo: {
+        date: today.toISOString().split("T")[0],
+        description: "Showing only today's announcements",
+      },
+    };
+  } catch (error) {
+    throw new Error(`Error fetching employee announcements: ${error.message}`);
+  }
+};
+
+const getEmployeeAnnouncementsByDate = async (
+  employeeId,
+  targetDate,
+  page = 1,
+  size = 10
+) => {
+  try {
+    console.log(
+      `🗓️ Getting announcements for employee ${employeeId} on date: ${targetDate}`
+    );
+
+    const skip = (page - 1) * size;
+    const date = new Date(targetDate);
+    const startOfDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate()
+    );
+    const endOfDate = new Date(
+      date.getFullYear(),
+      date.getMonth(),
+      date.getDate(),
+      23,
+      59,
+      59,
+      999
+    );
+
+    const announcementsForDate = await prisma.hrms_d_announcement.findMany({
+      where: {
+        is_active: "Y",
+        OR: [
+          // Immediate announcements created on this date
+          {
+            scheduled_at: null,
+            createdate: {
+              gte: startOfDate,
+              lte: endOfDate,
+            },
+          },
+          // Scheduled announcements that executed on this date
+          {
+            scheduled_at: {
+              gte: startOfDate,
+              lte: endOfDate,
+            },
+          },
+        ],
+      },
+      orderBy: [{ scheduled_at: "desc" }, { createdate: "desc" }],
+    });
+
+    const targetedAnnouncements = [];
+
+    for (const announcement of announcementsForDate) {
+      const targetEmployees = await getTargetEmployees(
+        announcement.target_type,
+        JSON.parse(announcement.target_values || "[]")
+      );
+
+      const isTargeted = targetEmployees.some(
+        (emp) => emp.id === parseInt(employeeId)
+      );
+
+      if (isTargeted) {
+        targetedAnnouncements.push({
+          ...announcement,
+          target_values: JSON.parse(announcement.target_values || "[]"),
+          dateFiltered: targetDate,
         });
       }
     }
@@ -411,11 +661,63 @@ const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
       size,
       totalPages: Math.ceil(targetedAnnouncements.length / size),
       totalCount: targetedAnnouncements.length,
+      filterInfo: {
+        date: targetDate,
+        description: `Showing announcements for ${targetDate}`,
+      },
     };
   } catch (error) {
-    throw new Error(`Error fetching employee announcements: ${error.message}`);
+    throw new Error(`Error fetching announcements by date: ${error.message}`);
   }
 };
+
+// const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
+//   try {
+//     const skip = (page - 1) * size;
+
+//     const allAnnouncements = await prisma.hrms_d_announcement.findMany({
+//       where: {
+//         is_active: "Y",
+//       },
+//       orderBy: { updatedate: "desc" },
+//     });
+
+//     const targetedAnnouncements = [];
+
+//     for (const announcement of allAnnouncements) {
+//       const targetEmployees = await getTargetEmployees(
+//         announcement.target_type,
+//         JSON.parse(announcement.target_values || "[]")
+//       );
+
+//       const isTargeted = targetEmployees.some(
+//         (emp) => emp.id === parseInt(employeeId)
+//       );
+
+//       if (isTargeted) {
+//         targetedAnnouncements.push({
+//           ...announcement,
+//           target_values: JSON.parse(announcement.target_values || "[]"),
+//         });
+//       }
+//     }
+
+//     const paginatedAnnouncements = targetedAnnouncements.slice(
+//       skip,
+//       skip + size
+//     );
+
+//     return {
+//       data: paginatedAnnouncements,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(targetedAnnouncements.length / size),
+//       totalCount: targetedAnnouncements.length,
+//     };
+//   } catch (error) {
+//     throw new Error(`Error fetching employee announcements: ${error.message}`);
+//   }
+// };
 
 const getTargetEmployees = async (targetType, targetValues) => {
   const baseWhere = { status: "Active" };
