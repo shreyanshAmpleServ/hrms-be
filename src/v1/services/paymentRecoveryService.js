@@ -23,14 +23,16 @@ const getAllPaymentRecovery = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  employee_id
 ) => {
   return await paymentRecoveryModel.getAllPaymentRecovery(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    employee_id
   );
 };
 

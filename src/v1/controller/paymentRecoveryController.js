@@ -61,14 +61,15 @@ const deletePaymentRecovery = async (req, res, next) => {
 
 const getAllPaymentRecovery = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, employee_id } = req.query;
 
     const data = await paymentRecoveryService.getAllPaymentRecovery(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      employee_id
     );
 
     res.status(200).success(null, data);
