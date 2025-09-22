@@ -146,6 +146,7 @@ const notificationSetupRoute = require("../v1/routes/notificationSetupRoute.js")
 const alertWorkflowRoutes = require("../v1/routes/alertWorkflowRoutes.js");
 const announcementRoute = require("../v1/routes/announcementRoute.js");
 const paymentRecoveryRoute = require("../v1/routes/paymentRecoveryRoute.js");
+
 const router = express.Router();
 
 // Version 1 API

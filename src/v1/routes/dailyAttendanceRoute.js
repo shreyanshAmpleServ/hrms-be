@@ -2,22 +2,11 @@ const express = require("express");
 const router = express.Router();
 const dailyAttendanceController = require("../controller/dailyAttendanceController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
-const {
-  setupNotificationMiddleware,
-} = require("../middlewares/notificationMiddleware");
 
 // Create daily attendance routes
 router.post(
   "/daily-attendance",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Daily Attendance Entry",
-      "create"
-    ),
   dailyAttendanceController.createDailyAttendance
 );
 
@@ -45,14 +34,6 @@ router.get(
 router.post(
   "/daily-attendance/upsert",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Daily Attendance Entry",
-      "update"
-    ),
   dailyAttendanceController.upsertDailyAttendance
 );
 
@@ -60,14 +41,6 @@ router.post(
 router.delete(
   "/daily-attendance/:id",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Daily Attendance Entry",
-      "delete"
-    ),
   dailyAttendanceController.deleteDailyAttendance
 );
 
@@ -81,5 +54,23 @@ router.get(
   authenticateToken,
   dailyAttendanceController.findAttendanceByEmployeeId
 );
+
+// router.get(
+//   "/manager/employee",
+//   authenticateToken,
+//   dailyAttendanceController.getManagerEmployees
+// );
+
+// router.get(
+//   "/manager/team-attendance",
+//   authenticateToken,
+//   dailyAttendanceController.getManagerTeamAttendance
+// );
+
+// router.post(
+//   "/manager/verify-attendance",
+//   authenticateToken,
+//   dailyAttendanceController.verifyAttendanceByManager
+// );
 
 module.exports = router;

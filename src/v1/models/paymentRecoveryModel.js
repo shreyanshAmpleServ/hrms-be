@@ -161,7 +161,8 @@ const getAllPaymentRecovery = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  employee_id
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -169,6 +170,10 @@ const getAllPaymentRecovery = async (
     const skip = (page - 1) * size || 0;
 
     const filters = {};
+
+    if (employee_id) {
+      filters.employee_id = Number(employee_id);
+    }
 
     if (search) {
       filters.OR = [
