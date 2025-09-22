@@ -42,12 +42,12 @@ const getPaymentRecoveryStats = async () => {
 
 const updatePaymentRecoveryStatus = async (recoveryId, status, updatedBy) => {
   try {
-    const validStatuses = ["P", "A"];
+    const validStatuses = ["P", "A", "R"];
 
     if (!validStatuses.includes(status)) {
       return {
         success: false,
-        message: "Invalid status. Use P (Pending), A (Approved)",
+        message: "Invalid status. Use P (Pending), A (Approved), R (Rejected)",
       };
     }
 
@@ -70,7 +70,8 @@ const updatePaymentRecoveryStatus = async (recoveryId, status, updatedBy) => {
 
     const statusText = {
       P: "Pending",
-      C: "Approved",
+      C: "Completed",
+      R: "Rejected",
     };
 
     return {
