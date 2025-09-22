@@ -106,7 +106,6 @@ const findPaymentRecoveryById = async (id) => {
   }
 };
 
-// ✅ FIXED - Update function using serializePaymentRecoveryUpdateData
 const updatePaymentRecovery = async (id, data) => {
   try {
     const updatedEntry = await prisma.hrms_d_payment_recovery.update({
@@ -126,7 +125,7 @@ const updatePaymentRecovery = async (id, data) => {
         },
       },
       data: {
-        ...serializePaymentRecoveryUpdateData(data), // ✅ Use update serializer
+        ...serializePaymentRecoveryUpdateData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
