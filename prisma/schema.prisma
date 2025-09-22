@@ -367,6 +367,7 @@ model hrms_d_employee {
   alert_workflow_actions_alert_recipient          hrms_d_alert_workflow_action[]                    @relation("AlertActionAlertRecipients")
   early_leave_requests                            hrms_d_early_leave[]
   early_leave_approvals                           hrms_d_early_leave[]                              @relation("ApprovedByUser")
+  payment_recovery_employee                       hrms_d_payment_recovery[]
 }
 
 model hrms_d_employee_address {
@@ -2757,7 +2758,22 @@ model hrms_d_early_leave {
   createdby        Int       @default(1)
   updatedby        Int?
 
-  // Relations
   early_leave_employee    hrms_d_employee  @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK_hrms_d_early_leave_employee")
   early_leave_approved_by hrms_d_employee? @relation("ApprovedByUser", fields: [approved_by], references: [id], onUpdate: NoAction, map: "FK_hrms_d_early_leave_approved_by")
+}
+
+model hrms_d_payment_recovery {
+  id                        Int              @id @default(autoincrement())
+  employee_id               Int
+  amount                    Decimal          @db.Decimal(18, 2)
+  status                    String           @default("P") @db.VarChar(5)
+  payment_mode              String?          @db.VarChar(500)
+  payment_date              DateTime?        @db.DateTime
+  remarks                   String?          @db.NVarChar(500)
+  createdate                DateTime         @default(now()) @db.DateTime
+  updatedate                DateTime?        @db.DateTime
+  createdby                 Int              @default(1)
+  updatedby                 Int?
+  log_inst                  Int              @default(1)
+  payment_recovery_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
