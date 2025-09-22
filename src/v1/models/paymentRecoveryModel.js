@@ -13,6 +13,9 @@ const serializePaymentRecoveryData = (data) => ({
 const serializePaymentRecoveryUpdateData = (data) => {
   const updateData = {};
 
+  if (data.employee_id !== undefined) {
+    updateData.employee_id = Number(data.employee_id);
+  }
   if (data.amount !== undefined) {
     updateData.amount = Number(data.amount);
   }

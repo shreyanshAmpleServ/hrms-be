@@ -56,7 +56,7 @@ router.get(
 );
 
 // router.get(
-//   "/manager/employee",
+//   "/manager/employees",
 //   authenticateToken,
 //   dailyAttendanceController.getManagerEmployees
 // );
@@ -67,10 +67,40 @@ router.get(
 //   dailyAttendanceController.getManagerTeamAttendance
 // );
 
-// router.post(
-//   "/manager/verify-attendance",
+// router.get(
+//   "/manager/hr-users",
 //   authenticateToken,
-//   dailyAttendanceController.verifyAttendanceByManager
+//   dailyAttendanceController.getAllHRUsers
+// );
+
+// router.post(
+//   "/manager/verify-attendance-auto-hr",
+//   authenticateToken,
+//   dailyAttendanceController.verifyAttendanceWithAutoHR
+// );
+
+// router.post(
+//   "/manager/verify-attendance-manual-hr",
+//   authenticateToken,
+//   dailyAttendanceController.verifyAttendanceWithManualHR
+// );
+
+// router.get(
+//   "/hr/verfication-status",
+//   authenticateToken,
+//   dailyAttendanceController.getVerificationSummary
+// );
+
+// router.get(
+//   "/hr/my-notifications",
+//   authenticateToken,
+//   dailyAttendanceController.getHRNotifications
+// );
+
+// router.put(
+//   "/hr/mark-notification-read/:id",
+//   authenticateToken,
+//   dailyAttendanceController.markNotificationRead
 // );
 
 module.exports = router;
