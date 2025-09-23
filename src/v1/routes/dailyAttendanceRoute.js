@@ -55,52 +55,58 @@ router.get(
   dailyAttendanceController.findAttendanceByEmployeeId
 );
 
-// router.get(
-//   "/manager/employees",
-//   authenticateToken,
-//   dailyAttendanceController.getManagerEmployees
-// );
+router.get(
+  "/manager/employees",
+  authenticateToken,
+  dailyAttendanceController.getManagerEmployees
+);
 
-// router.get(
-//   "/manager/team-attendance",
-//   authenticateToken,
-//   dailyAttendanceController.getManagerTeamAttendance
-// );
+router.get(
+  "/manager/team-attendance",
+  authenticateToken,
+  dailyAttendanceController.getManagerTeamAttendance
+);
 
-// router.get(
-//   "/manager/hr-users",
-//   authenticateToken,
-//   dailyAttendanceController.getAllHRUsers
-// );
+router.get(
+  "/manager/hr-users",
+  authenticateToken,
+  dailyAttendanceController.getAllHRUsers
+);
 
-// router.post(
-//   "/manager/verify-attendance-auto-hr",
-//   authenticateToken,
-//   dailyAttendanceController.verifyAttendanceWithAutoHR
-// );
+router.post(
+  "/manager/verify-attendance-manual-hr",
+  authenticateToken,
+  dailyAttendanceController.verifyAttendanceWithManualHR
+);
 
-// router.post(
-//   "/manager/verify-attendance-manual-hr",
-//   authenticateToken,
-//   dailyAttendanceController.verifyAttendanceWithManualHR
-// );
+router.get(
+  "/hr/my-notifications",
+  authenticateToken,
+  dailyAttendanceController.getHRNotifications
+);
 
-// router.get(
-//   "/hr/verfication-status",
-//   authenticateToken,
-//   dailyAttendanceController.getVerificationSummary
-// );
+router.post(
+  "/manager/bulk-attendance",
+  authenticateToken,
+  dailyAttendanceController.bulkVerifyWithManualHR
+);
 
-// router.get(
-//   "/hr/my-notifications",
-//   authenticateToken,
-//   dailyAttendanceController.getHRNotifications
-// );
+router.get(
+  "/hr/verified-attendance",
+  authenticateToken,
+  dailyAttendanceController.getVerificationStatusForHR
+);
 
-// router.put(
-//   "/hr/mark-notification-read/:id",
-//   authenticateToken,
-//   dailyAttendanceController.markNotificationRead
-// );
+router.get(
+  "/hr/verification-summary",
+  authenticateToken,
+  dailyAttendanceController.getVerificationSummary
+);
+
+router.get(
+  "/hr/managers",
+  authenticateToken,
+  dailyAttendanceController.getAllManagersWithVerifications
+);
 
 module.exports = router;

@@ -540,10 +540,10 @@ const createEmployeeFromCandidate = async (
       throw new CustomError("Employee already exists for this candidate", 400);
     }
 
-    const employeeCode = await generateEmployeeCode(candidate.full_name);
+    const employee_code = await generateEmployeeCode(candidate.full_name);
 
     const employeeData = {
-      employee_code: employeeCode,
+      employee_code: employee_code,
       first_name: candidate.full_name.split(" ")[0] || "",
       last_name: candidate.full_name.split(" ").slice(1).join(" ") || "",
       full_name: candidate.full_name,

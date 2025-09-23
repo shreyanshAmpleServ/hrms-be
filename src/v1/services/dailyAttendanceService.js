@@ -1,3 +1,4 @@
+const { verify } = require("jsonwebtoken");
 const dailyAttendanceModel = require("../models/dailyAttendanceModel.js");
 
 const createDailyAttendance = async (data) => {
@@ -73,6 +74,123 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
     endDate
   );
 };
+const getManagerEmployees = async (manager_id, search, page, size) => {
+  return await dailyAttendanceModel.getManagerEmployees(
+    manager_id,
+    search,
+    page,
+    size
+  );
+};
+
+const getManagerTeamAttendance = async (
+  manager_id,
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  employee_id
+) => {
+  return await dailyAttendanceModel.getManagerTeamAttendance(
+    manager_id,
+    search,
+    page,
+    size,
+    startDate,
+    endDate,
+    employee_id
+  );
+};
+
+const getAllHRUsers = async () => {
+  return await dailyAttendanceModel.getAllHRUsers();
+};
+
+const verifyAttendanceByManager = async (
+  manager_id,
+  attendanceId,
+  verificationStatus,
+  remarks
+) => {
+  return await dailyAttendanceModel.verifyAttendanceByManager(
+    manager_id,
+    attendanceId,
+    verificationStatus,
+    remarks
+  );
+};
+
+const verifyAttendanceWithManualHR = async (
+  manager_id,
+  attendanceId,
+  verificationStatus,
+  remarks,
+  logInst,
+  selectedHRUserId,
+  notifyHR
+) => {
+  return await dailyAttendanceModel.verifyAttendanceWithManualHR(
+    manager_id,
+    attendanceId,
+    verificationStatus,
+    remarks,
+    logInst,
+    selectedHRUserId,
+    notifyHR
+  );
+};
+
+const bulkVerifyWithManualHR = async (
+  manager_id,
+  attendanceIds,
+  verificationStatus,
+  remarks,
+  logInst,
+  selectedHRUserId,
+  notifyHR
+) => {
+  return await dailyAttendanceModel.bulkVerifyWithManualHR(
+    manager_id,
+    attendanceIds,
+    verificationStatus,
+    remarks,
+    logInst,
+    selectedHRUserId,
+    notifyHR
+  );
+};
+
+const getAllManagersWithVerifications = async () => {
+  return await dailyAttendanceModel.getAllManagersWithVerifications();
+};
+
+const getVerificationStatusForHR = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  verificationStatus,
+  manager_id
+) => {
+  return await dailyAttendanceModel.getVerificationStatusForHR(
+    search,
+    page,
+    size,
+    startDate,
+    endDate,
+    verificationStatus,
+    manager_id
+  );
+};
+const getVerificationSummary = async (startDate, endDate, manager_id) => {
+  return await dailyAttendanceModel.getVerificationSummary(
+    startDate,
+    endDate,
+    manager_id
+  );
+};
 
 module.exports = {
   createDailyAttendance,
@@ -83,4 +201,16 @@ module.exports = {
   getAttendanceSummaryByEmployee,
   findAttendanceByEmployeeId,
   upsertDailyAttendance,
+
+  getManagerEmployees,
+  getManagerTeamAttendance,
+  getAllHRUsers,
+
+  verifyAttendanceByManager,
+  verifyAttendanceWithManualHR,
+
+  bulkVerifyWithManualHR,
+  getAllManagersWithVerifications,
+  getVerificationStatusForHR,
+  getVerificationSummary,
 };

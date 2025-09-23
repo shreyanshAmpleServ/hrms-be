@@ -827,13 +827,646 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
       current.setUTCDate(current.getUTCDate() + 1);
     }
 
-    // Round total overtime in summary
     summary.total_overtime = parseFloat(summary.total_overtime.toFixed(2));
 
     return { employee, summary, attendanceList: allDates };
   } catch (error) {
     console.error("Error retrieving attendance entry:", error);
     throw new CustomError(error.message, 500);
+  }
+};
+
+const getManagerEmployees = async (manager_id, search, page, take) => {
+  const skip = (page - 1) * take;
+
+  const whereCondition = {
+    hrms_manager: {
+      id: manager_id,
+    },
+
+    ...(search && {
+      OR: [
+        { first_name: { contains: search.toLowerCase() } },
+        { last_name: { contains: search.toLowerCase() } },
+        { employee_code: { contains: search.toLowerCase() } },
+        { email: { contains: search } },
+      ],
+    }),
+  };
+
+  const [employees, totalCount] = await Promise.all([
+    prisma.hrms_d_employee.findMany({
+      where: whereCondition,
+      select: {
+        id: true,
+        employee_code: true,
+        first_name: true,
+        last_name: true,
+        email: true,
+        phone_number: true,
+        hrms_employee_designation: {
+          select: {
+            designation_name: true,
+          },
+        },
+        hrms_employee_department: {
+          select: {
+            department_name: true,
+          },
+        },
+      },
+      skip,
+      take,
+      orderBy: { first_name: "asc" },
+    }),
+    prisma.hrms_d_employee.count({
+      where: whereCondition,
+    }),
+  ]);
+
+  return {
+    data: employees,
+    totalCount,
+    currentPage: page,
+    totalPages: Math.ceil(totalCount / take),
+  };
+};
+
+const getManagerTeamAttendance = async (
+  manager_id,
+  search,
+  page = 1,
+  size = 10,
+  startDate,
+  endDate,
+  employeeId
+) => {
+  try {
+    const skip = (page - 1) * size;
+    const take = parseInt(size);
+
+    const managerEmployees = await prisma.hrms_d_employee.findMany({
+      where: {
+        manager_id: parseInt(manager_id),
+        status: "Active",
+      },
+      select: { id: true },
+    });
+
+    const employeeIds = managerEmployees.map((emp) => emp.id);
+
+    if (employeeIds.length === 0) {
+      return {
+        data: [],
+        pagination: {
+          currentPage: parseInt(page),
+          pageSize: take,
+          totalRecords: 0,
+          totalPages: 0,
+        },
+      };
+    }
+
+    const whereCondition = {
+      employee_id: { in: employeeIds },
+    };
+
+    if (employeeId) whereCondition.employee_id = parseInt(employeeId);
+    if (startDate && endDate) {
+      whereCondition.attendance_date = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+    if (search) {
+      whereCondition.OR = [
+        {
+          hrms_daily_attendance_employee: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          hrms_daily_attendance_employee: {
+            employee_code: { contains: search.toLowerCase() },
+          },
+        },
+      ];
+    }
+
+    const [attendanceRecords, total] = await Promise.all([
+      prisma.hrms_d_daily_attendance_entry.findMany({
+        where: whereCondition,
+        include: {
+          hrms_daily_attendance_employee: {
+            select: {
+              id: true,
+              employee_code: true,
+              full_name: true,
+              email: true,
+              hrms_employee_designation: {
+                select: { designation_name: true },
+              },
+              hrms_employee_department: {
+                select: { department_name: true },
+              },
+            },
+          },
+        },
+        skip,
+        take,
+        orderBy: [
+          { attendance_date: "desc" },
+          { hrms_daily_attendance_employee: { full_name: "asc" } },
+        ],
+      }),
+      prisma.hrms_d_daily_attendance_entry.count({ where: whereCondition }),
+    ]);
+
+    const enhancedRecords = attendanceRecords.map((record) => ({
+      ...record,
+      manager_verified: record.manager_verified || "P",
+      manager_verification_date: record.manager_verification_date,
+      manager_remarks: record.manager_remarks,
+      verified_by_manager_id: record.verified_by_manager_id,
+      can_verify:
+        record.manager_verified === "P" || record.manager_verified === null,
+    }));
+
+    return {
+      data: enhancedRecords,
+      pagination: {
+        currentPage: parseInt(page),
+        pageSize: take,
+        totalRecords: total,
+        totalPages: Math.ceil(total / take),
+      },
+    };
+  } catch (error) {
+    console.error("Error in getManagerTeamAttendance:", error);
+    throw new CustomError("Failed to fetch team attendance", 500);
+  }
+};
+
+const getAllHRUsers = async () => {
+  try {
+    const hrByDesignation = await prisma.hrms_d_employee.findMany({
+      where: {
+        status: "Active",
+        hrms_employee_designation: {
+          designation_name: { contains: "Head HR" },
+        },
+      },
+      select: {
+        id: true,
+        employee_code: true,
+        full_name: true,
+        email: true,
+        phone_number: true,
+        hrms_employee_designation: {
+          select: { designation_name: true },
+        },
+      },
+    });
+
+    console.log(`Found ${hrByDesignation.length} HR employees by department`);
+
+    const allHrEmployees = [...hrByDesignation];
+    const uniqueHrEmployees = allHrEmployees.filter(
+      (employee, index, self) =>
+        index === self.findIndex((e) => e.id === employee.id)
+    );
+
+    console.log(`Total unique HR employees found: ${uniqueHrEmployees.length}`);
+
+    return uniqueHrEmployees.map((employee) => ({
+      employee_id: employee.id,
+      empCode: employee.employee_code,
+      name: employee.full_name,
+      email: employee.email,
+      phone: employee.phone_number,
+      department: employee.hrms_employee_department?.department_name,
+      designation: employee.hrms_employee_designation?.designation_name,
+      displayName: `${employee.full_name} (${employee.employee_code}) - ${
+        employee.hrms_employee_designation?.designation_name || "HR"
+      }`,
+    }));
+  } catch (error) {
+    console.error("Error fetching HR employees:", error);
+    throw new CustomError("Failed to fetch HR users: " + error.message, 500);
+  }
+};
+
+const verifyAttendanceByManager = async (
+  manager_id,
+  attendanceId,
+  verificationStatus,
+  remarks
+) => {
+  try {
+    const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update({
+      where: { id: parseInt(attendanceId) },
+      data: {
+        manager_verified: verificationStatus,
+        manager_verification_date: new Date(),
+        manager_remarks: remarks || null,
+        verified_by_manager_id: parseInt(managerId),
+        updatedate: new Date(),
+      },
+      include: {
+        hrms_daily_attendance_employee: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    return {
+      success: true,
+      data: updatedRecord,
+      message: `Attendance ${verificationStatus.toLowerCase()} successfully`,
+    };
+  } catch (error) {
+    console.error("Error verifying attendance by manager:", error);
+    throw new CustomError("Failed to verify attendance", 500);
+  }
+};
+
+const verifyAttendanceWithManualHR = async (
+  manager_id,
+  attendance_id,
+  verification_status,
+  remarks,
+  logInst,
+  selected_hr_userId,
+  notify_HR = true
+) => {
+  try {
+    const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update({
+      where: { id: parseInt(attendance_id) },
+      data: {
+        manager_verified: verification_status,
+        manager_verification_date: new Date(),
+        manager_remarks: remarks || null,
+        verified_by_manager_id: parseInt(manager_id),
+        updatedate: new Date(),
+      },
+      include: {
+        hrms_daily_attendance_employee: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+            email: true,
+          },
+        },
+      },
+    });
+
+    let notificationResult = null;
+    if (notify_HR && selected_hr_userId) {
+      notificationResult = await createHRNotification(
+        parseInt(selected_hr_userId),
+        attendance_id,
+        manager_id,
+        verification_status,
+        remarks,
+        logInst
+      );
+    }
+
+    return {
+      success: true,
+      data: updatedRecord,
+      notification: notificationResult,
+      message: `Attendance ${verification_status.toLowerCase()}${
+        notify_HR ? " and HR notified" : ""
+      }`,
+    };
+  } catch (error) {
+    console.error("Error verifying attendance with manual HR:", error);
+    throw new CustomError(
+      "Failed to verify attendance with manual HR notification",
+      500
+    );
+  }
+};
+
+const bulkVerifyWithManualHR = async (
+  manager_id,
+  attendanceIds,
+  verificationStatus,
+  remarks,
+  logInst,
+  selectedHRUserId,
+  notifyHR = true
+) => {
+  try {
+    const results = [];
+    const errors = [];
+
+    for (const attendanceId of attendanceIds) {
+      try {
+        const result = await verifyAttendanceWithManualHR(
+          manager_id,
+          attendanceId,
+          verificationStatus,
+          remarks,
+          logInst,
+          selectedHRUserId,
+          notifyHR
+        );
+        results.push(result);
+      } catch (error) {
+        errors.push({
+          attendanceId,
+          error: error.message,
+        });
+      }
+    }
+
+    return {
+      success: true,
+      processed: results.length,
+      errors: errors.length,
+      results,
+      errors,
+      message: `Processed ${results.length} records, ${errors.length} errors`,
+    };
+  } catch (error) {
+    console.error("Error in bulk verify with manual HR:", error);
+    throw new CustomError("Failed to process bulk verification", 500);
+  }
+};
+
+const createHRNotification = async (
+  hrUserId,
+  attendanceId,
+  manager_id,
+  verificationStatus,
+  remarks,
+  logInst
+) => {
+  try {
+    const notification = await prisma.hrms_d_notification_log.create({
+      data: {
+        employee_id: parseInt(hrUserId),
+        message_title: `Attendance ${verificationStatus}`,
+        message_body: `Manager has ${verificationStatus.toLowerCase()} attendance record #${attendanceId}. ${
+          remarks ? "Remarks: " + remarks : ""
+        }`,
+        channel: "SYSTEM",
+        status: "SENT",
+        sent_on: new Date(),
+        createdate: new Date(),
+        createdby: parseInt(managerId),
+        log_inst: logInst || 1,
+      },
+    });
+
+    return notification;
+  } catch (error) {
+    console.error("Error creating HR notification:", error);
+    return null;
+  }
+};
+
+const getVerificationStatusForHR = async (
+  search,
+  page = 1,
+  size = 20,
+  startDate,
+  endDate,
+  verificationStatus,
+  manager_id
+) => {
+  try {
+    const skip = (page - 1) * size;
+    const take = parseInt(size);
+
+    const whereCondition = {
+      manager_verified: { not: null },
+    };
+
+    if (verificationStatus) {
+      whereCondition.manager_verified = verificationStatus;
+    }
+
+    if (manager_id) {
+      whereCondition.verified_by_manager_id = parseInt(manager_id);
+    }
+
+    if (startDate && endDate) {
+      whereCondition.attendance_date = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+
+    if (search) {
+      whereCondition.OR = [
+        {
+          hrms_daily_attendance_employee: {
+            full_name: { contains: search.toLowerCase() },
+          },
+        },
+        {
+          hrms_daily_attendance_employee: {
+            employee_code: { contains: earch.toLowerCase() },
+          },
+        },
+      ];
+    }
+
+    const [records, total] = await Promise.all([
+      prisma.hrms_d_daily_attendance_entry.findMany({
+        where: whereCondition,
+        include: {
+          hrms_daily_attendance_employee: {
+            select: {
+              id: true,
+              employee_code: true,
+              full_name: true,
+              email: true,
+              hrms_employee_designation: {
+                select: { designation_name: true },
+              },
+              hrms_employee_department: {
+                select: { department_name: true },
+              },
+            },
+          },
+        },
+        skip,
+        take,
+        orderBy: [
+          { manager_verification_date: "desc" },
+          { attendance_date: "desc" },
+        ],
+      }),
+      prisma.hrms_d_daily_attendance_entry.count({ where: whereCondition }),
+    ]);
+
+    // Get summary statistics
+    const summary = await prisma.hrms_d_daily_attendance_entry.groupBy({
+      by: ["manager_verified"],
+      where: {
+        manager_verified: { not: null },
+        ...(startDate &&
+          endDate && {
+            attendance_date: {
+              gte: new Date(startDate),
+              lte: new Date(endDate),
+            },
+          }),
+      },
+      _count: true,
+    });
+
+    const summaryStats = summary.reduce((acc, item) => {
+      acc[item.manager_verified] = item._count;
+      return acc;
+    }, {});
+
+    return {
+      data: records,
+      pagination: {
+        currentPage: parseInt(page),
+        pageSize: take,
+        totalRecords: total,
+        totalPages: Math.ceil(total / take),
+      },
+      summary: {
+        ...summaryStats,
+        total: total,
+      },
+    };
+  } catch (error) {
+    console.error("Error in getVerificationStatusForHR:", error);
+    throw new CustomError("Failed to fetch verification status", 500);
+  }
+};
+
+const getVerificationSummary = async (startDate, endDate, manager_id) => {
+  try {
+    const whereCondition = {
+      manager_verified: { not: null },
+    };
+
+    if (startDate && endDate) {
+      whereCondition.attendance_date = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+
+    if (manager_id) {
+      whereCondition.verified_by_manager_id = parseInt(manager_id);
+    }
+
+    const verificationStats =
+      await prisma.hrms_d_daily_attendance_entry.groupBy({
+        by: ["manager_verified"],
+        where: whereCondition,
+        _count: true,
+      });
+
+    const managerStatsRaw = await prisma.hrms_d_daily_attendance_entry.groupBy({
+      by: ["verified_by_manager_id"],
+      where: whereCondition,
+      _count: true,
+    });
+
+    const managerIds = managerStatsRaw.map((s) => s.verified_by_manager_id);
+    const managers = await prisma.hrms_d_employee.findMany({
+      where: { id: { in: managerIds } },
+      select: { id: true, full_name: true, employee_code: true },
+    });
+
+    const managerMap = managers.reduce((acc, m) => {
+      acc[m.id] = m;
+      return acc;
+    }, {});
+
+    const managerStats = managerStatsRaw.map((stat) => ({
+      manager_id: stat.verified_by_manager_id,
+      manager_name: managerMap[stat.verified_by_manager_id]?.full_name || null,
+      employee_code:
+        managerMap[stat.verified_by_manager_id]?.employee_code || null,
+      verificationCount: stat._count,
+    }));
+
+    const recentVerifications =
+      await prisma.hrms_d_daily_attendance_entry.findMany({
+        where: whereCondition,
+        include: {
+          hrms_daily_attendance_employee: {
+            select: {
+              full_name: true,
+              employee_code: true,
+            },
+          },
+        },
+        orderBy: { manager_verification_date: "desc" },
+        take: 10,
+      });
+
+    return {
+      verificationStats: verificationStats.reduce((acc, item) => {
+        acc[item.manager_verified] = item._count;
+        return acc;
+      }, {}),
+      managerStats,
+      recentVerifications: recentVerifications.map((record) => ({
+        id: record.id,
+        employee_name: record.hrms_daily_attendance_employee.full_name,
+        employee_code: record.hrms_daily_attendance_employee.employee_code,
+        verification_status: record.manager_verified,
+        verification_date: record.manager_verification_date,
+        attendance_date: record.attendance_date,
+      })),
+    };
+  } catch (error) {
+    console.error("Error in getVerificationSummary:", error);
+    throw new CustomError("Failed to fetch verification summary", 500);
+  }
+};
+
+const getAllManagersWithVerifications = async () => {
+  try {
+    const managers = await prisma.hrms_d_employee.findMany({
+      where: {
+        id: {
+          in: await prisma.hrms_d_daily_attendance_entry
+            .findMany({
+              where: { verified_by_manager_id: { not: null } },
+              select: { verified_by_manager_id: true },
+              distinct: ["verified_by_manager_id"],
+            })
+            .then((records) => records.map((r) => r.verified_by_manager_id)),
+        },
+      },
+      select: {
+        id: true,
+        employee_code: true,
+        full_name: true,
+        hrms_employee_designation: {
+          select: { designation_name: true },
+        },
+        hrms_employee_department: {
+          select: { department_name: true },
+        },
+      },
+      orderBy: { full_name: "asc" },
+    });
+
+    return managers;
+  } catch (error) {
+    console.error("Error in getAllManagersWithVerifications:", error);
+    throw new CustomError("Failed to fetch managers", 500);
   }
 };
 
@@ -845,4 +1478,12 @@ module.exports = {
   getAllDailyAttendance,
   getAttendanceSummaryByEmployee,
   findAttendanceByEmployeeId,
+  getAllHRUsers,
+  getManagerTeamAttendance,
+  getManagerEmployees,
+  bulkVerifyWithManualHR,
+  verifyAttendanceWithManualHR,
+  getVerificationStatusForHR,
+  getVerificationSummary,
+  getAllManagersWithVerifications,
 };

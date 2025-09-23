@@ -149,11 +149,11 @@ const findAttendanceByEmployeeId = async (req, res, next) => {
 
 const getManagerEmployees = async (req, res, next) => {
   try {
-    const managerId = req.user.employee_id;
+    const manager_id = req.user.employee_id;
     const { search, page = 1, size = 10 } = req.query;
 
     const reqData = await dailyAttendanceService.getManagerEmployees(
-      managerId,
+      manager_id,
       search,
       page,
       size
@@ -161,7 +161,7 @@ const getManagerEmployees = async (req, res, next) => {
 
     res.status(200).success("Manager employees retrieved successfully", {
       ...reqData,
-      managerId,
+      manager_id,
       message: `Found ${reqData.data.length} employees under your management`,
     });
   } catch (error) {
@@ -171,24 +171,24 @@ const getManagerEmployees = async (req, res, next) => {
 
 const getManagerTeamAttendance = async (req, res, next) => {
   try {
-    const managerId = req.user.employee_id;
+    const manager_id = req.user.employee_id;
     const {
       search,
       page = 1,
       size = 10,
       startDate,
       endDate,
-      employeeId,
+      employee_id,
     } = req.query;
 
     const reqData = await dailyAttendanceService.getManagerTeamAttendance(
-      managerId,
+      manager_id,
       search,
       page,
       size,
       startDate,
       endDate,
-      employeeId
+      employee_id
     );
 
     res.status(200).success("Team attendance retrieved successfully", reqData);
@@ -211,15 +211,10 @@ const getAllHRUsers = async (req, res, next) => {
   }
 };
 
-const verifyAttendanceWithAutoHR = async (req, res, next) => {
+const verifyAttendanceByManager = async (req, res, next) => {
   try {
-    const managerId = req.user.employee_id;
-    const {
-      attendanceId,
-      verificationStatus,
-      remarks,
-      hrStrategy = "round-robin",
-    } = req.body;
+    const manager_id = req.user.id;
+    const { attendanceId, verificationStatus, remarks } = req.body;
 
     if (!attendanceId || !verificationStatus) {
       throw new CustomError(
@@ -228,18 +223,25 @@ const verifyAttendanceWithAutoHR = async (req, res, next) => {
       );
     }
 
-    const reqData = await dailyAttendanceService.verifyAttendanceWithAutoHR(
-      managerId,
+    if (!["A", "R", "P"].includes(verificationStatus)) {
+      throw new CustomError(
+        "Invalid verification status. Must be A, R, or P",
+        400
+      );
+    }
+
+    const reqData = await dailyAttendanceService.verifyAttendanceByManager(
+      manager_id,
       attendanceId,
       verificationStatus,
       remarks,
-      req.user.log_inst,
-      hrStrategy
+      req.user.log_inst
     );
 
-    res
-      .status(200)
-      .success("Attendance verified with auto HR notification", reqData);
+    res.status(200).success("Attendance verified successfully", {
+      ...reqData,
+      message: `Attendance ${verificationStatus.toLowerCase()} successfully (no HR notification sent)`,
+    });
   } catch (error) {
     next(error);
   }
@@ -247,34 +249,34 @@ const verifyAttendanceWithAutoHR = async (req, res, next) => {
 
 const verifyAttendanceWithManualHR = async (req, res, next) => {
   try {
-    const managerId = req.user.id;
+    const manager_id = req.user.id;
     const {
-      attendanceId,
-      verificationStatus,
+      attendance_id,
+      verification_status,
       remarks,
-      selectedHRUserId,
-      notifyHR = true,
+      selected_hr_userId,
+      notify_HR = true,
     } = req.body;
 
-    if (!attendanceId || !verificationStatus) {
+    if (!attendance_id || !verification_status) {
       throw new CustomError(
         "Attendance ID and verification status are required",
         400
       );
     }
 
-    if (notifyHR && !selectedHRUserId) {
+    if (notify_HR && !selected_hr_userId) {
       throw new CustomError("Please select an HR user to notify", 400);
     }
 
     const reqData = await dailyAttendanceService.verifyAttendanceWithManualHR(
-      managerId,
-      attendanceId,
-      verificationStatus,
+      manager_id,
+      attendance_id,
+      verification_status,
       remarks,
       req.user.log_inst,
-      selectedHRUserId,
-      notifyHR
+      selected_hr_userId,
+      notify_HR
     );
 
     res
@@ -285,47 +287,9 @@ const verifyAttendanceWithManualHR = async (req, res, next) => {
   }
 };
 
-const bulkVerifyWithAutoHR = async (req, res, next) => {
-  try {
-    const managerId = req.user.id;
-    const {
-      attendanceIds,
-      verificationStatus,
-      remarks,
-      hrStrategy = "round-robin",
-    } = req.body;
-
-    if (
-      !attendanceIds ||
-      !Array.isArray(attendanceIds) ||
-      attendanceIds.length === 0
-    ) {
-      throw new CustomError("Attendance IDs array is required", 400);
-    }
-
-    const reqData = await dailyAttendanceService.bulkVerifyWithAutoHR(
-      managerId,
-      attendanceIds,
-      verificationStatus,
-      remarks,
-      req.user.log_inst,
-      hrStrategy
-    );
-
-    res
-      .status(200)
-      .success(
-        "Bulk verification completed with auto HR notification",
-        reqData
-      );
-  } catch (error) {
-    next(error);
-  }
-};
-
 const bulkVerifyWithManualHR = async (req, res, next) => {
   try {
-    const managerId = req.user.id;
+    const manager_id = req.user.id;
     const {
       attendanceIds,
       verificationStatus,
@@ -347,7 +311,7 @@ const bulkVerifyWithManualHR = async (req, res, next) => {
     }
 
     const reqData = await dailyAttendanceService.bulkVerifyWithManualHR(
-      managerId,
+      manager_id,
       attendanceIds,
       verificationStatus,
       remarks,
@@ -367,6 +331,101 @@ const bulkVerifyWithManualHR = async (req, res, next) => {
   }
 };
 
+const getVerificationStatusForHR = async (req, res, next) => {
+  try {
+    const {
+      search,
+      page = 1,
+      size = 20,
+      startDate,
+      endDate,
+      verificationStatus,
+      manager_id,
+    } = req.query;
+
+    const reqData = await dailyAttendanceService.getVerificationStatusForHR(
+      search,
+      page,
+      size,
+      startDate,
+      endDate,
+      verificationStatus,
+      manager_id
+    );
+
+    res
+      .status(200)
+      .success("Verification status retrieved successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getVerificationSummary = async (req, res, next) => {
+  try {
+    const { startDate, endDate, manager_id } = req.query;
+
+    const reqData = await dailyAttendanceService.getVerificationSummary(
+      startDate,
+      endDate,
+      manager_id
+    );
+
+    res
+      .status(200)
+      .success("Verification summary retrieved successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getHRNotifications = async (req, res, next) => {
+  try {
+    const hrUserId = req.user.id;
+    const { page = 1, size = 10, isRead } = req.query;
+
+    const reqData = await dailyAttendanceService.getHRNotifications(
+      hrUserId,
+      page,
+      size,
+      isRead
+    );
+
+    res.status(200).success("HR notifications retrieved successfully", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const markNotificationRead = async (req, res, next) => {
+  try {
+    const { id } = req.params;
+    const hrUserId = req.user.id;
+
+    const reqData = await dailyAttendanceService.markNotificationRead(
+      id,
+      hrUserId
+    );
+
+    res.status(200).success("Notification marked as read", reqData);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const getAllManagersWithVerifications = async (req, res, next) => {
+  try {
+    const reqData =
+      await dailyAttendanceService.getAllManagersWithVerifications();
+
+    res.status(200).success("Managers retrieved successfully", {
+      managers: reqData,
+      totalCount: reqData.length,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 module.exports = {
   createDailyAttendance,
   findDailyAttendance,
@@ -376,4 +435,19 @@ module.exports = {
   getAttendanceSummaryByEmployee,
   findAttendanceByEmployeeId,
   upsertDailyAttendance,
+  getManagerEmployees,
+  getManagerTeamAttendance,
+  getAllHRUsers,
+
+  verifyAttendanceByManager,
+  verifyAttendanceWithManualHR,
+
+  bulkVerifyWithManualHR,
+
+  getVerificationStatusForHR,
+  getVerificationSummary,
+  getHRNotifications,
+  markNotificationRead,
+
+  getAllManagersWithVerifications,
 };

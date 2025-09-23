@@ -1702,6 +1702,10 @@ model hrms_d_daily_attendance_entry {
   updatedby                      Int?
   log_inst                       Int?
   working_hours                  Decimal?        @db.Decimal(18, 0)
+  manager_verified               String?         @db.VarChar(100)
+  manager_verification_date      DateTime?
+  manager_remarks                String?         @db.Text
+  verified_by_manager_id         Int?
   hrms_daily_attendance_employee hrms_d_employee @relation("DailyAttendanceRelation", fields: [employee_id], references: [id], onUpdate: NoAction)
 }
 
