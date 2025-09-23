@@ -141,6 +141,87 @@ const getDashboardData = async (filterDays) => {
   }
 };
 
+// const getAllEmployeeAttendance = async (dateString) => {
+//   let today;
+
+//   if (dateString) {
+//     today = DateTime.fromISO(dateString, { zone: "Asia/Kolkata" }).startOf(
+//       "day"
+//     );
+//   } else {
+//     today = DateTime.now().setZone("Asia/Kolkata").startOf("day");
+//   }
+
+//   const endOfDay = today.endOf("day");
+
+//   const employees = await prisma.hrms_d_employee.findMany({
+//     where: {
+//       status: { in: ["Active", "Probation", "Notice Period"] },
+//     },
+//     select: { id: true },
+//   });
+
+//   const totalEmployees = employees.length;
+//   const employeeIds = employees.map((e) => e.id);
+
+//   const attendanceRecords = await prisma.hrms_d_daily_attendance_entry.findMany(
+//     {
+//       where: {
+//         attendance_date: {
+//           gte: today.toJSDate(),
+//           lte: endOfDay.toJSDate(),
+//         },
+//         employee_id: { in: employeeIds },
+//       },
+//       orderBy: {
+//         check_in_time: "desc",
+//       },
+//       select: {
+//         employee_id: true,
+//         status: true,
+//         check_in_time: true,
+//       },
+//     }
+//   );
+
+//   const latestRecordMap = new Map();
+//   for (const record of attendanceRecords) {
+//     if (!latestRecordMap.has(record.employee_id)) {
+//       latestRecordMap.set(record.employee_id, record.status?.toLowerCase());
+//     }
+//   }
+
+//   let present = 0;
+//   let wfh = 0;
+//   const markedEmployees = new Set();
+
+//   for (const [empId, status] of latestRecordMap.entries()) {
+//     markedEmployees.add(empId);
+//     console.log("status : ", status);
+//     if (status === "present") present++;
+//     else if (status === "work from home" || status === "wfh") {
+//       console.log("wfh");
+//       wfh++;
+//     }
+//   }
+
+//   const absent = totalEmployees - markedEmployees.size;
+
+//   const presentPercentage =
+//     totalEmployees === 0
+//       ? "0.00%"
+//       : ((present / totalEmployees) * 100).toFixed(2) + "%";
+
+//   return {
+//     date: today.toISODate(),
+//     total_employees: totalEmployees,
+//     present,
+//     work_from_home: wfh,
+//     absent,
+//     present_percentage: presentPercentage,
+//   };
+// };
+
 const getAllEmployeeAttendance = async (dateString) => {
   let today;
 
@@ -155,14 +236,16 @@ const getAllEmployeeAttendance = async (dateString) => {
   const endOfDay = today.endOf("day");
 
   const employees = await prisma.hrms_d_employee.findMany({
-    where: { status: { in: ["Active", "Probation"] } },
-    select: { id: true },
+    where: {
+      status: { in: ["Active", "Probation", "Notice Period"] },
+    },
+    select: { id: true, full_name: true, employee_code: true },
   });
 
   const totalEmployees = employees.length;
   const employeeIds = employees.map((e) => e.id);
 
-  // 🟡 Fetch all entries for the day, ordered by latest first
+  // ✅ Include manager verification fields in select
   const attendanceRecords = await prisma.hrms_d_daily_attendance_entry.findMany(
     {
       where: {
@@ -173,12 +256,22 @@ const getAllEmployeeAttendance = async (dateString) => {
         employee_id: { in: employeeIds },
       },
       orderBy: {
-        check_in_time: "desc", // or "createdate" if that field is more reliable
+        check_in_time: "desc",
       },
       select: {
         employee_id: true,
         status: true,
         check_in_time: true,
+        manager_verified: true,
+        manager_verification_date: true,
+        manager_remarks: true,
+        verified_by_manager_id: true,
+        hrms_daily_attendance_employee: {
+          select: {
+            full_name: true,
+            employee_code: true,
+          },
+        },
       },
     }
   );
@@ -186,7 +279,7 @@ const getAllEmployeeAttendance = async (dateString) => {
   const latestRecordMap = new Map();
   for (const record of attendanceRecords) {
     if (!latestRecordMap.has(record.employee_id)) {
-      latestRecordMap.set(record.employee_id, record.status?.toLowerCase());
+      latestRecordMap.set(record.employee_id, record);
     }
   }
 
@@ -194,14 +287,27 @@ const getAllEmployeeAttendance = async (dateString) => {
   let wfh = 0;
   const markedEmployees = new Set();
 
-  for (const [empId, status] of latestRecordMap.entries()) {
+  // Detailed records with manager verification info
+  const detailedRecords = [];
+
+  for (const [empId, record] of latestRecordMap.entries()) {
     markedEmployees.add(empId);
-    console.log("status : ", status);
+
+    const status = record.status?.toLowerCase();
     if (status === "present") present++;
-    else if (status === "work from home" || status === "wfh") {
-      console.log("wfh");
-      wfh++;
-    }
+    else if (status === "work from home" || status === "wfh") wfh++;
+
+    detailedRecords.push({
+      id: empId,
+      name: record.hrms_daily_attendance_employee.full_name,
+      code: record.hrms_daily_attendance_employee.employee_code,
+      status: record.status,
+      check_in_time: record.check_in_time,
+      manager_verified: record.manager_verified || "P",
+      manager_verification_date: record.manager_verification_date,
+      manager_remarks: record.manager_remarks,
+      verified_by_manager_id: record.verified_by_manager_id,
+    });
   }
 
   const absent = totalEmployees - markedEmployees.size;
@@ -218,111 +324,9 @@ const getAllEmployeeAttendance = async (dateString) => {
     work_from_home: wfh,
     absent,
     present_percentage: presentPercentage,
+    details: detailedRecords,
   };
 };
-
-// const getUpcomingBirthdays = async (page = 1, size = 10) => {
-//   const today = moment();
-//   const tomorrow = moment().add(1, "day");
-
-//   const employees = await prisma.hrms_d_employee.findMany({
-//     where: {
-//       date_of_birth: {
-//         not: null,
-//       },
-//     },
-//     select: {
-//       id: true,
-//       first_name: true,
-//       last_name: true,
-//       designation_id: true,
-//       profile_pic: true,
-//       date_of_birth: true,
-//       hrms_employee_designation: {
-//         select: {
-//           designation_name: true,
-//         },
-//       },
-//     },
-//   });
-
-//   const todayList = [];
-//   const tomorrowList = [];
-//   const others = [];
-
-//   employees.forEach((emp) => {
-//     const dob = moment(emp.date_of_birth);
-//     const currentYear = today.year();
-//     let birthdayThisYear = moment(
-//       `${currentYear}-${dob.format("MM-DD")}`,
-//       "YYYY-MM-DD"
-//     );
-
-//     if (birthdayThisYear.isBefore(today, "day")) {
-//       birthdayThisYear.add(1, "year");
-//     }
-
-//     const formattedLabel = birthdayThisYear.isSame(today, "day")
-//       ? "today"
-//       : birthdayThisYear.isSame(tomorrow, "day")
-//       ? "tomorrow"
-//       : birthdayThisYear.format("DD MMM YYYY");
-
-//     const birthdayObj = {
-//       id: emp.id,
-//       name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
-//       designation: emp.hrms_employee_designation?.designation_name || "",
-//       profile_pic: emp.profile_pic || "",
-//       birthday: birthdayThisYear.toDate(),
-//       label: formattedLabel,
-//     };
-
-//     if (formattedLabel === "today") {
-//       todayList.push(birthdayObj);
-//     } else if (formattedLabel === "tomorrow") {
-//       tomorrowList.push(birthdayObj);
-//     } else {
-//       others.push(birthdayObj);
-//     }
-//   });
-
-//   const all = [...todayList, ...tomorrowList, ...others].sort(
-//     (a, b) => a.birthday - b.birthday
-//   );
-
-//   const totalCount = all.length;
-//   const totalPages = Math.ceil(totalCount / size);
-//   const offset = (page - 1) * size;
-
-//   const paginated = all.slice(offset, offset + size);
-
-//   if (paginated.length === 0) {
-//     return {
-//       data: {},
-//       currentPage: page,
-//       size,
-//       totalPages,
-//       totalCount,
-//     };
-//   }
-
-//   const grouped = {};
-//   paginated.forEach((item) => {
-//     const { birthday, label, ...rest } = item;
-//     if (!grouped[label]) {
-//       grouped[label] = [];
-//     }
-//     grouped[label].push(rest);
-//   });
-
-//   return {
-//     data: grouped,
-//     currentPage: page,
-//     size,
-//     totalPages,
-//     totalCount,
-//   };
-// };
 
 const getUpcomingBirthdays = async (page = 1, size = 10) => {
   const today = moment();
@@ -597,111 +601,6 @@ const getStatus = async () => {
     },
   };
 };
-// const workAnniversary = async (page = 1, size = 10) => {
-//   const today = moment();
-//   const tomorrow = moment().add(1, "day");
-
-//   const employees = await prisma.hrms_d_employee.findMany({
-//     where: {
-//       join_date: {
-//         not: null,
-//       },
-//     },
-//     select: {
-//       id: true,
-//       first_name: true,
-//       last_name: true,
-//       designation_id: true,
-//       profile_pic: true,
-//       join_date: true,
-//       hrms_employee_designation: {
-//         select: {
-//           designation_name: true,
-//         },
-//       },
-//     },
-//   });
-
-//   const todayList = [];
-//   const tomorrowList = [];
-//   const others = [];
-
-//   employees.forEach((emp) => {
-//     const joinDate = moment(emp.join_date);
-//     const currentYear = today.year();
-//     let anniversaryThisYear = moment(
-//       `${currentYear}-${joinDate.format("MM-DD")}`,
-//       "YYYY-MM-DD"
-//     );
-
-//     if (anniversaryThisYear.isBefore(today, "day")) {
-//       anniversaryThisYear.add(1, "year");
-//     }
-
-//     const yearsOfService = anniversaryThisYear.year() - joinDate.year();
-
-//     const formattedLabel = anniversaryThisYear.isSame(today, "day")
-//       ? "today"
-//       : anniversaryThisYear.isSame(tomorrow, "day")
-//       ? "tomorrow"
-//       : anniversaryThisYear.format("DD MMM YYYY");
-
-//     const anniversaryObj = {
-//       id: emp.id,
-//       name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
-//       designation: emp.hrms_employee_designation?.designation_name || "",
-//       profile_pic: emp.profile_pic || "",
-//       anniversary: anniversaryThisYear.toDate(),
-//       years_of_service: yearsOfService,
-//       label: formattedLabel,
-//     };
-
-//     if (formattedLabel === "today") {
-//       todayList.push(anniversaryObj);
-//     } else if (formattedLabel === "tomorrow") {
-//       tomorrowList.push(anniversaryObj);
-//     } else {
-//       others.push(anniversaryObj);
-//     }
-//   });
-
-//   const all = [...todayList, ...tomorrowList, ...others].sort(
-//     (a, b) => b.anniversary - a.anniversary
-//   );
-
-//   const totalCount = all.length;
-//   const totalPages = Math.ceil(totalCount / size);
-//   const offset = (page - 1) * size;
-
-//   const paginated = all.slice(offset, offset + size);
-
-//   if (paginated.length === 0) {
-//     return {
-//       data: [],
-//       currentPage: page,
-//       size,
-//       totalPages,
-//       totalCount,
-//     };
-//   }
-
-//   const grouped = {};
-//   paginated.forEach((item) => {
-//     const { anniversary, label, ...rest } = item;
-//     if (!grouped[label]) {
-//       grouped[label] = [];
-//     }
-//     grouped[label].push(rest);
-//   });
-
-//   return {
-//     data: grouped,
-//     currentPage: page,
-//     size,
-//     totalPages,
-//     totalCount,
-//   };
-// };
 
 const workAnniversary = async (page = 1, size = 10) => {
   const today = moment();
@@ -905,6 +804,7 @@ const attendanceOverview = async (dateString) => {
     throw new CustomError("Error retrieving attendance status count", 503);
   }
 };
+
 const getEmployeeActivity = async () => {
   try {
     const logs = await prisma.hrms_d_activity_log.findMany({
@@ -926,6 +826,7 @@ const getEmployeeActivity = async () => {
     console.log("Error getting activities:", error);
   }
 };
+
 module.exports = {
   findDealById,
   getDashboardData,

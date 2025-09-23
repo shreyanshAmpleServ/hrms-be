@@ -65,7 +65,6 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
 
     console.log(`Default date range: ${startDate} to ${endDate}`);
     console.log(`Default is the current month: ${startDate} to ${endDate}`);
-    console.error(`${error}`);
   }
 
   return await dailyAttendanceModel.findAttendanceByEmployeeId(

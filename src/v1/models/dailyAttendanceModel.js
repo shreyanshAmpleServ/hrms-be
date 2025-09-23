@@ -182,181 +182,6 @@ const deleteDailyAttendance = async (id) => {
   }
 };
 
-// const getAllDailyAttendance = async (
-//   search,
-//   page,
-//   size,
-//   startDate,
-//   endDate
-// ) => {
-//   try {
-//     page = !page || page == 0 ? 1 : page;
-//     size = size || 10;
-//     const skip = (page - 1) * size || 0;
-
-//     const filters = {};
-
-//     if (search) {
-//       filters.OR = [
-//         {
-//           hrms_daily_attendance_employee: {
-//             full_name: { contains: search.toLowerCase() },
-//           },
-//         },
-//         {
-//           hrms_daily_attendance_employee: {
-//             employee_code: { contains: search.toLowerCase() },
-//           },
-//         },
-//         { status: { contains: search.toLowerCase() } },
-//         { remarks: { contains: search.toLowerCase() } },
-//       ];
-//     }
-
-//     let start, end;
-//     if (startDate && endDate) {
-//       start = new Date(startDate);
-//       end = new Date(endDate);
-//     } else {
-//       const now = new Date();
-//       start = new Date(now.getFullYear(), now.getMonth(), 1);
-//       end = new Date(now);
-//     }
-
-//     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-//       filters.attendance_date = { gte: start, lte: end };
-//     }
-
-//     const datas = await prisma.hrms_d_daily_attendance_entry.findMany({
-//       where: filters,
-//       skip,
-//       take: size,
-//       orderBy: [{ attendance_date: "desc" }],
-//       include: {
-//         hrms_daily_attendance_employee: {
-//           select: {
-//             id: true,
-//             employee_code: true,
-//             full_name: true,
-//           },
-//         },
-//       },
-//     });
-
-//     const totalCount = await prisma.hrms_d_daily_attendance_entry.count({
-//       where: filters,
-//     });
-
-//     return {
-//       data: datas,
-//       currentPage: page,
-//       size,
-//       totalPages: Math.ceil(totalCount / size),
-//       totalCount,
-//     };
-//   } catch (error) {
-//     throw new CustomError("Error retrieving attendance entries", 503);
-//   }
-// };
-
-// const getAllDailyAttendance = async (
-//   search,
-//   page,
-//   size,
-//   startDate,
-//   endDate
-// ) => {
-//   try {
-//     page = !page || page == 0 ? 1 : page;
-//     size = size || 10;
-//     const skip = (page - 1) * size || 0;
-
-//     const filters = {};
-
-//     if (search) {
-//       filters.OR = [
-//         {
-//           hrms_daily_attendance_employee: {
-//             full_name: { contains: search.toLowerCase() },
-//           },
-//         },
-//         {
-//           hrms_daily_attendance_employee: {
-//             employee_code: { contains: search.toLowerCase() },
-//           },
-//         },
-//         { status: { contains: search.toLowerCase() } },
-//         { remarks: { contains: search.toLowerCase() } },
-//       ];
-//     }
-
-//     let start, end;
-//     if (startDate && endDate) {
-//       start = new Date(startDate);
-//       end = new Date(endDate);
-//     } else {
-//       const now = new Date();
-//       start = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1, 0, 0, 0));
-//       end = new Date(
-//         Date.UTC(now.getFullYear(), now.getMonth() + 1, 0, 0, 0, 0)
-//       );
-//     }
-
-//     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-//       filters.attendance_date = { gte: start, lte: end };
-//     }
-
-//     const attendanceEntries =
-//       await prisma.hrms_d_daily_attendance_entry.findMany({
-//         where: filters,
-//         orderBy: [{ attendance_date: "asc" }],
-//         include: {
-//           hrms_daily_attendance_employee: {
-//             select: {
-//               id: true,
-//               employee_code: true,
-//               full_name: true,
-//             },
-//           },
-//         },
-//       });
-
-//     const attendanceMap = {};
-//     attendanceEntries.forEach((entry) => {
-//       const key = entry.attendance_date.toISOString().split("T")[0];
-//       attendanceMap[key] = entry;
-//     });
-
-//     const allDates = [];
-//     const current = new Date(start);
-
-//     while (current <= end) {
-//       const dateStr = current.toISOString().split("T")[0];
-//       const data = attendanceMap[dateStr] || {
-//         attendance_date: new Date(dateStr),
-//         status: null,
-//         remarks: null,
-//         hrms_daily_attendance_employee: null,
-//       };
-//       allDates.push(data);
-//       current.setUTCDate(current.getUTCDate() + 1);
-//     }
-
-//     const paginated = allDates.slice(skip, skip + size);
-
-//     return {
-//       data: paginated,
-//       currentPage: page,
-//       size,
-//       totalPages: Math.ceil(allDates.length / size),
-//       totalCount: allDates.length,
-//     };
-//   } catch (error) {
-//     console.error(error);
-//     throw new CustomError("Error retrieving attendance entries", 503);
-//   }
-// };
-
 const getAllDailyAttendance = async (
   search,
   page,
@@ -466,117 +291,7 @@ const getAllDailyAttendance = async (
     throw new CustomError("Error retrieving attendance entries", 503);
   }
 };
-// const getAttendanceSummaryByEmployee = async (
-//   search,
-//   page,
-//   size,
-//   startDate,
-//   endDate
-// ) => {
-//   try {
-//     page = !page || page == 0 ? 1 : page;
-//     size = size || 10;
-//     const skip = (page - 1) * size || 0;
 
-//     const filters = {};
-//     if (startDate || endDate) {
-//       filters.attendance_date = {};
-//       if (startDate) {
-//         const start = new Date(startDate);
-//         if (!isNaN(start.getTime())) {
-//           filters.attendance_date.gte = start;
-//         }
-//       }
-//       if (endDate) {
-//         const end = new Date(endDate);
-//         if (!isNaN(end.getTime())) {
-//           filters.attendance_date.lte = end;
-//         }
-//       }
-//     } else {
-//       const now = new Date();
-//       const firstDay = new Date(now.getFullYear(), now.getMonth(), 1);
-//       const lastDay = new Date(now.getFullYear(), now.getMonth() + 1, 0);
-//       filters.attendance_date = {
-//         gte: firstDay,
-//         lte: lastDay,
-//       };
-//     }
-
-//     if (search) {
-//       filters.hrms_daily_attendance_employee = {
-//         OR: [
-//           { full_name: { contains: search.toLowerCase() } },
-//           { employee_code: { contains: search.toLowerCase() } },
-//         ],
-//       };
-//     }
-
-//     const summary = await prisma.hrms_d_daily_attendance_entry.groupBy({
-//       by: ["employee_id", "status"],
-//       where: filters,
-//       _count: { status: true },
-//     });
-
-//     const employeeWhere = {};
-//     if (search) {
-//       employeeWhere.OR = [
-//         { full_name: { contains: search.toLowerCase() } },
-//         { employee_code: { contains: search.toLowerCase() } },
-//       ];
-//     }
-
-//     const totalCount = await prisma.hrms_d_employee.count({
-//       where: employeeWhere,
-//     });
-
-//     const employees = await prisma.hrms_d_employee.findMany({
-//       where: employeeWhere,
-//       select: {
-//         id: true,
-//         employee_code: true,
-//         full_name: true,
-//         department_id: true,
-//       },
-//       skip,
-//       take: size,
-//     });
-
-//     const normalize = (status) => status.toLowerCase().replace(/ /g, "_");
-
-//     const data = employees.map((emp) => {
-//       const empSummary = summary.filter((s) => s.employee_id === emp.id);
-//       return {
-//         ...emp,
-//         present:
-//           empSummary.find((s) => normalize(s.status) === "present")?._count
-//             .status || 0,
-//         absent:
-//           empSummary.find((s) => normalize(s.status) === "absent")?._count
-//             .status || 0,
-//         half_day:
-//           empSummary.find((s) => normalize(s.status) === "half_day")?._count
-//             .status || 0,
-//         late:
-//           empSummary.find((s) => normalize(s.status) === "late")?._count
-//             .status || 0,
-//       };
-//     });
-
-//     return {
-//       data,
-//       currentPage: page,
-//       size,
-//       totalPages: Math.ceil(totalCount / size),
-//       totalCount,
-//     };
-//   } catch (error) {
-//     console.error(error);
-//     throw new CustomError("Error generating attendance summary", 503);
-//   }
-// };
-
-// Add this helper function at the top if not already present
 const calculateOvertimeHours = (checkIn, checkOut, standardHours = 8) => {
   if (!checkIn || !checkOut) return 0;
 
@@ -729,6 +444,7 @@ const getAttendanceSummaryByEmployee = async (
     throw new CustomError("Error generating attendance summary", 503);
   }
 };
+
 const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
   try {
     const empId = Number(employeeId);
@@ -895,16 +611,13 @@ const getManagerEmployees = async (manager_id, search, page, take) => {
 const getManagerTeamAttendance = async (
   manager_id,
   search,
-  page = 1,
-  size = 10,
+  _page,
+  _size,
   startDate,
   endDate,
   employeeId
 ) => {
   try {
-    const skip = (page - 1) * size;
-    const take = parseInt(size);
-
     const managerEmployees = await prisma.hrms_d_employee.findMany({
       where: {
         manager_id: parseInt(manager_id),
@@ -916,91 +629,72 @@ const getManagerTeamAttendance = async (
     const employeeIds = managerEmployees.map((emp) => emp.id);
 
     if (employeeIds.length === 0) {
-      return {
-        data: [],
-        pagination: {
-          currentPage: parseInt(page),
-          pageSize: take,
-          totalRecords: 0,
-          totalPages: 0,
-        },
-      };
+      return { data: [] };
     }
 
-    const whereCondition = {
-      employee_id: { in: employeeIds },
-    };
+    const whereCondition = { employee_id: { in: employeeIds } };
 
     if (employeeId) whereCondition.employee_id = parseInt(employeeId);
+
     if (startDate && endDate) {
       whereCondition.attendance_date = {
         gte: new Date(startDate),
         lte: new Date(endDate),
       };
+    } else {
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const tomorrow = new Date(today);
+      tomorrow.setDate(tomorrow.getDate() + 1);
+
+      whereCondition.attendance_date = { gte: today, lt: tomorrow };
     }
+
     if (search) {
       whereCondition.OR = [
         {
           hrms_daily_attendance_employee: {
-            full_name: { contains: search.toLowerCase() },
+            some: { full_name: { contains: search, mode: "insensitive" } },
           },
         },
         {
           hrms_daily_attendance_employee: {
-            employee_code: { contains: search.toLowerCase() },
+            some: { employee_code: { contains: search, mode: "insensitive" } },
           },
         },
       ];
     }
 
-    const [attendanceRecords, total] = await Promise.all([
-      prisma.hrms_d_daily_attendance_entry.findMany({
+    const attendanceRecords =
+      await prisma.hrms_d_daily_attendance_entry.findMany({
         where: whereCondition,
-        include: {
+        select: {
+          id: true,
+          status: true,
+          check_in_time: true,
+          check_out_time: true,
+          manager_verified: true,
           hrms_daily_attendance_employee: {
             select: {
               id: true,
               employee_code: true,
               full_name: true,
+              profile_pic: true,
               email: true,
-              hrms_employee_designation: {
-                select: { designation_name: true },
-              },
-              hrms_employee_department: {
-                select: { department_name: true },
-              },
+              hrms_employee_designation: { select: { designation_name: true } },
+              hrms_employee_department: { select: { department_name: true } },
             },
           },
         },
-        skip,
-        take,
-        orderBy: [
-          { attendance_date: "desc" },
-          { hrms_daily_attendance_employee: { full_name: "asc" } },
-        ],
-      }),
-      prisma.hrms_d_daily_attendance_entry.count({ where: whereCondition }),
-    ]);
+        orderBy: [{ attendance_date: "desc" }],
+      });
 
     const enhancedRecords = attendanceRecords.map((record) => ({
       ...record,
       manager_verified: record.manager_verified || "P",
-      manager_verification_date: record.manager_verification_date,
-      manager_remarks: record.manager_remarks,
-      verified_by_manager_id: record.verified_by_manager_id,
-      can_verify:
-        record.manager_verified === "P" || record.manager_verified === null,
     }));
 
-    return {
-      data: enhancedRecords,
-      pagination: {
-        currentPage: parseInt(page),
-        pageSize: take,
-        totalRecords: total,
-        totalPages: Math.ceil(total / take),
-      },
-    };
+    return { data: enhancedRecords };
   } catch (error) {
     console.error("Error in getManagerTeamAttendance:", error);
     throw new CustomError("Failed to fetch team attendance", 500);
@@ -1222,7 +916,7 @@ const createHRNotification = async (
         status: "SENT",
         sent_on: new Date(),
         createdate: new Date(),
-        createdby: parseInt(managerId),
+        createdby: parseInt(manager_id),
         log_inst: logInst || 1,
       },
     });
@@ -1396,7 +1090,7 @@ const getVerificationSummary = async (startDate, endDate, manager_id) => {
       manager_name: managerMap[stat.verified_by_manager_id]?.full_name || null,
       employee_code:
         managerMap[stat.verified_by_manager_id]?.employee_code || null,
-      verificationCount: stat._count,
+      verification_count: stat._count,
     }));
 
     const recentVerifications =
