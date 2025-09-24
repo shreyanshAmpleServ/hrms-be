@@ -158,7 +158,7 @@ const getDashboardData = async (filterDays) => {
 //     where: {
 //       status: { in: ["Active", "Probation", "Notice Period"] },
 //     },
-//     select: { id: true },
+//     select: { id: true, full_name: true, employee_code: true },
 //   });
 
 //   const totalEmployees = employees.length;
@@ -178,8 +178,16 @@ const getDashboardData = async (filterDays) => {
 //       },
 //       select: {
 //         employee_id: true,
-//         status: true,
-//         check_in_time: true,
+//         manager_verified: true,
+//         manager_verification_date: true,
+//         manager_remarks: true,
+//         verified_by_manager_id: true,
+//         hrms_daily_attendance_employee: {
+//           select: {
+//             full_name: true,
+//             employee_code: true,
+//           },
+//         },
 //       },
 //     }
 //   );
@@ -187,7 +195,7 @@ const getDashboardData = async (filterDays) => {
 //   const latestRecordMap = new Map();
 //   for (const record of attendanceRecords) {
 //     if (!latestRecordMap.has(record.employee_id)) {
-//       latestRecordMap.set(record.employee_id, record.status?.toLowerCase());
+//       latestRecordMap.set(record.employee_id, record);
 //     }
 //   }
 
@@ -195,14 +203,21 @@ const getDashboardData = async (filterDays) => {
 //   let wfh = 0;
 //   const markedEmployees = new Set();
 
-//   for (const [empId, status] of latestRecordMap.entries()) {
+//   const detailedRecords = [];
+
+//   for (const [empId, record] of latestRecordMap.entries()) {
 //     markedEmployees.add(empId);
-//     console.log("status : ", status);
+
+//     const status = record.status?.toLowerCase();
 //     if (status === "present") present++;
-//     else if (status === "work from home" || status === "wfh") {
-//       console.log("wfh");
-//       wfh++;
-//     }
+//     else if (status === "work from home" || status === "wfh") wfh++;
+
+//     detailedRecords.push({
+//       status: record.status,
+//       check_in_time: record.check_in_time,
+//       manager_verified: record.manager_verified || "P",
+//       manager_verification_date: record.manager_verification_date,
+//     });
 //   }
 
 //   const absent = totalEmployees - markedEmployees.size;
@@ -219,6 +234,7 @@ const getDashboardData = async (filterDays) => {
 //     work_from_home: wfh,
 //     absent,
 //     present_percentage: presentPercentage,
+//     details: detailedRecords,
 //   };
 // };
 
@@ -245,7 +261,6 @@ const getAllEmployeeAttendance = async (dateString) => {
   const totalEmployees = employees.length;
   const employeeIds = employees.map((e) => e.id);
 
-  // ✅ Include manager verification fields in select
   const attendanceRecords = await prisma.hrms_d_daily_attendance_entry.findMany(
     {
       where: {
@@ -254,10 +269,13 @@ const getAllEmployeeAttendance = async (dateString) => {
           lte: endOfDay.toJSDate(),
         },
         employee_id: { in: employeeIds },
+        manager_verified: "A",
+        manager_verification_date: {
+          gte: today.toJSDate(),
+          lte: endOfDay.toJSDate(),
+        },
       },
-      orderBy: {
-        check_in_time: "desc",
-      },
+      orderBy: { check_in_time: "desc" },
       select: {
         employee_id: true,
         status: true,
@@ -267,10 +285,7 @@ const getAllEmployeeAttendance = async (dateString) => {
         manager_remarks: true,
         verified_by_manager_id: true,
         hrms_daily_attendance_employee: {
-          select: {
-            full_name: true,
-            employee_code: true,
-          },
+          select: { full_name: true, employee_code: true },
         },
       },
     }
@@ -286,8 +301,6 @@ const getAllEmployeeAttendance = async (dateString) => {
   let present = 0;
   let wfh = 0;
   const markedEmployees = new Set();
-
-  // Detailed records with manager verification info
   const detailedRecords = [];
 
   for (const [empId, record] of latestRecordMap.entries()) {
@@ -297,18 +310,24 @@ const getAllEmployeeAttendance = async (dateString) => {
     if (status === "present") present++;
     else if (status === "work from home" || status === "wfh") wfh++;
 
+    let managerVerifiedToday = false;
+    if (record.manager_verification_date) {
+      const verificationDate = DateTime.fromJSDate(
+        record.manager_verification_date,
+        { zone: "Asia/Kolkata" }
+      );
+      managerVerifiedToday = verificationDate.hasSame(today, "day");
+    }
+
     detailedRecords.push({
-      id: empId,
-      name: record.hrms_daily_attendance_employee.full_name,
-      code: record.hrms_daily_attendance_employee.employee_code,
       status: record.status,
       check_in_time: record.check_in_time,
       manager_verified: record.manager_verified || "P",
       manager_verification_date: record.manager_verification_date,
-      manager_remarks: record.manager_remarks,
-      verified_by_manager_id: record.verified_by_manager_id,
+      manager_verified_today: managerVerifiedToday,
     });
   }
+  const isVerified = detailedRecords?.every((i) => i.manager_verified === "A");
 
   const absent = totalEmployees - markedEmployees.size;
 
@@ -323,6 +342,7 @@ const getAllEmployeeAttendance = async (dateString) => {
     present,
     work_from_home: wfh,
     absent,
+    isVerifiedAttendance: isVerified,
     present_percentage: presentPercentage,
     details: detailedRecords,
   };

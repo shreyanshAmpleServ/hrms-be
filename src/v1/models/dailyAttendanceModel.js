@@ -1104,6 +1104,173 @@ const verifyAttendanceWithManualHR = async (
 //   }
 // };
 
+// II
+// const bulkVerifyWithManualHR = async (
+//   manager_id,
+//   verificationStatus = "A",
+//   remarks = "Bulk verification by manager",
+//   logInst = 1,
+//   notifyHR = true
+// ) => {
+//   try {
+//     const managerEmployees = await prisma.hrms_d_employee.findMany({
+//       where: {
+//         manager_id: parseInt(manager_id),
+//         status: "Active",
+//       },
+//       select: { id: true },
+//     });
+
+//     const employeeIds = managerEmployees.map((emp) => emp.id);
+
+//     if (employeeIds.length === 0) {
+//       return {
+//         success: true,
+//         processed: 0,
+//         errors: 0,
+//         results: [],
+//         message: "No employees found under this manager",
+//       };
+//     }
+
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+//     const tomorrow = new Date(today);
+//     tomorrow.setDate(tomorrow.getDate() + 1);
+
+//     const attendanceRecords =
+//       await prisma.hrms_d_daily_attendance_entry.findMany({
+//         where: {
+//           employee_id: { in: employeeIds },
+//           attendance_date: { gte: today, lt: tomorrow },
+//           OR: [{ manager_verified: null }, { manager_verified: "P" }],
+//         },
+//         include: {
+//           hrms_daily_attendance_employee: {
+//             select: {
+//               id: true,
+//               employee_code: true,
+//               full_name: true,
+//               email: true,
+//               hrms_employee_designation: {
+//                 select: { designation_name: true },
+//               },
+//               hrms_employee_department: {
+//                 select: { department_name: true },
+//               },
+//             },
+//           },
+//         },
+//       });
+
+//     if (attendanceRecords.length === 0) {
+//       return {
+//         success: true,
+//         processed: 0,
+//         errors: 0,
+//         results: [],
+//         message: "No pending attendance records found for verification",
+//       };
+//     }
+
+//     const results = [];
+//     const errors = [];
+//     const employeeDetails = [];
+
+//     // Process each attendance record
+//     for (const record of attendanceRecords) {
+//       try {
+//         const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update(
+//           {
+//             where: { id: record.id },
+//             data: {
+//               manager_verified: verificationStatus,
+//               manager_verification_date: new Date(),
+//               manager_remarks: remarks,
+//               verified_by_manager_id: parseInt(manager_id),
+//               updatedate: new Date(),
+//             },
+//           }
+//         );
+
+//         results.push({
+//           attendanceId: record.id,
+//           employeeName: record.hrms_daily_attendance_employee.full_name,
+//           employeeCode: record.hrms_daily_attendance_employee.employee_code,
+//           verificationStatus,
+//         });
+
+//         employeeDetails.push({
+//           employee: record.hrms_daily_attendance_employee,
+//           status: record.status,
+//           checkInTime: record.check_in_time,
+//           checkOutTime: record.check_out_time,
+//           workingHours: record.working_hours,
+//           attendanceDate: record.attendance_date,
+//           verificationStatus: verificationStatus,
+//         });
+//       } catch (error) {
+//         errors.push({
+//           attendanceId: record.id,
+//           employeeName: record.hrms_daily_attendance_employee.full_name,
+//           error: error.message,
+//         });
+//       }
+//     }
+
+//     let notificationResults = [];
+//     if (notifyHR && results.length > 0) {
+//       const hrUsers = await getAllHRUsers();
+
+//       for (const hrUser of hrUsers) {
+//         try {
+//           const notification = await createHRNotification(
+//             hrUser.employee_id,
+//             null,
+//             manager_id,
+//             verificationStatus,
+//             `${remarks} - Processed ${results.length} attendance records`,
+//             logInst,
+//             employeeDetails,
+//             true // is bulk
+//           );
+
+//           notificationResults.push({
+//             hrUserId: hrUser.employee_id,
+//             hrUserName: hrUser.name,
+//             notificationId: notification?.id,
+//             success: true,
+//           });
+//         } catch (notificationError) {
+//           notificationResults.push({
+//             hrUserId: hrUser.employee_id,
+//             hrUserName: hrUser.name,
+//             error: notificationError.message,
+//             success: false,
+//           });
+//         }
+//       }
+//     }
+
+//     return {
+//       success: true,
+//       processed: results.length,
+//       errors: errors.length,
+//       results,
+//       errors,
+//       notifications: notificationResults,
+//       message: `Bulk verification completed: ${
+//         results.length
+//       } records verified, ${errors.length} errors, ${
+//         notificationResults.filter((n) => n.success).length
+//       } HR users notified`,
+//     };
+//   } catch (error) {
+//     console.error("Error in bulk verify with manual HR:", error);
+//     throw new CustomError("Failed to process bulk team verification", 500);
+//   }
+// };
+
 const bulkVerifyWithManualHR = async (
   manager_id,
   verificationStatus = "A",
@@ -1155,7 +1322,10 @@ const bulkVerifyWithManualHR = async (
                 select: { designation_name: true },
               },
               hrms_employee_department: {
-                select: { department_name: true },
+                select: {
+                  id: true,
+                  department_name: true,
+                },
               },
             },
           },
@@ -1176,21 +1346,18 @@ const bulkVerifyWithManualHR = async (
     const errors = [];
     const employeeDetails = [];
 
-    // Process each attendance record
     for (const record of attendanceRecords) {
       try {
-        const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update(
-          {
-            where: { id: record.id },
-            data: {
-              manager_verified: verificationStatus,
-              manager_verification_date: new Date(),
-              manager_remarks: remarks,
-              verified_by_manager_id: parseInt(manager_id),
-              updatedate: new Date(),
-            },
-          }
-        );
+        await prisma.hrms_d_daily_attendance_entry.update({
+          where: { id: record.id },
+          data: {
+            manager_verified: verificationStatus,
+            manager_verification_date: new Date(),
+            manager_remarks: remarks,
+            verified_by_manager_id: parseInt(manager_id),
+            updatedate: new Date(),
+          },
+        });
 
         results.push({
           attendanceId: record.id,
@@ -1219,31 +1386,80 @@ const bulkVerifyWithManualHR = async (
 
     let notificationResults = [];
     if (notifyHR && results.length > 0) {
-      const hrUsers = await getAllHRUsers();
+      const hrUsers = await prisma.hrms_d_employee.findMany({
+        where: {
+          AND: [
+            {
+              hrms_employee_designation: {
+                designation_name: {
+                  in: [
+                    "HR Manager",
+                    "HR Executive",
+                    "HR Head",
+                    "Human Resources",
+                    "Head HR",
+                    "HR",
+                  ],
+                },
+              },
+            },
+            {
+              id: {
+                not: parseInt(manager_id),
+              },
+            },
+            {
+              status: "Active",
+            },
+          ],
+        },
+        select: {
+          id: true,
+          employee_code: true,
+          full_name: true,
+          email: true,
+          hrms_employee_designation: {
+            select: {
+              designation_name: true,
+            },
+          },
+        },
+      });
+
+      console.log(
+        `Found ${hrUsers.length} HR users to notify (excluding manager ${manager_id})`
+      );
 
       for (const hrUser of hrUsers) {
+        if (hrUser.id === parseInt(manager_id)) {
+          console.log(`Skipping self-notification for manager ${hrUser.id}`);
+          continue;
+        }
+
         try {
           const notification = await createHRNotification(
-            hrUser.employee_id,
+            hrUser.id,
             null,
             manager_id,
             verificationStatus,
             `${remarks} - Processed ${results.length} attendance records`,
             logInst,
             employeeDetails,
-            true // is bulk
+            true
           );
 
           notificationResults.push({
-            hrUserId: hrUser.employee_id,
-            hrUserName: hrUser.name,
+            hrUserId: hrUser.id,
+            hrUserName: hrUser.full_name,
+            hrDesignation: hrUser.hrms_employee_designation?.designation_name,
             notificationId: notification?.id,
             success: true,
           });
         } catch (notificationError) {
           notificationResults.push({
-            hrUserId: hrUser.employee_id,
-            hrUserName: hrUser.name,
+            hrUserId: hrUser.id,
+            hrUserName: hrUser.full_name,
+            hrDesignation: hrUser.hrms_employee_designation?.designation_name,
             error: notificationError.message,
             success: false,
           });
@@ -1269,6 +1485,7 @@ const bulkVerifyWithManualHR = async (
     throw new CustomError("Failed to process bulk team verification", 500);
   }
 };
+
 // const createHRNotification = async (
 //   hrUserId,
 //   attendanceId,
