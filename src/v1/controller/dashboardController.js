@@ -23,23 +23,44 @@ const getDashboardData = async (req, res, next) => {
   }
 };
 
+// const getAllEmployeeAttendance = async (req, res, next) => {
+//   try {
+//     const managerId = req.user.employee_id;
+//     const { startDate, endDate } = req.query;
+
+//     const attendanceData = await dashboardService.getAllEmployeeAttendance(
+//       startDate,
+//       endDate
+//     );
+
+//     res
+//       .status(200)
+//       .success("Attendance data fetched successfully", attendanceData);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const getAllEmployeeAttendance = async (req, res, next) => {
   try {
-    const { startDate, endDate } = req.query;
+    const managerId = req.user?.employee_id;
+    const { date } = req.query;
 
     const attendanceData = await dashboardService.getAllEmployeeAttendance(
-      startDate,
-      endDate
+      date,
+      managerId
     );
 
-    res
-      .status(200)
-      .success("Attendance data fetched successfully", attendanceData);
+    res.status(200).json({
+      success: true,
+      data: attendanceData,
+      message: "Attendance data fetched successfully",
+      status: 200,
+    });
   } catch (error) {
     next(error);
   }
 };
-
 const getUpcomingBirthdays = async (req, res, next) => {
   try {
     const page = parseInt(req.query.page) || 1;
