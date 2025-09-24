@@ -172,21 +172,23 @@ const getDashboardData = async (filterDays) => {
 //           lte: endOfDay.toJSDate(),
 //         },
 //         employee_id: { in: employeeIds },
+//         manager_verified: "A",
+//         manager_verification_date: {
+//           gte: today.toJSDate(),
+//           lte: endOfDay.toJSDate(),
+//         },
 //       },
-//       orderBy: {
-//         check_in_time: "desc",
-//       },
+//       orderBy: { check_in_time: "desc" },
 //       select: {
 //         employee_id: true,
+//         status: true,
+//         check_in_time: true,
 //         manager_verified: true,
 //         manager_verification_date: true,
 //         manager_remarks: true,
 //         verified_by_manager_id: true,
 //         hrms_daily_attendance_employee: {
-//           select: {
-//             full_name: true,
-//             employee_code: true,
-//           },
+//           select: { full_name: true, employee_code: true },
 //         },
 //       },
 //     }
@@ -202,7 +204,6 @@ const getDashboardData = async (filterDays) => {
 //   let present = 0;
 //   let wfh = 0;
 //   const markedEmployees = new Set();
-
 //   const detailedRecords = [];
 
 //   for (const [empId, record] of latestRecordMap.entries()) {
@@ -212,13 +213,24 @@ const getDashboardData = async (filterDays) => {
 //     if (status === "present") present++;
 //     else if (status === "work from home" || status === "wfh") wfh++;
 
+//     let managerVerifiedToday = false;
+//     if (record.manager_verification_date) {
+//       const verificationDate = DateTime.fromJSDate(
+//         record.manager_verification_date,
+//         { zone: "Asia/Kolkata" }
+//       );
+//       managerVerifiedToday = verificationDate.hasSame(today, "day");
+//     }
+
 //     detailedRecords.push({
 //       status: record.status,
 //       check_in_time: record.check_in_time,
 //       manager_verified: record.manager_verified || "P",
 //       manager_verification_date: record.manager_verification_date,
+//       manager_verified_today: managerVerifiedToday,
 //     });
 //   }
+//   const isVerified = detailedRecords?.every((i) => i.manager_verified === "A");
 
 //   const absent = totalEmployees - markedEmployees.size;
 
@@ -233,8 +245,8 @@ const getDashboardData = async (filterDays) => {
 //     present,
 //     work_from_home: wfh,
 //     absent,
+//     isVerified: isVerified,
 //     present_percentage: presentPercentage,
-//     details: detailedRecords,
 //   };
 // };
 
@@ -329,7 +341,14 @@ const getAllEmployeeAttendance = async (dateString) => {
   }
   const isVerified = detailedRecords?.every((i) => i.manager_verified === "A");
 
-  const absent = totalEmployees - markedEmployees.size;
+  // const halfDay = detailedRecords.filter(
+  //   (i) =>
+  //     i.status?.toLowerCase() === "half day" ||
+  //     i.status?.toLowerCase() === "half-day" ||
+  //     i.status?.toLowerCase() === "hd"
+  // ).length;
+
+  const absent = totalEmployees - (present + wfh + halfDay);
 
   const presentPercentage =
     totalEmployees === 0
@@ -341,8 +360,9 @@ const getAllEmployeeAttendance = async (dateString) => {
     total_employees: totalEmployees,
     present,
     work_from_home: wfh,
+    // half_day: halfDay,
     absent,
-    isVerified: isVerified,
+    is_verified: isVerified,
     present_percentage: presentPercentage,
   };
 };
