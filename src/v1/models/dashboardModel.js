@@ -342,9 +342,8 @@ const getAllEmployeeAttendance = async (dateString) => {
     present,
     work_from_home: wfh,
     absent,
-    isVerifiedAttendance: isVerified,
+    isVerified: isVerified,
     present_percentage: presentPercentage,
-    details: detailedRecords,
   };
 };
 
