@@ -142,20 +142,16 @@ const verifyAttendanceWithManualHR = async (
 
 const bulkVerifyWithManualHR = async (
   manager_id,
-  attendanceIds,
-  verificationStatus,
-  remarks,
-  logInst,
-  selectedHRUserId,
-  notifyHR
+  verificationStatus = "A",
+  remarks = "Bulk verification by manager",
+  logInst = 1,
+  notifyHR = true
 ) => {
   return await dailyAttendanceModel.bulkVerifyWithManualHR(
     manager_id,
-    attendanceIds,
     verificationStatus,
     remarks,
     logInst,
-    selectedHRUserId,
     notifyHR
   );
 };

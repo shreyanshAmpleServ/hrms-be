@@ -6,11 +6,117 @@
 const cron = require("node-cron");
 const logger = require("./Comman/logger");
 const moment = require("moment");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 const {
   contractExpiryAlertFn,
   getAllEmploymentContract,
 } = require("./v1/models/employmentContractModel");
 
+const dailyAttendanceInitializer = async () => {
+  try {
+    const currentTime = moment().format("YYYY-MM-DD HH:mm:ss");
+    logger.info(` Daily Attendance Initializer Started at ${currentTime}`);
+
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setHours(0, 0, 0, 0);
+
+    logger.info(` Creating attendance records for: ${tomorrow.toDateString()}`);
+
+    const activeEmployees = await prisma.hrms_d_employee.findMany({
+      where: {
+        status: "Active",
+      },
+      select: {
+        id: true,
+        full_name: true,
+        employee_code: true,
+      },
+    });
+
+    logger.info(`Found ${activeEmployees.length} active employees`);
+
+    if (activeEmployees.length === 0) {
+      logger.warn(" No active employees found - skipping attendance creation");
+      return;
+    }
+
+    const existingRecords = await prisma.hrms_d_daily_attendance_entry.findMany(
+      {
+        where: {
+          attendance_date: tomorrow,
+          employee_id: {
+            in: activeEmployees.map((emp) => emp.id),
+          },
+        },
+        select: {
+          employee_id: true,
+        },
+      }
+    );
+
+    const existingEmployeeIds = new Set(
+      existingRecords.map((record) => record.employee_id)
+    );
+
+    const employeesNeedingRecords = activeEmployees.filter(
+      (emp) => !existingEmployeeIds.has(emp.id)
+    );
+
+    logger.info(
+      ` Employees needing attendance records: ${employeesNeedingRecords.length}`
+    );
+    logger.info(` Employees with existing records: ${existingRecords.length}`);
+
+    if (employeesNeedingRecords.length === 0) {
+      logger.info("All employees already have attendance records for tomorrow");
+      return;
+    }
+
+    // Prepare bulk insert data
+    const attendanceData = employeesNeedingRecords.map((employee) => ({
+      employee_id: employee.id,
+      attendance_date: tomorrow,
+      status: "Absent",
+      remarks: "Auto-generated at midnight - Default status",
+      createdby: 1, // System user ID
+      createdate: new Date(),
+      log_inst: 1,
+    }));
+
+    // Bulk create attendance records using createMany
+    const result = await prisma.hrms_d_daily_attendance_entry.createMany({
+      data: attendanceData,
+      skipDuplicates: true,
+    });
+
+    logger.info(`SUCCESS: Created ${result.count} default attendance records`);
+    logger.info(
+      `Summary - Total Active: ${activeEmployees.length}, Created: ${result.count}, Existing: ${existingRecords.length}`
+    );
+
+    // Log some employee details for verification
+    employeesNeedingRecords.slice(0, 5).forEach((emp) => {
+      logger.info(
+        ` Created record for: ${emp.full_name} (${emp.employee_code})`
+      );
+    });
+
+    if (employeesNeedingRecords.length > 5) {
+      logger.info(` and ${employeesNeedingRecords.length - 5} more employees`);
+    }
+
+    logger.info(
+      `Daily Attendance Initializer Completed at ${moment().format(
+        "YYYY-MM-DD HH:mm:ss"
+      )}`
+    );
+  } catch (error) {
+    logger.error(" Failed to perform Daily Attendance Initialization:", error);
+    // You might want to send an alert about this failure
+  }
+};
 /**
  * @description Cron schedule format notation:
  * ┌────────────── second (optional)
@@ -181,7 +287,13 @@ const initializeCronJobs = () => {
       timezone: "Asia/Kolkata",
     });
 
+    cron.schedule("0 0 * * *", dailyAttendanceInitializer, {
+      scheduled: true,
+      name: "Daily Attendance Initializer",
+      timezone: "Asia/Kolkata",
+    });
     logger.info("=== All HRMS cron jobs scheduled successfully ===");
+    logger.info("   Attendance Initializer: Daily at 12:00 AM IST (Midnight)");
   } catch (error) {
     logger.error("Failed to initialize HRMS cron jobs:", error);
   }

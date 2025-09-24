@@ -95,7 +95,6 @@ const createDailyAttendance = async (data) => {
   }
 };
 
-// Find attendance entry by ID
 const findDailyAttendanceById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_daily_attendance_entry.findUnique({
@@ -552,23 +551,84 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
   }
 };
 
-const getManagerEmployees = async (manager_id, search, page, take) => {
+// const getManagerEmployees = async (manager_id, search, page, take) => {
+//   const skip = (page - 1) * take;
+
+//   const whereCondition = {
+//     hrms_manager: {
+//       id: manager_id,
+//     },
+
+//     ...(search && {
+//       OR: [
+//         { first_name: { contains: search.toLowerCase() } },
+//         { last_name: { contains: search.toLowerCase() } },
+//         { employee_code: { contains: search.toLowerCase() } },
+//         { email: { contains: search } },
+//       ],
+//     }),
+//   };
+
+//   const [employees, totalCount] = await Promise.all([
+//     prisma.hrms_d_employee.findMany({
+//       where: whereCondition,
+//       select: {
+//         id: true,
+//         employee_code: true,
+//         first_name: true,
+//         last_name: true,
+//         email: true,
+//         phone_number: true,
+//         hrms_employee_designation: {
+//           select: {
+//             designation_name: true,
+//           },
+//         },
+//         hrms_employee_department: {
+//           select: {
+//             department_name: true,
+//           },
+//         },
+//       },
+//       skip,
+//       take,
+//       orderBy: { first_name: "asc" },
+//     }),
+//     prisma.hrms_d_employee.count({
+//       where: whereCondition,
+//     }),
+//   ]);
+
+//   return {
+//     data: employees,
+//     totalCount,
+//     currentPage: page,
+//     totalPages: Math.ceil(totalCount / take),
+//   };
+// };
+
+const getManagerEmployees = async (
+  managerId,
+  search = "",
+  page = 1,
+  take = 10
+) => {
   const skip = (page - 1) * take;
 
   const whereCondition = {
     hrms_manager: {
-      id: manager_id,
+      id: managerId,
     },
-
-    ...(search && {
-      OR: [
-        { first_name: { contains: search.toLowerCase() } },
-        { last_name: { contains: search.toLowerCase() } },
-        { employee_code: { contains: search.toLowerCase() } },
-        { email: { contains: search } },
-      ],
-    }),
   };
+
+  if (search) {
+    whereCondition.OR = [
+      { first_name: { contains: search.toLowerCase() } },
+      { last_name: { contains: search.toLowerCase() } },
+      { employee_code: { contains: search.toLowerCase() } },
+      { email: { contains: search } },
+    ];
+  }
 
   const [employees, totalCount] = await Promise.all([
     prisma.hrms_d_employee.findMany({
@@ -593,7 +653,9 @@ const getManagerEmployees = async (manager_id, search, page, take) => {
       },
       skip,
       take,
-      orderBy: { first_name: "asc" },
+      orderBy: {
+        first_name: "asc",
+      },
     }),
     prisma.hrms_d_employee.count({
       where: whereCondition,
@@ -654,12 +716,12 @@ const getManagerTeamAttendance = async (
       whereCondition.OR = [
         {
           hrms_daily_attendance_employee: {
-            some: { full_name: { contains: search, mode: "insensitive" } },
+            some: { full_name: { contains: search.toLowerCase() } },
           },
         },
         {
           hrms_daily_attendance_employee: {
-            some: { employee_code: { contains: search, mode: "insensitive" } },
+            some: { employee_code: { contains: search.toLowerCase() } },
           },
         },
       ];
@@ -750,44 +812,65 @@ const getAllHRUsers = async () => {
   }
 };
 
-const verifyAttendanceByManager = async (
-  manager_id,
-  attendanceId,
-  verificationStatus,
-  remarks
-) => {
-  try {
-    const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update({
-      where: { id: parseInt(attendanceId) },
-      data: {
-        manager_verified: verificationStatus,
-        manager_verification_date: new Date(),
-        manager_remarks: remarks || null,
-        verified_by_manager_id: parseInt(managerId),
-        updatedate: new Date(),
-      },
-      include: {
-        hrms_daily_attendance_employee: {
-          select: {
-            id: true,
-            employee_code: true,
-            full_name: true,
-            email: true,
-          },
-        },
-      },
-    });
+// const verifyAttendanceWithManualHR = async (
+//   manager_id,
+//   attendance_id,
+//   verification_status,
+//   remarks,
+//   logInst,
+//   selected_hr_userId,
+//   notify_HR = true
+// ) => {
+//   try {
+//     const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update({
+//       where: { id: parseInt(attendance_id) },
+//       data: {
+//         manager_verified: verification_status,
+//         manager_verification_date: new Date(),
+//         manager_remarks: remarks || null,
+//         verified_by_manager_id: parseInt(manager_id),
+//         updatedate: new Date(),
+//       },
+//       include: {
+//         hrms_daily_attendance_employee: {
+//           select: {
+//             id: true,
+//             employee_code: true,
+//             full_name: true,
+//             email: true,
+//           },
+//         },
+//       },
+//     });
 
-    return {
-      success: true,
-      data: updatedRecord,
-      message: `Attendance ${verificationStatus.toLowerCase()} successfully`,
-    };
-  } catch (error) {
-    console.error("Error verifying attendance by manager:", error);
-    throw new CustomError("Failed to verify attendance", 500);
-  }
-};
+//     let notificationResult = null;
+//     if (notify_HR && selected_hr_userId) {
+//       notificationResult = await createHRNotification(
+//         parseInt(selected_hr_userId),
+//         attendance_id,
+//         manager_id,
+//         verification_status,
+//         remarks,
+//         logInst
+//       );
+//     }
+
+//     return {
+//       success: true,
+//       data: updatedRecord,
+//       notification: notificationResult,
+//       message: `Attendance ${verification_status.toLowerCase()}${
+//         notify_HR ? " and HR notified" : ""
+//       }`,
+//     };
+//   } catch (error) {
+//     console.error("Error verifying attendance with manual HR:", error);
+//     throw new CustomError(
+//       "Failed to verify attendance with manual HR notification",
+//       500
+//     );
+//   }
+// };
 
 const verifyAttendanceWithManualHR = async (
   manager_id,
@@ -815,6 +898,12 @@ const verifyAttendanceWithManualHR = async (
             employee_code: true,
             full_name: true,
             email: true,
+            hrms_employee_designation: {
+              select: { designation_name: true },
+            },
+            hrms_employee_department: {
+              select: { department_name: true },
+            },
           },
         },
       },
@@ -822,13 +911,28 @@ const verifyAttendanceWithManualHR = async (
 
     let notificationResult = null;
     if (notify_HR && selected_hr_userId) {
+      // Create employee details for notification
+      const employeeDetails = [
+        {
+          employee: updatedRecord.hrms_daily_attendance_employee,
+          status: updatedRecord.status,
+          checkInTime: updatedRecord.check_in_time,
+          checkOutTime: updatedRecord.check_out_time,
+          workingHours: updatedRecord.working_hours,
+          attendanceDate: updatedRecord.attendance_date,
+          verificationStatus: verification_status,
+        },
+      ];
+
       notificationResult = await createHRNotification(
         parseInt(selected_hr_userId),
         attendance_id,
         manager_id,
         verification_status,
         remarks,
-        logInst
+        logInst,
+        employeeDetails,
+        false
       );
     }
 
@@ -849,36 +953,301 @@ const verifyAttendanceWithManualHR = async (
   }
 };
 
+// const bulkVerifyWithManualHR = async (
+//   manager_id,
+//   verificationStatus = "A",
+//   remarks = "Bulk verification by manager",
+//   logInst = 1,
+//   notifyHR = true
+// ) => {
+//   try {
+//     const managerEmployees = await prisma.hrms_d_employee.findMany({
+//       where: {
+//         manager_id: parseInt(manager_id),
+//         status: "Active",
+//       },
+//       select: { id: true },
+//     });
+
+//     const employeeIds = managerEmployees.map((emp) => emp.id);
+
+//     if (employeeIds.length === 0) {
+//       return {
+//         success: true,
+//         processed: 0,
+//         errors: 0,
+//         results: [],
+//         errors: [],
+//         message: "No employees found under this manager",
+//       };
+//     }
+
+//     const today = new Date();
+//     today.setHours(0, 0, 0, 0);
+//     const tomorrow = new Date(today);
+//     tomorrow.setDate(tomorrow.getDate() + 1);
+
+//     const attendanceRecords =
+//       await prisma.hrms_d_daily_attendance_entry.findMany({
+//         where: {
+//           employee_id: { in: employeeIds },
+//           attendance_date: { gte: today, lt: tomorrow },
+//           OR: [{ manager_verified: null }, { manager_verified: "P" }],
+//         },
+//         select: { id: true },
+//       });
+
+//     const attendanceIds = attendanceRecords.map((record) => record.id);
+
+//     if (attendanceIds.length === 0) {
+//       return {
+//         success: true,
+//         processed: 0,
+//         errors: 0,
+//         results: [],
+//         errors: [],
+//         message: "No pending attendance records found for verification",
+//       };
+//     }
+
+//     const hrUsers = await getAllHRUsers();
+
+//     const results = [];
+//     const errors = [];
+
+//     for (const attendanceId of attendanceIds) {
+//       try {
+//         const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update(
+//           {
+//             where: { id: parseInt(attendanceId) },
+//             data: {
+//               manager_verified: verificationStatus,
+//               manager_verification_date: new Date(),
+//               manager_remarks: remarks,
+//               verified_by_manager_id: parseInt(manager_id),
+//               updatedate: new Date(),
+//             },
+//             include: {
+//               hrms_daily_attendance_employee: {
+//                 select: {
+//                   id: true,
+//                   employee_code: true,
+//                   full_name: true,
+//                   profile_pic: true,
+//                   email: true,
+//                 },
+//               },
+//             },
+//           }
+//         );
+
+//         results.push({
+//           attendanceId,
+//           employeeName: updatedRecord.hrms_daily_attendance_employee.full_name,
+//           employeeCode:
+//             updatedRecord.hrms_daily_attendance_employee.employee_code,
+//           verificationStatus,
+//         });
+//       } catch (error) {
+//         errors.push({
+//           attendanceId,
+//           error: error.message,
+//         });
+//       }
+//     }
+
+//     let notificationResults = [];
+//     if (notifyHR && hrUsers.length > 0) {
+//       for (const hrUser of hrUsers) {
+//         try {
+//           const notification = await createHRNotification(
+//             hrUser.employee_id,
+//             null,
+//             manager_id,
+//             verificationStatus,
+//             `Bulk verification completed for ${results.length} attendance records. ${remarks}`,
+//             logInst
+//           );
+//           notificationResults.push({
+//             hrUserId: hrUser.employee_id,
+//             hrUserName: hrUser.name,
+//             notificationId: notification?.id,
+//             success: true,
+//           });
+//         } catch (notificationError) {
+//           notificationResults.push({
+//             hrUserId: hrUser.employee_id,
+//             hrUserName: hrUser.name,
+//             error: notificationError.message,
+//             success: false,
+//           });
+//         }
+//       }
+//     }
+
+//     return {
+//       success: true,
+//       processed: results.length,
+//       errors: errors.length,
+//       results,
+//       errors,
+//       notifications: notificationResults,
+//       message: `Bulk verification completed: ${
+//         results.length
+//       } records verified, ${errors.length} errors, ${
+//         notificationResults.filter((n) => n.success).length
+//       } HR users notified`,
+//     };
+//   } catch (error) {
+//     console.error("Error in bulk verify all team attendance:", error);
+//     throw new CustomError("Failed to process bulk team verification", 500);
+//   }
+// };
+
 const bulkVerifyWithManualHR = async (
   manager_id,
-  attendanceIds,
-  verificationStatus,
-  remarks,
-  logInst,
-  selectedHRUserId,
+  verificationStatus = "A",
+  remarks = "Bulk verification by manager",
+  logInst = 1,
   notifyHR = true
 ) => {
   try {
+    const managerEmployees = await prisma.hrms_d_employee.findMany({
+      where: {
+        manager_id: parseInt(manager_id),
+        status: "Active",
+      },
+      select: { id: true },
+    });
+
+    const employeeIds = managerEmployees.map((emp) => emp.id);
+
+    if (employeeIds.length === 0) {
+      return {
+        success: true,
+        processed: 0,
+        errors: 0,
+        results: [],
+        message: "No employees found under this manager",
+      };
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const attendanceRecords =
+      await prisma.hrms_d_daily_attendance_entry.findMany({
+        where: {
+          employee_id: { in: employeeIds },
+          attendance_date: { gte: today, lt: tomorrow },
+          OR: [{ manager_verified: null }, { manager_verified: "P" }],
+        },
+        include: {
+          hrms_daily_attendance_employee: {
+            select: {
+              id: true,
+              employee_code: true,
+              full_name: true,
+              email: true,
+              hrms_employee_designation: {
+                select: { designation_name: true },
+              },
+              hrms_employee_department: {
+                select: { department_name: true },
+              },
+            },
+          },
+        },
+      });
+
+    if (attendanceRecords.length === 0) {
+      return {
+        success: true,
+        processed: 0,
+        errors: 0,
+        results: [],
+        message: "No pending attendance records found for verification",
+      };
+    }
+
     const results = [];
     const errors = [];
+    const employeeDetails = [];
 
-    for (const attendanceId of attendanceIds) {
+    // Process each attendance record
+    for (const record of attendanceRecords) {
       try {
-        const result = await verifyAttendanceWithManualHR(
-          manager_id,
-          attendanceId,
-          verificationStatus,
-          remarks,
-          logInst,
-          selectedHRUserId,
-          notifyHR
+        const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update(
+          {
+            where: { id: record.id },
+            data: {
+              manager_verified: verificationStatus,
+              manager_verification_date: new Date(),
+              manager_remarks: remarks,
+              verified_by_manager_id: parseInt(manager_id),
+              updatedate: new Date(),
+            },
+          }
         );
-        results.push(result);
+
+        results.push({
+          attendanceId: record.id,
+          employeeName: record.hrms_daily_attendance_employee.full_name,
+          employeeCode: record.hrms_daily_attendance_employee.employee_code,
+          verificationStatus,
+        });
+
+        employeeDetails.push({
+          employee: record.hrms_daily_attendance_employee,
+          status: record.status,
+          checkInTime: record.check_in_time,
+          checkOutTime: record.check_out_time,
+          workingHours: record.working_hours,
+          attendanceDate: record.attendance_date,
+          verificationStatus: verificationStatus,
+        });
       } catch (error) {
         errors.push({
-          attendanceId,
+          attendanceId: record.id,
+          employeeName: record.hrms_daily_attendance_employee.full_name,
           error: error.message,
         });
+      }
+    }
+
+    let notificationResults = [];
+    if (notifyHR && results.length > 0) {
+      const hrUsers = await getAllHRUsers();
+
+      for (const hrUser of hrUsers) {
+        try {
+          const notification = await createHRNotification(
+            hrUser.employee_id,
+            null,
+            manager_id,
+            verificationStatus,
+            `${remarks} - Processed ${results.length} attendance records`,
+            logInst,
+            employeeDetails,
+            true // is bulk
+          );
+
+          notificationResults.push({
+            hrUserId: hrUser.employee_id,
+            hrUserName: hrUser.name,
+            notificationId: notification?.id,
+            success: true,
+          });
+        } catch (notificationError) {
+          notificationResults.push({
+            hrUserId: hrUser.employee_id,
+            hrUserName: hrUser.name,
+            error: notificationError.message,
+            success: false,
+          });
+        }
       }
     }
 
@@ -888,13 +1257,181 @@ const bulkVerifyWithManualHR = async (
       errors: errors.length,
       results,
       errors,
-      message: `Processed ${results.length} records, ${errors.length} errors`,
+      notifications: notificationResults,
+      message: `Bulk verification completed: ${
+        results.length
+      } records verified, ${errors.length} errors, ${
+        notificationResults.filter((n) => n.success).length
+      } HR users notified`,
     };
   } catch (error) {
     console.error("Error in bulk verify with manual HR:", error);
-    throw new CustomError("Failed to process bulk verification", 500);
+    throw new CustomError("Failed to process bulk team verification", 500);
   }
 };
+// const createHRNotification = async (
+//   hrUserId,
+//   attendanceId,
+//   manager_id,
+//   verificationStatus,
+//   remarks,
+//   logInst,
+//   managerDetails = null,
+//   employeeDetails = [], // Array of processed employees
+//   isBulk = false
+// ) => {
+//   try {
+//     // Get manager details if not provided
+//     if (!managerDetails && manager_id) {
+//       managerDetails = await prisma.hrms_d_employee.findUnique({
+//         where: { id: parseInt(manager_id) },
+//         select: {
+//           id: true,
+//           employee_code: true,
+//           full_name: true,
+//           email: true,
+//           hrms_employee_designation: {
+//             select: { designation_name: true },
+//           },
+//           hrms_employee_department: {
+//             select: { department_name: true },
+//           },
+//         },
+//       });
+//     }
+
+//     const statusText =
+//       verificationStatus === "A"
+//         ? "APPROVED"
+//         : verificationStatus === "R"
+//         ? "REJECTED"
+//         : verificationStatus === "P"
+//         ? "PENDING"
+//         : "VERIFIED";
+
+//     const messageTitle = isBulk
+//       ? `Bulk Attendance ${statusText} - ${employeeDetails.length} Employees`
+//       : `Attendance ${statusText} - ${
+//           employeeDetails[0]?.employee?.fullName || "Employee"
+//         }`;
+
+//     // Create employee list with status details
+//     let employeeListText = "";
+//     if (employeeDetails && employeeDetails.length > 0) {
+//       employeeListText = employeeDetails
+//         .map((emp, index) => {
+//           const employee = emp.employee || emp;
+//           return `${index + 1}. ${
+//             employee.fullName || employee.full_name || "Unknown"
+//           } (${employee.employeeCode || employee.employee_code || "N/A"})
+//    • Designation: ${employee.designation || "N/A"}
+//    • Department: ${employee.department || "N/A"}
+//    • Status: ${emp.attendanceStatus || emp.status || "Present"}
+//    • Check-in: ${
+//      emp.checkInTime ? new Date(emp.checkInTime).toLocaleTimeString() : "N/A"
+//    }
+//    • Check-out: ${
+//      emp.checkOutTime ? new Date(emp.checkOutTime).toLocaleTimeString() : "N/A"
+//    }
+//    • Working Hours: ${emp.workingHours || "N/A"} hrs`;
+//         })
+//         .join("\n\n");
+//     }
+
+//     let messageBody;
+//     if (isBulk) {
+//       messageBody = ` BULK ATTENDANCE VERIFICATION
+
+//  Manager Details:
+// • Name: ${managerDetails?.full_name || "Unknown"}
+// • Code: ${managerDetails?.employee_code || "N/A"}
+// • Designation: ${
+//         managerDetails?.hrms_employee_designation?.designation_name || "N/A"
+//       }
+// • Department: ${
+//         managerDetails?.hrms_employee_department?.department_name || "N/A"
+//       }
+
+// Action Summary:
+// • Status: ${statusText}
+// • Total Records: ${employeeDetails.length} attendance records
+// • Date: ${new Date().toLocaleDateString()}
+// • Time: ${new Date().toLocaleTimeString()}
+
+//  Verified Employees:
+// ${employeeListText || "No employee details available"}
+
+//  Manager Remarks:
+// ${remarks || "No additional remarks provided"}
+
+//  This is an automated notification for HR review.
+// Please verify the attendance records in the system.`;
+//     } else {
+//       const employee = employeeDetails[0]?.employee || employeeDetails[0] || {};
+//       messageBody = ` ATTENDANCE VERIFICATION
+
+// 👤 Manager Details:
+// • Name: ${managerDetails?.full_name || "Unknown"}
+// • Code: ${managerDetails?.employee_code || "N/A"}
+// • Designation: ${
+//         managerDetails?.hrms_employee_designation?.designation_name || "N/A"
+//       }
+// • Department: ${
+//         managerDetails?.hrms_employee_department?.department_name || "N/A"
+//       }
+
+//  Employee Details:
+// • Name: ${employee.fullName || employee.full_name || "Unknown"}
+// • Code: ${employee.employeeCode || employee.employee_code || "N/A"}
+// • Designation: ${employee.designation || "N/A"}
+// • Department: ${employee.department || "N/A"}
+
+// Verification Details:
+// • Status: ${statusText}
+// • Record ID: #${attendanceId || "N/A"}
+// • Attendance Status: ${employeeDetails[0]?.attendanceStatus || "Present"}
+// • Check-in: ${
+//         employeeDetails[0]?.checkInTime
+//           ? new Date(employeeDetails[0].checkInTime).toLocaleTimeString()
+//           : "N/A"
+//       }
+// • Check-out: ${
+//         employeeDetails[0]?.checkOutTime
+//           ? new Date(employeeDetails[0].checkOutTime).toLocaleTimeString()
+//           : "N/A"
+//       }
+// • Working Hours: ${employeeDetails[0]?.workingHours || "N/A"} hrs
+// • Date: ${new Date().toLocaleDateString()}
+// • Time: ${new Date().toLocaleTimeString()}
+
+//  Manager Remarks:
+// ${remarks || "No additional remarks provided"}
+
+//  This is an automated notification for HR review.`;
+//     }
+
+//     const notification = await prisma.hrms_d_notification_log.create({
+//       data: {
+//         notification_log_employee: {
+//           connect: { id: parseInt(hrUserId) },
+//         },
+//         message_title: messageTitle,
+//         message_body: messageBody,
+//         channel: "SYSTEM",
+//         status: "SENT",
+//         sent_on: new Date(),
+//         createdate: new Date(),
+//         createdby: parseInt(manager_id) || null,
+//         log_inst: parseInt(logInst) || 1,
+//       },
+//     });
+
+//     return notification;
+//   } catch (error) {
+//     console.error("Error creating HR notification:", error);
+//     return null;
+//   }
+// };
 
 const createHRNotification = async (
   hrUserId,
@@ -902,29 +1439,152 @@ const createHRNotification = async (
   manager_id,
   verificationStatus,
   remarks,
-  logInst
+  logInst,
+  employeeDetails = null,
+  isBulk = false
 ) => {
   try {
+    const managerDetails = await prisma.hrms_d_employee.findUnique({
+      where: { id: parseInt(manager_id) },
+      select: {
+        id: true,
+        employee_code: true,
+        full_name: true,
+        email: true,
+        hrms_employee_designation: {
+          select: { designation_name: true },
+        },
+        hrms_employee_department: {
+          select: { department_name: true },
+        },
+      },
+    });
+
+    let employees = [];
+    if (!employeeDetails && attendanceId) {
+      const attendanceRecord =
+        await prisma.hrms_d_daily_attendance_entry.findUnique({
+          where: { id: parseInt(attendanceId) },
+          include: {
+            hrms_daily_attendance_employee: {
+              select: {
+                id: true,
+                employee_code: true,
+                full_name: true,
+                email: true,
+                hrms_employee_designation: {
+                  select: { designation_name: true },
+                },
+                hrms_employee_department: {
+                  select: { department_name: true },
+                },
+              },
+            },
+          },
+        });
+
+      if (attendanceRecord) {
+        employees = [
+          {
+            employee: attendanceRecord.hrms_daily_attendance_employee,
+            status: attendanceRecord.status,
+            checkInTime: attendanceRecord.check_in_time,
+            checkOutTime: attendanceRecord.check_out_time,
+            workingHours: attendanceRecord.working_hours,
+            attendanceDate: attendanceRecord.attendance_date,
+            verificationStatus: verificationStatus,
+          },
+        ];
+      }
+    } else if (employeeDetails) {
+      employees = Array.isArray(employeeDetails)
+        ? employeeDetails
+        : [employeeDetails];
+    }
+
+    const statusText =
+      {
+        A: "APPROVED",
+        R: "REJECTED",
+        P: "PENDING",
+      }[verificationStatus] || "VERIFIED";
+
+    const messageTitle = isBulk
+      ? `Bulk Attendance ${statusText} - ${employees.length} Employee${
+          employees.length > 1 ? "s" : ""
+        }`
+      : `Attendance ${statusText} - ${
+          employees[0]?.employee?.full_name || "Employee"
+        }`;
+
+    let employeeSection = "";
+    if (employees.length > 0) {
+      employeeSection = employees.map((emp, index) => {
+        const employee = emp.employee || emp;
+        const statusIcon = [emp.status] || "";
+
+        return `${index + 1}. ${employee.full_name || employee.name} (${
+          employee.employee_code
+        })
+   ${statusIcon} Status: ${emp.status || "Present"} → ${statusText}
+    Check-in: ${
+      emp.checkInTime
+        ? new Date(emp.checkInTime).toLocaleTimeString("en-IN")
+        : "N/A"
+    }
+   
+    Working Hours: ${emp.workingHours || "N/A"} hrs`;
+      });
+    }
+
+    const messageBody = ` ATTENDANCE VERIFICATION NOTIFICATION
+
+ Manager Details:
+• Name: ${managerDetails?.full_name || "Unknown Manager"}
+• Code: ${managerDetails?.employee_code || "N/A"}
+• Designation: ${
+      managerDetails?.hrms_employee_designation?.designation_name || "Manager"
+    }
+• Department: ${
+      managerDetails?.hrms_employee_department?.department_name || "N/A"
+    }
+
+ Verification Summary:
+• Action: ${statusText}
+• Date: ${new Date().toLocaleDateString("en-IN")}
+• Time: ${new Date().toLocaleTimeString("en-IN")}
+• Total Records: ${employees.length}
+
+Employee Details:
+${employeeSection || "No employee details available"}
+
+Manager Remarks:
+${remarks || "No additional remarks provided"}
+`;
+
     const notification = await prisma.hrms_d_notification_log.create({
       data: {
-        employee_id: parseInt(hrUserId),
-        message_title: `Attendance ${verificationStatus}`,
-        message_body: `Manager has ${verificationStatus.toLowerCase()} attendance record #${attendanceId}. ${
-          remarks ? "Remarks: " + remarks : ""
-        }`,
+        notification_log_employee: {
+          connect: { id: parseInt(hrUserId) },
+        },
+        message_title: messageTitle,
+        message_body: messageBody,
         channel: "SYSTEM",
         status: "SENT",
         sent_on: new Date(),
         createdate: new Date(),
-        createdby: parseInt(manager_id),
-        log_inst: logInst || 1,
+        createdby: parseInt(manager_id) || null,
+        log_inst: parseInt(logInst) || 1,
       },
     });
 
+    console.log(
+      `Notification created for HR User ${hrUserId}: ${messageTitle}`
+    );
     return notification;
   } catch (error) {
     console.error("Error creating HR notification:", error);
-    return null;
+    throw new Error(`Failed to create HR notification: ${error.message}`);
   }
 };
 

@@ -1,7 +1,30 @@
 const dailyAttendanceService = require("../services/dailyAttendanceService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+const attendanceScheduler = require("../services/attendanceScheduler");
 
+const createDefaultAttendanceForToday = async (req, res, next) => {
+  try {
+    const { date } = req.query;
+    const result = await attendanceScheduler.createDefaultAttendanceForDate(
+      date
+    );
+
+    if (result.success) {
+      res.status(200).success(result.message, {
+        recordsCreated: result.recordsCreated,
+        totalEmployees: result.totalEmployees,
+        date: result.date,
+      });
+    } else {
+      res.status(400).json({ message: result.message });
+    }
+  } catch (error) {
+    next(error);
+  }
+};
 const createDailyAttendance = async (req, res, next) => {
   try {
     console.log("Incoming request body:", req.body);
@@ -289,43 +312,19 @@ const verifyAttendanceWithManualHR = async (req, res, next) => {
 
 const bulkVerifyWithManualHR = async (req, res, next) => {
   try {
-    const manager_id = req.user.id;
-    const {
-      attendanceIds,
-      verificationStatus,
-      remarks,
-      selectedHRUserId,
-      notifyHR = true,
-    } = req.body;
-
-    if (
-      !attendanceIds ||
-      !Array.isArray(attendanceIds) ||
-      attendanceIds.length === 0
-    ) {
-      throw new CustomError("Attendance IDs array is required", 400);
-    }
-
-    if (notifyHR && !selectedHRUserId) {
-      throw new CustomError("Please select an HR user to notify", 400);
-    }
+    const manager_id = req.user.employee_id;
 
     const reqData = await dailyAttendanceService.bulkVerifyWithManualHR(
       manager_id,
-      attendanceIds,
-      verificationStatus,
-      remarks,
+      "A",
+      "Bulk verification by manager - all team attendance approved",
       req.user.log_inst,
-      selectedHRUserId,
-      notifyHR
+      true
     );
 
     res
       .status(200)
-      .success(
-        "Bulk verification completed with selected HR notification",
-        reqData
-      );
+      .success("Bulk team verification completed successfully", reqData);
   } catch (error) {
     next(error);
   }
@@ -450,4 +449,5 @@ module.exports = {
   markNotificationRead,
 
   getAllManagersWithVerifications,
+  createDefaultAttendanceForToday,
 };

@@ -109,4 +109,10 @@ router.get(
   dailyAttendanceController.getAllManagersWithVerifications
 );
 
+router.post(
+  "/create-default-attendance",
+  authenticateToken,
+  dailyAttendanceController.createDefaultAttendanceForToday
+);
+
 module.exports = router;

@@ -660,7 +660,7 @@ model hrms_d_notification_log {
   id                        Int              @id(map: "PK__hrms_d_n__3213E83FE7247C57") @default(autoincrement())
   employee_id               Int?
   message_title             String?          @db.NVarChar(255)
-  message_body              String?
+  message_body              String?           @db.Text
   channel                   String?          @db.VarChar(50)
   sent_on                   DateTime?        @db.DateTime
   status                    String?          @db.VarChar(50)
