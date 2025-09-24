@@ -348,7 +348,7 @@ const getAllEmployeeAttendance = async (dateString) => {
   //     i.status?.toLowerCase() === "hd"
   // ).length;
 
-  const absent = totalEmployees - (present + wfh + halfDay);
+  const absent = totalEmployees - (present + wfh);
 
   const presentPercentage =
     totalEmployees === 0
@@ -782,7 +782,7 @@ const attendanceOverview = async (dateString) => {
       Present: 0,
       Absent: 0,
       Late: 0,
-      "Half Day": 0,
+      // "Half Day": 0,
       "Work From Home": 0,
     };
 
