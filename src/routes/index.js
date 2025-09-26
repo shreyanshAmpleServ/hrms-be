@@ -146,6 +146,7 @@ const notificationSetupRoute = require("../v1/routes/notificationSetupRoute.js")
 const alertWorkflowRoutes = require("../v1/routes/alertWorkflowRoutes.js");
 const announcementRoute = require("../v1/routes/announcementRoute.js");
 const paymentRecoveryRoute = require("../v1/routes/paymentRecoveryRoute.js");
+const importExportRoutes = require("../v1/routes/importExportRoutes.js");
 
 const router = express.Router();
 
@@ -297,6 +298,7 @@ router.use("/v1", notificationSetupRoute);
 router.use("/v1", alertWorkflowRoutes);
 router.use("/v1", announcementRoute);
 router.use("/v1", paymentRecoveryRoute);
+router.use("/v1", importExportRoutes);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;
