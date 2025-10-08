@@ -2,7 +2,6 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
-// ✅ CORRECTED TABLE CONFIGURATIONS
 const TABLE_CONFIGS = {
   employees: {
     tableName: "hrms_d_employee",
