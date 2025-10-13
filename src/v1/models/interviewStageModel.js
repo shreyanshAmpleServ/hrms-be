@@ -7,6 +7,7 @@ const serializeInterviewStage = (data) => ({
   stage_name: data.stage_name,
   description: data.description,
   sort_order: data.sort_order ? Number(data.sort_order) : 0,
+  stage_code: data.stage_code,
 });
 
 // Create
@@ -83,10 +84,6 @@ const deleteInterviewStage = async (id) => {
       throw new CustomError("Interview stage not found", 404);
     }
 
-    // Perform deletions / updates in a single transaction:
-    // 1) delete all child remarks
-    // 2) clear candidate references to this stage
-    // 3) delete the stage itself
     await prisma.$transaction([
       prisma.hrms_m_interview_stage_remark.deleteMany({
         where: { stage_id: stageId },

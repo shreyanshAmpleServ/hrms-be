@@ -7,6 +7,11 @@ const serializeJobData = (data) => {
     department_id: Number(data.department_id) || null,
     designation_id: Number(data.designation_id) || null,
     job_title: data.job_title || "",
+    reporting_manager_id: Number(data.reporting_manager_id) || null,
+    currency_id: Number(data.currency_id) || null,
+    annual_salary_from: Number(data.annual_salary_from) || null,
+    annual_salary_to: Number(data.annual_salary_to) || null,
+    due_date: data.due_date ? new Date(data.due_date) : null,
     description: data.description || "",
     required_experience: data.required_experience || "",
     posting_date: data.posting_date ? new Date(data.posting_date) : null,
@@ -20,37 +25,6 @@ const serializeJobData = (data) => {
           data.is_internal === "1",
   };
 };
-
-// Create a new job posting
-// const createJobPosting = async (data) => {
-//   try {
-//     const reqData = await prisma.hrms_d_job_posting.create({
-//       data: {
-//         ...serializeJobData(data),
-//         createdby: data.createdby || 1,
-//         createdate: new Date(),
-//         log_inst: data.log_inst || 1,
-//       },
-//       include: {
-//         hrms_job_department: {
-//           select: {
-//             department_name: true,
-//             id: true,
-//           },
-//         },
-//         hrms_job_designation: {
-//           select: {
-//             designation_name: true,
-//             id: true,
-//           },
-//         },
-//       },
-//     });
-//     return reqData;
-//   } catch (error) {
-//     throw new CustomError(`Error creating job posting: ${error.message}`, 500);
-//   }
-// };
 
 const createJobPosting = async (data) => {
   try {
@@ -112,6 +86,18 @@ const createJobPosting = async (data) => {
             id: true,
           },
         },
+        job_posting_currency: {
+          select: {
+            currency_name: true,
+            id: true,
+          },
+        },
+        job_posting_reporting_manager: {
+          select: {
+            full_name: true,
+            id: true,
+          },
+        },
       },
     });
 
@@ -159,6 +145,18 @@ const updateJobPosting = async (id, data) => {
         hrms_job_designation: {
           select: {
             designation_name: true,
+            id: true,
+          },
+        },
+        job_posting_currency: {
+          select: {
+            currency_name: true,
+            id: true,
+          },
+        },
+        job_posting_reporting_manager: {
+          select: {
+            full_name: true,
             id: true,
           },
         },
@@ -241,6 +239,18 @@ const getAllJobPosting = async (search, page, size, startDate, endDate) => {
         hrms_job_designation: {
           select: {
             designation_name: true,
+            id: true,
+          },
+        },
+        job_posting_currency: {
+          select: {
+            currency_name: true,
+            id: true,
+          },
+        },
+        job_posting_reporting_manager: {
+          select: {
+            full_name: true,
             id: true,
           },
         },
