@@ -2,11 +2,74 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
+const generateDocumentCode = async () => {
+  try {
+    const prefix = "DOC-";
+    const paddingLength = 5;
+
+    // Get the latest document with the highest code
+    const latestDocument = await prisma.hrms_d_document_upload.findFirst({
+      where: {
+        code: {
+          startsWith: prefix,
+        },
+      },
+      orderBy: {
+        code: "desc",
+      },
+      select: {
+        code: true,
+      },
+    });
+
+    let nextNumber = 1;
+
+    if (latestDocument && latestDocument.code) {
+      // Extract the numeric part from the code
+      const numericPart = latestDocument.code.replace(prefix, "");
+      const lastNumber = parseInt(numericPart, 10);
+
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+
+    let isUnique = false;
+    let newCode = "";
+
+    while (!isUnique) {
+      newCode = prefix + String(nextNumber).padStart(paddingLength, "0");
+
+      const existingDocument = await prisma.hrms_d_document_upload.findFirst({
+        where: {
+          code: newCode,
+        },
+      });
+
+      if (!existingDocument) {
+        isUnique = true;
+      } else {
+        nextNumber++;
+      }
+    }
+
+    return newCode;
+  } catch (error) {
+    throw new CustomError(
+      `Error generating document code: ${error.message}`,
+      500
+    );
+  }
+};
+
 const createDocType = async (data) => {
   try {
     const finalData = await prisma.hrms_m_document_type.create({
       data: {
+        name: data.name || "",
+        code: await generateDocumentCode(),
         doc_type: data.doc_type || "",
+        alert_before_expiry: Number(data.alert_before_expiry) || 0,
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
         createdate: new Date(),
