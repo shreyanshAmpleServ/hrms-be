@@ -304,6 +304,14 @@ const getAllEmployeeAttendance = async (dateString, managerId) => {
     else if (s === "work from home" || s === "wfh") wfh++;
   }
 
+  // const pendingCount = await prisma.hrms_d_daily_attendance_entry.count({
+  //   where: {
+  //     attendance_date: { gte: today.toJSDate(), lte: endOfDay.toJSDate() },
+  //     employee_id: { in: employeeIds },
+  //     OR: [{ manager_verified: null }, { manager_verified: { not: "A" } }],
+  //   },
+  // });
+
   const pendingCount = await prisma.hrms_d_daily_attendance_entry.count({
     where: {
       attendance_date: { gte: today.toJSDate(), lte: endOfDay.toJSDate() },
@@ -312,6 +320,8 @@ const getAllEmployeeAttendance = async (dateString, managerId) => {
     },
   });
 
+  const hasRecords = latestRecords.length > 0;
+  const is_verified = hasRecords && pendingCount === 0;
   const absent = totalEmployees - (present + wfh);
   const presentPercentage =
     totalEmployees === 0
@@ -324,7 +334,7 @@ const getAllEmployeeAttendance = async (dateString, managerId) => {
     present,
     work_from_home: wfh,
     absent,
-    is_verified: pendingCount === 0,
+    is_verified: is_verified,
     present_percentage: presentPercentage,
     manager_id: managerId ?? null,
   };
