@@ -7,8 +7,7 @@ const generateDocumentCode = async () => {
     const prefix = "DOC-";
     const paddingLength = 5;
 
-    // Get the latest document with the highest code
-    const latestDocument = await prisma.hrms_d_document_upload.findFirst({
+    const latestDocument = await prisma.hrms_m_document_type.findFirst({
       where: {
         code: {
           startsWith: prefix,
@@ -25,7 +24,6 @@ const generateDocumentCode = async () => {
     let nextNumber = 1;
 
     if (latestDocument && latestDocument.code) {
-      // Extract the numeric part from the code
       const numericPart = latestDocument.code.replace(prefix, "");
       const lastNumber = parseInt(numericPart, 10);
 
@@ -40,7 +38,7 @@ const generateDocumentCode = async () => {
     while (!isUnique) {
       newCode = prefix + String(nextNumber).padStart(paddingLength, "0");
 
-      const existingDocument = await prisma.hrms_d_document_upload.findFirst({
+      const existingDocument = await prisma.hrms_m_document_type.findFirst({
         where: {
           code: newCode,
         },
