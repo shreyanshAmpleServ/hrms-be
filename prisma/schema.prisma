@@ -196,7 +196,9 @@ model hrms_d_disciplinary_action {
 
 model hrms_d_document_upload {
   id                       Int              @id(map: "PK__hrms_d_d__3213E83F12C70662") @default(autoincrement())
+  name                     String?          @db.NVarChar(100)
   employee_id              Int?
+  code                     String?          @db.VarChar(20)
   document_type            String?          @db.NVarChar(100)
   document_path            String?          @db.NVarChar(255)
   uploaded_on              DateTime?        @db.DateTime
@@ -211,6 +213,7 @@ model hrms_d_document_upload {
   is_mandatory             String           @default("Y", map: "DF__hrms_d_do__is_ma__056ECC6A") @db.Char(1)
   document_owner_type      String?          @default("employee", map: "DF__hrms_d_do__docum__0662F0A3") @db.VarChar(20)
   document_owner_id        Int?
+  alert_before_expiry      Int?
   document_upload_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -660,7 +663,7 @@ model hrms_d_notification_log {
   id                        Int              @id(map: "PK__hrms_d_n__3213E83FE7247C57") @default(autoincrement())
   employee_id               Int?
   message_title             String?          @db.NVarChar(255)
-  message_body              String?           @db.Text
+  message_body              String?          @db.Text
   channel                   String?          @db.VarChar(50)
   sent_on                   DateTime?        @db.DateTime
   status                    String?          @db.VarChar(50)

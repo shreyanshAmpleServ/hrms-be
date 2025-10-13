@@ -2,10 +2,71 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
-// Serialize document upload data
+const generateDocumentCode = async () => {
+  try {
+    const prefix = "DOC-";
+    const paddingLength = 5;
 
+    // Get the latest document with the highest code
+    const latestDocument = await prisma.hrms_d_document_upload.findFirst({
+      where: {
+        code: {
+          startsWith: prefix,
+        },
+      },
+      orderBy: {
+        code: "desc",
+      },
+      select: {
+        code: true,
+      },
+    });
+
+    let nextNumber = 1;
+
+    if (latestDocument && latestDocument.code) {
+      // Extract the numeric part from the code
+      const numericPart = latestDocument.code.replace(prefix, "");
+      const lastNumber = parseInt(numericPart, 10);
+
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+
+    let isUnique = false;
+    let newCode = "";
+
+    while (!isUnique) {
+      newCode = prefix + String(nextNumber).padStart(paddingLength, "0");
+
+      const existingDocument = await prisma.hrms_d_document_upload.findFirst({
+        where: {
+          code: newCode,
+        },
+      });
+
+      if (!existingDocument) {
+        isUnique = true;
+      } else {
+        nextNumber++;
+      }
+    }
+
+    return newCode;
+  } catch (error) {
+    throw new CustomError(
+      `Error generating document code: ${error.message}`,
+      500
+    );
+  }
+};
+
+// Serialize document upload data
 const serializeDocumentData = (data) => ({
+  name: data.name,
   employee_id: data.employee_id ? Number(data.employee_id) : null,
+  code: data.code,
   document_type: data.document_type || "",
   document_path: data.document_path || "",
   uploaded_on: data.uploaded_on ? new Date(data.uploaded_on) : null,
@@ -17,6 +78,9 @@ const serializeDocumentData = (data) => ({
       ? data.is_mandatory
       : "Y",
   document_owner_type: data.document_owner_type || "employee",
+  alert_before_expiry: data.alert_before_expiry
+    ? Number(data.alert_before_expiry)
+    : null,
   document_owner_id: data.document_owner_id
     ? Number(data.document_owner_id)
     : null,
@@ -25,6 +89,23 @@ const serializeDocumentData = (data) => ({
 // Create a new document upload
 const createDocumentUpload = async (data) => {
   try {
+    if (!data.code) {
+      data.code = await generateDocumentCode();
+    } else {
+      const existingDocument = await prisma.hrms_d_document_upload.findFirst({
+        where: {
+          code: data.code,
+        },
+      });
+
+      if (existingDocument) {
+        throw new CustomError(
+          `Document code '${data.code}' already exists`,
+          400
+        );
+      }
+    }
+
     const reqData = await prisma.hrms_d_document_upload.create({
       data: {
         ...serializeDocumentData(data),
