@@ -10,8 +10,6 @@ const {
 } = require("../../utils/uploadBackblaze");
 const fs = require("fs");
 const path = require("path");
-const fetch = require("node-fetch").default;
-const PDFLib = require("pdf-lib");
 const crypto = require("crypto");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
