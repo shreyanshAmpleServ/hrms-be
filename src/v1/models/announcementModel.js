@@ -1,7 +1,5 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const { schedule } = require("node-cron");
-const { parseDate } = require("pdf-lib");
 const prisma = new PrismaClient();
 
 const serializeAnnouncementData = (data) => ({
