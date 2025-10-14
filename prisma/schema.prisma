@@ -282,7 +282,7 @@ model hrms_d_employee {
   work_address_id                                 Int?
   payment_mode                                    String?                                           @db.NVarChar(50)
   notes                                           String?                                           @db.NVarChar(500)
-  header_attendance_rule                          String?                                           @db.NVarChar(50)
+  header_attendance_rule                          String?                                           @db.VarChar(255)
   activity_employee                               hrms_d_activity_log[]
   hrms_advance_payement_entry_approvedBy          hrms_d_advance_payment_entry[]                    @relation("AdvanceApprovedBy")
   hrms_advance_payement_entry_employee            hrms_d_advance_payment_entry[]                    @relation("AdvancePayementEntry")
@@ -1269,7 +1269,7 @@ model hrms_m_leave_type_master {
   leave_type                      String?                        @db.NVarChar(100)
   carry_forward                   Boolean?
   sub_period                      String?                        @db.VarChar(100)
-  leaves_sub_period               Decimal                        @db.Decimal(18, 2)
+  leaves_sub_period               Decimal?                       @db.Decimal(18, 2)
   createdate                      DateTime?                      @default(now(), map: "DF__hrms_m_le__creat__282DF8C2") @db.DateTime
   createdby                       Int
   updatedate                      DateTime?                      @db.DateTime

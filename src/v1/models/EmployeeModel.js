@@ -61,6 +61,7 @@ const serializeTags = (data) => {
       connect: { id: Number(data.currency_id || 23) },
     };
   }
+
   if ("nationality" in data) serialized.nationality = data.nationality;
   if ("passport_issue_date" in data)
     serialized.passport_issue_date = data.passport_issue_date
@@ -253,6 +254,8 @@ const createEmployee = async (data) => {
 
     // Split the transaction into smaller operations
     // 1. Create employee first
+    console.log("header_attendance_rule value:", data.header_attendance_rule);
+
     const employee = await prisma.hrms_d_employee.create({
       data: {
         ...serializedData,
