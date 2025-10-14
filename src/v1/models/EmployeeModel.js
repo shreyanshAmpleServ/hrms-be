@@ -104,6 +104,8 @@ const serializeTags = (data) => {
       ? JSON.stringify(data.social_medias)
       : JSON.stringify([data.social_medias]);
   }
+  if ("header_attendance_rule" in data)
+    serialized.header_attendance_rule = data.header_attendance_rule;
   if ("wcf" in data) serialized.wcf = data.wcf;
   if ("nhif" in data) serialized.nhif = data.nhif;
   if ("father_name" in data) serialized.father_name = data.father_name;
