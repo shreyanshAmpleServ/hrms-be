@@ -11,6 +11,10 @@ const serializeLeaveTypeMasterData = (data) => ({
   leave_unit: data.leave_unit || "D",
   prorate_allowed: data.prorate_allowed || "Y",
   for_gender: data.for_gender || "B",
+  sub_period: data.sub_period || "",
+  leaves_sub_period: data.leaves_sub_period
+    ? Number(data.leaves_sub_period)
+    : null,
   is_active: data.is_active || "Y",
 });
 
