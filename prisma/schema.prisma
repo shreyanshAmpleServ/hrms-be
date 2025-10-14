@@ -282,6 +282,7 @@ model hrms_d_employee {
   work_address_id                                 Int?
   payment_mode                                    String?                                           @db.NVarChar(50)
   notes                                           String?                                           @db.NVarChar(500)
+  header_attendance_rule                          String?                                           @db.NVarChar(50)
   activity_employee                               hrms_d_activity_log[]
   hrms_advance_payement_entry_approvedBy          hrms_d_advance_payment_entry[]                    @relation("AdvanceApprovedBy")
   hrms_advance_payement_entry_employee            hrms_d_advance_payment_entry[]                    @relation("AdvancePayementEntry")
@@ -363,6 +364,8 @@ model hrms_d_employee {
   assigned_employee                               hrms_d_notification_assigned_user[]
   nida_file                                       String?                                           @db.VarChar(255)
   nssf_file                                       String?                                           @db.VarChar(255)
+  wcf                                             String?                                           @db.VarChar(255)
+  nhif                                            String?                                           @db.VarChar(255)
   alert_workflow_actions_recipient                hrms_d_alert_workflow_action[]                    @relation("AlertActionRecipients")
   alert_workflow_actions_alert_recipient          hrms_d_alert_workflow_action[]                    @relation("AlertActionAlertRecipients")
   early_leave_requests                            hrms_d_early_leave[]
@@ -1148,6 +1151,7 @@ model hrms_m_designation_master {
   candidate_master_applied_position hrms_d_candidate_master[]
   hrms_employee_designation         hrms_d_employee[]
   hrms_job_designation              hrms_d_job_posting[]
+  approval_work_flow_designation    hrms_d_approval_work_flow[]
 }
 
 model hrms_m_disciplinary_penalty {
@@ -1264,6 +1268,8 @@ model hrms_m_leave_type_master {
   id                              Int                            @id(map: "PK__hrms_m_l__3213E83F7F49932B") @default(autoincrement())
   leave_type                      String?                        @db.NVarChar(100)
   carry_forward                   Boolean?
+  sub_period                      String?                        @db.VarChar(100)
+  leaves_sub_period               Decimal                        @db.Decimal(18, 2)
   createdate                      DateTime?                      @default(now(), map: "DF__hrms_m_le__creat__282DF8C2") @db.DateTime
   createdby                       Int
   updatedate                      DateTime?                      @db.DateTime
@@ -2582,20 +2588,23 @@ model hrms_d_requests {
 }
 
 model hrms_d_approval_work_flow {
-  id                       Int                       @id @default(autoincrement())
-  request_type             String?
-  sequence                 Int
-  approver_id              Int
-  department_id            Int?
-  is_active                String?
-  remarks                  String?                   @db.VarChar(100)
-  createdate               DateTime                  @default(now()) @db.DateTime
-  createdby                Int
-  updatedate               DateTime?                 @db.DateTime
-  updatedby                Int?
-  log_inst                 Int?
-  approval_work_approver   hrms_d_employee?          @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  approval_work_department hrms_m_department_master? @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  id                             Int                        @id @default(autoincrement())
+  request_type                   String?
+  sequence                       Int
+  approver_id                    Int
+  department_id                  Int?
+  header_approval_type           String?
+  header_designation_id          Int?
+  is_active                      String?
+  remarks                        String?                    @db.VarChar(100)
+  createdate                     DateTime                   @default(now()) @db.DateTime
+  createdby                      Int
+  updatedate                     DateTime?                  @db.DateTime
+  updatedby                      Int?
+  log_inst                       Int?
+  approval_work_approver         hrms_d_employee?           @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approval_work_department       hrms_m_department_master?  @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  approval_work_flow_designation hrms_m_designation_master? @relation(fields: [header_designation_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
 }
 
 model hrms_d_requests_approval {
@@ -2668,8 +2677,8 @@ model hrms_d_alert_workflow {
   target                    String                         @db.NVarChar(500)
   schedule_cron             String?                        @db.NVarChar(100)
   is_active                 String                         @default("Y") @db.Char(1)
-  conditions                String                         @default("[]") // store JSON as string
-  actions                   String                         @default("[]") // store JSON as string
+  conditions                String                         @default("[]")
+  actions                   String                         @default("[]")
   createdate                DateTime                       @default(now()) @db.DateTime
   createdby                 Int
   updatedate                DateTime?                      @db.DateTime

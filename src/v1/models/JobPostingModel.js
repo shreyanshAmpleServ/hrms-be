@@ -257,7 +257,6 @@ const getAllJobPosting = async (search, page, size, startDate, endDate) => {
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_job_posting.count();
     const totalCount = await prisma.hrms_d_job_posting.count({
       where: filters,
     });
