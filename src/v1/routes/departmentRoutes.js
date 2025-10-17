@@ -28,7 +28,7 @@ router.put(
 // );
 
 router.delete(
-  "/department",
+  "/department/:id",
   authenticateToken,
   departmentController.deleteDepartment
 );
