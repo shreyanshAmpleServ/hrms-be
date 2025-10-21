@@ -85,7 +85,7 @@ const deleteRequestApproval = async (approval_id) => {
   } catch (error) {
     if (error.code === "P2003") {
       throw new CustomError(
-        "This record cannot be deleted because it has associated data other records. Please remove the dependent data first.",
+        "This record is connected to other data. Please remove that first.",
         400
       );
     } else {
