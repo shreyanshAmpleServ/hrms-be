@@ -845,11 +845,14 @@ const deleteEmployee = async (id) => {
       await handleTransactionNotification("m_employee", "D", employeeId);
     });
   } catch (error) {
-    console.error("Error to delete employee : ", error);
-    throw new CustomError(
-      `Error deleting employee: ${error.message}`,
-      error.status || 500
-    );
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record is connected to other data. Please remove that first.",
+        400
+      );
+    } else {
+      throw new CustomError(error.meta.constraint, 500);
+    }
   }
 };
 
