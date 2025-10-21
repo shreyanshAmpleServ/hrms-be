@@ -1,51 +1,8 @@
-// const express = require("express");
-// const router = express.Router();
-// const approvalWorkFlowController = require("../controller/approvalWorkFlowController.js");
-// const { authenticateToken } = require("../middlewares/authMiddleware.js");
-
-// router.post(
-//   "/approval-workflow",
-//   authenticateToken,
-//   approvalWorkFlowController.createApprovalWorkFlow
-// );
-// router.get(
-//   "/approval-workflow/:id",
-//   authenticateToken,
-//   approvalWorkFlowController.findApprovalWorkFlow
-// );
-// router.get(
-//   "/approval-workflow",
-//   authenticateToken,
-//   approvalWorkFlowController.getAllApprovalWorkFlow
-// );
-
-// router.post(
-//   "/approval-workflow-upsert",
-//   authenticateToken,
-//   approvalWorkFlowController.updateApprovalWorkFlow
-// );
-// router.delete(
-//   "/approval-workflow/:requestType",
-//   authenticateToken,
-//   approvalWorkFlowController.deleteApprovalWorkFlow
-// );
-
-// router.get(
-//   "/approval/get-all-workflow",
-//   authenticateToken,
-//   approvalWorkFlowController.getAllApprovalWorkFlowByRequest
-// );
-
-// // Route for upsert (create or update based on presence of ID in body)
-
-// module.exports = router;
-
 const express = require("express");
 const router = express.Router();
 const approvalWorkFlowController = require("../controller/approvalWorkFlowController.js");
 const { authenticateToken } = require("../middlewares/authMiddleware.js");
 
-// Existing routes
 router.post(
   "/approval-workflow",
   authenticateToken,

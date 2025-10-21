@@ -841,8 +841,6 @@ const deleteEmployee = async (id) => {
       });
 
       await tx.hrms_d_employee.delete({ where: { id: employeeId } });
-
-      await handleTransactionNotification("m_employee", "D", employeeId);
     });
   } catch (error) {
     if (error.code === "P2003") {
@@ -851,6 +849,8 @@ const deleteEmployee = async (id) => {
         400
       );
     } else {
+      console.log("Error in deleting:", error);
+
       throw new CustomError(error.meta.constraint, 500);
     }
   }
