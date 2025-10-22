@@ -2802,3 +2802,22 @@ model hrms_d_payment_recovery {
   log_inst                  Int              @default(1)
   payment_recovery_employee hrms_d_employee? @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
+
+model hrms_d_hiring_stage {
+  id               Int       @id @default(autoincrement())
+  name             String    @db.NVarChar(100)
+  code             String    @db.NVarChar(100)
+  stage_name       String    @db.NVarChar(100)
+  description      String?   @db.NText
+  planned_date     DateTime? @db.DateTime
+  completion_date  DateTime? @db.DateTime
+  status           String    @default("P") @db.NVarChar(20)
+  feedback         String?   @db.NText
+  competency_level String?   @db.NVarChar(50)
+  remarks          String?   @db.NText
+  createdate       DateTime  @default(now()) @db.DateTime
+  updatedate       DateTime? @db.DateTime
+  createdby        Int       @default(1)
+  updatedby        Int?
+  log_inst         Int       @default(1)
+}
