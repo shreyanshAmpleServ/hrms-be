@@ -77,7 +77,7 @@ const getAllCurrency = async (
   is_active
 ) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    page = page && page !== 0 ? parseInt(page) : 1;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
