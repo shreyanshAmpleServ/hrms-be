@@ -14,12 +14,17 @@ const serializeApprovalWorkFlowData = (data) => ({
   remarks: data.remarks || "",
   is_active: data.is_active || "Y",
 });
+
 const createApprovalWorkFlow = async (dataArray) => {
   try {
     if (!Array.isArray(dataArray)) {
       throw new CustomError("Input must be an array of data objects", 400);
     }
 
+    const result = await prisma.hrms_d_approval_work_flow.createMany({
+      data: dataArray,
+      skipDuplicates: true,
+    });
     const results = [];
 
     for (const data of dataArray) {
