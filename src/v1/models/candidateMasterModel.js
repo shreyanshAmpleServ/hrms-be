@@ -1053,7 +1053,11 @@ const getAllCandidateMaster = async (
         { candidate_code: { contains: searchTerm } },
       ];
     }
-
+    if (status && status.trim()) {
+      filters.status = {
+        in: status || [],
+      };
+    }
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
