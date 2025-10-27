@@ -16,7 +16,6 @@ const deleteHiringStage = async (id) => {
   return await hiringStageModel.deleteHiringStage(id);
 };
 
-// FIXED: Parameter order matches model
 const getAllHiringStages = async (
   search,
   page,

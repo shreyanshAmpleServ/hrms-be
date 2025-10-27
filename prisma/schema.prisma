@@ -2822,3 +2822,13 @@ model hrms_d_hiring_stage {
   updatedby        Int?
   log_inst         Int       @default(1)
 }
+
+model hrms_d_hiring_stage_value {
+  id         Int       @id @default(autoincrement())
+  value      String    @db.NVarChar(100)
+  createdate DateTime  @default(now()) @db.DateTime
+  updatedate DateTime? @db.DateTime
+  createdby  Int       @default(1)
+  updatedby  Int?
+  log_inst   Int       @default(1)
+}
