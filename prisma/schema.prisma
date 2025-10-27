@@ -2805,30 +2805,33 @@ model hrms_d_payment_recovery {
 }
 
 model hrms_d_hiring_stage {
-  id               Int       @id @default(autoincrement())
-  name             String    @db.NVarChar(100)
-  code             String    @db.NVarChar(100)
-  stage_name       String    @db.NVarChar(100)
-  description      String?   @db.NText
-  planned_date     DateTime? @db.DateTime
-  completion_date  DateTime? @db.DateTime
-  status           String    @default("P") @db.NVarChar(20)
-  feedback         String?   @db.NText
-  competency_level String?   @db.NVarChar(50)
-  remarks          String?   @db.NText
-  createdate       DateTime  @default(now()) @db.DateTime
-  updatedate       DateTime? @db.DateTime
-  createdby        Int       @default(1)
-  updatedby        Int?
-  log_inst         Int       @default(1)
+  id                        Int                       @id @default(autoincrement())
+  name                      String                    @db.NVarChar(100)
+  sequence                  Int                       @db.Int
+  code                      String                    @db.NVarChar(100)
+  stage_id                  Int                       @db.Int
+  description               String?                   @db.NText
+  planned_date              DateTime?                 @db.DateTime
+  completion_date           DateTime?                 @db.DateTime
+  status                    String                    @default("P") @db.NVarChar(20)
+  feedback                  String?                   @db.NText
+  competency_level          String?                   @db.NVarChar(50)
+  remarks                   String?                   @db.NText
+  createdate                DateTime                  @default(now()) @db.DateTime
+  updatedate                DateTime?                 @db.DateTime
+  createdby                 Int                       @default(1)
+  updatedby                 Int?
+  log_inst                  Int                       @default(1)
+  hiring_stage_hiring_value hrms_d_hiring_stage_value @relation(fields: [stage_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model hrms_d_hiring_stage_value {
-  id         Int       @id @default(autoincrement())
-  value      String    @db.NVarChar(100)
-  createdate DateTime  @default(now()) @db.DateTime
-  updatedate DateTime? @db.DateTime
-  createdby  Int       @default(1)
-  updatedby  Int?
-  log_inst   Int       @default(1)
+  id                        Int                   @id @default(autoincrement())
+  value                     String                @db.NVarChar(100)
+  createdate                DateTime              @default(now()) @db.DateTime
+  updatedate                DateTime?             @db.DateTime
+  createdby                 Int                   @default(1)
+  updatedby                 Int?
+  log_inst                  Int                   @default(1)
+  hiring_stage_hiring_value hrms_d_hiring_stage[]
 }

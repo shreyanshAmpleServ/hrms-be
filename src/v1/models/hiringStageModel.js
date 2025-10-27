@@ -5,7 +5,8 @@ const prisma = new PrismaClient();
 const serializeHiringStageData = (data) => ({
   name: data.name || "",
   code: data.code || "",
-  stage_name: data.stage_name || "",
+  stage_id: data.stage_id || "",
+  sequence: data.sequence || "",
   description: data.description || null,
   planned_date: data.planned_date ? new Date(data.planned_date) : null,
   completion_date: data.completion_date ? new Date(data.completion_date) : null,
@@ -23,6 +24,14 @@ const createHiringStage = async (data) => {
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
+      },
+      include: {
+        hiring_stage_hiring_value: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
       },
     });
 
@@ -53,6 +62,14 @@ const updateHiringStage = async (id, data) => {
   try {
     const updatedStage = await prisma.hrms_d_hiring_stage.update({
       where: { id: parseInt(id) },
+      include: {
+        hiring_stage_hiring_value: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+      },
       data: {
         ...serializeHiringStageData(data),
         updatedby: data.updatedby || 1,
@@ -136,6 +153,14 @@ const getAllHiringStages = async (
       skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      include: {
+        hiring_stage_hiring_value: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+      },
     });
 
     const totalCount = await prisma.hrms_d_hiring_stage.count({
