@@ -527,6 +527,7 @@ model hrms_d_hr_letter {
 model hrms_d_job_posting {
   id                            Int                        @id(map: "PK__hrms_d_j__3213E83FF15AFFB9") @default(autoincrement())
   department_id                 Int?
+  hiring_stage_id               String?
   designation_id                Int?
   reporting_manager_id          Int?
   job_title                     String?                    @db.NVarChar(255)
