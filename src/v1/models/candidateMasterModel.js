@@ -1046,11 +1046,11 @@ const getAllCandidateMaster = async (
     if (search && search.trim()) {
       const searchTerm = search.trim().toLowerCase();
       filters.OR = [
-        { full_name: { contains: searchTerm, mode: "insensitive" } },
-        { email: { contains: searchTerm, mode: "insensitive" } },
-        { phone: { contains: searchTerm, mode: "insensitive" } },
-        { status: { contains: searchTerm, mode: "insensitive" } },
-        { candidate_code: { contains: searchTerm, mode: "insensitive" } },
+        { full_name: { contains: searchTerm } },
+        { email: { contains: searchTerm } },
+        { phone: { contains: searchTerm } },
+        { status: { contains: searchTerm } },
+        { candidate_code: { contains: searchTerm } },
       ];
     }
 
