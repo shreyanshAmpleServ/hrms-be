@@ -67,8 +67,14 @@ const enrichWithHiringStages = async (jobPosting) => {
     },
     select: {
       id: true,
-      stage_name: true,
+      stage_id: true,
       description: true,
+      hiring_stage_hiring_value: {
+        select: {
+          id: true,
+          value: true,
+        },
+      },
     },
   });
 
@@ -106,8 +112,15 @@ const enrichMultipleWithHiringStages = async (jobPostings) => {
     },
     select: {
       id: true,
-      stage_name: true,
+      stage_id: true,
       description: true,
+      description: true,
+      hiring_stage_hiring_value: {
+        select: {
+          id: true,
+          value: true,
+        },
+      },
     },
   });
 
