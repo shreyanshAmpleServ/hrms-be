@@ -707,13 +707,11 @@ const prisma = new PrismaClient();
 const serializeJobData = (data) => {
   let hiringStageValue = null;
 
-  // Handle hiring_stage_ids array with optional sequence
   if (
     data.hiring_stage_ids &&
     Array.isArray(data.hiring_stage_ids) &&
     data.hiring_stage_ids.length > 0
   ) {
-    // The ORDER of the array determines the sequence
     hiringStageValue = data.hiring_stage_ids.map((id) => Number(id)).join(",");
   } else if (data.hiring_stage_id) {
     hiringStageValue = String(data.hiring_stage_id);
@@ -756,9 +754,6 @@ const parseHiringStageIds = (hiringStageId) => {
     .filter((id) => !isNaN(id) && id > 0);
 };
 
-/**
- * Enrich job posting with hiring stages in the correct sequence
- */
 const enrichWithHiringStages = async (jobPosting) => {
   if (!jobPosting) return null;
 
@@ -772,7 +767,6 @@ const enrichWithHiringStages = async (jobPosting) => {
     };
   }
 
-  // Fetch hiring stages
   const hiringStages = await prisma.hrms_d_hiring_stage.findMany({
     where: {
       id: { in: stageIds },
@@ -780,7 +774,7 @@ const enrichWithHiringStages = async (jobPosting) => {
     select: {
       id: true,
       name: true,
-      sequence: true,
+      // sequence: true,
       code: true,
       stage_id: true,
       description: true,
@@ -794,10 +788,8 @@ const enrichWithHiringStages = async (jobPosting) => {
     },
   });
 
-  // Create a map for quick lookup
   const stageMap = new Map(hiringStages.map((stage) => [stage.id, stage]));
 
-  // Maintain the order from the stored string (this is the custom sequence)
   const orderedStages = stageIds
     .map((id, index) => {
       const stage = stageMap.get(id);
@@ -812,9 +804,6 @@ const enrichWithHiringStages = async (jobPosting) => {
   };
 };
 
-/**
- * Enrich multiple job postings with hiring stages
- */
 const enrichMultipleWithHiringStages = async (jobPostings) => {
   if (!jobPostings || jobPostings.length === 0) return [];
 
@@ -839,7 +828,7 @@ const enrichMultipleWithHiringStages = async (jobPostings) => {
     select: {
       id: true,
       name: true,
-      sequence: true,
+      // sequence: true,
       code: true,
       stage_id: true,
       description: true,
@@ -891,7 +880,6 @@ const createJobPosting = async (data) => {
       );
     }
 
-    // Validate hiring stages if provided
     if (
       data.hiring_stage_ids &&
       Array.isArray(data.hiring_stage_ids) &&
@@ -1021,12 +1009,8 @@ const findJobPostingById = async (id) => {
   }
 };
 
-/**
- * UPDATED: Single update function that handles both job details and sequence changes
- */
 const updateJobPosting = async (id, data) => {
   try {
-    // Validate hiring stages if provided
     if (
       data.hiring_stage_ids &&
       Array.isArray(data.hiring_stage_ids) &&
@@ -1050,8 +1034,6 @@ const updateJobPosting = async (id, data) => {
       }
     }
 
-    // The serializeJobData function already handles the hiring_stage_ids array
-    // and converts it to comma-separated string in the correct order
     const jobPosting = await prisma.hrms_d_job_posting.update({
       where: { id: parseInt(id) },
       data: {
@@ -1195,7 +1177,9 @@ const getAllJobPosting = async (search, page, size, startDate, endDate) => {
       totalCount: totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving job postings", 503);
+    console.log("Error retrieving job postings", error);
+
+    throw new CustomError("Error retrieving job postings", 500);
   }
 };
 
