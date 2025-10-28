@@ -37,6 +37,11 @@ const getAllOfferLetter = async (
 const updateOfferLetterStatus = async () => {
   return await offerLatterModel.updateOfferLetterStatus(id, data);
 };
+
+const getOfferLetterForPDF = async (id) => {
+  return await offerLatterModel.getOfferLetterForPDF(id);
+};
+
 module.exports = {
   createOfferLetter,
   findOfferLetterById,
@@ -44,4 +49,5 @@ module.exports = {
   deleteOfferLetter,
   getAllOfferLetter,
   updateOfferLetterStatus,
+  getOfferLetterForPDF,
 };

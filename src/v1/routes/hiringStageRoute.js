@@ -35,4 +35,10 @@ router.get(
   hiringStageController.getAllHiringStages
 );
 
+router.put(
+  "/hiring-stage-status/:id",
+  authenticateToken,
+  hiringStageController.updateHiringStageStatus
+);
+
 module.exports = router;

@@ -63,10 +63,25 @@ const getAllHiringStages = async (req, res, next) => {
   }
 };
 
+const updateHiringStageStatus = async (req, res, next) => {
+  try {
+    const hiringStage = await hiringStageService.updateHiringStageStatus(
+      req.params.id,
+      req.body
+    );
+    res
+      .status(200)
+      .success("Hiring Stage status updated successfully", hiringStage);
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createHiringStage,
   getHiringStageById,
   updateHiringStage,
   deleteHiringStage,
   getAllHiringStages,
+  updateHiringStageStatus,
 };

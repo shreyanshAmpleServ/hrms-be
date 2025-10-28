@@ -115,7 +115,6 @@ const validateData = (data, tableName) => {
   return errors;
 };
 
-// ✅ FIXED - transformDataForInsert function with proper variable scoping
 const transformDataForInsert = (data, tableName, createdBy = 1) => {
   const config = getTableConfig(tableName);
 
@@ -126,9 +125,8 @@ const transformDataForInsert = (data, tableName, createdBy = 1) => {
       log_inst: 1,
     };
 
-    // ✅ FIXED - Process each field properly
     Object.keys(config.fields).forEach((fieldName) => {
-      const fieldConfig = config.fields[fieldName]; // ✅ FIXED - Proper variable name
+      const fieldConfig = config.fields[fieldName];
 
       if (
         row[fieldName] !== undefined &&
@@ -177,12 +175,11 @@ const transformDataForInsert = (data, tableName, createdBy = 1) => {
   });
 };
 
-// ✅ SIMPLIFIED BULK INSERT
 const bulkInsertData = async (data, tableName, createdBy = 1) => {
   try {
     const config = getTableConfig(tableName);
 
-    console.log(`📝 Processing ${data.length} records for ${config.tableName}`);
+    console.log(`Processing ${data.length} records for ${config.tableName}`);
 
     // Transform data
     const transformedData = transformDataForInsert(data, tableName, createdBy);

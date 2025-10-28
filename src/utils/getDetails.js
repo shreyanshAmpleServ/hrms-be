@@ -63,6 +63,48 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
         where: { id: reference_id },
         select: { leave_days: true, approval_status: true },
       });
+    case "hiring_stage":
+      // ADD THIS NEW CASE
+      if (reference_id) {
+        const hiringStage = await prisma.hrms_d_hiring_stage.findUnique({
+          where: { id: parseInt(reference_id) },
+          include: {
+            hiring_stage_hiring_value: {
+              select: {
+                id: true,
+                value: true,
+              },
+            },
+          },
+        });
+
+        if (hiringStage) {
+          return `
+        <strong>Hiring Stage:</strong> ${hiringStage.name || "N/A"}<br>
+        <strong>Stage Code:</strong> ${hiringStage.code || "N/A"}<br>
+        <strong>Stage Type:</strong> ${
+          hiringStage.hiring_stage_hiring_value?.value || "N/A"
+        }<br>
+        <strong>Status:</strong> ${
+          hiringStage.status === "P"
+            ? "Pending"
+            : hiringStage.status === "A"
+            ? "Approved"
+            : "Rejected"
+        }<br>
+        <strong>Remarks:</strong> ${hiringStage.remarks || "N/A"}<br>
+        <strong>Feedback:</strong> ${hiringStage.feedback || "N/A"}<br>
+        <strong>Competency Level:</strong> ${
+          hiringStage.competency_level || "N/A"
+        }<br>
+        <strong>Completion Date:</strong> ${
+          hiringStage.completion_date
+            ? new Date(hiringStage.completion_date).toLocaleDateString()
+            : "N/A"
+        }
+      `;
+        }
+      }
 
     default:
       return null;

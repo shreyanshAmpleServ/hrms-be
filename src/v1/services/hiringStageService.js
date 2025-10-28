@@ -34,10 +34,15 @@ const getAllHiringStages = async (
   );
 };
 
+const updateHiringStageStatus = async (id, data) => {
+  return await hiringStageModel.updateHiringStageStatus(id, data);
+};
+
 module.exports = {
   createHiringStage,
   getHiringStageById,
   updateHiringStage,
   deleteHiringStage,
   getAllHiringStages,
+  updateHiringStageStatus,
 };

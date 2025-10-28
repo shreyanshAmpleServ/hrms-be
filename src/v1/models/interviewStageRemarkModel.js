@@ -54,17 +54,17 @@ const createInterviewStageRemark = async (data) => {
       });
     }
 
-    await createRequest({
-      requester_id: data.employee_id,
-      request_type: "interview_stage",
-      reference_id: result.id,
-      stage_name: data.stage_name,
-      // request_data:
-      //   reqData.reason ||
-      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
-      createdby: data.createdby || 1,
-      log_inst: data.log_inst || 1,
-    });
+    // await createRequest({
+    //   requester_id: data.employee_id,
+    //   request_type: "interview_stage",
+    //   reference_id: result.id,
+    //   stage_name: data.stage_name,
+    //   // request_data:
+    //   //   reqData.reason ||
+    //   //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
+    //   createdby: data.createdby || 1,
+    //   log_inst: data.log_inst || 1,
+    // });
 
     return result;
   } catch (error) {
