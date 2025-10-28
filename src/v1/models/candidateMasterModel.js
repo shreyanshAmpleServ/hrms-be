@@ -708,28 +708,26 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
       },
     });
 
-    console.log("📋 Job Posting:", JSON.stringify(jobPosting, null, 2));
+    console.log(" Job Posting:", JSON.stringify(jobPosting, null, 2));
 
     if (!jobPosting || !jobPosting.hiring_stage_id) {
-      console.log("❌ No hiring_stage_id found in job posting");
+      console.log(" No hiring_stage_id found in job posting");
       return [];
     }
 
-    // Parse stage IDs
     const stageIds = jobPosting.hiring_stage_id
       .split(",")
       .map((id) => parseInt(id.trim()))
       .filter((id) => !isNaN(id));
 
-    console.log("🎯 Parsed Stage IDs:", stageIds);
+    console.log(" Parsed Stage IDs:", stageIds);
 
     if (stageIds.length === 0) {
-      console.log("❌ No valid stage IDs found");
+      console.log(" No valid stage IDs found");
       return [];
     }
 
-    // Fetch stages
-    console.log("🔎 Querying database for stages:", stageIds);
+    console.log(" Querying database for stages:", stageIds);
 
     const stages = await prisma.hrms_d_hiring_stage.findMany({
       where: { id: { in: stageIds } },
@@ -762,13 +760,11 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
         where: { id: { in: missingIds } },
       });
 
-      console.log("🔍 Direct check for missing IDs:", checkMissing);
+      console.log(" Direct check for missing IDs:", checkMissing);
     }
 
-    // Map to maintain order
     const stageMap = new Map(stages.map((s) => [s.id, s]));
 
-    // Return in order
     const orderedStages = stageIds
       .map((id, index) => {
         const stage = stageMap.get(id);
@@ -873,7 +869,6 @@ const createCandidateMaster = async (data) => {
       },
     });
 
-    // Add hiring stages
     const hiringStages = await getHiringStagesForJobPosting(
       reqData.job_posting
     );
@@ -933,7 +928,6 @@ const findCandidateMasterById = async (id) => {
       throw new CustomError("Candidate not found", 404);
     }
 
-    // Add hiring stages
     const hiringStages = await getHiringStagesForJobPosting(
       reqData.job_posting
     );
@@ -994,7 +988,6 @@ const updateCandidateMaster = async (id, data) => {
       },
     });
 
-    // Add hiring stages
     const hiringStages = await getHiringStagesForJobPosting(
       updatedEntry.job_posting
     );
@@ -1034,7 +1027,8 @@ const getAllCandidateMaster = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  status
 ) => {
   try {
     page = !page || page <= 0 ? 1 : parseInt(page);
@@ -1187,6 +1181,8 @@ const getAllCandidateMaster = async (
           : null,
     };
   } catch (error) {
+    console.log("Candidate error", error);
+
     if (error.code === "P2002") {
       throw new CustomError("Duplicate entry found", 409);
     } else if (error.code === "P2025") {
