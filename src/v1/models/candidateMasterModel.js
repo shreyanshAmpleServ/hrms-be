@@ -642,7 +642,6 @@ const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 const employeeModel = require("./EmployeeModel");
 
-// Serialize candidate master data
 const serializeCandidateMasterData = (data) => ({
   candidate_code: data.candidate_code ?? undefined,
   full_name: data.full_name || "",
@@ -683,22 +682,15 @@ const serializeCandidateMasterData = (data) => ({
   department_id: Number(data.department_id),
 });
 
-/**
- * Helper: Get hiring stages from job posting
- */
-/**
- * Helper: Get hiring stages from job posting WITH DEBUG LOGGING
- */
 const getHiringStagesForJobPosting = async (jobPostingId) => {
   if (!jobPostingId) {
-    console.log("❌ No job posting ID provided");
+    console.log(" No job posting ID provided");
     return [];
   }
 
   try {
-    console.log("🔍 Fetching job posting:", jobPostingId);
+    console.log(" Fetching job posting:", jobPostingId);
 
-    // Get job posting
     const jobPosting = await prisma.hrms_d_job_posting.findUnique({
       where: { id: parseInt(jobPostingId) },
       select: {
@@ -731,39 +723,56 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
 
     const stages = await prisma.hrms_d_hiring_stage.findMany({
       where: { id: { in: stageIds } },
-      select: {
-        id: true,
-        name: true,
-        sequence: true,
-        code: true,
-        description: true,
-        status: true,
-        hiring_stage_hiring_value: {
-          select: {
-            id: true,
-            value: true,
-          },
-        },
-      },
     });
 
-    console.log("Stages found in database:", stages.length);
-    console.log("Stage Details:", JSON.stringify(stages, null, 2));
+    console.log(" Stages found in database:", stages.length);
+    console.log(
+      " Found stage IDs:",
+      stages.map((s) => s.id)
+    );
 
-    const foundIds = stages.map((s) => s.id);
-    const missingIds = stageIds.filter((id) => !foundIds.includes(id));
-
-    if (missingIds.length > 0) {
-      console.warn("Missing hiring stages with IDs:", missingIds);
-
-      const checkMissing = await prisma.hrms_d_hiring_stage.findMany({
-        where: { id: { in: missingIds } },
-      });
-
-      console.log(" Direct check for missing IDs:", checkMissing);
+    if (stages.length === 0) {
+      console.log(" No stages found for IDs:", stageIds);
+      return [];
     }
 
-    const stageMap = new Map(stages.map((s) => [s.id, s]));
+    const stageWithValues = await Promise.all(
+      stages.map(async (stage) => {
+        let stageValue = null;
+
+        if (stage.stage_id) {
+          try {
+            stageValue = await prisma.hrms_d_hiring_stage_value.findUnique({
+              where: { id: stage.stage_id },
+              select: {
+                id: true,
+                value: true,
+              },
+            });
+          } catch (error) {
+            console.warn(
+              `Could not fetch value for stage_id ${stage.stage_id}:`,
+              error.message
+            );
+          }
+        }
+
+        return {
+          id: stage.id,
+          name: stage.name,
+          sequence: stage.sequence,
+          code: stage.code,
+          description: stage.description,
+          status: stage.status,
+          competency_level: stage.competency_level,
+          hiring_stage_hiring_value: stageValue,
+        };
+      })
+    );
+
+    console.log(" Stages with values:", stageWithValues.length);
+
+    const stageMap = new Map(stageWithValues.map((s) => [s.id, s]));
 
     const orderedStages = stageIds
       .map((id, index) => {
@@ -774,23 +783,22 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
             sequence_number: index + 1,
           };
         } else {
-          console.warn(`Stage ID ${id} not found in results`);
+          console.warn(` Stage ID ${id} not found in results`);
           return null;
         }
       })
       .filter(Boolean);
 
-    console.log("Returning", orderedStages.length, "ordered stages");
+    console.log(" Returning", orderedStages.length, "ordered stages");
 
     return orderedStages;
   } catch (error) {
-    console.error("Error fetching hiring stages:", error);
+    console.error(" Error fetching hiring stages:", error);
     console.error("Error details:", error.message);
     console.error("Stack trace:", error.stack);
     return [];
   }
 };
-
 const createCandidateMaster = async (data) => {
   try {
     const fullName = data.full_name?.trim();
