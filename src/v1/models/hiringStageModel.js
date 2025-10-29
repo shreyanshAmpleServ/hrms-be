@@ -15,7 +15,7 @@ const serializeHiringStageData = (data) => ({
 
 const createHiringStage = async (data) => {
   try {
-    const existing = await prisma.hrms_d_hiring_stage.findUnique({
+    const existing = await prisma.hrms_d_hiring_stage.findFirst({
       where: { code: data.code },
     });
 
@@ -51,7 +51,7 @@ const createHiringStage = async (data) => {
 
 const getHiringStageById = async (id) => {
   try {
-    const stage = await prisma.hrms_d_hiring_stage.findUnique({
+    const stage = await prisma.hrms_d_hiring_stage.findFirst({
       where: { id: parseInt(id) },
     });
     if (!stage) {
