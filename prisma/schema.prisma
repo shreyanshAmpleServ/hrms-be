@@ -2805,7 +2805,6 @@ model hrms_d_payment_recovery {
 
 model hrms_d_hiring_stage {
   id                                  Int                             @id @default(autoincrement())
-  name                                String                          @db.NVarChar(100)
   code                                String                          @db.NVarChar(100)
   stage_id                            Int                             @db.Int
   description                         String?                         @db.NText

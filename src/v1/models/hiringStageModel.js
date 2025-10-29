@@ -3,7 +3,6 @@ const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
 const serializeHiringStageData = (data) => ({
-  name: data.name || "",
   code: data.code || "",
   stage_id: data.stage_id || "",
   description: data.description || null,
@@ -17,6 +16,17 @@ const serializeHiringStageData = (data) => ({
 
 const createHiringStage = async (data) => {
   try {
+    const existing = await prisma.hrms_d_hiring_stage.findUnique({
+      where: { code: data.code },
+    });
+
+    if (existing) {
+      throw new CustomError(
+        `Code '${data.code}' already exists. Please use a unique code.`,
+        400
+      );
+    }
+
     const newStage = await prisma.hrms_d_hiring_stage.create({
       data: {
         ...serializeHiringStageData(data),
@@ -26,16 +36,16 @@ const createHiringStage = async (data) => {
       },
       include: {
         hiring_stage_hiring_value: {
-          select: {
-            id: true,
-            value: true,
-          },
+          select: { id: true, value: true },
         },
       },
     });
 
     return newStage;
   } catch (error) {
+    if (error.code === "P2002") {
+      throw new CustomError(`Code '${data.code}' must be unique.`, 400);
+    }
     throw new CustomError(`Error creating hiring stage: ${error.message}`, 500);
   }
 };
@@ -56,27 +66,43 @@ const getHiringStageById = async (id) => {
     );
   }
 };
-
 const updateHiringStage = async (id, data) => {
   try {
+    if (data.code) {
+      const existing = await prisma.hrms_d_hiring_stage.findFirst({
+        where: {
+          code: data.code,
+          NOT: { id: parseInt(id) },
+        },
+      });
+
+      if (existing) {
+        throw new CustomError(
+          `Code '${data.code}' already exists. Please use a unique code.`,
+          400
+        );
+      }
+    }
+
     const updatedStage = await prisma.hrms_d_hiring_stage.update({
       where: { id: parseInt(id) },
-      include: {
-        hiring_stage_hiring_value: {
-          select: {
-            id: true,
-            value: true,
-          },
-        },
-      },
       data: {
         ...serializeHiringStageData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
+      include: {
+        hiring_stage_hiring_value: {
+          select: { id: true, value: true },
+        },
+      },
     });
+
     return updatedStage;
   } catch (error) {
+    if (error.code === "P2002") {
+      throw new CustomError(`Code '${data.code}' must be unique.`, 400);
+    }
     throw new CustomError(`Error updating hiring stage: ${error.message}`, 500);
   }
 };
