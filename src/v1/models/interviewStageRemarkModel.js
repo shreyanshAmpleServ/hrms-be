@@ -802,9 +802,8 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    // Check all previous stages - look for remarks for those stages
     const previousStageIds = stageIds.slice(0, currentStageIndex);
-    console.log(`📋 Previous stage IDs: ${previousStageIds.join(", ")}`);
+    console.log(`Previous stage IDs: ${previousStageIds.join(", ")}`);
 
     const previousRemarks = await prisma.hrms_m_interview_stage_remark.findMany(
       {
@@ -890,7 +889,7 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
 const createInterviewStageRemark = async (data) => {
   try {
     console.log(
-      "📝 Creating interview stage remark for hiring stage:",
+      " Creating interview stage remark for hiring stage:",
       data.stage_id
     );
 
