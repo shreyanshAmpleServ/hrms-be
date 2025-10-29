@@ -1,7 +1,9 @@
 const offerLatterService = require("../services/offerLatterService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-
+const { generateOfferLetterPDF } = require("../../utils/offerLetterPDF");
+const path = require("path");
+const fs = require("fs");
 const createOfferLetter = async (req, res, next) => {
   try {
     const data = {
@@ -93,12 +95,16 @@ const updateOfferLetterStatus = async (req, res, next) => {
 
 const downloadOfferLetterPDF = async (req, res, next) => {
   try {
-    const offerId = req.query.id;
+    const offerId = req.params.id;
 
-    // Fetch offer letter data with pay components
+    if (!offerId) {
+      throw new CustomError("Offer letter ID is required", 400);
+    }
+
+    console.log("Downloading offer letter PDF for ID:", offerId);
+
     const offerData = await offerLatterService.getOfferLetterForPDF(offerId);
 
-    // Generate unique filename
     const fileName = `offer_letter_${offerId}_${Date.now()}.pdf`;
     const filePath = path.join(
       process.cwd(),
@@ -107,17 +113,14 @@ const downloadOfferLetterPDF = async (req, res, next) => {
       fileName
     );
 
-    // Generate PDF
     await generateOfferLetterPDF(offerData, filePath);
 
-    // Send file as download
     res.download(filePath, fileName, (err) => {
       if (err) {
         console.error("Error sending file:", err);
         next(err);
       }
 
-      // Optional: Delete file after sending
       setTimeout(() => {
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath);

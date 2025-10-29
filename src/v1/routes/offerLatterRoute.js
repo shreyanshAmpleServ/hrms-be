@@ -8,6 +8,12 @@ router.post(
   authenticateToken,
   offerLatterController.createOfferLetter
 );
+
+router.get(
+  "/offer-letter/:id/download",
+  authenticateToken,
+  offerLatterController.downloadOfferLetterPDF
+);
 router.get(
   "/offer-letter/:id",
   authenticateToken,
@@ -28,15 +34,11 @@ router.get(
   authenticateToken,
   offerLatterController.getAllOfferLetter
 );
+
 router.patch(
   "/offer-letter/:id/status",
   authenticateToken,
   offerLatterController.updateOfferLetterStatus
 );
 
-router.get(
-  "/offer-letter/:id/download",
-  authenticateToken,
-  offerLatterController.downloadOfferLetterPDF
-);
 module.exports = router;

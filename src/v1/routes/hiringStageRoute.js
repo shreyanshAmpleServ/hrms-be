@@ -22,7 +22,6 @@ router.put(
   hiringStageController.updateHiringStage
 );
 
-// FIXED: Added authenticateToken middleware
 router.delete(
   "/hiring-stage/:id",
   authenticateToken,

@@ -1632,42 +1632,33 @@ const takeActionOnRequest = async ({
     //   candidateName =
     //     interviewStage?.interview_stage_candidate?.full_name || null;
     // }
+    // if (request?.reference_id) {
+    //   if (request.request_type === "interview_stage") {
+    //     await prisma.hrms_m_interview_stage_remark.update({
+    //       where: { id: request.reference_id },
+    //       data: {
+    //         updatedby: acted_by,
+    //         updatedate: new Date(),
+    //       },
+    //     });
 
     if (request.request_type === "interview_stage" && request.reference_id) {
-      const hiringStage = await prisma.hrms_d_hiring_stage.findUnique({
-        where: { id: request.reference_id },
-      });
-
-      // Get candidate from request_data
-      if (request.request_data) {
-        try {
-          const requestData = JSON.parse(request.request_data);
-          if (requestData.candidate_id) {
-            const candidate = await prisma.hrms_d_candidate_master.findUnique({
-              where: { id: requestData.candidate_id },
+      const interviewStage =
+        await prisma.hrms_m_interview_stage_remark.findUnique({
+          where: { id: request.reference_id },
+          include: {
+            interview_stage_candidate: {
               select: { full_name: true },
-            });
-            candidateName = candidate?.full_name || null;
-          }
-        } catch (e) {
-          console.error("Error parsing request_data:", e);
-        }
-      }
+            },
+          },
+        });
+      candidateName =
+        interviewStage?.interview_stage_candidate?.full_name || null;
     }
 
     if (request?.reference_id) {
-      // if (request.request_type === "interview_stage") {
-      //   await prisma.hrms_m_interview_stage_remark.update({
-      //     where: { id: request.reference_id },
-      //     data: {
-      //       updatedby: acted_by,
-      //       updatedate: new Date(),
-      //     },
-      //   });
-      // }
       if (request.request_type === "interview_stage") {
-        // ADD THIS CASE
-        await prisma.hrms_d_hiring_stage.update({
+        await prisma.hrms_m_interview_stage_remark.update({
           where: { id: request.reference_id },
           data: {
             updatedby: acted_by,
@@ -1749,33 +1740,44 @@ const takeActionOnRequest = async ({
       });
 
       if (request?.reference_id) {
-        //   if (request.request_type === "interview_stage") {
-        //     await prisma.hrms_m_interview_stage_remark.update({
-        //       where: { id: request.reference_id },
-        //       data: {
-        //         status: "R",
-        //         updatedby: acted_by,
-        //         updatedate: new Date(),
-        //       },
-        //     });
-        //   }
+        // if (request.request_type === "interview_stage") {
+        //   await prisma.hrms_m_interview_stage_remark.update({
+        //     where: { id: request.reference_id },
+        //     data: {
+        //       status: "R",
+        //       updatedby: acted_by,
+        //       updatedate: new Date(),
+        //     },
+        //   });
+        // }
 
         if (request.request_type === "interview_stage") {
           let candidateId = null;
+          let hiringStageId = null;
+
           if (request.request_data) {
             try {
               const requestData = JSON.parse(request.request_data);
               candidateId = requestData.candidate_id;
+              hiringStageId = requestData.hiring_stage_id;
+              console.log(
+                ` Parsed candidate_id: ${candidateId}, hiring_stage_id: ${hiringStageId}`
+              );
             } catch (e) {
-              console.error("Error parsing request_data:", e);
+              console.error(" Error parsing request_data:", e);
             }
           }
-          const hiringStageModel = require("./hiringStageModel.js");
-          await hiringStageModel.updateHiringStageStatus(
+
+          const interviewStageRemarkModel = require("./interviewStageRemarkModel");
+          await interviewStageRemarkModel.updateInterviewStageRemarkStatus(
             request.reference_id,
-            "Rejected",
-            acted_by,
-            candidateId
+            {
+              status: "R",
+              updatedby: acted_by,
+            }
+          );
+          console.log(
+            ` Interview stage remark ${request.reference_id} rejected - process stopped`
           );
         } else if (request.request_type === "leave_request") {
           await prisma.hrms_d_leave_application.update({
@@ -1897,48 +1899,33 @@ const takeActionOnRequest = async ({
       });
 
       if (request?.reference_id) {
-        // if (request.request_type === "interview_stage") {
-        //   await prisma.hrms_m_interview_stage_remark.update({
-        //     where: { id: request.reference_id },
-        //     data: {
-        //       status: "A",
-        //       updatedby: acted_by,
-        //       updatedate: new Date(),
-        //     },
-        //   });
-
         if (request.request_type === "interview_stage") {
           let candidateId = null;
+          let hiringStageId = null;
+
           if (request.request_data) {
             try {
               const requestData = JSON.parse(request.request_data);
               candidateId = requestData.candidate_id;
+              hiringStageId = requestData.hiring_stage_id;
               console.log(
-                ` Parsed candidate_id from request_data: ${candidateId}`
+                ` Parsed candidate_id: ${candidateId}, hiring_stage_id: ${hiringStageId}`
               );
             } catch (e) {
               console.error(" Error parsing request_data:", e);
             }
           }
 
-          if (!candidateId) {
-            console.log(" No candidate_id found in request_data");
-          }
-
-          const hiringStageModel = require("./hiringStageModel");
-          console.log(
-            ` Calling updateHiringStageStatus for stage ${request.reference_id}, candidate ${candidateId}`
-          );
-
-          await hiringStageModel.updateHiringStageStatus(
+          const interviewStageRemarkModel = require("./interviewStageRemarkModel");
+          await interviewStageRemarkModel.updateInterviewStageRemarkStatus(
             request.reference_id,
-            "Approved",
-            acted_by,
-            candidateId
+            {
+              status: "A",
+              updatedby: acted_by,
+            }
           );
-
           console.log(
-            `✅ updateHiringStageStatus completed for stage ${request.reference_id}`
+            ` Interview stage remark ${request.reference_id} approved`
           );
         } else if (request.request_type === "leave_request") {
           await prisma.hrms_d_leave_application.update({

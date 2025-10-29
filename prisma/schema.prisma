@@ -2334,38 +2334,37 @@ model hrms_m_application_source {
 }
 
 model hrms_m_interview_stage {
-  id                        Int                             @id @default(autoincrement())
-  stage_name                String                          @unique @db.NVarChar(100)
-  createdate                DateTime?                       @default(now(), map: "DF__interview_stage__createdate") @db.DateTime
+  id                        Int                       @id @default(autoincrement())
+  stage_name                String                    @unique @db.NVarChar(100)
+  createdate                DateTime?                 @default(now(), map: "DF__interview_stage__createdate") @db.DateTime
   createdby                 Int
-  updatedate                DateTime?                       @db.DateTime
+  updatedate                DateTime?                 @db.DateTime
   updatedby                 Int?
   log_inst                  Int?
   sort_order                Int
-  description               String?                         @db.NVarChar(Max)
-  candidate_interview_stage hrms_d_candidate_master[]       @relation("CandidateInterviewStage")
-  interview_stage_stage_id  hrms_m_interview_stage_remark[]
+  description               String?                   @db.NVarChar(Max)
+  candidate_interview_stage hrms_d_candidate_master[] @relation("CandidateInterviewStage")
 }
 
 model hrms_m_interview_stage_remark {
-  id                          Int                     @id @default(autoincrement())
-  candidate_id                Int
-  stage_id                    Int
-  stage_name                  String?                 @db.VarChar(50)
-  remark                      String?                 @db.NText
-  rating                      Int?
-  createdate                  DateTime?               @default(now(), map: "DF__stage_remark__createdate") @db.DateTime
-  createdby                   Int
-  updatedate                  DateTime?
-  updatedby                   Int?
-  log_inst                    Int?
-  is_completed                Boolean?
-  status                      String?                 @db.NVarChar(50)
-  employee_id                 Int?
-  interview_date              DateTime?
-  interview_stage_candidate   hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
-  interview_stage_employee_id hrms_d_employee?        @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  interview_stage_stage_id    hrms_m_interview_stage  @relation(fields: [stage_id], references: [id], onUpdate: NoAction)
+  id                                  Int                     @id @default(autoincrement())
+  candidate_id                        Int
+  stage_id                            Int
+  stage_name                          String?                 @db.VarChar(50)
+  remark                              String?                 @db.NText
+  rating                              Int?
+  createdate                          DateTime?               @default(now(), map: "DF__stage_remark__createdate") @db.DateTime
+  createdby                           Int
+  updatedate                          DateTime?
+  updatedby                           Int?
+  log_inst                            Int?
+  is_completed                        Boolean?
+  status                              String?                 @db.NVarChar(50)
+  employee_id                         Int?
+  interview_date                      DateTime?
+  interview_stage_candidate           hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
+  interview_stage_employee_id         hrms_d_employee?        @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  interview_stage_remark_hiring_stage hrms_d_hiring_stage     @relation(fields: [stage_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
 }
 
 model hrms_m_costcenters {
@@ -2805,23 +2804,24 @@ model hrms_d_payment_recovery {
 }
 
 model hrms_d_hiring_stage {
-  id                        Int                       @id @default(autoincrement())
-  name                      String                    @db.NVarChar(100)
-  code                      String                    @db.NVarChar(100)
-  stage_id                  Int                       @db.Int
-  description               String?                   @db.NText
-  planned_date              DateTime?                 @db.DateTime
-  completion_date           DateTime?                 @db.DateTime
-  status                    String                    @default("P") @db.NVarChar(20)
-  feedback                  String?                   @db.NText
-  competency_level          String?                   @db.NVarChar(50)
-  remarks                   String?                   @db.NText
-  createdate                DateTime                  @default(now()) @db.DateTime
-  updatedate                DateTime?                 @db.DateTime
-  createdby                 Int                       @default(1)
-  updatedby                 Int?
-  log_inst                  Int                       @default(1)
-  hiring_stage_hiring_value hrms_d_hiring_stage_value @relation(fields: [stage_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  id                                  Int                             @id @default(autoincrement())
+  name                                String                          @db.NVarChar(100)
+  code                                String                          @db.NVarChar(100)
+  stage_id                            Int                             @db.Int
+  description                         String?                         @db.NText
+  planned_date                        DateTime?                       @db.DateTime
+  completion_date                     DateTime?                       @db.DateTime
+  status                              String                          @default("P") @db.NVarChar(20)
+  feedback                            String?                         @db.NText
+  competency_level                    String?                         @db.NVarChar(50)
+  remarks                             String?                         @db.NText
+  createdate                          DateTime                        @default(now()) @db.DateTime
+  updatedate                          DateTime?                       @db.DateTime
+  createdby                           Int                             @default(1)
+  updatedby                           Int?
+  log_inst                            Int                             @default(1)
+  hiring_stage_hiring_value           hrms_d_hiring_stage_value       @relation(fields: [stage_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  interview_stage_remark_hiring_stage hrms_m_interview_stage_remark[]
 }
 
 model hrms_d_hiring_stage_value {
