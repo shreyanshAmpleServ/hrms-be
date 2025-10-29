@@ -2593,6 +2593,7 @@ model hrms_d_approval_work_flow {
   sequence                       Int
   approver_id                    Int
   department_id                  Int?
+  designation_id                 Int?
   header_approval_type           String?
   header_designation_id          Int?
   is_active                      String?
@@ -2604,7 +2605,7 @@ model hrms_d_approval_work_flow {
   log_inst                       Int?
   approval_work_approver         hrms_d_employee?           @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   approval_work_department       hrms_m_department_master?  @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  approval_work_flow_designation hrms_m_designation_master? @relation(fields: [header_designation_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
+  approval_work_flow_designation hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
 }
 
 model hrms_d_requests_approval {
