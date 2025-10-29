@@ -2810,7 +2810,6 @@ model hrms_d_hiring_stage {
   description                         String?                         @db.NText
   planned_date                        DateTime?                       @db.DateTime
   completion_date                     DateTime?                       @db.DateTime
-  status                              String                          @default("P") @db.NVarChar(20)
   feedback                            String?                         @db.NText
   competency_level                    String?                         @db.NVarChar(50)
   remarks                             String?                         @db.NText

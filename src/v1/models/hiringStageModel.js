@@ -8,7 +8,6 @@ const serializeHiringStageData = (data) => ({
   description: data.description || null,
   planned_date: data.planned_date ? new Date(data.planned_date) : null,
   completion_date: data.completion_date ? new Date(data.completion_date) : null,
-  status: data.status || "P",
   feedback: data.feedback || null,
   competency_level: data.competency_level || null,
   remarks: data.remarks || null,

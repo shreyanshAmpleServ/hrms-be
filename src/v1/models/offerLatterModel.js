@@ -11,7 +11,6 @@ const serializeJobData = (data) => {
     position: data.position || "",
     offered_salary: Number(data.offered_salary) || 0,
     valid_until: data.valid_until || new Date(),
-    status: data.status || "",
   };
 };
 
