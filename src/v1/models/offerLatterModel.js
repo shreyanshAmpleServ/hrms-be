@@ -272,157 +272,6 @@ const updateOfferLetterStatus = async (id, data) => {
   }
 };
 
-// const getOfferLetterForPDF = async (id) => {
-//   try {
-//     const offerLetter = await prisma.hrms_d_offer_letter.findUnique({
-//       where: { id: Number(id) },
-//       include: {
-//         offered_candidate: {
-//           select: {
-//             id: true,
-//             full_name: true,
-//             email: true,
-//             phone: true,
-//             department_id: true,
-//             expected_joining_date: true,
-//             candidate_department: {
-//               select: {
-//                 department_name: true,
-//               },
-//             },
-//           },
-//         },
-//         offer_letter_currency_Id: {
-//           select: {
-//             currency_code: true,
-//             currency_name: true,
-//           },
-//         },
-//       },
-//     });
-
-//     if (!offerLetter) {
-//       throw new CustomError("Offer letter not found", 404);
-//     }
-
-//     // Get company settings for logo
-//     const companySettings = await prisma.hrms_m_company_setting.findFirst({
-//       where: {
-//         is_active: "Y",
-//       },
-//       select: {
-//         company_logo: true,
-//         company_name: true,
-//         address: true,
-//         email: true,
-//         phone: true,
-//         authorized_signatory: true,
-//       },
-//     });
-
-//     // Get pay components for this candidate's contract
-//     // First, find if there's an employment contract for this candidate
-//     const employmentContract =
-//       await prisma.hrms_d_employment_contract.findFirst({
-//         where: {
-//           candidate_id: offerLetter.candidate_id,
-//           is_active: "Y",
-//         },
-//         select: {
-//           id: true,
-//         },
-//       });
-
-//     let payComponents = [];
-//     if (employmentContract) {
-//       // Fetch pay components linked to this contract
-//       const contractPayComponents =
-//         await prisma.hrms_d_pay_component_contract.findMany({
-//           where: {
-//             contract_id: employmentContract.id,
-//           },
-//           include: {
-//             pay_component_for_contract: {
-//               select: {
-//                 component_name: true,
-//                 component_code: true,
-//               },
-//             },
-//             pay_component_contract_currency: {
-//               select: {
-//                 currency_code: true,
-//               },
-//             },
-//           },
-//         });
-
-//       payComponents = contractPayComponents.map((pc) => ({
-//         componentName:
-//           pc.pay_component_for_contract?.component_name || "Component",
-//         componentCode: pc.pay_component_for_contract?.component_code || "",
-//         amount: pc.amount || 0,
-//         currencyCode:
-//           pc.pay_component_contract_currency?.currency_code ||
-//           offerLetter.offer_letter_currency_Id?.currency_code ||
-//           "",
-//       }));
-//     }
-
-//     // If no contract pay components, create a default entry with offered salary
-//     if (payComponents.length === 0) {
-//       payComponents = [
-//         {
-//           componentName: "Base Salary",
-//           componentCode: "BASIC",
-//           amount: offerLetter.offered_salary || 0,
-//           currencyCode:
-//             offerLetter.offer_letter_currency_Id?.currency_code || "",
-//         },
-//       ];
-//     }
-
-//     // Prepare data for PDF generation
-//     const pdfData = {
-//       // Company Info
-//       companyLogo: companySettings?.company_logo || "",
-//       companyName: companySettings?.company_name || "Company",
-//       companyAddress: companySettings?.address || "",
-//       companyEmail: companySettings?.email || "",
-//       companyPhone: companySettings?.phone || "",
-//       companySignatory: companySettings?.authorized_signatory || "HR Manager",
-
-//       // Candidate Info
-//       candidateName: offerLetter.offered_candidate?.full_name || "N/A",
-//       candidateEmail: offerLetter.offered_candidate?.email || "N/A",
-//       candidatePhone: offerLetter.offered_candidate?.phone || "N/A",
-
-//       // Offer Details
-//       position: offerLetter.position || "N/A",
-//       department:
-//         offerLetter.offered_candidate?.candidate_department?.department_name ||
-//         "N/A",
-//       offerDate: offerLetter.offer_date,
-//       validUntil: offerLetter.valid_until,
-//       expectedJoiningDate: offerLetter.offered_candidate?.expected_joining_date,
-
-//       // Pay Components
-//       payComponents: payComponents,
-//       currencyCode: offerLetter.offer_letter_currency_Id?.currency_code || "",
-//       currencyName: offerLetter.offer_letter_currency_Id?.currency_name || "",
-//     };
-
-//     return pdfData;
-//   } catch (error) {
-//     console.error("Error in getOfferLetterForPDF:", error);
-//     throw new CustomError(
-//       error.message || "Error fetching offer letter data",
-//       500
-//     );
-//   }
-// };
-
-// Fixed version - offerLatterModel.js
-
 const getOfferLetterForPDF = async (id) => {
   try {
     if (!id) {
@@ -462,88 +311,125 @@ const getOfferLetterForPDF = async (id) => {
       throw new CustomError("Offer letter not found", 404);
     }
 
-    const companySettings = await prisma.hrms_m_company_setting.findFirst({
-      where: {
-        is_active: "Y",
-      },
+    const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
       select: {
         company_logo: true,
         company_name: true,
-        address: true,
-        email: true,
-        phone: true,
-        authorized_signatory: true,
+        company_signature: true,
+        street_address: true,
+        city: true,
+        state: true,
+        country: true,
+        phone_number: true,
+        website: true,
       },
     });
 
-    const employmentContract =
-      await prisma.hrms_d_employment_contract.findFirst({
-        where: {
-          candidate_id: Number(offerLetter.candidate_id),
-          is_active: "Y",
-        },
-        select: {
-          id: true,
-        },
-      });
+    console.log("=== DEFAULT CONFIGURATION ===");
+    console.log("Company Logo:", defaultConfig?.company_logo);
+    console.log("Company Signature:", defaultConfig?.company_signature);
+    console.log("Company Name:", defaultConfig?.company_name);
 
-    let payComponents = [];
-    if (employmentContract) {
-      const contractPayComponents =
-        await prisma.hrms_d_pay_component_contract.findMany({
+    let payComponents = [
+      {
+        componentName: "Base Salary",
+        componentCode: "BASIC",
+        amount: offerLetter.offered_salary || 0,
+        currencyCode: offerLetter.offer_letter_currencyId?.currency_code || "",
+      },
+    ];
+
+    try {
+      const employmentContract =
+        await prisma.hrms_d_employment_contract.findFirst({
           where: {
-            contract_id: Number(employmentContract.id),
+            candidate_id: Number(offerLetter.candidate_id),
           },
-          include: {
-            pay_component_for_contract: {
-              select: {
-                component_name: true,
-                component_code: true,
-              },
-            },
-            pay_component_contract_currency: {
-              select: {
-                currency_code: true,
-              },
-            },
+          select: {
+            id: true,
+          },
+          orderBy: {
+            createdate: "desc",
           },
         });
 
-      payComponents = contractPayComponents.map((pc) => ({
-        componentName:
-          pc.pay_component_for_contract?.component_name || "Component",
-        componentCode: pc.pay_component_for_contract?.component_code || "",
-        amount: pc.amount || 0,
-        currencyCode:
-          pc.pay_component_contract_currency?.currency_code ||
-          offerLetter.offer_letter_currencyId?.currency_code ||
-          "",
-      }));
+      if (employmentContract) {
+        const contractPayComponents =
+          await prisma.hrms_d_pay_component_contract.findMany({
+            where: {
+              contract_id: Number(employmentContract.id),
+            },
+            include: {
+              pay_component_for_contract: {
+                select: {
+                  component_name: true,
+                  component_code: true,
+                },
+              },
+            },
+          });
+
+        if (contractPayComponents.length > 0) {
+          const currencyIds = [
+            ...new Set(
+              contractPayComponents.map((pc) => pc.currencyid).filter(Boolean)
+            ),
+          ];
+          let currencies = {};
+
+          if (currencyIds.length > 0) {
+            const currencyData = await prisma.hrms_m_currency_master.findMany({
+              where: {
+                id: { in: currencyIds },
+              },
+              select: {
+                id: true,
+                currency_code: true,
+              },
+            });
+
+            currencies = currencyData.reduce((acc, curr) => {
+              acc[curr.id] = curr.currency_code;
+              return acc;
+            }, {});
+          }
+
+          payComponents = contractPayComponents.map((pc) => ({
+            componentName:
+              pc.pay_component_for_contract?.component_name || "Component",
+            componentCode: pc.pay_component_for_contract?.component_code || "",
+            amount: pc.amount || 0,
+            currencyCode: pc.currencyid
+              ? currencies[pc.currencyid] || ""
+              : offerLetter.offer_letter_currencyId?.currency_code || "",
+          }));
+        }
+      }
+    } catch (payComponentError) {
+      console.error("Error fetching pay components:", payComponentError);
     }
 
-    if (payComponents.length === 0) {
-      payComponents = [
-        {
-          componentName: "Base Salary",
-          componentCode: "BASIC",
-          amount: offerLetter.offered_salary || 0,
-          currencyCode:
-            offerLetter.offer_letter_currencyId?.currency_code || "",
-        },
-      ];
-    }
+    const addressParts = [
+      defaultConfig?.street_address,
+      defaultConfig?.city,
+      defaultConfig?.state,
+      defaultConfig?.country,
+    ].filter(Boolean);
+    const fullAddress = addressParts.join(", ") || "Company Address";
 
     const pdfData = {
-      companyLogo: companySettings?.company_logo || "",
-      companyName: companySettings?.company_name || "Company",
-      companyAddress: companySettings?.address || "",
-      companyEmail: companySettings?.email || "",
-      companyPhone: companySettings?.phone || "",
-      companySignatory: companySettings?.authorized_signatory || "HR Manager",
+      companyLogo: defaultConfig?.company_logo || "",
+      companySignature: defaultConfig?.company_signature || "",
+      companyName: defaultConfig?.company_name || "Company Name",
+      companyAddress: fullAddress,
+      companyEmail: defaultConfig?.website || "info@company.com",
+      companyPhone: defaultConfig?.phone_number || "Phone Number",
+      companySignatory: "HR Manager",
 
       candidateName: offerLetter.offered_candidate?.full_name || "N/A",
       candidateEmail: offerLetter.offered_candidate?.email || "N/A",
       candidatePhone: offerLetter.offered_candidate?.phone || "N/A",
+
       position: offerLetter.position || "N/A",
       department:
         offerLetter.offered_candidate?.candidate_department?.department_name ||
@@ -567,6 +453,35 @@ const getOfferLetterForPDF = async (id) => {
   }
 };
 
+const getAllOfferLettersForBulkDownload = async (filters = {}) => {
+  try {
+    const offerLetters = await prisma.hrms_d_offer_letter.findMany({
+      where: {
+        ...filters,
+        is_active: "Y",
+      },
+      select: {
+        id: true,
+        position: true,
+        offered_candidate: {
+          select: {
+            id: true,
+            full_name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdate: "desc",
+      },
+    });
+
+    return offerLetters;
+  } catch (error) {
+    console.error("Error in getAllOfferLettersForBulkDownload:", error);
+    throw new CustomError(error.message, 500);
+  }
+};
+
 module.exports = {
   createOfferLetter,
   findOfferLetterById,
@@ -575,4 +490,5 @@ module.exports = {
   getAllOfferLetter,
   updateOfferLetterStatus,
   getOfferLetterForPDF,
+  getAllOfferLettersForBulkDownload,
 };

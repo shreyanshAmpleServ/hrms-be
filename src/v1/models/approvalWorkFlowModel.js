@@ -15,18 +15,112 @@ const serializeApprovalWorkFlowData = (data) => ({
   is_active: data.is_active || "Y",
 });
 
+// const createApprovalWorkFlow = async (dataArray) => {
+//   try {
+//     if (!Array.isArray(dataArray)) {
+//       throw new CustomError("Input must be an array of data objects", 400);
+//     }
+
+//     const result = await prisma.hrms_d_approval_work_flow.createMany({
+//       data: dataArray,
+//       // skipDuplicates: true,
+//     });
+//     const results = [];
+
+//     for (const data of dataArray) {
+//       const approver = await prisma.hrms_d_employee.findUnique({
+//         where: { id: Number(data.approver_id) },
+//         select: {
+//           id: true,
+//           full_name: true,
+//           department_id: true,
+//           hrms_employee_department: {
+//             select: { department_name: true },
+//           },
+//         },
+//       });
+
+//       if (!approver) {
+//         throw new CustomError(
+//           `Approver with ID ${data.approver_id} not found`,
+//           400
+//         );
+//       }
+
+//       if (
+//         data.department_id &&
+//         approver.department_id !== Number(data.department_id)
+//       ) {
+//         const department = await prisma.hrms_m_department_master.findUnique({
+//           where: { id: Number(data.department_id) },
+//           select: { department_name: true },
+//         });
+
+//         throw new CustomError(
+//           `Approver ${approver.full_name} (${approver.hrms_employee_department?.department_name}) does not belong to ${department?.department_name} department`,
+//           400
+//         );
+//       }
+
+//       const result = await prisma.hrms_d_approval_work_flow.create({
+//         data: {
+//           ...serializeApprovalWorkFlowData(data),
+//           createdby: data.createdby || 1,
+//           createdate: new Date(),
+//           log_inst: data.log_inst ? Number(data.log_inst) : 1,
+//         },
+//         include: {
+//           approval_work_approver: {
+//             select: {
+//               id: true,
+//               employee_code: true,
+//               full_name: true,
+//               hrms_employee_department: {
+//                 select: {
+//                   id: true,
+//                   department_name: true,
+//                 },
+//               },
+//             },
+//           },
+//           approval_work_department: {
+//             select: {
+//               id: true,
+//               department_name: true,
+//             },
+//           },
+//         },
+//       });
+
+//       console.log(
+//         ` Created ${
+//           data.department_id ? "Department-Specific" : "Global"
+//         } workflow: ${data.request_type} → ${approver.full_name}`
+//       );
+//       results.push(result);
+//     }
+
+//     return results;
+//   } catch (error) {
+//     throw new CustomError(`${error.message}`, 500);
+//   }
+// };
+
 const createApprovalWorkFlow = async (dataArray) => {
   try {
     if (!Array.isArray(dataArray)) {
       throw new CustomError("Input must be an array of data objects", 400);
     }
 
-    const result = await prisma.hrms_d_approval_work_flow.createMany({
-      data: dataArray,
-      skipDuplicates: true,
-    });
-    const results = [];
+    // ✅ SERIALIZE DATA FIRST - Remove extra fields
+    const serializedData = dataArray.map((data) => ({
+      ...serializeApprovalWorkFlowData(data),
+      createdby: data.createdby || 1,
+      createdate: new Date(),
+      log_inst: data.log_inst ? Number(data.log_inst) : 1,
+    }));
 
+    // Validate approvers and departments BEFORE creating
     for (const data of dataArray) {
       const approver = await prisma.hrms_d_employee.findUnique({
         where: { id: Number(data.approver_id) },
@@ -61,46 +155,46 @@ const createApprovalWorkFlow = async (dataArray) => {
           400
         );
       }
+    }
 
-      const result = await prisma.hrms_d_approval_work_flow.create({
-        data: {
-          ...serializeApprovalWorkFlowData(data),
-          createdby: data.createdby || 1,
-          createdate: new Date(),
-          log_inst: data.log_inst ? Number(data.log_inst) : 1,
-        },
-        include: {
-          approval_work_approver: {
-            select: {
-              id: true,
-              employee_code: true,
-              full_name: true,
-              hrms_employee_department: {
-                select: {
-                  id: true,
-                  department_name: true,
-                },
+    // ✅ NOW CREATE WITH CLEAN DATA
+    const result = await prisma.hrms_d_approval_work_flow.createMany({
+      data: serializedData,
+    });
+
+    console.log(`✅ Created ${result.count} approval workflows`);
+
+    // Fetch and return created records with relations
+    const createdWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
+      where: {
+        request_type: dataArray[0].request_type,
+      },
+      include: {
+        approval_work_approver: {
+          select: {
+            id: true,
+            employee_code: true,
+            full_name: true,
+            hrms_employee_department: {
+              select: {
+                id: true,
+                department_name: true,
               },
             },
           },
-          approval_work_department: {
-            select: {
-              id: true,
-              department_name: true,
-            },
+        },
+        approval_work_department: {
+          select: {
+            id: true,
+            department_name: true,
           },
         },
-      });
+      },
+      orderBy: { createdate: "desc" },
+      take: dataArray.length,
+    });
 
-      console.log(
-        ` Created ${
-          data.department_id ? "Department-Specific" : "Global"
-        } workflow: ${data.request_type} → ${approver.full_name}`
-      );
-      results.push(result);
-    }
-
-    return results;
+    return createdWorkflows;
   } catch (error) {
     throw new CustomError(`${error.message}`, 500);
   }

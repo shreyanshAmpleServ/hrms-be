@@ -41,4 +41,22 @@ router.patch(
   offerLatterController.updateOfferLetterStatus
 );
 
+router.post(
+  "/offer-letter/bulk-download",
+  authenticateToken,
+  offerLatterController.bulkDownloadOfferLetters
+);
+
+router.get(
+  "/offer-letter/bulk-download/status/:jobId",
+  authenticateToken,
+  offerLatterController.checkBulkDownloadStatus
+);
+
+router.get(
+  "/offer-letter/bulk-download/:jobId",
+  authenticateToken,
+  offerLatterController.downloadBulkOfferLetters
+);
+
 module.exports = router;

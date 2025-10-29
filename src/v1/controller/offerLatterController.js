@@ -4,6 +4,9 @@ const moment = require("moment");
 const { generateOfferLetterPDF } = require("../../utils/offerLetterPDF");
 const path = require("path");
 const fs = require("fs");
+const { v4: uuidv4 } = require("uuid");
+const offerLetterQueue = require("../../utils/offerLetterQueue");
+
 const createOfferLetter = async (req, res, next) => {
   try {
     const data = {
@@ -131,6 +134,114 @@ const downloadOfferLetterPDF = async (req, res, next) => {
     next(error);
   }
 };
+
+const bulkDownloadOfferLetters = async (req, res, next) => {
+  try {
+    const { candidate_id, startDate, endDate, status } = req.query;
+
+    const filters = {};
+    if (candidate_id) filters.candidate_id = Number(candidate_id);
+    if (status) filters.status = status;
+    if (startDate && endDate) {
+      filters.offer_date = {
+        gte: new Date(startDate),
+        lte: new Date(endDate),
+      };
+    }
+
+    const jobId = uuidv4();
+
+    const job = await offerLetterQueue.add({
+      userId: req.user.id,
+      filters: filters,
+      jobId: jobId,
+    });
+
+    console.log(`Bulk download job created: ${job.id}`);
+
+    res
+      .status(202)
+      .success("Bulk download started. Use job ID to check progress.", {
+        jobId: job.id,
+        statusUrl: `/api/offer-letter/bulk-download/status/${job.id}`,
+      });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkBulkDownloadStatus = async (req, res, next) => {
+  try {
+    const jobId = req.params.jobId;
+
+    const job = await offerLetterQueue.getJob(jobId);
+
+    if (!job) {
+      throw new CustomError("Job not found", 404);
+    }
+
+    const state = await job.getState();
+    const progress = job.progress();
+    const result = job.returnvalue;
+
+    res.status(200).success(null, {
+      jobId: job.id,
+      status: state,
+      progress: progress,
+      result: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const downloadBulkOfferLetters = async (req, res, next) => {
+  try {
+    const jobId = req.params.jobId;
+
+    const job = await offerLetterQueue.getJob(jobId);
+
+    if (!job) {
+      throw new CustomError("Job not found", 404);
+    }
+
+    const state = await job.getState();
+
+    if (state !== "completed") {
+      throw new CustomError(
+        `Job is ${state}. Please wait for completion.`,
+        400
+      );
+    }
+
+    const result = job.returnvalue;
+
+    if (!result || !result.zipPath) {
+      throw new CustomError("Download file not found", 404);
+    }
+
+    if (!fs.existsSync(result.zipPath)) {
+      throw new CustomError("File has been deleted or expired", 410);
+    }
+
+    res.download(result.zipPath, result.fileName, (err) => {
+      if (err) {
+        console.error("Error sending file:", err);
+        next(err);
+      }
+
+      setTimeout(() => {
+        if (fs.existsSync(result.zipPath)) {
+          fs.unlinkSync(result.zipPath);
+          console.log(`Cleaned up: ${result.zipPath}`);
+        }
+      }, 3600000);
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createOfferLetter,
   findOfferLetterById,
@@ -139,4 +250,7 @@ module.exports = {
   getAllOfferLetter,
   updateOfferLetterStatus,
   downloadOfferLetterPDF,
+  bulkDownloadOfferLetters,
+  checkBulkDownloadStatus,
+  downloadBulkOfferLetters,
 };

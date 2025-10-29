@@ -1678,7 +1678,7 @@ const takeActionOnRequest = async ({
         await prisma.hrms_d_loan_request.update({
           where: { id: request.reference_id },
           data: {
-            rejection_reason: remarks || null,
+            // rejection_reason: remarks || null,
             updatedby: acted_by,
             updatedate: new Date(),
           },
