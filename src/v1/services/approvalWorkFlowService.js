@@ -74,7 +74,6 @@ const deleteApprovalWorkFlows = async (ids) => {
   return await approvalWorkFlowModel.deleteApprovalWorkFlows(ids);
 };
 
-// ✅ CHANGED: Add designation_id parameter
 const getAllApprovalWorkFlowByRequest = async (
   requestType,
   departmentId,
@@ -83,7 +82,7 @@ const getAllApprovalWorkFlowByRequest = async (
   return await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
     requestType,
     departmentId,
-    designationId // ✅ ADDED
+    designationId
   );
 };
 

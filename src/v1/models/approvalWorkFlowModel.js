@@ -746,14 +746,12 @@ const createApprovalWorkFlow = async (dataArray) => {
       }
     }
 
-    // ✅ NOW CREATE WITH CLEAN DATA
     const result = await prisma.hrms_d_approval_work_flow.createMany({
       data: serializedData,
     });
 
-    console.log(`✅ Created ${result.count} approval workflows`);
+    console.log(` Created ${result.count} approval workflows`);
 
-    // Fetch and return created records with relations
     const createdWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: {
         request_type: dataArray[0].request_type,
@@ -1139,13 +1137,12 @@ const getAllApprovalWorkFlowByRequest = async (
   try {
     let workflows;
 
-    // ✅ 1. Try DEPARTMENT-specific workflow
     if (department_id) {
       workflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
           department_id: Number(department_id),
-          designation_id: null, // ✅ Must be null for pure department workflow
+          designation_id: null,
           is_active: "Y",
         },
         orderBy: { sequence: "asc" },
@@ -1176,7 +1173,7 @@ const getAllApprovalWorkFlowByRequest = async (
               department_name: true,
             },
           },
-          approval_work_designation: {
+          approval_work_flow_designation: {
             select: {
               id: true,
               designation_name: true,
@@ -1188,13 +1185,12 @@ const getAllApprovalWorkFlowByRequest = async (
       if (workflows.length > 0) return workflows;
     }
 
-    // ✅ 2. Try DESIGNATION-specific workflow
     if (designation_id) {
       workflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
           designation_id: Number(designation_id),
-          department_id: null, // ✅ Must be null for pure designation workflow
+          department_id: null,
           is_active: "Y",
         },
         orderBy: { sequence: "asc" },
@@ -1225,7 +1221,7 @@ const getAllApprovalWorkFlowByRequest = async (
               department_name: true,
             },
           },
-          approval_work_designation: {
+          approval_work_flow_designation: {
             select: {
               id: true,
               designation_name: true,
@@ -1237,7 +1233,6 @@ const getAllApprovalWorkFlowByRequest = async (
       if (workflows.length > 0) return workflows;
     }
 
-    // ✅ 3. Fallback to GLOBAL workflow
     workflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: {
         request_type,
