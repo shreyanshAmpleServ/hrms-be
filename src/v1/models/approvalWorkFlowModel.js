@@ -596,6 +596,7 @@ const serializeApprovalWorkFlowData = (data) => ({
   sequence: data.sequence ? Number(data.sequence) : 1,
   approver_id: Number(data.approver_id),
   department_id: data.department_id ? Number(data.department_id) : null,
+  designation_id: data.designation_id ? Number(data.designation_id) : null,
   header_approval_type: data.header_approval_type || "",
   header_designation_id: data.header_designation_id
     ? Number(data.header_designation_id)
@@ -701,7 +702,6 @@ const createApprovalWorkFlow = async (dataArray) => {
       throw new CustomError("Input must be an array of data objects", 400);
     }
 
-    // ✅ SERIALIZE DATA FIRST - Remove extra fields
     const serializedData = dataArray.map((data) => ({
       ...serializeApprovalWorkFlowData(data),
       createdby: data.createdby || 1,
@@ -709,7 +709,6 @@ const createApprovalWorkFlow = async (dataArray) => {
       log_inst: data.log_inst ? Number(data.log_inst) : 1,
     }));
 
-    // Validate approvers and departments BEFORE creating
     for (const data of dataArray) {
       const approver = await prisma.hrms_d_employee.findUnique({
         where: { id: Number(data.approver_id) },
@@ -928,7 +927,6 @@ const deleteApprovalWorkFlows = async (ids) => {
     );
   }
 };
-
 const getAllApprovalWorkFlow = async (
   search,
   page,
@@ -1135,10 +1133,43 @@ const getAllApprovalWorkFlowByRequest = async (
   designation_id = null
 ) => {
   try {
-    let workflows;
+    const includeConfig = {
+      approval_work_approver: {
+        select: {
+          id: true,
+          full_name: true,
+          employee_code: true,
+          profile_pic: true,
+          hrms_employee_department: {
+            select: {
+              id: true,
+              department_name: true,
+            },
+          },
+          hrms_employee_designation: {
+            select: {
+              id: true,
+              designation_name: true,
+            },
+          },
+        },
+      },
+      approval_work_department: {
+        select: {
+          id: true,
+          department_name: true,
+        },
+      },
+      approval_work_flow_designation: {
+        select: {
+          id: true,
+          designation_name: true,
+        },
+      },
+    };
 
     if (department_id) {
-      workflows = await prisma.hrms_d_approval_work_flow.findMany({
+      const workflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
           department_id: Number(department_id),
@@ -1146,47 +1177,13 @@ const getAllApprovalWorkFlowByRequest = async (
           is_active: "Y",
         },
         orderBy: { sequence: "asc" },
-        include: {
-          approval_work_approver: {
-            select: {
-              id: true,
-              full_name: true,
-              employee_code: true,
-              profile_pic: true,
-              hrms_employee_department: {
-                select: {
-                  id: true,
-                  department_name: true,
-                },
-              },
-              hrms_employee_designation: {
-                select: {
-                  id: true,
-                  designation_name: true,
-                },
-              },
-            },
-          },
-          approval_work_department: {
-            select: {
-              id: true,
-              department_name: true,
-            },
-          },
-          approval_work_flow_designation: {
-            select: {
-              id: true,
-              designation_name: true,
-            },
-          },
-        },
+        include: includeConfig,
       });
-
-      if (workflows.length > 0) return workflows;
+      return workflows;
     }
 
     if (designation_id) {
-      workflows = await prisma.hrms_d_approval_work_flow.findMany({
+      const workflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
           designation_id: Number(designation_id),
@@ -1194,46 +1191,12 @@ const getAllApprovalWorkFlowByRequest = async (
           is_active: "Y",
         },
         orderBy: { sequence: "asc" },
-        include: {
-          approval_work_approver: {
-            select: {
-              id: true,
-              full_name: true,
-              employee_code: true,
-              profile_pic: true,
-              hrms_employee_department: {
-                select: {
-                  id: true,
-                  department_name: true,
-                },
-              },
-              hrms_employee_designation: {
-                select: {
-                  id: true,
-                  designation_name: true,
-                },
-              },
-            },
-          },
-          approval_work_department: {
-            select: {
-              id: true,
-              department_name: true,
-            },
-          },
-          approval_work_flow_designation: {
-            select: {
-              id: true,
-              designation_name: true,
-            },
-          },
-        },
+        include: includeConfig,
       });
-
-      if (workflows.length > 0) return workflows;
+      return workflows;
     }
 
-    workflows = await prisma.hrms_d_approval_work_flow.findMany({
+    const workflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: {
         request_type,
         department_id: null,
@@ -1241,28 +1204,7 @@ const getAllApprovalWorkFlowByRequest = async (
         OR: [{ is_active: "Y" }, { is_active: null }],
       },
       orderBy: { sequence: "asc" },
-      include: {
-        approval_work_approver: {
-          select: {
-            id: true,
-            full_name: true,
-            employee_code: true,
-            profile_pic: true,
-            hrms_employee_department: {
-              select: {
-                id: true,
-                department_name: true,
-              },
-            },
-            hrms_employee_designation: {
-              select: {
-                id: true,
-                designation_name: true,
-              },
-            },
-          },
-        },
-      },
+      include: includeConfig,
     });
 
     return workflows;

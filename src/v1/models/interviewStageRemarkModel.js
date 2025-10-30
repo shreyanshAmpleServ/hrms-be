@@ -713,13 +713,10 @@ const serializeRemarkData = (data) => ({
   is_completed: data.is_completed ?? false,
 });
 
-/**
- * ✅ UPDATED: Check if previous stages are approved using CANDIDATE's snapshotted stages
- */
 const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
   try {
     console.log(
-      `🔍 Checking if previous hiring stages are approved for candidate ${candidateId}`
+      `Checking if previous hiring stages are approved for candidate ${candidateId}`
     );
 
     if (!candidateId) {
@@ -740,7 +737,6 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    // ✅ Get candidate's SNAPSHOTTED stages (not job posting stages)
     const candidateStages = await prisma.hrms_d_candidate_hiring_stage.findMany(
       {
         where: {
@@ -849,7 +845,6 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       );
     });
 
-    // Check for rejections
     const anyRejected = previousRemarks.some(
       (remark) => remark.status === "Rejected" || remark.status === "R"
     );
@@ -864,7 +859,6 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    // Check if all previous stages have remarks
     if (previousRemarks.length < previousStageIds.length) {
       const remarkedStageIds = new Set(previousRemarks.map((r) => r.stage_id));
       const missingStageIds = previousStageIds.filter(
@@ -882,7 +876,6 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    // Check if all previous stages are approved
     const allPreviousApproved = previousRemarks.every(
       (remark) => remark.status === "Approved" || remark.status === "A"
     );
@@ -909,44 +902,37 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    console.log("✅ All previous stages are approved - allowed to proceed");
     return {
       allowed: true,
       message: "All previous stages approved",
     };
   } catch (error) {
-    console.error("❌ Error checking previous stages:", error);
+    console.error("Error checking previous stages:", error);
     return {
       allowed: false,
       message: `Error checking previous stages: ${error.message}`,
     };
   }
 };
-/**
- * ✅ NEW: Convert snapshot record ID to actual hiring stage ID
- * This allows the API to accept snapshot IDs from the frontend
- */
 const convertSnapshotIdToStageId = async (candidateId, possibleSnapshotId) => {
   try {
     console.log(
-      `🔍 Checking if stage_id ${possibleSnapshotId} is a snapshot ID for candidate ${candidateId}`
+      `Checking if stage_id ${possibleSnapshotId} is a snapshot ID for candidate ${candidateId}`
     );
 
-    // First, check if it's already an actual hiring stage ID
     const isActualStage = await prisma.hrms_d_hiring_stage.findUnique({
       where: { id: parseInt(possibleSnapshotId) },
     });
 
     if (isActualStage) {
       console.log(
-        `✅ stage_id ${possibleSnapshotId} is already an actual hiring stage ID`
+        `stage_id ${possibleSnapshotId} is already an actual hiring stage ID`
       );
       return parseInt(possibleSnapshotId);
     }
 
-    // If not found in hiring_stage table, it might be a snapshot record ID
     console.log(
-      `🔄 stage_id ${possibleSnapshotId} not found in hiring_stage table, checking snapshot table...`
+      ` stage_id ${possibleSnapshotId} not found in hiring_stage table, checking snapshot table...`
     );
 
     const snapshotRecord = await prisma.hrms_d_candidate_hiring_stage.findFirst(
@@ -965,12 +951,11 @@ const convertSnapshotIdToStageId = async (candidateId, possibleSnapshotId) => {
 
     if (snapshotRecord) {
       console.log(
-        `✅ Converted snapshot ID ${possibleSnapshotId} to actual stage ID ${snapshotRecord.stage_id} (${snapshotRecord.stage_name})`
+        ` Converted snapshot ID ${possibleSnapshotId} to actual stage ID ${snapshotRecord.stage_id} (${snapshotRecord.stage_name})`
       );
       return snapshotRecord.stage_id;
     }
 
-    // If not found anywhere, throw error
     throw new CustomError(
       `Stage ID ${possibleSnapshotId} not found for candidate ${candidateId}`,
       404
@@ -983,25 +968,17 @@ const convertSnapshotIdToStageId = async (candidateId, possibleSnapshotId) => {
   }
 };
 
-/**
- * ✅ UPDATED: Create interview stage remark with snapshot validation
- */
-/**
- * ✅ UPDATED: Create interview stage remark with auto-conversion of snapshot IDs
- */
 const createInterviewStageRemark = async (data) => {
   try {
-    // ✅ AUTO-CONVERT: If stage_id is a snapshot record ID, convert it to actual stage ID
     const actualStageId = await convertSnapshotIdToStageId(
       Number(data.candidate_id),
       Number(data.stage_id)
     );
 
     console.log(
-      `📝 Creating interview stage remark for hiring stage ${actualStageId}`
+      ` Creating interview stage remark for hiring stage ${actualStageId}`
     );
 
-    // Validate against candidate's snapshotted stages
     const canProceed = await checkIfPreviousStagesApproved(
       actualStageId,
       Number(data.candidate_id)
@@ -1011,12 +988,11 @@ const createInterviewStageRemark = async (data) => {
       throw new CustomError(canProceed.message, 400);
     }
 
-    // Create the remark with the ACTUAL stage ID
     const result = await prisma.hrms_m_interview_stage_remark.create({
       data: {
         ...serializeRemarkData({
           ...data,
-          stage_id: actualStageId, // ✅ Use actual stage ID
+          stage_id: actualStageId,
         }),
         createdby: data.createdby || 1,
         createdate: new Date(),
@@ -1053,9 +1029,8 @@ const createInterviewStageRemark = async (data) => {
       },
     });
 
-    console.log("✅ Interview stage remark created, creating request...");
+    console.log("Interview stage remark created, creating request...");
 
-    // Create approval request
     await createRequest({
       requester_id: data.employee_id || data.createdby || 1,
       request_type: "interview_stage",
@@ -1065,19 +1040,18 @@ const createInterviewStageRemark = async (data) => {
           .value,
       request_data: JSON.stringify({
         candidate_id: data.candidate_id,
-        hiring_stage_id: actualStageId, // ✅ Use actual stage ID
+        hiring_stage_id: actualStageId,
       }),
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });
 
-    console.log("✅ Request created for approval");
+    console.log("Request created for approval");
 
-    // ✅ Update candidate's stage status in snapshot table using actual stage ID
     await prisma.hrms_d_candidate_hiring_stage.updateMany({
       where: {
         candidate_id: parseInt(data.candidate_id),
-        stage_id: actualStageId, // ✅ Use actual stage ID
+        stage_id: actualStageId,
       },
       data: {
         stage_status: "in_progress",
@@ -1086,11 +1060,11 @@ const createInterviewStageRemark = async (data) => {
       },
     });
 
-    console.log("✅ Candidate stage status updated in snapshot table");
+    console.log("Candidate stage status updated in snapshot table");
 
     return result;
   } catch (error) {
-    console.error("❌ Error creating interview stage remark:", error);
+    console.error("Error creating interview stage remark:", error);
     throw new CustomError(
       `Error creating interview stage remark: ${error.message}`,
       500
@@ -1098,21 +1072,17 @@ const createInterviewStageRemark = async (data) => {
   }
 };
 
-/**
- * ✅ UPDATED: Check and update candidate status using snapshotted stages
- */
 const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
   try {
     console.log(
-      `🔍 Checking candidate ${candidateId} status for hiring stage ${hiringStageId}`
+      ` Checking candidate ${candidateId} status for hiring stage ${hiringStageId}`
     );
 
     if (!candidateId) {
-      console.log("⚠️ No candidate ID provided");
+      console.log("No candidate ID provided");
       return;
     }
 
-    // Get candidate's snapshotted stages
     const candidateStages = await prisma.hrms_d_candidate_hiring_stage.findMany(
       {
         where: {
@@ -1137,14 +1107,13 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
     );
 
     if (candidateStages.length === 0) {
-      console.log("⚠️ No hiring stages found for candidate");
+      console.log("No hiring stages found for candidate");
       return;
     }
 
     const stageIds = candidateStages.map((s) => s.stage_id);
-    console.log(`📋 Hiring stage IDs for candidate: [${stageIds.join(", ")}]`);
+    console.log(`Hiring stage IDs for candidate: [${stageIds.join(", ")}]`);
 
-    // Get all remarks for candidate's stages
     const allRemarks = await prisma.hrms_m_interview_stage_remark.findMany({
       where: {
         stage_id: { in: stageIds },
@@ -1165,7 +1134,7 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       },
     });
 
-    console.log(`📝 Found ${allRemarks.length} remarks`);
+    console.log(`Found ${allRemarks.length} remarks`);
     allRemarks.forEach((remark) => {
       console.log(
         `   - Stage ${remark.stage_id}: ${
@@ -1175,14 +1144,13 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       );
     });
 
-    // Check for rejections
     const anyRejected = allRemarks.some(
       (remark) => remark.status === "Rejected" || remark.status === "R"
     );
 
     if (anyRejected) {
       console.log(
-        "❌ At least one stage is rejected. Marking candidate as Rejected."
+        "At least one stage is rejected. Marking candidate as Rejected."
       );
 
       await prisma.hrms_d_candidate_master.update({
@@ -1194,7 +1162,6 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
         },
       });
 
-      // Update all remaining stages to rejected
       await prisma.hrms_d_candidate_hiring_stage.updateMany({
         where: {
           candidate_id: parseInt(candidateId),
@@ -1210,7 +1177,6 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       return;
     }
 
-    // Check if all stages are approved
     const allApproved =
       allRemarks.length === stageIds.length &&
       allRemarks.every(
@@ -1218,7 +1184,7 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       );
 
     if (allApproved) {
-      console.log("✅ All stages approved! Updating candidate status.");
+      console.log("All stages approved! Updating candidate status.");
 
       await prisma.hrms_d_candidate_master.update({
         where: { id: parseInt(candidateId) },
@@ -1229,7 +1195,6 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
         },
       });
 
-      // Mark all stages as completed
       await prisma.hrms_d_candidate_hiring_stage.updateMany({
         where: {
           candidate_id: parseInt(candidateId),
@@ -1242,11 +1207,11 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       });
 
       console.log(
-        `✅ Candidate ${candidateId} status updated to 'All Stages Approved'`
+        `Candidate ${candidateId} status updated to 'All Stages Approved'`
       );
     } else {
       console.log(
-        "⏳ Some stages still pending. Marking candidate as In Progress."
+        "Some stages still pending. Marking candidate as In Progress."
       );
 
       await prisma.hrms_d_candidate_master.update({
@@ -1259,22 +1224,18 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       });
     }
   } catch (error) {
-    console.error("❌ Error checking candidate status:", error);
+    console.error("   Error checking candidate status:", error);
   }
 };
 
-/**
- * ✅ UPDATED: Stop hiring process using snapshotted stages
- */
 const stopHiringProcess = async (
   candidateId,
   hiringStageId,
   rejectedStageName
 ) => {
   try {
-    console.log(`🛑 Stopping hiring process for candidate ${candidateId}`);
+    console.log(`Stopping hiring process for candidate ${candidateId}`);
 
-    // Get candidate's snapshotted stages
     const candidateStages = await prisma.hrms_d_candidate_hiring_stage.findMany(
       {
         where: {
@@ -1301,7 +1262,6 @@ const stopHiringProcess = async (
     const futureStages = candidateStages.slice(currentStageIndex + 1);
     const futureStageIds = futureStages.map((s) => s.stage_id);
 
-    // Cancel future stage remarks
     if (futureStageIds.length > 0) {
       await prisma.hrms_m_interview_stage_remark.updateMany({
         where: {
@@ -1316,7 +1276,6 @@ const stopHiringProcess = async (
         },
       });
 
-      // Update future stages in snapshot table
       await prisma.hrms_d_candidate_hiring_stage.updateMany({
         where: {
           candidate_id: parseInt(candidateId),
@@ -1338,15 +1297,12 @@ const stopHiringProcess = async (
       },
     });
 
-    console.log(`🛑 Hiring process stopped for candidate ${candidateId}`);
+    console.log(` Hiring process stopped for candidate ${candidateId}`);
   } catch (error) {
-    console.error("❌ Error stopping hiring process:", error);
+    console.error("Error stopping hiring process:", error);
   }
 };
 
-/**
- * ✅ UPDATED: Update remark status and move to next stage in snapshot
- */
 const updateInterviewStageRemarkStatus = async (id, data) => {
   try {
     const interviewStageRemarkId = parseInt(id);
@@ -1391,9 +1347,7 @@ const updateInterviewStageRemarkStatus = async (id, data) => {
       data: updateData,
     });
 
-    // Update candidate stage status in snapshot table
     if (data.status === "Approved" || data.status === "A") {
-      // Mark current stage as completed
       await prisma.hrms_d_candidate_hiring_stage.updateMany({
         where: {
           candidate_id: existingRemark.candidate_id,
@@ -1406,7 +1360,6 @@ const updateInterviewStageRemarkStatus = async (id, data) => {
         },
       });
 
-      // Find and start next stage
       const currentStage = await prisma.hrms_d_candidate_hiring_stage.findFirst(
         {
           where: {
@@ -1433,7 +1386,7 @@ const updateInterviewStageRemarkStatus = async (id, data) => {
               updatedate: new Date(),
             },
           });
-          console.log(`✅ Moved to next stage: ${nextStage.stage_name}`);
+          console.log(` Moved to next stage: ${nextStage.stage_name}`);
         }
       }
 
@@ -1442,7 +1395,6 @@ const updateInterviewStageRemarkStatus = async (id, data) => {
         existingRemark.stage_id
       );
     } else if (data.status === "Rejected" || data.status === "R") {
-      // Mark stage as rejected in snapshot
       await prisma.hrms_d_candidate_hiring_stage.updateMany({
         where: {
           candidate_id: existingRemark.candidate_id,
