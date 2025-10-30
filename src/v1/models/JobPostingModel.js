@@ -773,12 +773,9 @@ const enrichWithHiringStages = async (jobPosting) => {
     },
     select: {
       id: true,
-      name: true,
-      // sequence: true,
       code: true,
       stage_id: true,
       description: true,
-      status: true,
       hiring_stage_hiring_value: {
         select: {
           id: true,

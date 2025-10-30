@@ -2,26 +2,6 @@ const interviewStageRemarkService = require("../services/interviewStageRemarkSer
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
 
-// const createInterviewStageRemark = async (req, res, next) => {
-//   try {
-//     console.log("Incoming request body:", req.body);
-
-//     const data = {
-//       ...req.body,
-//       createdby: req.user.id,
-//       log_inst: req.user.log_inst,
-//     };
-
-//     const reqData =
-//       await interviewStageRemarkService.createInterviewStageRemark(data);
-//     res
-//       .status(201)
-//       .success("Interview stage Remark created successfully", reqData);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
-
 const createInterviewStageRemark = async (req, res, next) => {
   try {
     const data = {
@@ -106,32 +86,6 @@ const getAllInterviewStageRemark = async (req, res, next) => {
     next(error);
   }
 };
-
-// const updateInterviewStageRemarkStatus = async (req, res, next) => {
-//   try {
-//     console.log("Approver ID from token:", req.user.employee_id);
-
-//     const status = req.body.status;
-//     console.log("User : ", req.user);
-//     const data = {
-//       status,
-//       updatedby: req.user.employee_id,
-//       approver_id: req.user.employee_id,
-//       updatedate: new Date(),
-//     };
-
-//     const reqData =
-//       await interviewStageRemarkService.updateInterviewStageRemarkStatus(
-//         req.params.id,
-//         data
-//       );
-//     res
-//       .status(200)
-//       .success("Interview stage remark status updated successfully", reqData);
-//   } catch (error) {
-//     next(error);
-//   }
-// };
 
 const updateInterviewStageRemarkStatus = async (req, res, next) => {
   try {

@@ -181,14 +181,14 @@ const init = async () => {
     const activeWorkflows = workflows.filter(
       (w) => w.is_active === "Y" && w.schedule_cron
     );
-    console.log(
-      ` Found ${activeWorkflows.length} active workflows to schedule`
-    );
+    // console.log(
+    //   ` Found ${activeWorkflows.length} active workflows to schedule`
+    // );
 
     activeWorkflows.forEach((w) => {
-      console.log(
-        ` Scheduling workflow ${w.id}: "${w.name}" with cron "${w.schedule_cron}"`
-      );
+      // console.log(
+      //   ` Scheduling workflow ${w.id}: "${w.name}" with cron "${w.schedule_cron}"`
+      // );
       scheduleCron(w.id, w.schedule_cron);
     });
 
@@ -214,9 +214,9 @@ function scheduleCron(workflowId, cronPattern) {
       cronPattern,
       async () => {
         try {
-          console.log(
-            ` Cron job triggered for workflow ${workflowId} at ${new Date().toISOString()}`
-          );
+          // console.log(
+          //   ` Cron job triggered for workflow ${workflowId} at ${new Date().toISOString()}`
+          // );
 
           const workflow = await getAlertWorkflowById(workflowId);
           if (!workflow) {
@@ -232,15 +232,15 @@ function scheduleCron(workflowId, cronPattern) {
             actions: safeJsonParse(workflow.actions),
           };
 
-          console.log(` Parsed workflow data:`, {
-            conditions: parsedWorkflow.conditions,
-            actions: parsedWorkflow.actions,
-          });
+          // console.log(` Parsed workflow data:`, {
+          //   conditions: parsedWorkflow.conditions,
+          //   actions: parsedWorkflow.actions,
+          // });
 
           await runWorkflow(workflowId, parsedWorkflow);
-          console.log(
-            ` Cron job completed successfully for workflow ${workflowId}`
-          );
+          // console.log(
+          //   ` Cron job completed successfully for workflow ${workflowId}`
+          // );
         } catch (err) {
           console.error(
             ` Cron for workflow ${workflowId} failed:`,
@@ -254,9 +254,9 @@ function scheduleCron(workflowId, cronPattern) {
       }
     );
 
-    console.log(
-      ` Cron job scheduled for workflow ${workflowId} with pattern: ${cronPattern}`
-    );
+    // console.log(
+    //   ` Cron job scheduled for workflow ${workflowId} with pattern: ${cronPattern}`
+    // );
   } catch (error) {
     console.error(
       ` Failed to schedule cron for workflow ${workflowId}:`,

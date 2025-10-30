@@ -663,7 +663,7 @@ const serializeCandidateMasterData = (data) => ({
   interview1_remarks: data.interview1_remarks || "",
   interview2_remarks: data.interview2_remarks || "",
   interview3_remarks: data.interview3_remarks || "",
-  interview_stage: Number(data.interview_stage) || "",
+  interview_stage: Number(data.interview_stage) || null,
   expected_joining_date: data.expected_joining_date
     ? new Date(data.expected_joining_date)
     : null,
@@ -759,13 +759,13 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
 
         return {
           id: stage.id,
-          name: stage.name,
-          sequence: stage.sequence,
+          stage_name: stageValue.value,
+          sort_order: stage.sequence,
           code: stage.code,
           description: stage.description,
           status: stage.status,
           competency_level: stage.competency_level,
-          hiring_stage_hiring_value: stageValue,
+          // hiring_stage_hiring_value: stageValue,
         };
       })
     );
@@ -1078,7 +1078,7 @@ const getAllCandidateMaster = async (
         where: filters,
         skip,
         take: size,
-        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+        orderBy: [{ createdate: "desc" }],
         include: {
           candidate_job_posting: {
             select: {

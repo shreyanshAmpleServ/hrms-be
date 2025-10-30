@@ -139,10 +139,6 @@ const scheduleAnnouncementForTime = async (announcementId, scheduledAt) => {
           jobs[announcementId].stop();
           delete jobs[announcementId];
         }
-
-        console.log(
-          ` Cron job completed and cleaned up for announcement ${announcementId}`
-        );
       } catch (error) {
         console.error(
           ` Cron job failed for announcement ${announcementId}:`,

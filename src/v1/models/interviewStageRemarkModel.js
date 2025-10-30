@@ -815,7 +815,12 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
           interview_stage_remark_hiring_stage: {
             select: {
               id: true,
-              name: true,
+              hiring_stage_hiring_value: {
+                select: {
+                  value: true,
+                  id: true,
+                },
+              },
             },
           },
         },
@@ -825,7 +830,7 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
     console.log(`Previous stage remarks found: ${previousRemarks.length}`);
     previousRemarks.forEach((remark) => {
       console.log(
-        `  - Stage ${remark.stage_id} (${remark.interview_stage_remark_hiring_stage.name}): ${remark.status}`
+        `  - Stage ${remark.stage_id} (${remark.interview_stage_remark_hiring_stage.hiring_stage_hiring_value.value}): ${remark.status}`
       );
     });
     const anyRejected = previousRemarks.some(
@@ -838,7 +843,7 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       );
       return {
         allowed: false,
-        message: `Cannot proceed. Previous stage "${rejectedRemark.interview_stage_remark_hiring_stage.name}" was rejected. Hiring process has been stopped.`,
+        message: `Cannot proceed. Previous stage "${rejectedRemark.interview_stage_remark_hiring_stage.hiring_stage_hiring_value.value}" was rejected. Hiring process has been stopped.`,
       };
     }
 
@@ -863,7 +868,11 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       );
 
       const pendingStageNames = pendingRemarks
-        .map((r) => r.interview_stage_remark_hiring_stage.name)
+        .map(
+          (r) =>
+            r.interview_stage_remark_hiring_stage.hiring_stage_hiring_value
+              .value
+        )
         .join(", ");
 
       return {
@@ -916,8 +925,13 @@ const createInterviewStageRemark = async (data) => {
         interview_stage_remark_hiring_stage: {
           select: {
             id: true,
-            name: true,
             code: true,
+            hiring_stage_hiring_value: {
+              select: {
+                id: true,
+                value: true,
+              },
+            },
           },
         },
         interview_stage_employee_id: {
@@ -937,7 +951,9 @@ const createInterviewStageRemark = async (data) => {
       requester_id: data.employee_id || data.createdby || 1,
       request_type: "interview_stage",
       reference_id: result.id,
-      stage_name: result.interview_stage_remark_hiring_stage.name,
+      stage_name:
+        result.interview_stage_remark_hiring_stage.hiring_stage_hiring_value
+          .value,
       request_data: JSON.stringify({
         candidate_id: data.candidate_id,
         hiring_stage_id: data.stage_id,
@@ -968,7 +984,12 @@ const findInterviewStageRemarkById = async (id) => {
         interview_stage_remark_hiring_stage: {
           select: {
             id: true,
-            name: true,
+            hiring_stage_hiring_value: {
+              select: {
+                id: true,
+                value: true,
+              },
+            },
             code: true,
           },
         },
@@ -997,7 +1018,12 @@ const updateInterviewStageRemark = async (id, data) => {
         interview_stage_remark_hiring_stage: {
           select: {
             id: true,
-            name: true,
+            hiring_stage_hiring_value: {
+              select: {
+                value: true,
+                id: true,
+              },
+            },
             code: true,
           },
         },
@@ -1076,7 +1102,12 @@ const getAllInterviewStageRemark = async (search, page, size, candidateId) => {
         interview_stage_remark_hiring_stage: {
           select: {
             id: true,
-            name: true,
+            hiring_stage_hiring_value: {
+              select: {
+                value: true,
+                id: true,
+              },
+            },
             code: true,
           },
         },
@@ -1162,7 +1193,12 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
         interview_stage_remark_hiring_stage: {
           select: {
             id: true,
-            name: true,
+            hiring_stage_hiring_value: {
+              select: {
+                value: true,
+                id: true,
+              },
+            },
           },
         },
       },
@@ -1171,7 +1207,7 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
     console.log(`📊 Found ${allRemarks.length} remarks`);
     allRemarks.forEach((remark) => {
       console.log(
-        `  - Stage ${remark.stage_id} (${remark.interview_stage_remark_hiring_stage.name}): ${remark.status}`
+        `  - Stage ${remark.stage_id} (${remark.interview_stage_remark_hiring_stage.hiring_stage_hiring_value.value}): ${remark.status}`
       );
     });
 
@@ -1316,7 +1352,12 @@ const updateInterviewStageRemarkStatus = async (id, data) => {
           interview_stage_remark_hiring_stage: {
             select: {
               id: true,
-              name: true,
+              hiring_stage_hiring_value: {
+                select: {
+                  value: true,
+                  id: true,
+                },
+              },
             },
           },
         },
@@ -1349,7 +1390,8 @@ const updateInterviewStageRemarkStatus = async (id, data) => {
       await stopHiringProcess(
         existingRemark.candidate_id,
         existingRemark.stage_id,
-        existingRemark.interview_stage_remark_hiring_stage.name
+        existingRemark.interview_stage_remark_hiring_stage
+          .hiring_stage_hiring_value.value
       );
     }
 
