@@ -715,10 +715,9 @@ const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 const { createRequest } = require("./requestsModel.js");
 
-// Serialize
 const serializeRemarkData = (data) => ({
   candidate_id: data.candidate_id ? Number(data.candidate_id) : null,
-  stage_id: Number(data.stage_id), // This is hiring_stage id
+  stage_id: Number(data.stage_id),
   stage_name: data.stage_name || null,
   interview_date: data.interview_date ? new Date(data.interview_date) : null,
   status: data.status || "Pending",
@@ -728,11 +727,10 @@ const serializeRemarkData = (data) => ({
   is_completed: data.is_completed ?? false,
 });
 
-// ✅ NEW: Check if previous stages are approved
 const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
   try {
     console.log(
-      `🔍 Checking if previous hiring stages are approved for candidate ${candidateId}`
+      ` Checking if previous hiring stages are approved for candidate ${candidateId}`
     );
 
     if (!candidateId) {
@@ -742,7 +740,6 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    // Get candidate with job posting
     const candidate = await prisma.hrms_d_candidate_master.findUnique({
       where: { id: parseInt(candidateId) },
       include: {
@@ -761,7 +758,6 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    // Get all hiring stage IDs for this job posting
     const stageIdsString = candidate.candidate_job_posting.hiring_stage_id;
     if (!stageIdsString) {
       return {
@@ -782,7 +778,6 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    // Find the index of current stage
     const currentStageIndex = stageIds.indexOf(currentStageId);
 
     if (currentStageIndex === -1) {
@@ -793,9 +788,8 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    // If this is the first stage, allow it
     if (currentStageIndex === 0) {
-      console.log("✅ This is the first stage - allowed");
+      console.log(" This is the first stage - allowed");
       return {
         allowed: true,
         message: "First stage - allowed",
@@ -1149,7 +1143,6 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       return;
     }
 
-    // Get candidate with job posting
     const candidate = await prisma.hrms_d_candidate_master.findUnique({
       where: { id: parseInt(candidateId) },
       include: {
@@ -1204,7 +1197,7 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       },
     });
 
-    console.log(`📊 Found ${allRemarks.length} remarks`);
+    console.log(` Found ${allRemarks.length} remarks`);
     allRemarks.forEach((remark) => {
       console.log(
         `  - Stage ${remark.stage_id} (${remark.interview_stage_remark_hiring_stage.hiring_stage_hiring_value.value}): ${remark.status}`
@@ -1217,7 +1210,7 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
 
     if (anyRejected) {
       console.log(
-        "❌ At least one stage is rejected. Marking candidate as Rejected."
+        " At least one stage is rejected. Marking candidate as Rejected."
       );
       await prisma.hrms_d_candidate_master.update({
         where: { id: parseInt(candidateId) },
@@ -1237,7 +1230,7 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       );
 
     if (allApproved) {
-      console.log("✅ All stages approved! Updating candidate status.");
+      console.log(" All stages approved! Updating candidate status.");
       await prisma.hrms_d_candidate_master.update({
         where: { id: parseInt(candidateId) },
         data: {
@@ -1247,11 +1240,11 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
         },
       });
       console.log(
-        `✅ Candidate ${candidateId} status updated to "All Stages Approved"`
+        ` Candidate ${candidateId} status updated to "All Stages Approved"`
       );
     } else {
       console.log(
-        "⏳ Some stages still pending. Marking candidate as In Progress."
+        " Some stages still pending. Marking candidate as In Progress."
       );
       await prisma.hrms_d_candidate_master.update({
         where: { id: parseInt(candidateId) },
@@ -1308,7 +1301,6 @@ const stopHiringProcess = async (
     const futureStageIds = stageIds.slice(currentStageIndex + 1);
 
     if (futureStageIds.length > 0) {
-      // Mark future stage remarks as "Cancelled" if they exist
       await prisma.hrms_m_interview_stage_remark.updateMany({
         where: {
           stage_id: { in: futureStageIds },
@@ -1332,7 +1324,7 @@ const stopHiringProcess = async (
       },
     });
 
-    console.log(`✅ Hiring process stopped for candidate ${candidateId}`);
+    console.log(` Hiring process stopped for candidate ${candidateId}`);
   } catch (error) {
     console.error("Error stopping hiring process:", error);
   }
