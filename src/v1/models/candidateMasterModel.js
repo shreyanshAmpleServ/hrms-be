@@ -3,7 +3,6 @@
 // const prisma = new PrismaClient();
 // const employeeModel = require("./EmployeeModel");
 
-// // Serialize candidate master data
 // const serializeCandidateMasterData = (data) => ({
 //   candidate_code: data.candidate_code ?? undefined,
 //   full_name: data.full_name || "",
@@ -22,11 +21,10 @@
 //     : null,
 //   status: data.status || "Pending",
 //   application_source: Number(data.application_source),
-
 //   interview1_remarks: data.interview1_remarks || "",
 //   interview2_remarks: data.interview2_remarks || "",
 //   interview3_remarks: data.interview3_remarks || "",
-//   interview_stage: Number(data.interview_stage) || "",
+//   interview_stage: Number(data.interview_stage) || null,
 //   expected_joining_date: data.expected_joining_date
 //     ? new Date(data.expected_joining_date)
 //     : null,
@@ -43,91 +41,126 @@
 //     ? new Date(data.no_show_marked_date)
 //     : null,
 //   department_id: Number(data.department_id),
+
 // });
 
-// // const createCandidateMaster = async (data) => {
-// //   try {
-// //     const fullName = data.full_name?.trim();
-// //     if (!fullName || fullName.split(" ").length < 2) {
-// //       throw new CustomError(
-// //         "Full name must include at least first and last name",
-// //         400
-// //       );
-// //     }
+// const getHiringStagesForJobPosting = async (jobPostingId) => {
+//   if (!jobPostingId) {
+//     console.log(" No job posting ID provided");
+//     return [];
+//   }
 
-// //     const [firstName, lastName] = fullName.split(" ");
-// //     const initials = `${firstName[0]}${lastName[0]}`.toUpperCase();
+//   try {
+//     console.log(" Fetching job posting:", jobPostingId);
 
-// //     const lastCandidate = await prisma.hrms_d_candidate_master.findFirst({
-// //       orderBy: {
-// //         createdate: "desc",
-// //       },
-// //       select: {
-// //         candidate_code: true,
-// //       },
-// //     });
+//     const jobPosting = await prisma.hrms_d_job_posting.findUnique({
+//       where: { id: parseInt(jobPostingId) },
+//       select: {
+//         id: true,
+//         job_title: true,
+//         hiring_stage_id: true,
+//       },
+//     });
 
-// //     let nextNumber = 1;
+//     console.log(" Job Posting:", JSON.stringify(jobPosting, null, 2));
 
-// //     if (lastCandidate?.candidate_code) {
-// //       const numPart = lastCandidate.candidate_code.slice(2);
-// //       const parsedNum = parseInt(numPart);
-// //       if (!isNaN(parsedNum)) {
-// //         nextNumber = parsedNum + 1;
-// //       }
-// //     }
+//     if (!jobPosting || !jobPosting.hiring_stage_id) {
+//       console.log(" No hiring_stage_id found in job posting");
+//       return [];
+//     }
 
-// //     const newCandidateCode = `${initials}${String(nextNumber).padStart(
-// //       3,
-// //       "0"
-// //     )}`;
+//     const stageIds = jobPosting.hiring_stage_id
+//       .split(",")
+//       .map((id) => parseInt(id.trim()))
+//       .filter((id) => !isNaN(id));
 
-// //     const reqData = await prisma.hrms_d_candidate_master.create({
-// //       data: {
-// //         ...serializeCandidateMasterData(data),
-// //         candidate_code: newCandidateCode,
-// //         createdby: data.createdby || 1,
-// //         createdate: new Date(),
-// //         log_inst: data.log_inst || 1,
-// //       },
-// //       include: {
-// //         candidate_job_posting: {
-// //           select: {
-// //             id: true,
-// //             job_title: true,
-// //           },
-// //         },
-// //         candidate_application_source: {
-// //           select: {
-// //             id: true,
-// //             source_name: true,
-// //           },
-// //         },
-// //         candidate_interview_stage: {
-// //           select: {
-// //             id: true,
-// //             stage_name: true,
-// //           },
-// //         },
-// //         candidate_master_applied_position: {
-// //           select: {
-// //             id: true,
-// //             designation_name: true,
-// //           },
-// //         },
-// //       },
-// //     });
+//     console.log(" Parsed Stage IDs:", stageIds);
 
-// //     return reqData;
-// //   } catch (error) {
-// //     throw new CustomError(
-// //       `Error creating candidate master: ${error.message}`,
-// //       500
-// //     );
-// //   }
-// // };
+//     if (stageIds.length === 0) {
+//       console.log(" No valid stage IDs found");
+//       return [];
+//     }
 
-// // Find candidate master by ID
+//     console.log(" Querying database for stages:", stageIds);
+
+//     const stages = await prisma.hrms_d_hiring_stage.findMany({
+//       where: { id: { in: stageIds } },
+//     });
+
+//     console.log(" Stages found in database:", stages.length);
+//     console.log(
+//       " Found stage IDs:",
+//       stages.map((s) => s.id)
+//     );
+
+//     if (stages.length === 0) {
+//       console.log(" No stages found for IDs:", stageIds);
+//       return [];
+//     }
+
+//     const stageWithValues = await Promise.all(
+//       stages.map(async (stage) => {
+//         let stageValue = null;
+
+//         if (stage.stage_id) {
+//           try {
+//             stageValue = await prisma.hrms_d_hiring_stage_value.findUnique({
+//               where: { id: stage.stage_id },
+//               select: {
+//                 id: true,
+//                 value: true,
+//               },
+//             });
+//           } catch (error) {
+//             console.warn(
+//               `Could not fetch value for stage_id ${stage.stage_id}:`,
+//               error.message
+//             );
+//           }
+//         }
+
+//         return {
+//           id: stage.id,
+//           stage_name: stageValue.value,
+//           sort_order: stage.sequence,
+//           code: stage.code,
+//           description: stage.description,
+//           status: stage.status,
+//           competency_level: stage.competency_level,
+//           // hiring_stage_hiring_value: stageValue,
+//         };
+//       })
+//     );
+
+//     console.log(" Stages with values:", stageWithValues.length);
+
+//     const stageMap = new Map(stageWithValues.map((s) => [s.id, s]));
+
+//     const orderedStages = stageIds
+//       .map((id, index) => {
+//         const stage = stageMap.get(id);
+//         if (stage) {
+//           return {
+//             ...stage,
+//             sequence_number: index + 1,
+//           };
+//         } else {
+//           console.warn(` Stage ID ${id} not found in results`);
+//           return null;
+//         }
+//       })
+//       .filter(Boolean);
+
+//     console.log(" Returning", orderedStages.length, "ordered stages");
+
+//     return orderedStages;
+//   } catch (error) {
+//     console.error(" Error fetching hiring stages:", error);
+//     console.error("Error details:", error.message);
+//     console.error("Stack trace:", error.stack);
+//     return [];
+//   }
+// };
 // const createCandidateMaster = async (data) => {
 //   try {
 //     const fullName = data.full_name?.trim();
@@ -176,6 +209,7 @@
 //           select: {
 //             id: true,
 //             job_title: true,
+//             hiring_stage_id: true,
 //           },
 //         },
 //         candidate_application_source: {
@@ -205,7 +239,14 @@
 //       },
 //     });
 
-//     return reqData;
+//     const hiringStages = await getHiringStagesForJobPosting(
+//       reqData.job_posting
+//     );
+
+//     return {
+//       ...reqData,
+//       hiring_stages: hiringStages,
+//     };
 //   } catch (error) {
 //     throw new CustomError(
 //       `Error creating candidate master: ${error.message}`,
@@ -218,29 +259,12 @@
 //   try {
 //     const reqData = await prisma.hrms_d_candidate_master.findUnique({
 //       where: { id: parseInt(id) },
-//     });
-//     if (!reqData) {
-//       throw new CustomError("Candidate not found", 404);
-//     }
-//     return reqData;
-//   } catch (error) {
-//     throw new CustomError(
-//       `Error finding candidate by ID: ${error.message}`,
-//       503
-//     );
-//   }
-// };
-
-// // Update candidate master
-// const updateCandidateMaster = async (id, data) => {
-//   try {
-//     const updatedEntry = await prisma.hrms_d_candidate_master.update({
-//       where: { id: parseInt(id) },
 //       include: {
 //         candidate_job_posting: {
 //           select: {
 //             id: true,
 //             job_title: true,
+//             hiring_stage_id: true,
 //           },
 //         },
 //         candidate_application_source: {
@@ -261,7 +285,6 @@
 //             designation_name: true,
 //           },
 //         },
-
 //         candidate_department: {
 //           select: {
 //             id: true,
@@ -269,14 +292,80 @@
 //           },
 //         },
 //       },
+//     });
 
+//     if (!reqData) {
+//       throw new CustomError("Candidate not found", 404);
+//     }
+
+//     const hiringStages = await getHiringStagesForJobPosting(
+//       reqData.job_posting
+//     );
+
+//     return {
+//       ...reqData,
+//       hiring_stages: hiringStages,
+//     };
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error finding candidate by ID: ${error.message}`,
+//       503
+//     );
+//   }
+// };
+
+// const updateCandidateMaster = async (id, data) => {
+//   try {
+//     const updatedEntry = await prisma.hrms_d_candidate_master.update({
+//       where: { id: parseInt(id) },
+//       include: {
+//         candidate_job_posting: {
+//           select: {
+//             id: true,
+//             job_title: true,
+//             hiring_stage_id: true,
+//           },
+//         },
+//         candidate_application_source: {
+//           select: {
+//             id: true,
+//             source_name: true,
+//           },
+//         },
+//         candidate_interview_stage: {
+//           select: {
+//             id: true,
+//             stage_name: true,
+//           },
+//         },
+//         candidate_master_applied_position: {
+//           select: {
+//             id: true,
+//             designation_name: true,
+//           },
+//         },
+//         candidate_department: {
+//           select: {
+//             id: true,
+//             department_name: true,
+//           },
+//         },
+//       },
 //       data: {
 //         ...serializeCandidateMasterData(data),
 //         updatedby: data.updatedby || 1,
 //         updatedate: new Date(),
 //       },
 //     });
-//     return updatedEntry;
+
+//     const hiringStages = await getHiringStagesForJobPosting(
+//       updatedEntry.job_posting
+//     );
+
+//     return {
+//       ...updatedEntry,
+//       hiring_stages: hiringStages,
+//     };
 //   } catch (error) {
 //     console.error("Error updating candidate master:", error);
 //     throw new CustomError(
@@ -286,7 +375,6 @@
 //   }
 // };
 
-// // Delete candidate master
 // const deleteCandidateMaster = async (id) => {
 //   try {
 //     await prisma.hrms_d_candidate_master.delete({
@@ -299,7 +387,7 @@
 //         400
 //       );
 //     } else {
-//       throw new CustomError(error.meta.constraint, 500);
+//       throw new CustomError(error.meta?.constraint || error.message, 500);
 //     }
 //   }
 // };
@@ -309,7 +397,8 @@
 //   page,
 //   size,
 //   startDate,
-//   endDate
+//   endDate,
+//   status
 // ) => {
 //   try {
 //     page = !page || page <= 0 ? 1 : parseInt(page);
@@ -321,18 +410,21 @@
 //     if (search && search.trim()) {
 //       const searchTerm = search.trim().toLowerCase();
 //       filters.OR = [
-//         { full_name: { contains: searchTerm, mode: "insensitive" } },
-//         { email: { contains: searchTerm, mode: "insensitive" } },
-//         { phone: { contains: searchTerm, mode: "insensitive" } },
-//         { status: { contains: searchTerm, mode: "insensitive" } },
-//         { candidate_code: { contains: searchTerm, mode: "insensitive" } },
+//         { full_name: { contains: searchTerm } },
+//         { email: { contains: searchTerm } },
+//         { phone: { contains: searchTerm } },
+//         { status: { contains: searchTerm } },
+//         { candidate_code: { contains: searchTerm } },
 //       ];
 //     }
-
+//     if (status && status.trim()) {
+//       filters.status = {
+//         in: status || [],
+//       };
+//     }
 //     if (startDate && endDate) {
 //       const start = new Date(startDate);
 //       const end = new Date(endDate);
-
 //       end.setHours(23, 59, 59, 999);
 
 //       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
@@ -348,12 +440,13 @@
 //         where: filters,
 //         skip,
 //         take: size,
-//         orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//         orderBy: [{ createdate: "desc" }],
 //         include: {
 //           candidate_job_posting: {
 //             select: {
 //               id: true,
 //               job_title: true,
+//               hiring_stage_id: true,
 //             },
 //           },
 //           candidate_application_source: {
@@ -394,7 +487,6 @@
 //     ]);
 
 //     const stageCount = await prisma.hrms_m_interview_stage.count();
-
 //     const candidatesToUpdate = [];
 
 //     for (const candidate of datas) {
@@ -434,8 +526,21 @@
 //       });
 //     }
 
+//     // Add hiring stages to each candidate
+//     const enrichedData = await Promise.all(
+//       datas.map(async (candidate) => {
+//         const hiringStages = await getHiringStagesForJobPosting(
+//           candidate.job_posting
+//         );
+//         return {
+//           ...candidate,
+//           hiring_stages: hiringStages,
+//         };
+//       })
+//     );
+
 //     return {
-//       data: datas,
+//       data: enrichedData,
 //       currentPage: page,
 //       size,
 //       totalPages: Math.ceil(totalCount / size),
@@ -446,6 +551,8 @@
 //           : null,
 //     };
 //   } catch (error) {
+//     console.log("Candidate error", error);
+
 //     if (error.code === "P2002") {
 //       throw new CustomError("Duplicate entry found", 409);
 //     } else if (error.code === "P2025") {
@@ -459,7 +566,6 @@
 // const updateCandidateMasterStatus = async (id, data) => {
 //   try {
 //     const candidateMasterId = parseInt(id);
-//     console.log("Candidate Id : ", candidateMasterId);
 
 //     if (isNaN(candidateMasterId)) {
 //       throw new CustomError("Invalid candidate master ID", 400);
@@ -482,6 +588,7 @@
 //       updatedby: data.updatedby || 1,
 //       updatedate: new Date(),
 //     };
+
 //     if (data.status === "A") {
 //       updateData.status_remarks = data.status_remarks || "";
 //     } else if (data.status === "R") {
@@ -489,12 +596,30 @@
 //     } else {
 //       updateData.status_remarks = "";
 //     }
+
 //     const updatedEntry = await prisma.hrms_d_candidate_master.update({
 //       where: { id: candidateMasterId },
 //       data: updateData,
+//       include: {
+//         candidate_job_posting: {
+//           select: {
+//             id: true,
+//             job_title: true,
+//             hiring_stage_id: true,
+//           },
+//         },
+//       },
 //     });
 
-//     return updatedEntry;
+//     // Add hiring stages
+//     const hiringStages = await getHiringStagesForJobPosting(
+//       updatedEntry.job_posting
+//     );
+
+//     return {
+//       ...updatedEntry,
+//       hiring_stages: hiringStages,
+//     };
 //   } catch (error) {
 //     throw new CustomError(
 //       `Error updating candidate master status: ${error.message}`,
@@ -556,13 +681,10 @@
 //       department_id: candidate.department_id,
 //       designation_id: candidate.applied_position_id,
 //       join_date: candidate.actual_joining_date || new Date(),
-
 //       employment_type: additionalData.employment_type || "Full-time",
 //       employee_category: additionalData.employee_category || "Regular",
 //       status: "Active",
-
 //       ...additionalData,
-
 //       createdby: createdBy,
 //       log_inst: logInst,
 //     };
@@ -627,6 +749,7 @@
 //   const nextNumber = maxNumber + 1;
 //   return `EMP${initials}${String(nextNumber).padStart(3, "0")}`;
 // };
+
 // module.exports = {
 //   createCandidateMaster,
 //   findCandidateMasterById,
@@ -682,6 +805,143 @@ const serializeCandidateMasterData = (data) => ({
   department_id: Number(data.department_id),
 });
 
+const snapshotHiringStagesForCandidate = async (
+  candidateId,
+  jobPostingId,
+  createdBy,
+  logInst
+) => {
+  try {
+    console.log(
+      ` Snapshotting stages for candidate ${candidateId} from job ${jobPostingId}`
+    );
+
+    const jobPosting = await prisma.hrms_d_job_posting.findUnique({
+      where: { id: parseInt(jobPostingId) },
+      select: { hiring_stage_id: true },
+    });
+
+    if (!jobPosting || !jobPosting.hiring_stage_id) {
+      console.log(" No hiring stages defined for this job posting");
+      return [];
+    }
+
+    const stageIds = jobPosting.hiring_stage_id
+      .split(",")
+      .map((id) => parseInt(id.trim()))
+      .filter((id) => !isNaN(id) && id > 0);
+
+    if (stageIds.length === 0) {
+      console.log(" No valid stage IDs found");
+      return [];
+    }
+
+    console.log(` Found ${stageIds.length} stages:`, stageIds);
+    const hiringStages = await prisma.hrms_d_hiring_stage.findMany({
+      where: { id: { in: stageIds } },
+      include: {
+        hiring_stage_hiring_value: {
+          select: {
+            id: true,
+            value: true,
+          },
+        },
+      },
+    });
+
+    console.log(` Retrieved ${hiringStages.length} stage details`);
+
+    const snapshotPromises = stageIds.map(async (stageId, index) => {
+      const stage = hiringStages.find((s) => s.id === stageId);
+
+      if (!stage) {
+        console.warn(` Stage ID ${stageId} not found in database`);
+        return null;
+      }
+
+      const stageData = {
+        candidate_id: candidateId,
+        job_posting_id: parseInt(jobPostingId),
+        stage_id: stageId,
+        stage_name:
+          stage.hiring_stage_hiring_value?.value || `Stage ${index + 1}`,
+        sequence_order: index + 1,
+        stage_status: index === 0 ? "in_progress" : "pending",
+        description: stage.description || null,
+        started_date: index === 0 ? new Date() : null,
+        createdby: createdBy,
+        log_inst: logInst,
+      };
+
+      console.log(
+        `  Creating stage ${index + 1}: ${stageData.stage_name} (${
+          stageData.stage_status
+        })`
+      );
+
+      return prisma.hrms_d_candidate_hiring_stage.create({
+        data: stageData,
+      });
+    });
+
+    const results = await Promise.all(snapshotPromises);
+    const successfulSnapshots = results.filter(Boolean);
+
+    console.log(
+      ` Successfully created ${successfulSnapshots.length} stage snapshots`
+    );
+
+    return successfulSnapshots;
+  } catch (error) {
+    console.error(" Error snapshotting hiring stages:", error);
+    throw new CustomError(
+      `Error snapshotting hiring stages: ${error.message}`,
+      500
+    );
+  }
+};
+
+const getCandidateHiringStages = async (candidateId) => {
+  try {
+    const stages = await prisma.hrms_d_candidate_hiring_stage.findMany({
+      where: { candidate_id: parseInt(candidateId) },
+      include: {
+        candidate_hiring_stage_hiring_stage: {
+          include: {
+            hiring_stage_hiring_value: {
+              select: {
+                id: true,
+                value: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        sequence_order: "asc",
+      },
+    });
+
+    return stages.map((stage, index) => ({
+      id: stage.id,
+      stage_id: stage.stage_id,
+      stage_name: stage.stage_name,
+      sequence_order: stage.sequence_order,
+      stage_status: stage.stage_status,
+      description: stage.description,
+      feedback: stage.feedback,
+      started_date: stage.started_date,
+      completed_date: stage.completed_date,
+      code: stage.candidate_hiring_stage_hiring_stage?.code,
+      sort_order: stage.sequence_order,
+      sequence_number: index + 1,
+    }));
+  } catch (error) {
+    console.error("Error fetching candidate hiring stages:", error);
+    return [];
+  }
+};
+
 const getHiringStagesForJobPosting = async (jobPostingId) => {
   if (!jobPostingId) {
     console.log(" No job posting ID provided");
@@ -700,8 +960,6 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
       },
     });
 
-    console.log(" Job Posting:", JSON.stringify(jobPosting, null, 2));
-
     if (!jobPosting || !jobPosting.hiring_stage_id) {
       console.log(" No hiring_stage_id found in job posting");
       return [];
@@ -712,27 +970,15 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
       .map((id) => parseInt(id.trim()))
       .filter((id) => !isNaN(id));
 
-    console.log(" Parsed Stage IDs:", stageIds);
-
     if (stageIds.length === 0) {
-      console.log(" No valid stage IDs found");
       return [];
     }
-
-    console.log(" Querying database for stages:", stageIds);
 
     const stages = await prisma.hrms_d_hiring_stage.findMany({
       where: { id: { in: stageIds } },
     });
 
-    console.log(" Stages found in database:", stages.length);
-    console.log(
-      " Found stage IDs:",
-      stages.map((s) => s.id)
-    );
-
     if (stages.length === 0) {
-      console.log(" No stages found for IDs:", stageIds);
       return [];
     }
 
@@ -751,26 +997,22 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
             });
           } catch (error) {
             console.warn(
-              `Could not fetch value for stage_id ${stage.stage_id}:`,
-              error.message
+              `Could not fetch value for stage_id ${stage.stage_id}`
             );
           }
         }
 
         return {
           id: stage.id,
-          stage_name: stageValue.value,
+          stage_name: stageValue?.value || "Unknown Stage",
           sort_order: stage.sequence,
           code: stage.code,
           description: stage.description,
           status: stage.status,
           competency_level: stage.competency_level,
-          // hiring_stage_hiring_value: stageValue,
         };
       })
     );
-
-    console.log(" Stages with values:", stageWithValues.length);
 
     const stageMap = new Map(stageWithValues.map((s) => [s.id, s]));
 
@@ -782,23 +1024,18 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
             ...stage,
             sequence_number: index + 1,
           };
-        } else {
-          console.warn(` Stage ID ${id} not found in results`);
-          return null;
         }
+        return null;
       })
       .filter(Boolean);
 
-    console.log(" Returning", orderedStages.length, "ordered stages");
-
     return orderedStages;
   } catch (error) {
-    console.error(" Error fetching hiring stages:", error);
-    console.error("Error details:", error.message);
-    console.error("Stack trace:", error.stack);
+    console.error("Error fetching hiring stages:", error);
     return [];
   }
 };
+
 const createCandidateMaster = async (data) => {
   try {
     const fullName = data.full_name?.trim();
@@ -833,6 +1070,8 @@ const createCandidateMaster = async (data) => {
       3,
       "0"
     )}`;
+
+    console.log(` Creating candidate: ${fullName} (${newCandidateCode})`);
 
     const reqData = await prisma.hrms_d_candidate_master.create({
       data: {
@@ -877,15 +1116,25 @@ const createCandidateMaster = async (data) => {
       },
     });
 
-    const hiringStages = await getHiringStagesForJobPosting(
-      reqData.job_posting
-    );
+    console.log(` Candidate created with ID: ${reqData.id}`);
+
+    if (reqData.job_posting) {
+      await snapshotHiringStagesForCandidate(
+        reqData.id,
+        reqData.job_posting,
+        data.createdby || 1,
+        data.log_inst || 1
+      );
+    }
+
+    const hiringStages = await getCandidateHiringStages(reqData.id);
 
     return {
       ...reqData,
       hiring_stages: hiringStages,
     };
   } catch (error) {
+    console.error(" Error creating candidate master:", error);
     throw new CustomError(
       `Error creating candidate master: ${error.message}`,
       500
@@ -936,9 +1185,7 @@ const findCandidateMasterById = async (id) => {
       throw new CustomError("Candidate not found", 404);
     }
 
-    const hiringStages = await getHiringStagesForJobPosting(
-      reqData.job_posting
-    );
+    const hiringStages = await getCandidateHiringStages(reqData.id);
 
     return {
       ...reqData,
@@ -996,9 +1243,7 @@ const updateCandidateMaster = async (id, data) => {
       },
     });
 
-    const hiringStages = await getHiringStagesForJobPosting(
-      updatedEntry.job_posting
-    );
+    const hiringStages = await getCandidateHiringStages(updatedEntry.id);
 
     return {
       ...updatedEntry,
@@ -1164,12 +1409,9 @@ const getAllCandidateMaster = async (
       });
     }
 
-    // Add hiring stages to each candidate
     const enrichedData = await Promise.all(
       datas.map(async (candidate) => {
-        const hiringStages = await getHiringStagesForJobPosting(
-          candidate.job_posting
-        );
+        const hiringStages = await getCandidateHiringStages(candidate.id);
         return {
           ...candidate,
           hiring_stages: hiringStages,
@@ -1249,10 +1491,7 @@ const updateCandidateMasterStatus = async (id, data) => {
       },
     });
 
-    // Add hiring stages
-    const hiringStages = await getHiringStagesForJobPosting(
-      updatedEntry.job_posting
-    );
+    const hiringStages = await getCandidateHiringStages(updatedEntry.id);
 
     return {
       ...updatedEntry,
@@ -1261,6 +1500,81 @@ const updateCandidateMasterStatus = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating candidate master status: ${error.message}`,
+      500
+    );
+  }
+};
+
+const updateCandidateStageStatus = async (
+  candidateId,
+  stageId,
+  status,
+  feedback,
+  updatedBy
+) => {
+  try {
+    console.log(
+      ` Updating stage ${stageId} for candidate ${candidateId} to ${status}`
+    );
+
+    const updatedStage = await prisma.hrms_d_candidate_hiring_stage.updateMany({
+      where: {
+        candidate_id: parseInt(candidateId),
+        id: parseInt(stageId),
+      },
+      data: {
+        stage_status: status,
+        feedback: feedback || null,
+        completed_date:
+          status === "completed" || status === "rejected" ? new Date() : null,
+        updatedby: updatedBy,
+        updatedate: new Date(),
+      },
+    });
+
+    if (status === "completed") {
+      const currentStage = await prisma.hrms_d_candidate_hiring_stage.findFirst(
+        {
+          where: {
+            candidate_id: parseInt(candidateId),
+            id: parseInt(stageId),
+          },
+        }
+      );
+
+      if (currentStage) {
+        console.log(
+          `   Moving to next stage (sequence ${
+            currentStage.sequence_order + 1
+          })`
+        );
+
+        const nextStageUpdate =
+          await prisma.hrms_d_candidate_hiring_stage.updateMany({
+            where: {
+              candidate_id: parseInt(candidateId),
+              job_posting_id: currentStage.job_posting_id,
+              sequence_order: currentStage.sequence_order + 1,
+            },
+            data: {
+              stage_status: "in_progress",
+              started_date: new Date(),
+              updatedby: updatedBy,
+              updatedate: new Date(),
+            },
+          });
+
+        console.log(
+          `   Next stage activated: ${nextStageUpdate.count} record(s) updated`
+        );
+      }
+    }
+
+    return updatedStage;
+  } catch (error) {
+    console.error(" Error updating candidate stage:", error);
+    throw new CustomError(
+      `Error updating candidate stage: ${error.message}`,
       500
     );
   }
@@ -1395,5 +1709,8 @@ module.exports = {
   deleteCandidateMaster,
   getAllCandidateMaster,
   updateCandidateMasterStatus,
+  updateCandidateStageStatus,
   createEmployeeFromCandidate,
+  getCandidateHiringStages,
+  snapshotHiringStagesForCandidate,
 };

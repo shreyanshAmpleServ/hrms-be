@@ -740,9 +740,6 @@ const serializeJobData = (data) => {
   };
 };
 
-/**
- * Parse hiring stage IDs from comma-separated string
- */
 const parseHiringStageIds = (hiringStageId) => {
   if (!hiringStageId || hiringStageId.trim() === "") {
     return [];
