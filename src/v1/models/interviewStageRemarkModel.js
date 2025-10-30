@@ -1234,7 +1234,7 @@ const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
       await prisma.hrms_d_candidate_master.update({
         where: { id: parseInt(candidateId) },
         data: {
-          status: "All Stages Approved",
+          status: "A",
           status_remarks: "All hiring stages have been successfully approved",
           updatedate: new Date(),
         },
