@@ -447,7 +447,7 @@ const sendContractExpiryAlert = async (contract, daysUntilExpiry) => {
  */
 const initializeCronJobs = () => {
   try {
-    logger.info("=== Initializing HRMS Cron Jobs ===");
+    logger.info("Initializing HRMS Cron Jobs");
     // createMissingTodayAttendance();
 
     cron.schedule("0 10 * * *", HealthCheckUp, {
@@ -468,8 +468,8 @@ const initializeCronJobs = () => {
       name: "Daily Attendance Initializer",
     });
 
-    logger.info("=== All HRMS cron jobs scheduled successfully ===");
-    logger.info("   Attendance Initializer: Daily at 12:00 AM IST (Midnight)");
+    logger.info("All HRMS cron jobs scheduled successfully");
+    logger.info("Attendance Initializer: Daily at 12:00 AM IST (Midnight)");
   } catch (error) {
     logger.error("Failed to initialize HRMS cron jobs:", error);
   }

@@ -47,14 +47,16 @@ const getAllCandidateMaster = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  status
 ) => {
   return await candidateMasterModel.getAllCandidateMaster(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    status
   );
 };
 

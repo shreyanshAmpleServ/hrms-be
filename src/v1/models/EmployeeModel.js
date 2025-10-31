@@ -242,12 +242,6 @@ const createEmployee = async (data) => {
           400
         );
       }
-      if (existingEmployee.phone_number === data.phone_number) {
-        throw new CustomError(
-          `Employee with phone number ${data.phone_number} already exists`,
-          400
-        );
-      }
     }
 
     const serializedData = serializeTags(employeeData);

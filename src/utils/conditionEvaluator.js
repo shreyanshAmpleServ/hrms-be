@@ -235,15 +235,15 @@
 module.exports.evaluateConditions = (employee, conditions) => {
   if (!employee || !conditions?.length) return false;
 
-  console.log(
-    ` Evaluating conditions for employee: ${employee.full_name} (${employee.employee_code})`
-  );
+  // console.log(
+  //   ` Evaluating conditions for employee: ${employee.full_name} (${employee.employee_code})`
+  // );
 
   for (const cond of conditions) {
     const { field, operator, value } = cond;
     let empValue;
 
-    console.log(`   Checking: ${field} ${operator} ${value}`);
+    // console.log(`   Checking: ${field} ${operator} ${value}`);
 
     if (field === "probation_end_date") {
       let probationEndDate = employee.probation_end_date;
@@ -265,11 +265,11 @@ module.exports.evaluateConditions = (employee, conditions) => {
           );
         } else {
           empValue = formatDate(probationEndDate);
-          console.log(`   Probation end date: ${empValue}`);
+          // console.log(`   Probation end date: ${empValue}`);
         }
       } else {
         empValue = null;
-        console.log(`Probation end date: null`);
+        // console.log(`Probation end date: null`);
       }
     } else if (field === "attendance_marked") {
       const today = new Date().toISOString().split("T")[0];
@@ -283,7 +283,7 @@ module.exports.evaluateConditions = (employee, conditions) => {
       } else {
         empValue = false;
       }
-      console.log(`   Attendance marked for ${today}: ${empValue}`);
+      // console.log(`   Attendance marked for ${today}: ${empValue}`);
     } else if (field === "document_expiry_date") {
       // Handle document expiry conditions
       let documentExpiryDate = null;
@@ -319,7 +319,7 @@ module.exports.evaluateConditions = (employee, conditions) => {
               earliestDoc.document_name
             } on ${formatDate(documentExpiryDate)}`
           );
-          console.log(` Alert before: ${alertBeforeDays} days`);
+          // console.log(` Alert before: ${alertBeforeDays} days`);
         }
       }
 
@@ -346,11 +346,11 @@ module.exports.evaluateConditions = (employee, conditions) => {
           }
         } else {
           empValue = formatDate(documentExpiryDate);
-          console.log(` Document expiry date: ${empValue}`);
+          // console.log(` Document expiry date: ${empValue}`);
         }
       } else {
         empValue = null;
-        console.log(` No documents with expiry dates found`);
+        // console.log(` No documents with expiry dates found`);
       }
     } else if (field === "document_expiring_soon") {
       // Check if any document is expiring within specified days
@@ -398,7 +398,7 @@ module.exports.evaluateConditions = (employee, conditions) => {
       }
 
       empValue = expiredCount;
-      console.log(` Expired documents count: ${empValue}`);
+      // console.log(` Expired documents count: ${empValue}`);
     } else if (field === "document_type_expiring") {
       const targetDocType = value;
       let isExpiring = false;
@@ -439,7 +439,7 @@ module.exports.evaluateConditions = (employee, conditions) => {
       }
 
       empValue = isExpiring;
-      console.log(` Document type "${targetDocType}" is expiring: ${empValue}`);
+      // console.log(` Document type "${targetDocType}" is expiring: ${empValue}`);
     } else if (field === "has_checked_in") {
       const today = new Date().toISOString().split("T")[0];
 
@@ -453,7 +453,7 @@ module.exports.evaluateConditions = (employee, conditions) => {
       } else {
         empValue = false;
       }
-      console.log(`   Has checked in for ${today}: ${empValue}`);
+      // console.log(`   Has checked in for ${today}: ${empValue}`);
     } else if (field === "is_late_today") {
       const today = new Date().toISOString().split("T")[0];
 
@@ -475,11 +475,11 @@ module.exports.evaluateConditions = (employee, conditions) => {
           );
         } else {
           empValue = false;
-          console.log(` No check-in time found, not late: ${empValue}`);
+          // console.log(` No check-in time found, not late: ${empValue}`);
         }
       } else {
         empValue = false;
-        console.log(` No attendance record today, not late: ${empValue}`);
+        // console.log(` No attendance record today, not late: ${empValue}`);
       }
     } else if (field === "minutes_late") {
       const today = new Date().toISOString().split("T")[0];
@@ -517,35 +517,35 @@ module.exports.evaluateConditions = (employee, conditions) => {
           );
 
           empValue = !todayAttendance || !todayAttendance.check_in_time;
-          console.log(` Is absent today (${currentHour}:XX): ${empValue}`);
+          // console.log(` Is absent today (${currentHour}:XX): ${empValue}`);
         } else {
           empValue = true;
-          console.log(` No attendance record = absent: ${empValue}`);
+          // console.log(` No attendance record = absent: ${empValue}`);
         }
       } else {
         empValue = false;
-        console.log(
-          ` Too early to check absence (${currentHour}:XX): ${empValue}`
-        );
+        // console.log(
+        //   ` Too early to check absence (${currentHour}:XX): ${empValue}`
+        // );
       }
     } else if (field === "shift_start_time") {
       empValue = getEmployeeShiftStartTime(employee);
-      console.log(` Employee shift start time: ${empValue}`);
+      // console.log(` Employee shift start time: ${empValue}`);
     } else if (field === "shift_end_time") {
       empValue = getEmployeeShiftEndTime(employee);
-      console.log(` Employee shift end time: ${empValue}`);
+      // console.log(` Employee shift end time: ${empValue}`);
     } else if (field === "daily_working_hours") {
       empValue = getEmployeeShiftWorkingHours(employee);
-      console.log(` Employee daily working hours: ${empValue}`);
+      // console.log(` Employee daily working hours: ${empValue}`);
     } else if (field === "is_weekend_today") {
       const today = new Date();
       const dayOfWeek = today.getDay();
       const weekoffDays = getEmployeeWeekoffDays(employee);
       empValue = weekoffDays.includes(dayOfWeek);
-      console.log(` Is weekend today (day ${dayOfWeek}): ${empValue}`);
+      // console.log(` Is weekend today (day ${dayOfWeek}): ${empValue}`);
     } else if (field === "current_time_hour") {
       empValue = new Date().getHours();
-      console.log(` Current hour: ${empValue}`);
+      // console.log(` Current hour: ${empValue}`);
     } else if (field === "contract_end_date") {
       let contractEndDate = null;
       if (employee.contracted_employee?.length > 0) {
@@ -579,18 +579,18 @@ module.exports.evaluateConditions = (employee, conditions) => {
           }
         } else {
           empValue = formatDate(contractEndDate);
-          console.log(`   Contract end date: ${empValue}`);
+          // console.log(`   Contract end date: ${empValue}`);
         }
       } else {
         empValue = null;
-        console.log(`   Contract end date: null`);
+        // console.log(`   Contract end date: null`);
       }
     } else {
       empValue = employee[field];
-      console.log(`   Direct field ${field}: ${empValue}`);
+      // console.log(`   Direct field ${field}: ${empValue}`);
     }
 
-    console.log(`   Employee value: ${empValue}, Expected: ${value}`);
+    // console.log(`   Employee value: ${empValue}, Expected: ${value}`);
 
     if (empValue === undefined || empValue === null) {
       console.log(
@@ -607,7 +607,7 @@ module.exports.evaluateConditions = (employee, conditions) => {
     else if (operator === ">") conditionMet = empValue > value;
     else if (operator === "!=") conditionMet = empValue != value;
 
-    console.log(`   Condition result: ${conditionMet}`);
+    // console.log(`   Condition result: ${conditionMet}`);
 
     if (!conditionMet) {
       console.log(
@@ -617,7 +617,7 @@ module.exports.evaluateConditions = (employee, conditions) => {
     }
   }
 
-  console.log(`    Employee ${employee.full_name} meets ALL conditions`);
+  // console.log(`    Employee ${employee.full_name} meets ALL conditions`);
   return true;
 };
 
@@ -626,7 +626,7 @@ function formatDate(date) {
   try {
     return new Date(date).toISOString().split("T")[0];
   } catch (error) {
-    console.error("Error formatting date:", error);
+    // console.error("Error formatting date:", error);
     return null;
   }
 }
@@ -638,7 +638,7 @@ function getEmployeeShiftStartTime(employee) {
     }
     return "09:00:00";
   } catch (error) {
-    console.error("Error getting shift start time:", error);
+    // console.error("Error getting shift start time:", error);
     return "09:00:00";
   }
 }
@@ -650,7 +650,7 @@ function getEmployeeShiftEndTime(employee) {
     }
     return "17:00:00";
   } catch (error) {
-    console.error("Error getting shift end time:", error);
+    // console.error("Error getting shift end time:", error);
     return "17:00:00";
   }
 }
@@ -662,7 +662,7 @@ function getEmployeeShiftWorkingHours(employee) {
     }
     return 8;
   } catch (error) {
-    console.error("Error getting working hours:", error);
+    // console.error("Error getting working hours:", error);
     return 8;
   }
 }
@@ -675,7 +675,7 @@ function getEmployeeWeekoffDays(employee) {
     }
     return [0, 6];
   } catch (error) {
-    console.error("Error getting weekoff days:", error);
+    // console.error("Error getting weekoff days:", error);
     return [0, 6];
   }
 }
@@ -704,7 +704,7 @@ function isEmployeeLate(checkInTime, shiftStartTime, gracePeriodMinutes = 15) {
 
     return checkInDateTime > expectedDateTime;
   } catch (error) {
-    console.error("Error checking if employee is late:", error);
+    // console.error("Error checking if employee is late:", error);
     return false;
   }
 }
@@ -732,7 +732,7 @@ function calculateMinutesLate(checkInTime, shiftStartTime) {
 
     return Math.max(0, diffMinutes);
   } catch (error) {
-    console.error("Error calculating minutes late:", error);
+    // console.error("Error calculating minutes late:", error);
     return 0;
   }
 }
