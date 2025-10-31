@@ -532,6 +532,7 @@ model hrms_d_job_posting {
   reporting_manager_id               Int?
   job_title                          String?                         @db.NVarChar(255)
   description                        String?
+  document_type_id                   String?
   required_experience                String?                         @db.NVarChar(100)
   due_date                           DateTime?                       @db.Date
   annual_salary_from                 Int?
@@ -1171,17 +1172,18 @@ model hrms_m_disciplinary_penalty {
 }
 
 model hrms_m_document_type {
-  id                  Int       @id(map: "PK__hrms_m_d__3213E83F6F7CBFB3") @default(autoincrement())
-  name                String?   @db.NVarChar(100)
-  code                String?   @db.VarChar(20)
-  doc_type            String?   @db.NVarChar(100)
-  alert_before_expiry Int?
-  createdate          DateTime? @default(now(), map: "DF__hrms_m_do__creat__3C34F16F") @db.DateTime
-  createdby           Int
-  updatedate          DateTime? @db.DateTime
-  updatedby           Int?
-  log_inst            Int?
-  is_active           String?   @default("Y") @db.Char(1)
+  id                       Int                          @id(map: "PK__hrms_m_d__3213E83F6F7CBFB3") @default(autoincrement())
+  name                     String?                      @db.NVarChar(100)
+  code                     String?                      @db.VarChar(20)
+  doc_type                 String?                      @db.NVarChar(100)
+  alert_before_expiry      Int?
+  createdate               DateTime?                    @default(now(), map: "DF__hrms_m_do__creat__3C34F16F") @db.DateTime
+  createdby                Int
+  updatedate               DateTime?                    @db.DateTime
+  updatedby                Int?
+  log_inst                 Int?
+  is_active                String?                      @default("Y") @db.Char(1)
+  candidate_documents_type hrms_d_candidate_documents[]
 }
 
 model hrms_m_employee_category {
@@ -2322,6 +2324,25 @@ model hrms_d_candidate_master {
   interview_stage_candidate               hrms_m_interview_stage_remark[]
   candidate_department                    hrms_m_department_master?       @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_hiring_stage_candidate_master hrms_d_candidate_hiring_stage[]
+  candidate_documents_candidate           hrms_d_candidate_documents[]
+}
+
+model hrms_d_candidate_documents {
+  id                            Int                      @id @default(autoincrement())
+  candidate_id                  Int
+  path                          String?                  @db.VarChar(255)
+  name                          String?                  @db.NVarChar(255)
+  type_id                       Int?
+  expiry_date                   DateTime?                @db.Date
+  status                        String?                  @db.VarChar(255)
+  remarks                       String?                  @db.NText
+  createdate                    DateTime?                @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?                @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  candidate_documents_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  candidate_documents_type      hrms_m_document_type?    @relation(fields: [type_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model hrms_m_application_source {

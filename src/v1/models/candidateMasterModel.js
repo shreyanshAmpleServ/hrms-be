@@ -942,6 +942,75 @@ const getCandidateHiringStages = async (candidateId) => {
   }
 };
 
+const getCandidateDocumentTypes = async (candidateId) => {
+  try {
+    const candidate = await prisma.hrms_d_candidate_master.findUnique({
+      where: { id: parseInt(candidateId) },
+      select: {
+        job_posting: true,
+        candidate_job_posting: {
+          select: {
+            document_type_id: true,
+          },
+        },
+      },
+    });
+
+    if (!candidate?.candidate_job_posting?.document_type_id) {
+      console.log("No document types defined for this job posting");
+      return [];
+    }
+
+    const documentTypeIds = candidate.candidate_job_posting.document_type_id
+      .split(",")
+      .map((id) => parseInt(id.trim()))
+      .filter((id) => !isNaN(id));
+
+    if (documentTypeIds.length === 0) {
+      return [];
+    }
+
+    const documentTypes = await prisma.hrms_m_document_type.findMany({
+      where: {
+        id: { in: documentTypeIds },
+        is_active: "Y",
+      },
+    });
+
+    const candidateDocuments = await prisma.hrms_d_candidate_documents.findMany(
+      {
+        where: { candidate_id: parseInt(candidateId) },
+      }
+    );
+
+    const documentTypeMap = new Map(documentTypes.map((dt) => [dt.id, dt]));
+
+    return documentTypeIds
+      .map((id) => {
+        const docType = documentTypeMap.get(id);
+        if (!docType) return null;
+
+        const uploadedDoc = candidateDocuments.find(
+          (doc) => doc.document_type_id === docType.id
+        );
+
+        return {
+          id: docType.id,
+          document_type_name: docType.name,
+          document_type_code: docType.code,
+          doc_type: docType.doc_type,
+          is_uploaded: !!uploadedDoc,
+          uploaded_file_path: uploadedDoc?.file_path || null,
+          uploaded_date: uploadedDoc?.createdate || null,
+        };
+      })
+      .filter(Boolean);
+  } catch (error) {
+    console.error("Error fetching candidate document types:", error);
+    return [];
+  }
+};
+
 const getHiringStagesForJobPosting = async (jobPostingId) => {
   if (!jobPostingId) {
     console.log(" No job posting ID provided");
@@ -1128,10 +1197,12 @@ const createCandidateMaster = async (data) => {
     }
 
     const hiringStages = await getCandidateHiringStages(reqData.id);
+    const documentTypes = await getCandidateDocumentTypes(reqData.id);
 
     return {
       ...reqData,
       hiring_stages: hiringStages,
+      document_types: documentTypes,
     };
   } catch (error) {
     console.error(" Error creating candidate master:", error);
@@ -1186,10 +1257,12 @@ const findCandidateMasterById = async (id) => {
     }
 
     const hiringStages = await getCandidateHiringStages(reqData.id);
+    const documentTypes = await getCandidateDocumentTypes(reqData.id);
 
     return {
       ...reqData,
       hiring_stages: hiringStages,
+      document_types: documentTypes,
     };
   } catch (error) {
     throw new CustomError(
@@ -1244,10 +1317,12 @@ const updateCandidateMaster = async (id, data) => {
     });
 
     const hiringStages = await getCandidateHiringStages(updatedEntry.id);
+    const documentTypes = await getCandidateDocumentTypes(updatedEntry.id);
 
     return {
       ...updatedEntry,
       hiring_stages: hiringStages,
+      document_types: documentTypes,
     };
   } catch (error) {
     console.error("Error updating candidate master:", error);
@@ -1513,10 +1588,12 @@ const updateCandidateMasterStatus = async (id, data) => {
     });
 
     const hiringStages = await getCandidateHiringStages(updatedEntry.id);
+    const documentTypes = await getCandidateDocumentTypes(updatedEntry.id);
 
     return {
       ...updatedEntry,
       hiring_stages: hiringStages,
+      document_types: documentTypes,
     };
   } catch (error) {
     throw new CustomError(
@@ -1734,4 +1811,5 @@ module.exports = {
   createEmployeeFromCandidate,
   getCandidateHiringStages,
   snapshotHiringStagesForCandidate,
+  getCandidateDocumentTypes,
 };
