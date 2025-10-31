@@ -14,7 +14,6 @@ const serializeJobData = (data) => {
   };
 };
 
-// Create a new offer letter
 const createOfferLetter = async (data) => {
   try {
     await errorNotExist(
@@ -452,20 +451,74 @@ const getOfferLetterForPDF = async (id) => {
   }
 };
 
-const getAllOfferLettersForBulkDownload = async (filters = {}) => {
+// const getAllOfferLettersForBulkDownload = async (filters = {}) => {
+//   try {
+//     const offerLetters = await prisma.hrms_d_offer_letter.findMany({
+//       where: {
+//         ...filters,
+//         is_active: "Y",
+//       },
+//       select: {
+//         id: true,
+//         position: true,
+//         offered_candidate: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//           },
+//         },
+//       },
+//       orderBy: {
+//         createdate: "desc",
+//       },
+//     });
+
+//     return offerLetters;
+//   } catch (error) {
+//     console.error("Error in getAllOfferLettersForBulkDownload:", error);
+//     throw new CustomError(error.message, 500);
+//   }
+// };
+
+const getAllOfferLettersForBulkDownload = async (
+  filters = {},
+  advancedFilters = {}
+) => {
   try {
+    const whereClause = {
+      ...filters,
+    };
+
+    if (Object.keys(advancedFilters).length > 0) {
+      whereClause.offered_candidate = advancedFilters;
+    }
+
+    console.log("Final where clause:", JSON.stringify(whereClause, null, 2));
+
     const offerLetters = await prisma.hrms_d_offer_letter.findMany({
-      where: {
-        ...filters,
-        is_active: "Y",
-      },
+      where: whereClause,
       select: {
         id: true,
         position: true,
+        candidate_id: true,
         offered_candidate: {
           select: {
             id: true,
             full_name: true,
+            department_id: true,
+            designation_id: true,
+            candidate_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
+            candidate_designation: {
+              select: {
+                id: true,
+                designation_name: true,
+              },
+            },
           },
         },
       },
@@ -473,6 +526,8 @@ const getAllOfferLettersForBulkDownload = async (filters = {}) => {
         createdate: "desc",
       },
     });
+
+    console.log(`Found ${offerLetters.length} offer letters matching filters`);
 
     return offerLetters;
   } catch (error) {

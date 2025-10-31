@@ -1249,6 +1249,39 @@ const getDepartmentsWithWorkflows = async (request_type) => {
     );
   }
 };
+const getDesignationsWithWorkflows = async (request_type) => {
+  try {
+    const designations = await prisma.hrms_d_approval_work_flow.findMany({
+      where: {
+        request_type,
+        is_active: "Y",
+      },
+      select: {
+        designation_id: true,
+        approval_work_flow_designation: {
+          select: {
+            id: true,
+            designation_name: true,
+          },
+        },
+      },
+      distinct: ["designation_id"],
+    });
+
+    return designations.map((d) => ({
+      designation_id: d.designation_id,
+      designation_name: d.designation_id
+        ? d.approval_work_flow_designation?.designation_name
+        : "Global (All Designations)",
+      is_global: d.designation_id === null,
+    }));
+  } catch (error) {
+    throw new CustomError(
+      `Error fetching designations with workflows: ${error.message}`,
+      500
+    );
+  }
+};
 
 module.exports = {
   createApprovalWorkFlow,
@@ -1259,4 +1292,5 @@ module.exports = {
   getAllApprovalWorkFlow,
   getAllApprovalWorkFlowByRequest,
   getDepartmentsWithWorkflows,
+  getDesignationsWithWorkflows,
 };

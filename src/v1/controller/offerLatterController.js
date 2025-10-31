@@ -137,11 +137,36 @@ const downloadOfferLetterPDF = async (req, res, next) => {
 
 const bulkDownloadOfferLetters = async (req, res, next) => {
   try {
-    const { candidate_id, startDate, endDate, status } = req.query;
+    const {
+      candidate_ids,
+      department_ids,
+      designation_ids,
+      startDate,
+      endDate,
+      status,
+    } = req.query;
 
     const filters = {};
-    if (candidate_id) filters.candidate_id = Number(candidate_id);
-    if (status) filters.status = status;
+    const advancedFilters = {};
+
+    if (candidate_ids) {
+      const idParts = candidate_ids.split(",").map((id) => Number(id.trim()));
+
+      if (idParts.length === 2) {
+        const minId = Math.min(...idParts);
+        const maxId = Math.max(...idParts);
+
+        filters.candidate_id = {
+          gte: minId,
+          lte: maxId,
+        };
+      }
+    }
+
+    if (status) {
+      filters.status = status;
+    }
+
     if (startDate && endDate) {
       filters.offer_date = {
         gte: new Date(startDate),
@@ -149,21 +174,60 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
       };
     }
 
+    if (department_ids) {
+      const deptParts = department_ids
+        .split(",")
+        .map((id) => Number(id.trim()));
+
+      if (deptParts.length === 2) {
+        const minDept = Math.min(...deptParts);
+        const maxDept = Math.max(...deptParts);
+
+        advancedFilters.department_id = {
+          gte: minDept,
+          lte: maxDept,
+        };
+      }
+    }
+
+    if (designation_ids) {
+      const desigParts = designation_ids
+        .split(",")
+        .map((id) => Number(id.trim()));
+
+      if (desigParts.length === 2) {
+        const minDesig = Math.min(...desigParts);
+        const maxDesig = Math.max(...desigParts);
+
+        advancedFilters.designation_id = {
+          gte: minDesig,
+          lte: maxDesig,
+        };
+      }
+    }
+
     const jobId = uuidv4();
 
     const job = await offerLetterQueue.add({
       userId: req.user.id,
       filters: filters,
+      advancedFilters: advancedFilters,
       jobId: jobId,
     });
-
-    console.log(`Bulk download job created: ${job.id}`);
 
     res
       .status(202)
       .success("Bulk download started. Use job ID to check progress.", {
         jobId: job.id,
         statusUrl: `/api/offer-letter/bulk-download/status/${job.id}`,
+        appliedFilters: {
+          candidates: candidate_ids || "All",
+          departments: department_ids || "All",
+          designations: designation_ids || "All",
+          status: status || "All",
+          dateRange:
+            startDate && endDate ? `${startDate} to ${endDate}` : "All",
+        },
       });
   } catch (error) {
     next(error);
