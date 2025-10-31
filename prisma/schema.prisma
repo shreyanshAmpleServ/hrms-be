@@ -372,6 +372,7 @@ model hrms_d_employee {
   early_leave_approvals                           hrms_d_early_leave[]                              @relation("ApprovedByUser")
   payment_recovery_employee                       hrms_d_payment_recovery[]
   job_posting_reporting_manager                   hrms_d_job_posting[]
+  life_event_employee                             hrms_d_life_event[]
 }
 
 model hrms_d_employee_address {
@@ -988,6 +989,22 @@ model hrms_d_work_life_event {
   work_life_event_type       hrms_m_work_life_event_type?                      @relation(fields: [event_type], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
+model hrms_d_life_event {
+  id                  Int                          @id() @default(autoincrement())
+  employee_id         Int
+  event_type_id       Int?
+  from_date           DateTime?                    @db.Date
+  to_date             DateTime?                    @db.Date
+  createdate          DateTime?                    @default(now()) @db.DateTime
+  createdby           Int
+  updatedate          DateTime?                    @db.DateTime
+  updatedby           Int?
+  log_inst            Int?
+  is_active           String?                      @default("Y") @db.Char(1)
+  life_event_employee hrms_d_employee              @relation(fields: [employee_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  life_event_type     hrms_m_work_life_event_type? @relation(fields: [event_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
 model hrms_d_work_permit {
   id            Int       @id(map: "PK__hrms_d_w__3213E83FCB012DCD") @default(autoincrement())
   employee_id   Int?
@@ -995,7 +1012,7 @@ model hrms_d_work_permit {
   valid_from    DateTime? @db.Date
   valid_to      DateTime? @db.Date
   country       String?   @db.NVarChar(100)
-  createdate    DateTime? @default(now(), map: "DF__hrms_d_wo__creat__70A8B9AE") @db.DateTime
+  createdate    DateTime? @default(now()) @db.DateTime
   createdby     Int
   updatedate    DateTime? @db.DateTime
   updatedby     Int?
@@ -1518,6 +1535,7 @@ model hrms_m_work_life_event_type {
   log_inst             Int?
   is_active            String?                  @default("Y") @db.Char(1)
   work_life_event_type hrms_d_work_life_event[]
+  life_event_type      hrms_d_life_event[]
 }
 
 model hrms_m_work_schedule_template {

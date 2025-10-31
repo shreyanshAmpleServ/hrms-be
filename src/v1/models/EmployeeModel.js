@@ -181,34 +181,260 @@ const parseData = (data) => {
   return data;
 };
 
+const serializeLifeEvent = (data) => {
+  const serialized = {};
+
+  if ("event_type_id" in data)
+    serialized.event_type_id = data.event_type_id
+      ? Number(data.event_type_id)
+      : null;
+  if ("from_date" in data)
+    serialized.from_date = data.from_date
+      ? moment(data.from_date).toDate()
+      : null;
+  if ("to_date" in data)
+    serialized.to_date = data.to_date ? moment(data.to_date).toDate() : null;
+
+  return serialized;
+};
+
+/**
+ * Creates life events for an employee
+ * @param {number} employeeId - The employee ID
+ * @param {Array} events - Array of life events
+ * @param {number} createdby - User ID creating the events
+ */
+const createLifeEvents = async (employeeId, events, createdby) => {
+  if (!Array.isArray(events) || events.length === 0) return;
+
+  const lifeEvents = await Promise.all(
+    events.map((event) => {
+      const serializedEvent = serializeLifeEvent(event);
+
+      return prisma.hrms_d_life_event.create({
+        data: {
+          ...serializedEvent,
+          employee_id: employeeId,
+          createdate: new Date(),
+          createdby: event.createdby || createdby || 1,
+          log_inst: event.log_inst || 1,
+          is_active: "Y",
+        },
+      });
+    })
+  );
+
+  return lifeEvents;
+};
+
 /**
  * Creates a new employee and associated addresses.
  * @param {Object} data - The employee data, including empAddressData.
  * @returns {Promise<Object>} The created employee data.
  * @throws {CustomError} If required fields are missing or creation fails.
  */
+// const createEmployee = async (data) => {
+//   const { empAddressData, ...employeeData } = data;
+//   try {
+//     // Validate required fields
+//     if (!data.phone_number) {
+//       throw new CustomError(`Phone Number is required`, 400);
+//     }
+//     if (!data.email) {
+//       throw new CustomError(`Email is required`, 400);
+//     }
+//     if (!data.employment_type) {
+//       throw new CustomError(`Employment Type is required`, 400);
+//     }
+//     if (!data.employee_code) {
+//       throw new CustomError(`Employee Code is required`, 400);
+//     }
+//     if (!data.gender) {
+//       throw new CustomError(`Gender is required`, 400);
+//     }
+//     if (!data.designation_id) {
+//       throw new CustomError(`Designation is required`, 400);
+//     }
+//     if (!data.department_id) {
+//       throw new CustomError(`Department is required`, 400);
+//     }
+
+//     // Check for existing employee
+//     const existingEmployee = await prisma.hrms_d_employee.findFirst({
+//       where: {
+//         OR: [
+//           { email: data.email },
+//           { employee_code: data.employee_code },
+//           { phone_number: data.phone_number },
+//         ],
+//       },
+//       select: {
+//         email: true,
+//         employee_code: true,
+//         phone_number: true,
+//       },
+//     });
+
+//     if (existingEmployee) {
+//       if (existingEmployee.email === data.email) {
+//         throw new CustomError(
+//           `Employee with email ${data.email} already exists`,
+//           400
+//         );
+//       }
+//       if (existingEmployee.employee_code === data.employee_code) {
+//         throw new CustomError(
+//           `Employee with code ${data.employee_code} already exists`,
+//           400
+//         );
+//       }
+//     }
+
+//     const serializedData = serializeTags(employeeData);
+
+//     // Split the transaction into smaller operations
+//     // 1. Create employee first
+//     console.log("header_attendance_rule value:", data.header_attendance_rule);
+
+//     const employee = await prisma.hrms_d_employee.create({
+//       data: {
+//         ...serializedData,
+//         createdate: new Date(),
+//         createdby: data.createdby || 1,
+//         log_inst: data.log_inst || 1,
+//       },
+//     });
+
+//     // 3. Create addresses in batches if needed
+//     if (Array.isArray(empAddressData) && empAddressData.length > 0) {
+//       const addressDatas = empAddressData.map((addr) => ({
+//         ...serializeAddress(addr),
+//         address_type: addr?.address_type || "Home",
+//         employee_id: employee.id,
+//       }));
+
+//       // Create addresses in smaller batches if there are many
+//       const batchSize = 10;
+//       for (let i = 0; i < addressDatas.length; i += batchSize) {
+//         const batch = addressDatas.slice(i, i + batchSize);
+//         await prisma.hrms_d_employee_address.createMany({
+//           data: batch,
+//         });
+//       }
+//     }
+
+//     // 4. Handle transaction notification separately
+//     await handleTransactionNotification("m_employee", "A", employee.id);
+
+//     // 5. Fetch and return the complete employee data
+//     const fullData = await prisma.hrms_d_employee.findFirst({
+//       where: { id: employee.id },
+//       include: {
+//         employee_currency: {
+//           select: {
+//             id: true,
+//             currency_name: true,
+//             currency_code: true,
+//           },
+//         },
+//         hrms_employee_address: {
+//           include: {
+//             employee_state: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//               },
+//             },
+//             employee_country: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//               },
+//             },
+//           },
+//         },
+//         hrms_employee_designation: {
+//           select: {
+//             id: true,
+//             designation_name: true,
+//           },
+//         },
+//         hrms_employee_department: {
+//           select: {
+//             id: true,
+//             department_name: true,
+//           },
+//         },
+//         hrms_employee_bank: {
+//           select: {
+//             id: true,
+//             bank_name: true,
+//           },
+//         },
+//         employee_shift_id: {
+//           select: {
+//             id: true,
+//             shift_name: true,
+//           },
+//         },
+//         hrms_manager: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//           },
+//         },
+//         experiance_of_employee: true,
+//         eduction_of_employee: true,
+//       },
+//     });
+
+//     return parseData(fullData);
+//   } catch (error) {
+//     console.log("Error to Create employee : ", error);
+//     if (error instanceof CustomError) {
+//       throw error;
+//     }
+//     if (error.code === "P2002") {
+//       throw new CustomError(
+//         `A unique constraint would be violated. An employee with the same unique fields already exists.`,
+//         400
+//       );
+//     }
+//     throw new CustomError(
+//       `Error creating employee: ${error.message}`,
+//       error.status || 500
+//     );
+//   }
+// };
+
 const createEmployee = async (data) => {
-  const { empAddressData, ...employeeData } = data;
+  const { empAddressData, life_events: lifeEvents, ...employeeData } = data;
   try {
     // Validate required fields
     if (!data.phone_number) {
       throw new CustomError(`Phone Number is required`, 400);
     }
+
     if (!data.email) {
       throw new CustomError(`Email is required`, 400);
     }
+
     if (!data.employment_type) {
       throw new CustomError(`Employment Type is required`, 400);
     }
+
     if (!data.employee_code) {
       throw new CustomError(`Employee Code is required`, 400);
     }
+
     if (!data.gender) {
       throw new CustomError(`Gender is required`, 400);
     }
+
     if (!data.designation_id) {
       throw new CustomError(`Designation is required`, 400);
     }
+
     if (!data.department_id) {
       throw new CustomError(`Department is required`, 400);
     }
@@ -236,6 +462,7 @@ const createEmployee = async (data) => {
           400
         );
       }
+
       if (existingEmployee.employee_code === data.employee_code) {
         throw new CustomError(
           `Employee with code ${data.employee_code} already exists`,
@@ -246,10 +473,9 @@ const createEmployee = async (data) => {
 
     const serializedData = serializeTags(employeeData);
 
-    // Split the transaction into smaller operations
-    // 1. Create employee first
     console.log("header_attendance_rule value:", data.header_attendance_rule);
 
+    // 1. Create employee first
     const employee = await prisma.hrms_d_employee.create({
       data: {
         ...serializedData,
@@ -259,7 +485,7 @@ const createEmployee = async (data) => {
       },
     });
 
-    // 3. Create addresses in batches if needed
+    // 2. Create addresses
     if (Array.isArray(empAddressData) && empAddressData.length > 0) {
       const addressDatas = empAddressData.map((addr) => ({
         ...serializeAddress(addr),
@@ -267,7 +493,6 @@ const createEmployee = async (data) => {
         employee_id: employee.id,
       }));
 
-      // Create addresses in smaller batches if there are many
       const batchSize = 10;
       for (let i = 0; i < addressDatas.length; i += batchSize) {
         const batch = addressDatas.slice(i, i + batchSize);
@@ -277,10 +502,15 @@ const createEmployee = async (data) => {
       }
     }
 
-    // 4. Handle transaction notification separately
+    // 3. Create life events
+    if (Array.isArray(lifeEvents) && lifeEvents.length > 0) {
+      await createLifeEvents(employee.id, lifeEvents, data.createdby || 1);
+    }
+
+    // 4. Handle transaction notification
     await handleTransactionNotification("m_employee", "A", employee.id);
 
-    // 5. Fetch and return the complete employee data
+    // 5. Fetch and return complete employee data with life events
     const fullData = await prisma.hrms_d_employee.findFirst({
       where: { id: employee.id },
       include: {
@@ -337,6 +567,16 @@ const createEmployee = async (data) => {
             full_name: true,
           },
         },
+        life_event_employee: {
+          include: {
+            life_event_type: {
+              select: {
+                id: true,
+                event_type: true,
+              },
+            },
+          },
+        },
         experiance_of_employee: true,
         eduction_of_employee: true,
       },
@@ -348,12 +588,14 @@ const createEmployee = async (data) => {
     if (error instanceof CustomError) {
       throw error;
     }
+
     if (error.code === "P2002") {
       throw new CustomError(
         `A unique constraint would be violated. An employee with the same unique fields already exists.`,
         400
       );
     }
+
     throw new CustomError(
       `Error creating employee: ${error.message}`,
       error.status || 500
@@ -368,14 +610,212 @@ const createEmployee = async (data) => {
  * @returns {Promise<Object>} The updated employee data.
  * @throws {CustomError} If update fails.
  */
+
+const updateLifeEvents = async (employeeId, events, updatedby) => {
+  if (!Array.isArray(events) || events.length === 0) return;
+
+  // Separate new and existing events
+  const newEvents = events.filter((event) => !event.id);
+  const existingEvents = events.filter((event) => event.id);
+
+  // Get current events for this employee
+  const currentEvents = await prisma.hrms_d_life_event.findMany({
+    where: { employee_id: employeeId },
+    select: { id: true },
+  });
+
+  const currentEventIds = currentEvents.map((e) => e.id);
+  const keepEventIds = existingEvents.map((e) => e.id);
+  const deleteEventIds = currentEventIds.filter(
+    (id) => !keepEventIds.includes(id)
+  );
+
+  // Delete removed events
+  if (deleteEventIds.length > 0) {
+    await prisma.hrms_d_life_event.deleteMany({
+      where: { id: { in: deleteEventIds } },
+    });
+  }
+
+  // Update existing events
+  await Promise.all(
+    existingEvents.map((event) => {
+      const serializedEvent = serializeLifeEvent(event);
+
+      return prisma.hrms_d_life_event.update({
+        where: { id: event.id },
+        data: {
+          ...serializedEvent,
+          updatedate: new Date(),
+          updatedby: event.updatedby || updatedby || 1,
+        },
+      });
+    })
+  );
+
+  // Create new events
+  if (newEvents.length > 0) {
+    await createLifeEvents(employeeId, newEvents, updatedby);
+  }
+};
+
+// const updateEmployee = async (id, data) => {
+//   const { empAddressData, ...employeeData } = data;
+//   try {
+//     const updatedData = {
+//       ...employeeData,
+//       updatedby: data.updatedby || 1,
+//       updatedate: new Date(),
+//     };
+//     const serializedData = serializeTags(updatedData);
+
+//     // Get current employee data first
+//     const currentEmployee = await prisma.hrms_d_employee.findUnique({
+//       where: { id: parseInt(id) },
+//       include: {
+//         hrms_employee_address: true,
+//       },
+//     });
+
+//     if (!currentEmployee) {
+//       throw new CustomError("Employee not found", 404);
+//     }
+
+//     // Split the operations into smaller transactions
+//     // 1. Update employee data
+//     console.log("header_attendance_rule value:", data.header_attendance_rule);
+
+//     const employee = await prisma.hrms_d_employee.update({
+//       where: { id: parseInt(id) },
+//       data: serializedData,
+//     });
+
+//     // 2. Handle address updates in a separate operation
+//     if (Array.isArray(empAddressData) && empAddressData.length > 0) {
+//       const newAddresses = empAddressData.filter((addr) => !addr.id);
+//       const existingAddresses = empAddressData.filter((addr) => addr.id);
+
+//       // Delete addresses that are no longer present
+//       const currentAddressIds = currentEmployee.hrms_employee_address.map(
+//         (a) => a.id
+//       );
+//       const keepAddressIds = existingAddresses.map((a) => a.id);
+//       const deleteAddressIds = currentAddressIds.filter(
+//         (id) => !keepAddressIds.includes(id)
+//       );
+
+//       if (deleteAddressIds.length > 0) {
+//         await prisma.hrms_d_employee_address.deleteMany({
+//           where: { id: { in: deleteAddressIds } },
+//         });
+//       }
+
+//       // Update existing addresses
+//       for (const addr of existingAddresses) {
+//         await prisma.hrms_d_employee_address.update({
+//           where: { id: addr.id },
+//           data: serializeAddress(addr),
+//         });
+//       }
+
+//       // Create new addresses
+//       if (newAddresses.length > 0) {
+//         await prisma.hrms_d_employee_address.createMany({
+//           data: newAddresses.map((addr) => ({
+//             ...serializeAddress(addr),
+//             employee_id: parseInt(id),
+//           })),
+//         });
+//       }
+//     }
+
+//     // 3. Send transaction notification
+//     await handleTransactionNotification("m_employee", "U", parseInt(id));
+
+//     // 4. Fetch updated data
+//     const updatedEmp = await prisma.hrms_d_employee.findUnique({
+//       where: { id: parseInt(id) },
+//       include: {
+//         employee_currency: {
+//           select: {
+//             id: true,
+//             currency_name: true,
+//             currency_code: true,
+//           },
+//         },
+//         hrms_employee_address: {
+//           include: {
+//             employee_state: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//               },
+//             },
+//             employee_country: {
+//               select: {
+//                 id: true,
+//                 name: true,
+//               },
+//             },
+//           },
+//         },
+//         hrms_employee_designation: {
+//           select: {
+//             id: true,
+//             designation_name: true,
+//           },
+//         },
+//         employee_shift_id: {
+//           select: {
+//             id: true,
+//             shift_name: true,
+//           },
+//         },
+//         hrms_employee_department: {
+//           select: {
+//             id: true,
+//             department_name: true,
+//           },
+//         },
+//         hrms_employee_bank: {
+//           select: {
+//             id: true,
+//             bank_name: true,
+//           },
+//         },
+//         hrms_manager: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//           },
+//         },
+//         experiance_of_employee: true,
+//         eduction_of_employee: true,
+//       },
+//     });
+
+//     return parseData(updatedEmp);
+//   } catch (error) {
+//     console.log("Updating error in employee", error);
+//     if (error instanceof CustomError) {
+//       throw error;
+//     }
+//     throw new CustomError(
+//       `Error updating employee: ${error.message}`,
+//       error.status || 500
+//     );
+//   }
+// };
+
 const updateEmployee = async (id, data) => {
-  const { empAddressData, ...employeeData } = data;
+  const { empAddressData, life_events: lifeEvents, ...employeeData } = data;
   try {
     const updatedData = {
       ...employeeData,
       updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
+
     const serializedData = serializeTags(updatedData);
 
     // Get current employee data first
@@ -390,7 +830,6 @@ const updateEmployee = async (id, data) => {
       throw new CustomError("Employee not found", 404);
     }
 
-    // Split the operations into smaller transactions
     // 1. Update employee data
     console.log("header_attendance_rule value:", data.header_attendance_rule);
 
@@ -399,7 +838,7 @@ const updateEmployee = async (id, data) => {
       data: serializedData,
     });
 
-    // 2. Handle address updates in a separate operation
+    // 2. Handle address updates
     if (Array.isArray(empAddressData) && empAddressData.length > 0) {
       const newAddresses = empAddressData.filter((addr) => !addr.id);
       const existingAddresses = empAddressData.filter((addr) => addr.id);
@@ -408,7 +847,9 @@ const updateEmployee = async (id, data) => {
       const currentAddressIds = currentEmployee.hrms_employee_address.map(
         (a) => a.id
       );
+
       const keepAddressIds = existingAddresses.map((a) => a.id);
+
       const deleteAddressIds = currentAddressIds.filter(
         (id) => !keepAddressIds.includes(id)
       );
@@ -438,10 +879,15 @@ const updateEmployee = async (id, data) => {
       }
     }
 
-    // 3. Send transaction notification
+    // 3. Handle life events updates
+    if (Array.isArray(lifeEvents) && lifeEvents.length > 0) {
+      await updateLifeEvents(parseInt(id), lifeEvents, data.updatedby || 1);
+    }
+
+    // 4. Send transaction notification
     await handleTransactionNotification("m_employee", "U", parseInt(id));
 
-    // 4. Fetch updated data
+    // 5. Fetch updated data with life events
     const updatedEmp = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -474,12 +920,6 @@ const updateEmployee = async (id, data) => {
             designation_name: true,
           },
         },
-        employee_shift_id: {
-          select: {
-            id: true,
-            shift_name: true,
-          },
-        },
         hrms_employee_department: {
           select: {
             id: true,
@@ -492,10 +932,26 @@ const updateEmployee = async (id, data) => {
             bank_name: true,
           },
         },
+        employee_shift_id: {
+          select: {
+            id: true,
+            shift_name: true,
+          },
+        },
         hrms_manager: {
           select: {
             id: true,
             full_name: true,
+          },
+        },
+        life_event_employee: {
+          include: {
+            life_event_type: {
+              select: {
+                id: true,
+                event_type: true,
+              },
+            },
           },
         },
         experiance_of_employee: true,
@@ -509,6 +965,7 @@ const updateEmployee = async (id, data) => {
     if (error instanceof CustomError) {
       throw error;
     }
+
     throw new CustomError(
       `Error updating employee: ${error.message}`,
       error.status || 500
