@@ -367,9 +367,9 @@ const initializeScheduledAnnouncements = async () => {
 
 const getEmployeeAnnouncement = async (employeeId) => {
   try {
-    console.log(
-      ` Getting TODAY's announcements for employee ID: ${employeeId}`
-    );
+    // console.log(
+    //   ` Getting TODAY's announcements for employee ID: ${employeeId}`
+    // );
 
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(employeeId) },
@@ -388,7 +388,7 @@ const getEmployeeAnnouncement = async (employeeId) => {
     });
 
     if (!employee) {
-      console.log(` Employee ${employeeId} not found`);
+      // console.log(` Employee ${employeeId} not found`);
       return { data: [] };
     }
 
@@ -408,9 +408,9 @@ const getEmployeeAnnouncement = async (employeeId) => {
       999
     );
 
-    console.log(
-      ` Filtering announcements for today: ${startOfToday.toISOString()} to ${endOfToday.toISOString()}`
-    );
+    // console.log(
+    //   ` Filtering announcements for today: ${startOfToday.toISOString()} to ${endOfToday.toISOString()}`
+    // );
 
     const announcements = await prisma.hrms_d_announcement.findMany({
       where: {
@@ -434,16 +434,16 @@ const getEmployeeAnnouncement = async (employeeId) => {
       orderBy: [{ scheduled_at: "desc" }, { createdate: "desc" }],
     });
 
-    console.log(` Found ${announcements.length} announcements for today`);
+    // console.log(` Found ${announcements.length} announcements for today`);
 
     const matchingAnnouncements = [];
 
     for (const announcement of announcements) {
-      console.log(
-        ` Checking today's announcement ${announcement.id}: "${announcement.title}"`
-      );
-      console.log(`   Created: ${announcement.createdate}`);
-      console.log(`   Scheduled: ${announcement.scheduled_at || "Immediate"}`);
+      // console.log(
+      //   ` Checking today's announcement ${announcement.id}: "${announcement.title}"`
+      // );
+      // console.log(`   Created: ${announcement.createdate}`);
+      // console.log(`   Scheduled: ${announcement.scheduled_at || "Immediate"}`);
 
       const targetEmployees = await getTargetEmployees(
         announcement.target_type,
@@ -461,27 +461,27 @@ const getEmployeeAnnouncement = async (employeeId) => {
           isForMe: true,
           isToday: true,
         });
-        console.log(
-          `Employee ${employeeId} can see today's announcement: ${announcement.title}`
-        );
+        // console.log(
+        //   `Employee ${employeeId} can see today's announcement: ${announcement.title}`
+        // );
       }
     }
 
-    console.log(
-      `Final result: ${matchingAnnouncements.length} TODAY's announcements for employee ${employeeId}`
-    );
+    // console.log(
+    //   `Final result: ${matchingAnnouncements.length} TODAY's announcements for employee ${employeeId}`
+    // );
     return { data: matchingAnnouncements };
   } catch (error) {
-    console.error(` Error fetching employee announcements:`, error);
+    console.error(`Failed to fetch employee announcements:`, error);
     throw new Error(`Error fetching employee announcements: ${error.message}`);
   }
 };
 
 const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
   try {
-    console.log(
-      `Getting paginated TODAY's announcements for employee ${employeeId}`
-    );
+    // console.log(
+    //   `Getting paginated TODAY's announcements for employee ${employeeId}`
+    // );
 
     const skip = (page - 1) * size;
 
@@ -523,9 +523,9 @@ const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
       orderBy: [{ scheduled_at: "desc" }, { createdate: "desc" }],
     });
 
-    console.log(
-      ` Found ${allTodayAnnouncements.length} total announcements for today`
-    );
+    //  console.log(
+    //   ` Found ${allTodayAnnouncements.length} total announcements for today`
+    // );
 
     const targetedAnnouncements = [];
 
@@ -548,9 +548,9 @@ const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
       }
     }
 
-    console.log(
-      ` Found ${targetedAnnouncements.length} targeted TODAY's announcements for employee ${employeeId}`
-    );
+    // console.log(
+    //   ` Found ${targetedAnnouncements.length} targeted TODAY's announcements for employee ${employeeId}`
+    // );
 
     const paginatedAnnouncements = targetedAnnouncements.slice(
       skip,
@@ -580,9 +580,9 @@ const getEmployeeAnnouncementsByDate = async (
   size = 10
 ) => {
   try {
-    console.log(
-      `🗓️ Getting announcements for employee ${employeeId} on date: ${targetDate}`
-    );
+    // console.log(
+    //   `🗓️ Getting announcements for employee ${employeeId} on date: ${targetDate}`
+    // );
 
     const skip = (page - 1) * size;
     const date = new Date(targetDate);
@@ -749,7 +749,7 @@ const getTargetEmployees = async (targetType, targetValues) => {
       parsedTargetValues = JSON.parse(parsedTargetValues);
     }
 
-    console.log(parsedTargetValues);
+    // console.log(parsedTargetValues);
   } catch (error) {
     console.error(
       `Error parsing targetValues:`,
@@ -841,11 +841,11 @@ const getTargetEmployees = async (targetType, targetValues) => {
         throw new Error(`Unknown target type: ${targetType}`);
     }
 
-    console.log(
-      ` Found ${employees.length} employees for target type: ${targetType}`
-    );
+    // console.log(
+    //   ` Found ${employees.length} employees for target type: ${targetType}`
+    // );
   } catch (error) {
-    console.error(` Error getting target employees:`, error);
+    console.error(`Failed to get target employees:`, error);
     return [];
   }
 
@@ -874,14 +874,14 @@ const deleteAnnouncement = async (id) => {
         );
         if (imagePath) {
           await deleteFromBackblaze(imagePath);
-          console.log(" Deleted announcement image from Backblaze:", imagePath);
+          // console.log(" Deleted announcement image from Backblaze:", imagePath);
         }
       } catch (error) {
         console.warn(" Failed to delete image from Backblaze:", error.message);
       }
     }
 
-    console.log(` Announcement ${id} deleted successfully`);
+    // console.log(` Announcement ${id} deleted successfully`);
   } catch (error) {
     console.error(` Error deleting announcement ${id}:`, error);
     throw error;
@@ -911,11 +911,11 @@ const getPublicAnnouncements = async (
   endDate
 ) => {
   try {
-    console.log(" Fetching public announcements with filters:", {
-      search,
-      page,
-      size,
-    });
+    //  console.log(" Fetching public announcements with filters:", {
+    //   search,
+    //   page,
+    //   size,
+    // });
 
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -967,7 +967,7 @@ const getPublicAnnouncements = async (
       where: filters,
     });
 
-    console.log(` Found ${announcements.length} public announcements`);
+    // console.log(` Found ${announcements.length} public announcements`);
 
     return {
       data: announcements.map((item) => ({
@@ -980,14 +980,14 @@ const getPublicAnnouncements = async (
       totalCount,
     };
   } catch (error) {
-    console.error(" Error fetching public announcements:", error);
+    console.error("Failed to fetch public announcements:", error);
     throw new Error("Error retrieving public announcements");
   }
 };
 
 const getPublicAnnouncementById = async (id) => {
   try {
-    console.log(" Fetching public announcement by ID:", id);
+    // console.log(" Fetching public announcement by ID:", id);
 
     const announcement = await prisma.hrms_d_announcement.findUnique({
       where: {
@@ -1018,7 +1018,7 @@ const getPublicAnnouncementById = async (id) => {
       target_values: JSON.parse(announcement.target_values || "[]"),
     };
   } catch (error) {
-    console.error(" Error fetching public announcement by ID:", error);
+    console.error("Failed to fetch public announcement by ID:", error);
     throw new Error("Error retrieving public announcement");
   }
 };

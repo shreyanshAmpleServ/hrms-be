@@ -163,9 +163,9 @@ const runAlertWorkflow = async (workflowId) => {
       actions: safeJsonParse(workflow.actions),
     };
 
-    console.log(` Running workflow ${workflowId} manually`);
+    // console.log(` Running workflow ${workflowId} manually`);
     await runWorkflow(workflow.id, parsedWorkflow);
-    console.log(` Workflow ${workflowId} completed successfully`);
+    // console.log(` Workflow ${workflowId} completed successfully`);
   } catch (error) {
     console.error(`Manual workflow execution failed:`, error);
     throw error;
@@ -174,7 +174,7 @@ const runAlertWorkflow = async (workflowId) => {
 
 const init = async () => {
   try {
-    console.log(" Initializing alert workflows...");
+    // console.log(" Initializing alert workflows...");
     const result = await alertWorkflowModel.getAlertWorkflows();
     const workflows = result.data || result;
 
@@ -192,7 +192,7 @@ const init = async () => {
       scheduleCron(w.id, w.schedule_cron);
     });
 
-    console.log(" Alert workflow initialization completed");
+    // console.log(" Alert workflow initialization completed");
   } catch (error) {
     console.error("Failed to initialize alert workflows:", error);
   }
@@ -266,7 +266,7 @@ function scheduleCron(workflowId, cronPattern) {
 }
 
 function startScheduler() {
-  console.log(" Starting alert workflow scheduler...");
+  // console.log(" Starting alert workflow scheduler...");
   init();
 }
 

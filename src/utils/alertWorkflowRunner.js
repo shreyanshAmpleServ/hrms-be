@@ -1,8 +1,8 @@
 const { PrismaClient } = require("@prisma/client");
 const { evaluateConditions } = require("./conditionEvaluator");
 const { executeActions } = require("./actionExecutor");
-const logger = require("./../Comman/logger");
 const prisma = new PrismaClient();
+require("./consoleLogs");
 
 const runWorkflow = async (workflowId, workflow) => {
   const log = await prisma.hrms_d_alert_log.create({
@@ -62,7 +62,7 @@ const runWorkflow = async (workflowId, workflow) => {
       },
     });
 
-    console.log(` Workflow ${workflowId} completed successfully`);
+    // console.log(` Workflow ${workflowId} completed successfully`);
     return { eligible_count: eligible.length, action_results: actionResults };
   } catch (error) {
     console.error(`[error] Workflow ${workflowId} failed: ${error.message}`);
@@ -143,21 +143,21 @@ async function getTargetEmployees(workflow) {
     !workflow.target_type ||
     workflow.target_type === ""
   ) {
-    console.log(` Targeting ALL active employees`);
+    //  console.log(` Targeting ALL active employees`);
 
     const employees = await prisma.hrms_d_employee.findMany({
       include: commonIncludes,
       where: baseWhere,
     });
 
-    console.log(` Found ${employees.length} total active employees`);
+    // console.log(` Found ${employees.length} total active employees`);
     logEmployeesAttendance(employees);
     return employees;
   }
 
   if (workflow.target_type === "Role" && workflow.target) {
     const roles = workflow.target.split(",").map((r) => r.trim());
-    console.log(` Targeting roles by name: ${roles.join(", ")}`);
+    // console.log(` Targeting roles by name: ${roles.join(", ")}`);
 
     const employees = await prisma.hrms_d_employee.findMany({
       include: commonIncludes,
@@ -177,14 +177,14 @@ async function getTargetEmployees(workflow) {
       },
     });
 
-    console.log(` Found ${employees.length} employees with target roles`);
+    // console.log(` Found ${employees.length} employees with target roles`);
     logEmployeesAttendance(employees);
     return employees;
   } else if (workflow.target_type === "Department" && workflow.target) {
     const departmentIds = workflow.target
       .split(",")
       .map((d) => parseInt(d.trim()));
-    console.log(` Targeting departments by ID: ${departmentIds.join(", ")}`);
+    // console.log(` Targeting departments by ID: ${departmentIds.join(", ")}`);
 
     const employees = await prisma.hrms_d_employee.findMany({
       include: commonIncludes,
@@ -194,14 +194,14 @@ async function getTargetEmployees(workflow) {
       },
     });
 
-    console.log(` Found ${employees.length} employees in target departments`);
+    // console.log(` Found ${employees.length} employees in target departments`);
     logEmployeesAttendance(employees);
     return employees;
   } else if (workflow.target_type === "Designation" && workflow.target) {
     const designationIds = workflow.target
       .split(",")
       .map((d) => parseInt(d.trim()));
-    console.log(` Targeting designations by ID: ${designationIds.join(", ")}`);
+    // console.log(` Targeting designations by ID: ${designationIds.join(", ")}`);
 
     const employees = await prisma.hrms_d_employee.findMany({
       include: commonIncludes,
@@ -211,16 +211,16 @@ async function getTargetEmployees(workflow) {
       },
     });
 
-    console.log(` Found ${employees.length} employees in target designations`);
+    // console.log(` Found ${employees.length} employees in target designations`);
     logEmployeesAttendance(employees);
     return employees;
   } else if (workflow.target_type === "Employee" && workflow.target) {
     const employeeIds = workflow.target
       .split(",")
       .map((e) => parseInt(e.trim()));
-    console.log(
-      ` Targeting individual employees by ID: ${employeeIds.join(", ")}`
-    );
+    // console.log(
+    //   ` Targeting individual employees by ID: ${employeeIds.join(", ")}`
+    // );
 
     const employees = await prisma.hrms_d_employee.findMany({
       include: commonIncludes,
@@ -230,40 +230,37 @@ async function getTargetEmployees(workflow) {
       },
     });
 
-    console.log(` Found ${employees.length} individual target employees`);
+    // console.log(` Found ${employees.length} individual target employees`);
     logEmployeesAttendance(employees);
     return employees;
   }
 
-  console.log(` No valid targeting found, returning empty array`);
+  // console.log(` No valid targeting found, returning empty array`);
   return [];
 }
 
 function logEmployeesAttendance(employees) {
-  console.log(` Found ${employees.length} employees for workflow evaluation`);
-
-  employees.forEach((emp) => {
-    const todayAtt = emp.hrms_daily_attendance_employee?.[0];
-    const shift = emp.employee_shift_id;
-
-    console.log(` ${emp.full_name}: 
-      Shift: ${
-        shift
-          ? `${shift.shift_name} (${shift.start_time}-${shift.end_time})`
-          : "No shift assigned"
-      }
-      Attendance: ${
-        todayAtt
-          ? `${todayAtt.status} (In: ${
-              todayAtt.check_in_time || "None"
-            }, Out: ${todayAtt.check_out_time || "None"})`
-          : "No record today"
-      }`);
-  });
-
-  console.log(
-    ` Found ${employees.length} target employees for workflow evaluation`
-  );
+  // console.log(` Found ${employees.length} employees for workflow evaluation`);
+  // employees.forEach((emp) => {
+  //   const todayAtt = emp.hrms_daily_attendance_employee?.[0];
+  //   const shift = emp.employee_shift_id;
+  //   console.log(` ${emp.full_name}:
+  //     Shift: ${
+  //       shift
+  //         ? `${shift.shift_name} (${shift.start_time}-${shift.end_time})`
+  //         : "No shift assigned"
+  //     }
+  //     Attendance: ${
+  //       todayAtt
+  //         ? `${todayAtt.status} (In: ${
+  //             todayAtt.check_in_time || "None"
+  //           }, Out: ${todayAtt.check_out_time || "None"})`
+  //         : "No record today"
+  //     }`);
+  // });
+  // console.log(
+  //   ` Found ${employees.length} target employees for workflow evaluation`
+  // );
 }
 
 module.exports = {
