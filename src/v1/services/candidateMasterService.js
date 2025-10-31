@@ -22,6 +22,12 @@ const deleteCandidateMaster = async (ids) => {
   return await candidateMasterModel.deleteCandidateMaster(ids);
 };
 
+const getRequiredDocumentsForJobPosting = async (jobPostingId) => {
+  return await candidateMasterModel.getRequiredDocumentsForJobPosting(
+    jobPostingId
+  );
+};
+
 const createEmployeeFromCandidate = async (
   candidateId,
   additionalData,
@@ -64,4 +70,5 @@ module.exports = {
   updateCandidateMasterStatus,
   getAllCandidateMaster,
   createEmployeeFromCandidate,
+  getRequiredDocumentsForJobPosting,
 };

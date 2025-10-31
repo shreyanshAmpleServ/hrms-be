@@ -157,13 +157,12 @@ const serializeRequestsData = (data) => ({
 const getWorkflowForRequest = async (
   request_type,
   requester_department_id,
-  requester_designation_id // ✅ ADDED
+  requester_designation_id
 ) => {
   try {
     let workflowSteps;
     let workflowType = "NONE";
 
-    // ✅ 1. Try DEPARTMENT-SPECIFIC first
     if (requester_department_id) {
       console.log(
         `Looking for workflow: ${request_type} for department: ${requester_department_id}`
@@ -173,7 +172,7 @@ const getWorkflowForRequest = async (
         where: {
           request_type,
           department_id: requester_department_id,
-          designation_id: null, // ✅ ENSURE we only get department workflows
+          designation_id: null,
           is_active: "Y",
         },
         orderBy: { sequence: "asc" },
@@ -210,8 +209,6 @@ const getWorkflowForRequest = async (
         );
       }
     }
-
-    // ✅ 2. Try DESIGNATION-SPECIFIC second
     if (requester_designation_id) {
       console.log(
         `Looking for workflow: ${request_type} for designation: ${requester_designation_id}`
@@ -221,7 +218,7 @@ const getWorkflowForRequest = async (
         where: {
           request_type,
           designation_id: requester_designation_id,
-          department_id: null, // ✅ ENSURE we only get designation workflows
+          department_id: null,
           is_active: "Y",
         },
         orderBy: { sequence: "asc" },
@@ -237,7 +234,6 @@ const getWorkflowForRequest = async (
             },
           },
           approval_work_flow_designation: {
-            // ✅ ADDED
             select: {
               id: true,
               designation_name: true,
@@ -263,11 +259,10 @@ const getWorkflowForRequest = async (
       }
     } else if (!requester_department_id) {
       console.log(
-        `⚠️ Requester has no designation, skipping designation workflow check`
+        ` Requester has no designation, skipping designation workflow check`
       );
     }
 
-    // ✅ 3. Try GLOBAL workflow (fallback)
     console.log(
       ` No department-specific or designation-specific workflow found for ${request_type}, falling back to global workflow`
     );
@@ -276,7 +271,7 @@ const getWorkflowForRequest = async (
       where: {
         request_type,
         department_id: null,
-        designation_id: null, // ✅ ENSURE we only get global workflows
+        designation_id: null,
         is_active: "Y",
       },
       orderBy: { sequence: "asc" },
@@ -519,14 +514,13 @@ const createRequest = async (data) => {
   try {
     if (!request_type) throw new CustomError("request_type is required", 400);
 
-    // ✅ Get requester with BOTH department AND designation
     const requester = await prisma.hrms_d_employee.findUnique({
       where: { id: parentData.requester_id },
       select: {
         id: true,
         full_name: true,
         department_id: true,
-        designation_id: true, // ✅ ADDED
+        designation_id: true,
         hrms_employee_department: {
           select: {
             id: true,
@@ -534,7 +528,6 @@ const createRequest = async (data) => {
           },
         },
         hrms_employee_designation: {
-          // ✅ ADDED
           select: {
             id: true,
             designation_name: true,
@@ -565,7 +558,6 @@ const createRequest = async (data) => {
       },
     });
 
-    // ✅ NEW: Get workflow with designation support
     const {
       workflow: workflowSteps,
       isGlobalWorkflow,
@@ -573,7 +565,7 @@ const createRequest = async (data) => {
     } = await getWorkflowForRequest(
       request_type,
       requester.department_id,
-      requester.designation_id // ✅ ADDED
+      requester.designation_id
     );
 
     if (!workflowSteps || workflowSteps.length === 0) {
@@ -596,7 +588,6 @@ const createRequest = async (data) => {
       );
     }
     if (!isGlobalWorkflow && requester.hrms_employee_designation) {
-      // ✅ ADDED
       console.log(
         ` Designation: ${requester.hrms_employee_designation.designation_name}`
       );
