@@ -152,14 +152,14 @@ const deleteCandidateMaster = async (req, res, next) => {
 // Get all
 const getAllCandidateMaster = async (req, res, next) => {
   try {
-    const { search, page, size, startDate, endDate, status } = req.query;
+    const { search, page, size, startDate, endDate, is_active } = req.query;
     const data = await candidateMasterService.getAllCandidateMaster(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
       endDate && moment(endDate),
-      status
+      is_active
     );
     res.status(200).success(null, data);
   } catch (error) {

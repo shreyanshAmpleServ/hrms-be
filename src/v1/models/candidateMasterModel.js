@@ -1281,10 +1281,10 @@ const getAllCandidateMaster = async (
   size,
   startDate,
   endDate,
-  status = "false"
+  is_active = "false"
 ) => {
   try {
-    if (status === "true") {
+    if (is_active === "true") {
       const filters = {};
 
       if (search && search.trim()) {

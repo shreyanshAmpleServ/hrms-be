@@ -42,7 +42,7 @@ const getAllCandidateMaster = async (
   size,
   startDate,
   endDate,
-  status
+  is_active
 ) => {
   return await candidateMasterModel.getAllCandidateMaster(
     search,
@@ -50,7 +50,7 @@ const getAllCandidateMaster = async (
     size,
     startDate,
     endDate,
-    status
+    is_active
   );
 };
 
