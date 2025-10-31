@@ -2582,6 +2582,8 @@ model hrms_d_default_configurations {
   company_signature               String?                @db.VarChar(255)
   column_one                      String?                @db.VarChar(255)
   column_two                      String?                @db.VarChar(255)
+  column_three                    String?                @db.VarChar(255)
+  column_four                     String?                @db.VarChar(255)
   full_day_working_hours          Int?
   half_day_working_hours          Int?
   working_days                    Int?

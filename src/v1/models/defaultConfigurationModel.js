@@ -26,6 +26,8 @@ const serializeDefaultConfig = (data) => ({
   smtp_password: data.smtp_password || null,
   column_one: data.column_one || null,
   column_two: data.column_two || null,
+  column_three: data.column_three || null,
+  column_four: data.column_four || null,
   full_day_working_hours: Number(data.full_day_working_hours) || null,
   half_day_working_hours: Number(data.half_day_working_hours) || null,
   working_days: Number(data.working_days) || null,
@@ -64,6 +66,7 @@ const createDefaultConfiguration = async (data) => {
     );
   }
 };
+
 // Find a default configuration by ID
 const findDefaultConfiguration = async (id) => {
   try {

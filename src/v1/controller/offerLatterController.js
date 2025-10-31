@@ -138,9 +138,12 @@ const downloadOfferLetterPDF = async (req, res, next) => {
 const bulkDownloadOfferLetters = async (req, res, next) => {
   try {
     const {
-      candidate_ids,
-      department_ids,
-      designation_ids,
+      candidate_id_from,
+      candidate_id_to,
+      department_id_from,
+      department_id_to,
+      designation_id_from,
+      designation_id_to,
       startDate,
       endDate,
       status,
@@ -149,18 +152,27 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
     const filters = {};
     const advancedFilters = {};
 
-    if (candidate_ids) {
-      const idParts = candidate_ids.split(",").map((id) => Number(id.trim()));
+    if (candidate_id_from && candidate_id_to) {
+      const minId = Number(candidate_id_from);
+      const maxId = Number(candidate_id_to);
 
-      if (idParts.length === 2) {
-        const minId = Math.min(...idParts);
-        const maxId = Math.max(...idParts);
+      filters.candidate_id = {
+        gte: Math.min(minId, maxId),
+        lte: Math.max(minId, maxId),
+      };
 
-        filters.candidate_id = {
-          gte: minId,
-          lte: maxId,
-        };
-      }
+      console.log(
+        `Candidate Range: ${Math.min(minId, maxId)} to ${Math.max(
+          minId,
+          maxId
+        )}`
+      );
+    } else if (candidate_id_from) {
+      filters.candidate_id = { gte: Number(candidate_id_from) };
+      console.log(`Candidate From: ${candidate_id_from}`);
+    } else if (candidate_id_to) {
+      filters.candidate_id = { lte: Number(candidate_id_to) };
+      console.log(`Candidate To: ${candidate_id_to}`);
     }
 
     if (status) {
@@ -174,36 +186,50 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
       };
     }
 
-    if (department_ids) {
-      const deptParts = department_ids
-        .split(",")
-        .map((id) => Number(id.trim()));
+    if (department_id_from && department_id_to) {
+      const minDept = Number(department_id_from);
+      const maxDept = Number(department_id_to);
 
-      if (deptParts.length === 2) {
-        const minDept = Math.min(...deptParts);
-        const maxDept = Math.max(...deptParts);
+      advancedFilters.department_id = {
+        gte: Math.min(minDept, maxDept),
+        lte: Math.max(minDept, maxDept),
+      };
 
-        advancedFilters.department_id = {
-          gte: minDept,
-          lte: maxDept,
-        };
-      }
+      console.log(
+        `Department Range: ${Math.min(minDept, maxDept)} to ${Math.max(
+          minDept,
+          maxDept
+        )}`
+      );
+    } else if (department_id_from) {
+      advancedFilters.department_id = { gte: Number(department_id_from) };
+      console.log(`Department From: ${department_id_from}`);
+    } else if (department_id_to) {
+      advancedFilters.department_id = { lte: Number(department_id_to) };
+      console.log(`Department To: ${department_id_to}`);
     }
 
-    if (designation_ids) {
-      const desigParts = designation_ids
-        .split(",")
-        .map((id) => Number(id.trim()));
+    if (designation_id_from && designation_id_to) {
+      const minDesig = Number(designation_id_from);
+      const maxDesig = Number(designation_id_to);
 
-      if (desigParts.length === 2) {
-        const minDesig = Math.min(...desigParts);
-        const maxDesig = Math.max(...desigParts);
+      advancedFilters.designation_id = {
+        gte: Math.min(minDesig, maxDesig),
+        lte: Math.max(minDesig, maxDesig),
+      };
 
-        advancedFilters.designation_id = {
-          gte: minDesig,
-          lte: maxDesig,
-        };
-      }
+      console.log(
+        `Designation Range: ${Math.min(minDesig, maxDesig)} to ${Math.max(
+          minDesig,
+          maxDesig
+        )}`
+      );
+    } else if (designation_id_from) {
+      advancedFilters.designation_id = { gte: Number(designation_id_from) };
+      console.log(`Designation From: ${designation_id_from}`);
+    } else if (designation_id_to) {
+      advancedFilters.designation_id = { lte: Number(designation_id_to) };
+      console.log(`Designation To: ${designation_id_to}`);
     }
 
     const jobId = uuidv4();
@@ -215,15 +241,30 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
       jobId: jobId,
     });
 
+    console.log(`Bulk download job created: ${job.id}`);
+    console.log(`Filters:`, JSON.stringify(filters, null, 2));
+    console.log(`Advanced Filters:`, JSON.stringify(advancedFilters, null, 2));
+
     res
       .status(202)
       .success("Bulk download started. Use job ID to check progress.", {
         jobId: job.id,
         statusUrl: `/api/offer-letter/bulk-download/status/${job.id}`,
         appliedFilters: {
-          candidates: candidate_ids || "All",
-          departments: department_ids || "All",
-          designations: designation_ids || "All",
+          candidates:
+            candidate_id_from || candidate_id_to
+              ? `${candidate_id_from || "Any"} to ${candidate_id_to || "Any"}`
+              : "All",
+          departments:
+            department_id_from || department_id_to
+              ? `${department_id_from || "Any"} to ${department_id_to || "Any"}`
+              : "All",
+          designations:
+            designation_id_from || designation_id_to
+              ? `${designation_id_from || "Any"} to ${
+                  designation_id_to || "Any"
+                }`
+              : "All",
           status: status || "All",
           dateRange:
             startDate && endDate ? `${startDate} to ${endDate}` : "All",
