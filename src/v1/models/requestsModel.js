@@ -1854,6 +1854,64 @@ const findRequestByRequestUsers = async (
             });
           }
         }
+        if (requestType === "offer_letter" && referenceId) {
+          const offerLetterRequest =
+            await prisma.hrms_d_offer_letter.findUnique({
+              where: { id: parseInt(referenceId) },
+              select: {
+                id: true,
+                offer_date: true,
+                currency_id: true,
+                position: true,
+                offered_salary: true,
+                valid_until: true,
+                status: true,
+              },
+            });
+          if (offerLetterRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: offerLetterRequest,
+            });
+          }
+        }
+        if (requestType === "appointment_letter" && referenceId) {
+          const appointmentLetterRequest =
+            await prisma.hrms_d_appointment_letter.findUnique({
+              where: { id: parseInt(referenceId) },
+              select: {
+                id: true,
+                issue_date: true,
+                terms_summary: true,
+              },
+            });
+          if (appointmentLetterRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: appointmentLetterRequest,
+            });
+          }
+        }
+        if (requestType === "pay_component" && referenceId) {
+          const payComponentRequest =
+            await prisma.hrms_m_pay_component.findUnique({
+              where: { id: parseInt(referenceId) },
+              select: {
+                id: true,
+                component_name: true,
+                component_code: true,
+              },
+            });
+          if (payComponentRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: payComponentRequest,
+            });
+          }
+        }
       })
     );
 

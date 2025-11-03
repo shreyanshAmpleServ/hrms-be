@@ -1,13 +1,25 @@
+// const Queue = require("bull");
+// const path = require("path");
+// const fs = require("fs");
+// const archiver = require("archiver");
+// const prisma = require("../config/prisma");
+// const appointmentLatterModel = require("../models/AppointmentLatterModel");
+// const {
+//   generateAppointmentLetterPDF,
+// } = require("../utils/appointmentLetterPDF");
+
 const Queue = require("bull");
 const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const offerLatterModel = require("../v1/models/offerLatterModel.js");
-const { generateOfferLetterPDF } = require("../utils/offerLetterPDF");
-
-const offerLetterQueue = new Queue("offer-letter-bulk-download", {
+const appointmentLatterModel = require("../models/AppointmentLatterModel");
+const {
+  generateAppointmentLetterPDF,
+} = require("../utils/appointmentLetterPDF");
+// Create queue
+const appointmentLetterQueue = new Queue("appointment-letter-bulk-download", {
   redis: {
     host: process.env.REDIS_HOST || "localhost",
     port: process.env.REDIS_PORT || 6379,
@@ -15,75 +27,67 @@ const offerLetterQueue = new Queue("offer-letter-bulk-download", {
 });
 
 // Process the queue
-offerLetterQueue.process(async (job) => {
-  const { userId, filters, jobId } = job.data;
+appointmentLetterQueue.process(async (job) => {
+  const { userId, filters, advancedFilters, jobId } = job.data;
 
-  console.log(`[Job ${jobId}] Starting bulk offer letter download...`);
+  console.log(`[Job ${jobId}] Starting bulk appointment letter download...`);
 
   try {
-    // Update progress
     await job.progress(10);
 
-    // Get all offer letters based on filters
-    const offerLetters = await prisma.hrms_d_offer_letter.findMany({
-      where: filters || {},
-      select: {
-        id: true,
-        position: true,
-        offered_candidate: {
-          select: {
-            full_name: true,
-          },
-        },
-      },
-    });
+    // Get all appointment letters
+    const appointmentLetters =
+      await appointmentLatterModel.getAllAppointmentLettersForBulkDownload(
+        filters || {},
+        advancedFilters || {}
+      );
 
     console.log(
-      `[Job ${jobId}] Found ${offerLetters.length} offer letters to process`
+      `[Job ${jobId}] Found ${appointmentLetters.length} appointment letters to process`
     );
 
-    if (offerLetters.length === 0) {
-      throw new Error("No offer letters found");
+    if (appointmentLetters.length === 0) {
+      throw new Error("No appointment letters found");
     }
 
     await job.progress(20);
 
-    // Create temp directory for PDFs
+    // Create temp directory
     const tempDir = path.join(process.cwd(), "temp", jobId);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    // Generate PDFs with progress tracking
+    // Generate PDFs
     const pdfPaths = [];
-    const totalLetters = offerLetters.length;
+    const totalLetters = appointmentLetters.length;
 
     for (let i = 0; i < totalLetters; i++) {
-      const offerLetter = offerLetters[i];
+      const appointmentLetter = appointmentLetters[i];
 
       try {
         console.log(
           `[Job ${jobId}] Processing ${i + 1}/${totalLetters}: ${
-            offerLetter.offered_candidate?.full_name
+            appointmentLetter.appointed_employee?.full_name
           }`
         );
 
         // Get PDF data
-        const pdfData = await offerLatterModel.getOfferLetterForPDF(
-          offerLetter.id
+        const pdfData = await appointmentLatterModel.getAppointmentLetterForPDF(
+          appointmentLetter.id
         );
 
         // Generate filename
         const sanitizedName = (
-          offerLetter.offered_candidate?.full_name || "Unknown"
+          appointmentLetter.appointed_employee?.full_name || "Unknown"
         )
           .replace(/[^a-z0-9]/gi, "_")
           .toLowerCase();
-        const fileName = `offer_letter_${offerLetter.id}_${sanitizedName}.pdf`;
+        const fileName = `appointment_letter_${appointmentLetter.id}_${sanitizedName}.pdf`;
         const filePath = path.join(tempDir, fileName);
 
         // Generate PDF
-        await generateOfferLetterPDF(pdfData, filePath);
+        await generateAppointmentLetterPDF(pdfData, filePath);
         pdfPaths.push({ path: filePath, name: fileName });
 
         // Update progress (20% to 80% for PDF generation)
@@ -91,17 +95,21 @@ offerLetterQueue.process(async (job) => {
         await job.progress(progress);
       } catch (error) {
         console.error(
-          `[Job ${jobId}] Error processing offer letter ${offerLetter.id}:`,
+          `[Job ${jobId}] Error processing appointment letter ${appointmentLetter.id}:`,
           error
         );
-        // Continue with next letter instead of failing entire job
+        // Continue with next letter
       }
+    }
+
+    if (pdfPaths.length === 0) {
+      throw new Error("Failed to generate any appointment letter PDFs");
     }
 
     await job.progress(85);
 
     // Create ZIP file
-    const zipFileName = `offer_letters_bulk_${jobId}.zip`;
+    const zipFileName = `appointment_letters_bulk_${jobId}.zip`;
     const zipPath = path.join(
       process.cwd(),
       "uploads",
@@ -128,8 +136,8 @@ offerLetterQueue.process(async (job) => {
     return {
       success: true,
       totalProcessed: pdfPaths.length,
-      totalRequested: offerLetters.length,
-      downloadUrl: `/api/offer-letter/bulk-download/${jobId}`,
+      totalRequested: appointmentLetters.length,
+      downloadUrl: `/api/appointment-letter/bulk-download/${jobId}`,
       fileName: zipFileName,
       zipPath: zipPath,
     };
@@ -168,12 +176,12 @@ function createZip(files, outputPath) {
 }
 
 // Event handlers
-offerLetterQueue.on("completed", (job, result) => {
+appointmentLetterQueue.on("completed", (job, result) => {
   console.log(`Job ${job.id} completed:`, result);
 });
 
-offerLetterQueue.on("failed", (job, err) => {
+appointmentLetterQueue.on("failed", (job, err) => {
   console.error(`Job ${job.id} failed:`, err.message);
 });
 
-module.exports = offerLetterQueue;
+module.exports = appointmentLetterQueue;
