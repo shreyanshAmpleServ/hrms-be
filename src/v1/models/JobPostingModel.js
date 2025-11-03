@@ -1185,6 +1185,7 @@
 //   deleteJobPosting,
 //   getAllJobPosting,
 // };
+
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("./requestsModel");
@@ -1558,7 +1559,7 @@ const createJobPosting = async (data) => {
       request_type: "job_posting",
       reference_id: jobPosting.id,
       request_data: `Job Posting: ${jobPosting.job_title} (${jobPosting.job_code})`,
-      status: "P", // Pending approval
+      status: "P",
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });

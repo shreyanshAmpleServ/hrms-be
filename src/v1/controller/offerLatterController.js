@@ -6,7 +6,8 @@ const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const offerLetterQueue = require("../../utils/offerLetterQueue");
-
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
 const createOfferLetter = async (req, res, next) => {
   try {
     const data = {
@@ -135,6 +136,146 @@ const downloadOfferLetterPDF = async (req, res, next) => {
   }
 };
 
+// const bulkDownloadOfferLetters = async (req, res, next) => {
+//   try {
+//     const {
+//       candidate_id_from,
+//       candidate_id_to,
+//       department_id_from,
+//       department_id_to,
+//       designation_id_from,
+//       designation_id_to,
+//       startDate,
+//       endDate,
+//       status,
+//     } = req.query;
+
+//     const filters = {};
+//     const advancedFilters = {};
+
+//     if (candidate_id_from && candidate_id_to) {
+//       const minId = Number(candidate_id_from);
+//       const maxId = Number(candidate_id_to);
+
+//       filters.candidate_id = {
+//         gte: Math.min(minId, maxId),
+//         lte: Math.max(minId, maxId),
+//       };
+
+//       console.log(
+//         `Candidate Range: ${Math.min(minId, maxId)} to ${Math.max(
+//           minId,
+//           maxId
+//         )}`
+//       );
+//     } else if (candidate_id_from) {
+//       filters.candidate_id = { gte: Number(candidate_id_from) };
+//       console.log(`Candidate From: ${candidate_id_from}`);
+//     } else if (candidate_id_to) {
+//       filters.candidate_id = { lte: Number(candidate_id_to) };
+//       console.log(`Candidate To: ${candidate_id_to}`);
+//     }
+
+//     if (status) {
+//       filters.status = status;
+//     }
+
+//     if (startDate && endDate) {
+//       filters.offer_date = {
+//         gte: new Date(startDate),
+//         lte: new Date(endDate),
+//       };
+//     }
+
+//     if (department_id_from && department_id_to) {
+//       const minDept = Number(department_id_from);
+//       const maxDept = Number(department_id_to);
+
+//       advancedFilters.department_id = {
+//         gte: Math.min(minDept, maxDept),
+//         lte: Math.max(minDept, maxDept),
+//       };
+
+//       console.log(
+//         `Department Range: ${Math.min(minDept, maxDept)} to ${Math.max(
+//           minDept,
+//           maxDept
+//         )}`
+//       );
+//     } else if (department_id_from) {
+//       advancedFilters.department_id = { gte: Number(department_id_from) };
+//       console.log(`Department From: ${department_id_from}`);
+//     } else if (department_id_to) {
+//       advancedFilters.department_id = { lte: Number(department_id_to) };
+//       console.log(`Department To: ${department_id_to}`);
+//     }
+
+//     if (designation_id_from && designation_id_to) {
+//       const minDesig = Number(designation_id_from);
+//       const maxDesig = Number(designation_id_to);
+
+//       advancedFilters.designation_id = {
+//         gte: Math.min(minDesig, maxDesig),
+//         lte: Math.max(minDesig, maxDesig),
+//       };
+
+//       console.log(
+//         `Designation Range: ${Math.min(minDesig, maxDesig)} to ${Math.max(
+//           minDesig,
+//           maxDesig
+//         )}`
+//       );
+//     } else if (designation_id_from) {
+//       advancedFilters.designation_id = { gte: Number(designation_id_from) };
+//       console.log(`Designation From: ${designation_id_from}`);
+//     } else if (designation_id_to) {
+//       advancedFilters.designation_id = { lte: Number(designation_id_to) };
+//       console.log(`Designation To: ${designation_id_to}`);
+//     }
+
+//     const jobId = uuidv4();
+
+//     const job = await offerLetterQueue.add({
+//       userId: req.user.id,
+//       filters: filters,
+//       advancedFilters: advancedFilters,
+//       jobId: jobId,
+//     });
+
+//     console.log(`Bulk download job created: ${job.id}`);
+//     console.log(`Filters:`, JSON.stringify(filters, null, 2));
+//     console.log(`Advanced Filters:`, JSON.stringify(advancedFilters, null, 2));
+
+//     res
+//       .status(202)
+//       .success("Bulk download started. Use job ID to check progress.", {
+//         jobId: job.id,
+//         statusUrl: `/api/offer-letter/bulk-download/status/${job.id}`,
+//         appliedFilters: {
+//           candidates:
+//             candidate_id_from || candidate_id_to
+//               ? `${candidate_id_from || "Any"} to ${candidate_id_to || "Any"}`
+//               : "All",
+//           departments:
+//             department_id_from || department_id_to
+//               ? `${department_id_from || "Any"} to ${department_id_to || "Any"}`
+//               : "All",
+//           designations:
+//             designation_id_from || designation_id_to
+//               ? `${designation_id_from || "Any"} to ${
+//                   designation_id_to || "Any"
+//                 }`
+//               : "All",
+//           status: status || "All",
+//           dateRange:
+//             startDate && endDate ? `${startDate} to ${endDate}` : "All",
+//         },
+//       });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const bulkDownloadOfferLetters = async (req, res, next) => {
   try {
     const {
@@ -203,10 +344,8 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
       );
     } else if (department_id_from) {
       advancedFilters.department_id = { gte: Number(department_id_from) };
-      console.log(`Department From: ${department_id_from}`);
     } else if (department_id_to) {
       advancedFilters.department_id = { lte: Number(department_id_to) };
-      console.log(`Department To: ${department_id_to}`);
     }
 
     if (designation_id_from && designation_id_to) {
@@ -226,11 +365,32 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
       );
     } else if (designation_id_from) {
       advancedFilters.designation_id = { gte: Number(designation_id_from) };
-      console.log(`Designation From: ${designation_id_from}`);
     } else if (designation_id_to) {
       advancedFilters.designation_id = { lte: Number(designation_id_to) };
-      console.log(`Designation To: ${designation_id_to}`);
     }
+
+    console.log("Validating candidates exist...");
+
+    const validationWhere = {
+      ...filters,
+    };
+
+    if (Object.keys(advancedFilters).length > 0) {
+      validationWhere.offered_candidate = advancedFilters;
+    }
+
+    const offerCount = await prisma.hrms_d_offer_letter.count({
+      where: validationWhere,
+    });
+
+    if (offerCount === 0) {
+      throw new CustomError(
+        "No candidates found matching the provided filters",
+        404
+      );
+    }
+
+    console.log(`Found ${offerCount} offer letter(s) matching filters`);
 
     const jobId = uuidv4();
 
@@ -242,14 +402,13 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
     });
 
     console.log(`Bulk download job created: ${job.id}`);
-    console.log(`Filters:`, JSON.stringify(filters, null, 2));
-    console.log(`Advanced Filters:`, JSON.stringify(advancedFilters, null, 2));
 
     res
       .status(202)
       .success("Bulk download started. Use job ID to check progress.", {
         jobId: job.id,
         statusUrl: `/api/offer-letter/bulk-download/status/${job.id}`,
+        totalOfferLetters: offerCount,
         appliedFilters: {
           candidates:
             candidate_id_from || candidate_id_to
@@ -278,7 +437,6 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
 const checkBulkDownloadStatus = async (req, res, next) => {
   try {
     const jobId = req.params.jobId;
-
     const job = await offerLetterQueue.getJob(jobId);
 
     if (!job) {
@@ -303,7 +461,6 @@ const checkBulkDownloadStatus = async (req, res, next) => {
 const downloadBulkOfferLetters = async (req, res, next) => {
   try {
     const jobId = req.params.jobId;
-
     const job = await offerLetterQueue.getJob(jobId);
 
     if (!job) {
@@ -346,7 +503,6 @@ const downloadBulkOfferLetters = async (req, res, next) => {
     next(error);
   }
 };
-
 module.exports = {
   createOfferLetter,
   findOfferLetterById,
