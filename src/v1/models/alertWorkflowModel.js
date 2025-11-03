@@ -1,6 +1,12 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+
+// Configure PrismaClient with optimized settings
+// Note: Connection pool settings should be in DATABASE_URL:
+// postgresql://user:password@host:port/database?connection_limit=20&pool_timeout=20
+const prisma = new PrismaClient({
+  log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+});
 
 // Serialize workflow data for database
 const serializeWorkflowData = (data) => ({
@@ -36,6 +42,13 @@ const createAlertWorkflow = async (data) => {
 
     return reqData;
   } catch (error) {
+    // Handle connection pool errors
+    if (error.message && error.message.includes("connection pool")) {
+      throw new CustomError(
+        `Database connection pool exhausted. Please try again later.`,
+        503
+      );
+    }
     throw new CustomError(
       `Error creating alert workflow: ${error.message}`,
       500
@@ -44,18 +57,53 @@ const createAlertWorkflow = async (data) => {
 };
 
 const getAlertWorkflowById = async (id) => {
-  try {
-    const workflow = await prisma.hrms_d_alert_workflow.findUnique({
-      where: { id: parseInt(id) },
-      include: { alert_workflow_alert_logs: true },
-    });
-    if (!workflow) throw new CustomError("Workflow not found", 404);
-    workflow.conditions = JSON.parse(workflow.conditions || "[]");
-    workflow.actions = JSON.parse(workflow.actions || "[]");
-    return workflow;
-  } catch (error) {
-    throw new CustomError(error.message, 503);
+  let retries = 3;
+  let lastError;
+
+  while (retries > 0) {
+    try {
+      const workflow = await prisma.hrms_d_alert_workflow.findUnique({
+        where: { id: parseInt(id) },
+        include: { alert_workflow_alert_logs: true },
+      });
+
+      if (!workflow) {
+        throw new CustomError("Workflow not found", 404);
+      }
+
+      workflow.conditions = JSON.parse(workflow.conditions || "[]");
+      workflow.actions = JSON.parse(workflow.actions || "[]");
+      return workflow;
+    } catch (error) {
+      lastError = error;
+
+      // Check if it's a connection pool timeout error
+      if (
+        error.message &&
+        error.message.includes("connection pool") &&
+        retries > 1
+      ) {
+        retries--;
+        // Wait before retrying (exponential backoff)
+        await new Promise((resolve) =>
+          setTimeout(resolve, 1000 * (4 - retries))
+        );
+        continue;
+      }
+
+      // If it's not a connection pool error or we've exhausted retries, throw
+      throw new CustomError(
+        error.message || "Error fetching workflow",
+        error.statusCode || 503
+      );
+    }
   }
+
+  // If all retries failed
+  throw new CustomError(
+    lastError?.message || "Failed to fetch workflow after retries",
+    503
+  );
 };
 
 const updateAlertWorkflow = async (id, data) => {
@@ -74,6 +122,13 @@ const updateAlertWorkflow = async (id, data) => {
     });
     return updatedEntry;
   } catch (error) {
+    // Handle connection pool errors
+    if (error.message && error.message.includes("connection pool")) {
+      throw new CustomError(
+        `Database connection pool exhausted. Please try again later.`,
+        503
+      );
+    }
     throw new CustomError(error.message, 500);
   }
 };
@@ -82,6 +137,13 @@ const deleteAlertWorkflow = async (id) => {
   try {
     await prisma.hrms_d_alert_workflow.delete({ where: { id: parseInt(id) } });
   } catch (error) {
+    // Handle connection pool errors
+    if (error.message && error.message.includes("connection pool")) {
+      throw new CustomError(
+        `Database connection pool exhausted. Please try again later.`,
+        503
+      );
+    }
     throw new CustomError(error.message, 500);
   }
 };
@@ -130,6 +192,13 @@ const getAlertWorkflows = async (search, page, size, startDate, endDate) => {
       totalCount,
     };
   } catch (error) {
+    // Handle connection pool errors
+    if (error.message && error.message.includes("connection pool")) {
+      throw new CustomError(
+        `Database connection pool exhausted. Please try again later.`,
+        503
+      );
+    }
     throw new CustomError(error.message, 503);
   }
 };

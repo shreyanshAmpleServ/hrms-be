@@ -933,7 +933,7 @@ const updateEmployee = async (id, data) => {
             life_event_type: {
               select: {
                 id: true,
-                event_type: true,
+                event_type_name: true,
               },
             },
           },
