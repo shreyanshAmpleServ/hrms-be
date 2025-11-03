@@ -21,14 +21,26 @@ const getAllCandidateDocument = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  candidateId,
+  typeId,
+  status
 ) => {
   return await candidateDocumentModel.getAllCandidateDocument(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    candidateId,
+    typeId,
+    status
+  );
+};
+
+const findCandidateDocumentsByCandidate = async (candidateId) => {
+  return await candidateDocumentModel.findCandidateDocumentsByCandidate(
+    candidateId
   );
 };
 
@@ -46,6 +58,7 @@ module.exports = {
   updateCandidateDocument,
   deleteCandidateDocument,
   getAllCandidateDocument,
+  findCandidateDocumentsByCandidate,
   deleteMultipleCandidateDocuments,
   createMultipleCandidateDocuments,
 };

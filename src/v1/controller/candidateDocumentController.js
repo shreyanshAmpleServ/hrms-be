@@ -309,10 +309,19 @@ const deleteMultipleCandidateDocuments = async (req, res, next) => {
       );
     }
 
-    // Get all documents to delete their files
-    const documents = await prisma.hrms_d_candidate_documents.findMany({
-      where: { id: { in: documentIds.map((id) => parseInt(id)) } },
-    });
+    // Get all documents to delete their files before deletion
+    const documents = [];
+    for (const id of documentIds) {
+      try {
+        const doc = await candidateDocumentService.findCandidateDocument(id);
+        if (doc && doc.path) {
+          documents.push(doc);
+        }
+      } catch (error) {
+        // Document might not exist, continue with others
+        console.log(`Document ${id} not found, skipping file deletion`);
+      }
+    }
 
     // Delete files from Backblaze
     for (const doc of documents) {
