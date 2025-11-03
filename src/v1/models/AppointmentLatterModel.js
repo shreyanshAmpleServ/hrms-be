@@ -5,127 +5,125 @@ const { createRequest } = require("./requestsModel");
 
 const prisma = new PrismaClient();
 
-const serializeJobData = (data) => {
+const serializeData = (data) => {
   return {
-    candidate_id: Number(data.candidate_id) || null,
-    issue_date: data.issue_date ? new Date(data.issue_date) : new Date(),
+    employee_id: Number(data.employee_id) || null,
+    review_period: data.review_period || "",
+    rating: parseFloat(data.rating) || 0,
+    reviewer_comments: data.reviewer_comments || "",
     status: data.status || "P",
-    designation_id: Number(data.designation_id) || null,
-    terms_summary: data.terms_summary || "",
+    appraisal_cycle_id: Number(data.appraisal_cycle_id) || null,
+    appraisal_template_id: Number(data.appraisal_template_id) || null,
+    reviewer_id: Number(data.reviewer_id) || null,
+    hr_reviewer_id: Number(data.hr_reviewer_id) || null,
+    review_start_date: data.review_start_date
+      ? new Date(data.review_start_date)
+      : null,
+    review_end_date: data.review_end_date
+      ? new Date(data.review_end_date)
+      : null,
+    final_score: data.final_score ? Number(data.final_score) : null,
+    overall_remarks: data.overall_remarks || "",
+    effective_date: data.effective_date ? new Date(data.effective_date) : null,
+    review_date: data.review_date ? new Date(data.review_date) : null,
+    next_review_date: data.next_review_date
+      ? new Date(data.next_review_date)
+      : null,
   };
 };
 
-const createAppointmentLatter = async (data) => {
+const createAppraisalEntry = async (data) => {
   try {
-    await errorNotExist(
-      "hrms_d_candidate_master",
-      data.candidate_id,
-      "Candidate"
-    );
-    const reqData = await prisma.hrms_d_appointment_letter.create({
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    const reqData = await prisma.hrms_d_appraisal.create({
       data: {
-        ...serializeJobData(data),
+        ...serializeData(data),
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
       include: {
-        appointment_candidate: {
+        appraisal_employee: {
           select: {
             full_name: true,
-            id: true,
-          },
-        },
-        appointment_designation: {
-          select: {
-            designation_name: true,
             id: true,
           },
         },
       },
     });
     await createRequest({
-      requester_id: data.createdby || 1,
-      request_type: "appointment_letter",
+      requester_id: reqData.employee_id,
+      request_type: "appraisal_review",
       reference_id: reqData.id,
-      request_data: `Appointment Letter for ${reqData.appointment_candidate?.full_name} - ${reqData.appointment_designation?.designation_name}`,
-      status: "P", // Pending approval
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });
-
-    console.log(
-      ` Appointment letter created with ID: ${reqData.id} for candidate: ${reqData.appointment_candidate?.full_name}`
-    );
-    console.log(`Approval request initiated for appointment letter`);
     return reqData;
   } catch (error) {
+    console.error("Error creating appraisal entry:", error);
     throw new CustomError(
-      `Error creating appointment latter: ${error.message}`,
+      `Error creating appraisal entry: ${error.message}`,
       500
     );
   }
 };
 
-const findAppointmentLatterById = async (id) => {
+const findAppraisalEntryById = async (id) => {
   try {
-    const reqData = await prisma.hrms_d_appointment_letter.findUnique({
+    const reqData = await prisma.hrms_d_appraisal.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        appraisal_employee: {
+          select: {
+            full_name: true,
+            id: true,
+          },
+        },
+      },
     });
-    if (!AppointmentLatter) {
-      throw new CustomError("appointment latter not found", 404);
+    if (!reqData) {
+      throw new CustomError("appraisal entry not found", 404);
     }
     return reqData;
   } catch (error) {
     throw new CustomError(
-      `Error finding appointment latter by ID: ${error.message}`,
+      `Error finding appraisal entry by ID: ${error.message}`,
       503
     );
   }
 };
 
-const updateAppointmentLatter = async (id, data) => {
+const updateAppraisalEntry = async (id, data) => {
   try {
-    await errorNotExist(
-      "hrms_d_candidate_master",
-      data.candidate_id,
-      "Candidate"
-    );
-    const updatedAppointmentLatter =
-      await prisma.hrms_d_appointment_letter.update({
-        where: { id: parseInt(id) },
-        data: {
-          ...serializeJobData(data),
-          updatedby: data.updatedby || 1,
-          updatedate: new Date(),
-        },
-        include: {
-          appointment_candidate: {
-            select: {
-              full_name: true,
-              id: true,
-            },
-          },
-          appointment_designation: {
-            select: {
-              designation_name: true,
-              id: true,
-            },
+    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+    const updatedAppraisalEntry = await prisma.hrms_d_appraisal.update({
+      where: { id: parseInt(id) },
+      data: {
+        ...serializeData(data),
+        updatedby: data.updatedby || 1,
+        updatedate: new Date(),
+      },
+      include: {
+        appraisal_employee: {
+          select: {
+            full_name: true,
+            id: true,
           },
         },
-      });
-    return updatedAppointmentLatter;
+      },
+    });
+    return updatedAppraisalEntry;
   } catch (error) {
     throw new CustomError(
-      `Error updating appointment latter: ${error.message}`,
+      `Error updating appraisal entry: ${error.message}`,
       500
     );
   }
 };
 
-const deleteAppointmentLatter = async (id) => {
+const deleteAppraisalEntry = async (id) => {
   try {
-    await prisma.hrms_d_appointment_letter.delete({
+    await prisma.hrms_d_appraisal.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
@@ -140,14 +138,7 @@ const deleteAppointmentLatter = async (id) => {
   }
 };
 
-const getAllAppointmentLatter = async (
-  search,
-  page,
-  size,
-  startDate,
-  endDate,
-  candidate_id
-) => {
+const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -157,12 +148,7 @@ const getAllAppointmentLatter = async (
     if (search) {
       filters.OR = [
         {
-          appointment_designation: {
-            designation_name: { contains: search.toLowerCase() },
-          },
-        },
-        {
-          appointment_candidate: {
+          appraisal_employee: {
             full_name: { contains: search.toLowerCase() },
           },
         },
@@ -180,31 +166,23 @@ const getAllAppointmentLatter = async (
         };
       }
     }
-    if (candidate_id) {
-      filters.candidate_id = parseInt(candidate_id);
-    }
-    const datas = await prisma.hrms_d_appointment_letter.findMany({
+
+    const datas = await prisma.hrms_d_appraisal.findMany({
       where: filters,
       skip: skip,
       take: size,
       include: {
-        appointment_candidate: {
+        appraisal_employee: {
           select: {
             full_name: true,
-            id: true,
-          },
-        },
-        appointment_designation: {
-          select: {
-            designation_name: true,
             id: true,
           },
         },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_appointment_letter.count();
-    const totalCount = await prisma.hrms_d_appointment_letter.count({
+
+    const totalCount = await prisma.hrms_d_appraisal.count({
       where: filters,
     });
 
@@ -216,56 +194,52 @@ const getAllAppointmentLatter = async (
       totalCount: totalCount,
     };
   } catch (error) {
-    console.log(error);
-    throw new CustomError("Error retrieving appointment latters", 503);
+    throw new CustomError("Error retrieving appraisal entries", 503);
   }
 };
 
-const getAppointmentLetterForPDF = async (id) => {
+const getAppraisalForPDF = async (id) => {
   try {
     if (!id) {
-      throw new CustomError("Appointment letter ID is required", 400);
+      throw new CustomError("Appraisal ID is required", 400);
     }
 
-    const appointmentLetter = await prisma.hrms_d_appointment_letter.findUnique(
-      {
-        where: { id: parseInt(id) },
-        include: {
-          appointment_candidate: {
-            select: {
-              id: true,
-              full_name: true,
-              email: true,
-              phone: true,
-              candidate_code: true,
-              expected_joining_date: true,
-              actual_joining_date: true,
-              date_of_birth: true,
-              gender: true,
-              nationality: true,
-              resume_path: true,
-              status: true,
-
-              candidate_department: {
-                select: {
-                  id: true,
-                  department_name: true,
-                },
+    const appraisal = await prisma.hrms_d_appraisal.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        appraisal_employee: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            email: true,
+            phone: true,
+            department_id: true,
+            designation_id: true,
+            employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
+            employee_designation: {
+              select: {
+                id: true,
+                designation_name: true,
               },
             },
           },
-          appointment_designation: {
-            select: {
-              id: true,
-              designation_name: true,
-            },
+        },
+        appraisal_manager: {
+          select: {
+            full_name: true,
           },
         },
-      }
-    );
+      },
+    });
 
-    if (!appointmentLetter) {
-      throw new CustomError("Appointment letter not found", 404);
+    if (!appraisal) {
+      throw new CustomError("Appraisal not found", 404);
     }
 
     const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
@@ -299,7 +273,7 @@ const getAppointmentLetterForPDF = async (id) => {
         companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
         console.log("Logo converted to base64");
       } catch (err) {
-        console.error(" Error fetching logo:", err.message);
+        console.error("Error fetching logo:", err.message);
         companyLogoBase64 = defaultConfig.company_logo;
       }
     }
@@ -313,9 +287,9 @@ const getAppointmentLetterForPDF = async (id) => {
         const signatureMimeType =
           signatureResponse.headers.get("content-type") || "image/png";
         companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
-        console.log(" Signature converted to base64");
+        console.log("Signature converted to base64");
       } catch (err) {
-        console.error(" Error fetching signature:", err.message);
+        console.error("Error fetching signature:", err.message);
         companySignatureBase64 = defaultConfig.company_signature;
       }
     }
@@ -338,47 +312,47 @@ const getAppointmentLetterForPDF = async (id) => {
       companyPhone: defaultConfig?.phone_number || "Phone Number",
       companySignatory: "HR Manager",
 
-      employeeName: appointmentLetter.appointment_candidate?.full_name || "N/A",
-      employeeCode:
-        appointmentLetter.appointment_candidate?.candidate_code || "N/A",
-      employeeEmail: appointmentLetter.appointment_candidate?.email || "N/A",
-      employeePhone: appointmentLetter.appointment_candidate?.phone || "N/A",
+      employeeName: appraisal.appraisal_employee?.full_name || "N/A",
+      employeeCode: appraisal.appraisal_employee?.employee_code || "N/A",
+      employeeEmail: appraisal.appraisal_employee?.email || "N/A",
+      employeePhone: appraisal.appraisal_employee?.phone || "N/A",
 
       position:
-        appointmentLetter.appointment_designation?.designation_name || "N/A",
+        appraisal.appraisal_employee?.employee_designation?.designation_name ||
+        "N/A",
 
       department:
-        appointmentLetter.appointment_candidate?.candidate_department
-          ?.department_name || "N/A",
+        appraisal.appraisal_employee?.employee_department?.department_name ||
+        "N/A",
 
       designation:
-        appointmentLetter.appointment_designation?.designation_name || "N/A",
+        appraisal.appraisal_employee?.employee_designation?.designation_name ||
+        "N/A",
 
-      appointmentDate: appointmentLetter.issue_date,
-      joiningDate:
-        appointmentLetter.appointment_candidate?.actual_joining_date ||
-        appointmentLetter.appointment_candidate?.expected_joining_date,
-      termsSummary: appointmentLetter.terms_summary || "",
-      status: appointmentLetter.appointment_candidate?.status || "P",
+      managerName: appraisal.appraisal_manager?.full_name || "HR Manager",
+      appraisalDate: appraisal.review_date || appraisal.effective_date,
+      appraisalPeriod: appraisal.review_period || "N/A",
+      overallRating: parseFloat(appraisal.final_score || appraisal.rating) || 0,
+      managerComments: appraisal.reviewer_comments || "No comments provided",
+      employeeComments: appraisal.overall_remarks || "No comments provided",
     };
 
     console.log("Position:", pdfData.position);
     console.log("Department:", pdfData.department);
     console.log("Designation:", pdfData.designation);
     console.log("Employee Code:", pdfData.employeeCode);
-    console.log("Joining Date:", pdfData.joiningDate);
 
     return pdfData;
   } catch (error) {
-    console.error("Error in getAppointmentLetterForPDF:", error);
+    console.error("Error in getAppraisalForPDF:", error);
     throw new CustomError(
-      error.message || "Error fetching appointment letter data",
+      error.message || "Error fetching appraisal data",
       500
     );
   }
 };
 
-const getAllAppointmentLettersForBulkDownload = async (
+const getAllAppraisalsForBulkDownload = async (
   filters = {},
   advancedFilters = {}
 ) => {
@@ -388,44 +362,38 @@ const getAllAppointmentLettersForBulkDownload = async (
     };
 
     if (Object.keys(advancedFilters).length > 0) {
-      whereClause.appointment_candidate = advancedFilters;
+      whereClause.appraisal_employee = advancedFilters;
     }
 
     console.log("Final where clause:", JSON.stringify(whereClause, null, 2));
 
-    const appointmentLetters = await prisma.hrms_d_appointment_letter.findMany({
+    const appraisals = await prisma.hrms_d_appraisal.findMany({
       where: whereClause,
       select: {
         id: true,
-        designation_id: true,
-        candidate_id: true,
-        appointment_candidate: {
+        employee_id: true,
+        appraisal_employee: {
           select: {
             id: true,
             full_name: true,
+            employee_code: true,
             email: true,
             phone: true,
-            candidate_code: true,
-            expected_joining_date: true,
-            actual_joining_date: true,
-            date_of_birth: true,
-            gender: true,
-            nationality: true,
-            resume_path: true,
-            status: true,
+            department_id: true,
+            designation_id: true,
 
-            candidate_department: {
+            employee_department: {
               select: {
                 id: true,
                 department_name: true,
               },
             },
-          },
-        },
-        appointment_designation: {
-          select: {
-            id: true,
-            designation_name: true,
+            employee_designation: {
+              select: {
+                id: true,
+                designation_name: true,
+              },
+            },
           },
         },
       },
@@ -434,24 +402,21 @@ const getAllAppointmentLettersForBulkDownload = async (
       },
     });
 
-    console.log(
-      `Found ${appointmentLetters.length} appointment letters matching filters`
-    );
+    console.log(`Found ${appraisals.length} appraisals matching filters`);
 
-    return appointmentLetters;
+    return appraisals;
   } catch (error) {
-    console.error("Error in getAllAppointmentLettersForBulkDownload:", error);
+    console.error("Error in getAllAppraisalsForBulkDownload:", error);
     throw new CustomError(error.message, 500);
   }
 };
 
 module.exports = {
-  createAppointmentLatter,
-  findAppointmentLatterById,
-  updateAppointmentLatter,
-  deleteAppointmentLatter,
-  getAllAppointmentLatter,
-  getAppointmentLetterForPDF,
-  getAllAppointmentLettersForBulkDownload,
-  getAppointmentLetterForPDF,
+  createAppraisalEntry,
+  findAppraisalEntryById,
+  updateAppraisalEntry,
+  deleteAppraisalEntry,
+  getAllAppraisalEntry,
+  getAppraisalForPDF,
+  getAllAppraisalsForBulkDownload,
 };

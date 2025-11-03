@@ -2,6 +2,7 @@ const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
+
 const prisma = new PrismaClient();
 
 const serializeData = (data) => {
@@ -31,7 +32,6 @@ const serializeData = (data) => {
   };
 };
 
-// Create a new appraisal entry
 const createAppraisalEntry = async (data) => {
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
@@ -55,9 +55,6 @@ const createAppraisalEntry = async (data) => {
       requester_id: reqData.employee_id,
       request_type: "appraisal_review",
       reference_id: reqData.id,
-      // request_data:
-      //   reqData.reason ||
-      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });
@@ -71,7 +68,6 @@ const createAppraisalEntry = async (data) => {
   }
 };
 
-// Find a appraisal entry by ID
 const findAppraisalEntryById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_appraisal.findUnique({
@@ -97,7 +93,6 @@ const findAppraisalEntryById = async (id) => {
   }
 };
 
-// Update a appraisal entry
 const updateAppraisalEntry = async (id, data) => {
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
@@ -126,7 +121,6 @@ const updateAppraisalEntry = async (id, data) => {
   }
 };
 
-// Delete a appraisal entry
 const deleteAppraisalEntry = async (id) => {
   try {
     await prisma.hrms_d_appraisal.delete({
@@ -144,7 +138,6 @@ const deleteAppraisalEntry = async (id) => {
   }
 };
 
-// Get all appraisal entrys
 const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -173,6 +166,7 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
         };
       }
     }
+
     const datas = await prisma.hrms_d_appraisal.findMany({
       where: filters,
       skip: skip,
@@ -187,7 +181,7 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_appraisal.count();
+
     const totalCount = await prisma.hrms_d_appraisal.count({
       where: filters,
     });
@@ -200,7 +194,211 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
       totalCount: totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving appraisal entrys", 503);
+    throw new CustomError("Error retrieving appraisal entries", 503);
+  }
+};
+
+const getAppraisalForPDF = async (id) => {
+  try {
+    if (!id) {
+      throw new CustomError("Appraisal ID is required", 400);
+    }
+
+    const appraisal = await prisma.hrms_d_appraisal.findUnique({
+      where: { id: parseInt(id) },
+      include: {
+        appraisal_employee: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            email: true,
+            department_id: true,
+            designation_id: true,
+            hrms_employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
+            hrms_employee_designation: {
+              select: {
+                id: true,
+                designation_name: true,
+              },
+            },
+          },
+        },
+      },
+    });
+
+    if (!appraisal) {
+      throw new CustomError("Appraisal not found", 404);
+    }
+
+    const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
+      select: {
+        company_logo: true,
+        company_name: true,
+        company_signature: true,
+        street_address: true,
+        city: true,
+        state: true,
+        country: true,
+        phone_number: true,
+        website: true,
+      },
+    });
+
+    console.log("Company Logo:", defaultConfig?.company_logo);
+    console.log("Company Signature:", defaultConfig?.company_signature);
+
+    let companyLogoBase64 = "";
+    let companySignatureBase64 = "";
+
+    if (defaultConfig?.company_logo) {
+      try {
+        const fetch = require("node-fetch");
+        const logoResponse = await fetch(defaultConfig.company_logo);
+        const logoBuffer = await logoResponse.buffer();
+        const logoBase64 = logoBuffer.toString("base64");
+        const logoMimeType =
+          logoResponse.headers.get("content-type") || "image/png";
+        companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
+        console.log("Logo converted to base64");
+      } catch (err) {
+        console.error("Error fetching logo:", err.message);
+        companyLogoBase64 = defaultConfig.company_logo;
+      }
+    }
+
+    if (defaultConfig?.company_signature) {
+      try {
+        const fetch = require("node-fetch");
+        const signatureResponse = await fetch(defaultConfig.company_signature);
+        const signatureBuffer = await signatureResponse.buffer();
+        const signatureBase64 = signatureBuffer.toString("base64");
+        const signatureMimeType =
+          signatureResponse.headers.get("content-type") || "image/png";
+        companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
+        console.log("Signature converted to base64");
+      } catch (err) {
+        console.error("Error fetching signature:", err.message);
+        companySignatureBase64 = defaultConfig.company_signature;
+      }
+    }
+
+    const addressParts = [
+      defaultConfig?.street_address,
+      defaultConfig?.city,
+      defaultConfig?.state,
+      defaultConfig?.country,
+    ].filter(Boolean);
+    const fullAddress = addressParts.join(", ") || "Company Address";
+
+    const pdfData = {
+      companyLogo: companyLogoBase64 || defaultConfig?.company_logo || "",
+      companySignature:
+        companySignatureBase64 || defaultConfig?.company_signature || "",
+      companyName: defaultConfig?.company_name || "Company Name",
+      companyAddress: fullAddress,
+      companyEmail: defaultConfig?.website || "info@company.com",
+      companyPhone: defaultConfig?.phone_number || "Phone Number",
+      companySignatory: "HR Manager",
+
+      employeeName: appraisal.appraisal_employee?.full_name || "N/A",
+      employeeCode: appraisal.appraisal_employee?.employee_code || "N/A",
+      employeeEmail: appraisal.appraisal_employee?.email || "N/A",
+      employeePhone: appraisal.appraisal_employee?.phone || "N/A",
+
+      position:
+        appraisal.appraisal_employee?.hrms_employee_designation
+          ?.designation_name || "N/A",
+
+      department:
+        appraisal.appraisal_employee?.hrms_employee_department
+          ?.department_name || "N/A",
+
+      designation:
+        appraisal.appraisal_employee?.hrms_employee_designation
+          ?.designation_name || "N/A",
+
+      managerName: appraisal.appraisal_manager?.full_name || "HR Manager",
+      appraisalDate: appraisal.review_date || appraisal.effective_date,
+      appraisalPeriod: appraisal.review_period || "N/A",
+      overallRating: parseFloat(appraisal.final_score || appraisal.rating) || 0,
+      managerComments: appraisal.reviewer_comments || "No comments provided",
+      employeeComments: appraisal.overall_remarks || "No comments provided",
+    };
+
+    console.log("Position:", pdfData.position);
+    console.log("Department:", pdfData.department);
+    console.log("Designation:", pdfData.designation);
+    console.log("Employee Code:", pdfData.employeeCode);
+
+    return pdfData;
+  } catch (error) {
+    console.error("Error in getAppraisalForPDF:", error);
+    throw new CustomError(
+      error.message || "Error fetching appraisal data",
+      500
+    );
+  }
+};
+
+const getAllAppraisalsForBulkDownload = async (
+  filters = {},
+  advancedFilters = {}
+) => {
+  try {
+    const whereClause = {
+      ...filters,
+    };
+
+    if (Object.keys(advancedFilters).length > 0) {
+      whereClause.appraisal_employee = advancedFilters;
+    }
+
+    console.log("Final where clause:", JSON.stringify(whereClause, null, 2));
+
+    const appraisals = await prisma.hrms_d_appraisal.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        employee_id: true,
+        appraisal_employee: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            email: true,
+
+            hrms_employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
+            hrms_employee_designation: {
+              select: {
+                id: true,
+                designation_name: true,
+              },
+            },
+          },
+        },
+      },
+      orderBy: {
+        createdate: "desc",
+      },
+    });
+
+    console.log(`Found ${appraisals.length} appraisals matching filters`);
+
+    return appraisals;
+  } catch (error) {
+    console.error("Error in getAllAppraisalsForBulkDownload:", error);
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -210,4 +408,6 @@ module.exports = {
   updateAppraisalEntry,
   deleteAppraisalEntry,
   getAllAppraisalEntry,
+  getAppraisalForPDF,
+  getAllAppraisalsForBulkDownload,
 };
