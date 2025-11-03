@@ -173,12 +173,12 @@ Add relation (around line 1185):
 
 ### 1. Model: `src/v1/models/employeeKPIModel.js`
 
-```javascript
+```jsx
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const prisma = new PrismaClient();
 
-const serializeEmployeeKPIData = (data) => ({
+const serializeEmployeeKPIData = (data, defaultEmploymentType = null) => ({
   employee_id: Number(data.employee_id),
   reviewer_id: Number(data.reviewer_id),
   review_date: data.review_date ? new Date(data.review_date) : new Date(),
@@ -186,7 +186,7 @@ const serializeEmployeeKPIData = (data) => ({
   next_review_date: data.next_review_date
     ? new Date(data.next_review_date)
     : null,
-  employment_type: data.employment_type || null,
+  employment_type: data.employment_type || defaultEmploymentType || null, // Default from Employee Master if provided
   contract_expiry_date: data.contract_expiry_date
     ? new Date(data.contract_expiry_date)
     : null,
@@ -204,6 +204,12 @@ const serializeEmployeeKPIData = (data) => ({
 const createEmployeeKPI = async (data) => {
   try {
     return await prisma.$transaction(async (tx) => {
+      // Fetch employee to get default employment_type
+      const employee = await tx.hrms_d_employee.findUnique({
+        where: { id: Number(data.employee_id) },
+        select: { employment_type: true },
+      });
+
       // Get last active KPI
       const lastKPI = await tx.hrms_d_employee_kpi.findFirst({
         where: {
@@ -236,7 +242,7 @@ const createEmployeeKPI = async (data) => {
       // Create Header
       const kpiHeader = await tx.hrms_d_employee_kpi.create({
         data: {
-          ...serializeEmployeeKPIData(data),
+          ...serializeEmployeeKPIData(data, employee?.employment_type),
           rating: rating,
           last_kpi_id: lastKPI?.id || null,
           createdby: data.createdby || 1,
@@ -254,7 +260,7 @@ const createEmployeeKPI = async (data) => {
               );
               return (
                 !lastKpiContent ||
-                lastKpiContent.kpi_drawing_type !== "Inactive for Next KPI"
+                lastKpiContent.kpi_drawing_type !== "Inactive for Next"
               );
             })
           : contents;
@@ -308,8 +314,21 @@ const createEmployeeKPI = async (data) => {
           await tx.hrms_d_employee_kpi_component_assignment.create({
             data: {
               employee_kpi_id: kpiHeader.id,
-              header_payroll_rule:
-                data.component_assignment.header_payroll_rule || "Standard",
+              header_payroll_rule: (() => {
+                const rule = data.component_assignment.header_payroll_rule;
+                // Validate: Only "Biometric/Manual Attendance" or "Standard" allowed
+                if (
+                  rule &&
+                  rule !== "Biometric/Manual Attendance" &&
+                  rule !== "Standard"
+                ) {
+                  throw new CustomError(
+                    'Header Payroll Rule must be either "Biometric/Manual Attendance" or "Standard"',
+                    400
+                  );
+                }
+                return rule || "Standard";
+              })(),
               effective_from: data.component_assignment.effective_from
                 ? new Date(data.component_assignment.effective_from)
                 : new Date(),
@@ -506,11 +525,12 @@ const approveEmployeeKPI = async (kpiId, approverId) => {
           });
 
         // Copy component lines
+        let lineNum = 1; // Start from 1
         for (const line of kpi.kpi_component_assignment.kpi_component_lines) {
           await tx.hrms_d_employee_pay_component_assignment_line.create({
             data: {
               parent_id: newComponentAssignment.id,
-              line_num: 0, // Auto-increment or calculate
+              line_num: lineNum++, // Sequential line numbers
               pay_component_id: line.pay_component_id,
               amount: line.amount,
               type_value: line.amount,
@@ -743,7 +763,7 @@ module.exports = {
 
 ### 2. Controller: `src/v1/controller/employeeKPIController.js`
 
-```javascript
+```jsx
 const employeeKPIModel = require("../models/employeeKPIModel");
 const CustomError = require("../../utils/CustomError");
 
@@ -831,7 +851,7 @@ module.exports = {
 
 ### 3. Routes: `src/v1/routes/employeeKPIRoutes.js`
 
-```javascript
+```jsx
 const express = require("express");
 const router = express.Router();
 const employeeKPIController = require("../controller/employeeKPIController");
@@ -864,9 +884,11 @@ module.exports = router;
 ## Key Business Logic Implementation
 
 1. Rating calculation: Sum of (Achieved% × Weightage%) / 20
-2. KPI Drawing Type filter: Exclude rows where `kpi_drawing_type = "Inactive for Next KPI"` from last KPI
+2. KPI Drawing Type filter: Exclude rows where `kpi_drawing_type = "Inactive for Next"` from last KPI (Valid values: "Active for Current & Next KPI", "Active for Next KPI", "Inactive for Next")
 3. Component Assignment: Copy from last active assignment, apply Change% globally if provided
 4. Approval flow: On approval, sync to Employee Master and create new Component Assignment document
-5. Employment Type default: Pull from Employee Master (`hrms_d_employee.employment_type`)
+5. Employment Type default: Pull from Employee Master (`hrms_d_employee.employment_type`) if not provided in the form
+6. Header Payroll Rule validation: Only accepts "Biometric/Manual Attendance" or "Standard" values
+7. Component Assignment line numbers: Sequential numbering starting from 1 (not 0)
 
 This matches your existing schema patterns. After adding these models, run `npx prisma generate` and `npx prisma migrate dev` to apply the changes.
