@@ -1,6 +1,15 @@
-const AppointmentLatterService = require("../services/AppointmentLatterService");
+const AppointmentLatterService = require("../services/AppointmentLatterService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const fs = require("fs");
+const appointmentLetterQueue = require("../../utils/appointmentLetterQueue.js");
+const path = require("path");
+const { v4: uuidv4 } = require("uuid");
+const { PrismaClient } = require("@prisma/client");
+const prisma = new PrismaClient();
+const {
+  generateAppointmentLetterPDF,
+} = require("../../utils/appointmentLetterPDF.js");
 
 const createAppointmentLatter = async (req, res, next) => {
   try {
@@ -72,14 +81,14 @@ const getAllAppointmentLatter = async (req, res, next) => {
     next(error);
   }
 };
-
 const downloadAppointmentLetterPDF = async (req, res, next) => {
   try {
     const { id } = req.params;
     console.log(`Downloading appointment letter PDF for ID: ${id}`);
 
+    // FIXED: Using correct service name
     const appointmentLetterData =
-      await appointmentLatterService.getAppointmentLetterForPDF(id);
+      await AppointmentLatterService.getAppointmentLetterForPDF(id);
 
     const timestamp = Date.now();
     const fileName = `appointment_letter_${id}_${timestamp}.pdf`;
@@ -94,6 +103,8 @@ const downloadAppointmentLetterPDF = async (req, res, next) => {
     }
 
     const filePath = path.join(uploadDir, fileName);
+
+    // FIXED: Added import for generateAppointmentLetterPDF
     await generateAppointmentLetterPDF(appointmentLetterData, filePath);
 
     console.log(`[info] Appointment letter PDF generated: ${filePath}`);

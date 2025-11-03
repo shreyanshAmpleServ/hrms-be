@@ -333,7 +333,6 @@ const getOfferLetterForPDF = async (id) => {
       },
     });
 
-    console.log("=== DEFAULT CONFIGURATION ===");
     console.log("Company Logo:", defaultConfig?.company_logo);
     console.log("Company Signature:", defaultConfig?.company_signature);
     console.log("Company Name:", defaultConfig?.company_name);
@@ -460,35 +459,6 @@ const getOfferLetterForPDF = async (id) => {
     );
   }
 };
-
-// const getAllOfferLettersForBulkDownload = async (filters = {}) => {
-//   try {
-//     const offerLetters = await prisma.hrms_d_offer_letter.findMany({
-//       where: {
-//         ...filters,
-//         is_active: "Y",
-//       },
-//       select: {
-//         id: true,
-//         position: true,
-//         offered_candidate: {
-//           select: {
-//             id: true,
-//             full_name: true,
-//           },
-//         },
-//       },
-//       orderBy: {
-//         createdate: "desc",
-//       },
-//     });
-
-//     return offerLetters;
-//   } catch (error) {
-//     console.error("Error in getAllOfferLettersForBulkDownload:", error);
-//     throw new CustomError(error.message, 500);
-//   }
-// };
 
 const getAllOfferLettersForBulkDownload = async (
   filters = {},

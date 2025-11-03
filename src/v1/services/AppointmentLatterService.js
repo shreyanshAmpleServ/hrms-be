@@ -34,10 +34,22 @@ const getAllAppointmentLatter = async (
   );
 };
 
+const getAppointmentLetterForPDF = async (id) => {
+  return await AppointmentLatterModel.getAppointmentLetterForPDF(id);
+};
+
+const getAllAppointmentLettersForBulkDownload = async (filters = {}) => {
+  return await AppointmentLatterModel.getAllAppointmentLettersForBulkDownload(
+    filters
+  );
+};
+
 module.exports = {
   createAppointmentLatter,
   findAppointmentLatterById,
   updateAppointmentLatter,
   deleteAppointmentLatter,
   getAllAppointmentLatter,
+  getAppointmentLetterForPDF,
+  getAllAppointmentLettersForBulkDownload,
 };

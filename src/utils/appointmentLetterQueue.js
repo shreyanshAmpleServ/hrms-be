@@ -14,11 +14,10 @@ const fs = require("fs");
 const archiver = require("archiver");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const appointmentLatterModel = require("../models/AppointmentLatterModel");
+const appointmentLatterModel = require("../v1/models/AppointmentLatterModel");
 const {
   generateAppointmentLetterPDF,
-} = require("../utils/appointmentLetterPDF");
-// Create queue
+} = require("../utils/appointmentLetterPDF.js");
 const appointmentLetterQueue = new Queue("appointment-letter-bulk-download", {
   redis: {
     host: process.env.REDIS_HOST || "localhost",
@@ -26,7 +25,6 @@ const appointmentLetterQueue = new Queue("appointment-letter-bulk-download", {
   },
 });
 
-// Process the queue
 appointmentLetterQueue.process(async (job) => {
   const { userId, filters, advancedFilters, jobId } = job.data;
 
@@ -35,7 +33,6 @@ appointmentLetterQueue.process(async (job) => {
   try {
     await job.progress(10);
 
-    // Get all appointment letters
     const appointmentLetters =
       await appointmentLatterModel.getAllAppointmentLettersForBulkDownload(
         filters || {},
@@ -52,7 +49,6 @@ appointmentLetterQueue.process(async (job) => {
 
     await job.progress(20);
 
-    // Create temp directory
     const tempDir = path.join(process.cwd(), "temp", jobId);
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });

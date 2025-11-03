@@ -15,7 +15,6 @@ const serializeJobData = (data) => {
   };
 };
 
-// Create a new appointment latter
 const createAppointmentLatter = async (data) => {
   try {
     await errorNotExist(
@@ -68,7 +67,6 @@ const createAppointmentLatter = async (data) => {
   }
 };
 
-// Find a appointment latter by ID
 const findAppointmentLatterById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_appointment_letter.findUnique({
@@ -86,7 +84,6 @@ const findAppointmentLatterById = async (id) => {
   }
 };
 
-// Update a appointment latter
 const updateAppointmentLatter = async (id, data) => {
   try {
     await errorNotExist(
@@ -126,7 +123,6 @@ const updateAppointmentLatter = async (id, data) => {
   }
 };
 
-// Delete a appointment latter
 const deleteAppointmentLatter = async (id) => {
   try {
     await prisma.hrms_d_appointment_letter.delete({
@@ -144,7 +140,6 @@ const deleteAppointmentLatter = async (id) => {
   }
 };
 
-// Get all appointment latters
 const getAllAppointmentLatter = async (
   search,
   page,
@@ -159,7 +154,6 @@ const getAllAppointmentLatter = async (
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    // Handle search
     if (search) {
       filters.OR = [
         {
@@ -172,9 +166,6 @@ const getAllAppointmentLatter = async (
             full_name: { contains: search.toLowerCase() },
           },
         },
-        // {
-        //   job_title: { contains: search.toLowerCase() },
-        // },
       ];
     }
 
@@ -225,7 +216,230 @@ const getAllAppointmentLatter = async (
       totalCount: totalCount,
     };
   } catch (error) {
+    console.log(error);
     throw new CustomError("Error retrieving appointment latters", 503);
+  }
+};
+
+const getAppointmentLetterForPDF = async (id) => {
+  try {
+    if (!id) {
+      throw new CustomError("Appointment letter ID is required", 400);
+    }
+
+    const appointmentLetter = await prisma.hrms_d_appointment_letter.findUnique(
+      {
+        where: { id: parseInt(id) },
+        include: {
+          appointment_candidate: {
+            select: {
+              id: true,
+              full_name: true,
+              email: true,
+              phone: true,
+              candidate_code: true,
+              expected_joining_date: true,
+              actual_joining_date: true,
+              date_of_birth: true,
+              gender: true,
+              nationality: true,
+              resume_path: true,
+              status: true,
+
+              candidate_department: {
+                select: {
+                  id: true,
+                  department_name: true,
+                },
+              },
+            },
+          },
+          appointment_designation: {
+            select: {
+              id: true,
+              designation_name: true,
+            },
+          },
+        },
+      }
+    );
+
+    if (!appointmentLetter) {
+      throw new CustomError("Appointment letter not found", 404);
+    }
+
+    const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
+      select: {
+        company_logo: true,
+        company_name: true,
+        company_signature: true,
+        street_address: true,
+        city: true,
+        state: true,
+        country: true,
+        phone_number: true,
+        website: true,
+      },
+    });
+
+    console.log("Company Logo:", defaultConfig?.company_logo);
+    console.log("Company Signature:", defaultConfig?.company_signature);
+
+    let companyLogoBase64 = "";
+    let companySignatureBase64 = "";
+
+    if (defaultConfig?.company_logo) {
+      try {
+        const fetch = require("node-fetch");
+        const logoResponse = await fetch(defaultConfig.company_logo);
+        const logoBuffer = await logoResponse.buffer();
+        const logoBase64 = logoBuffer.toString("base64");
+        const logoMimeType =
+          logoResponse.headers.get("content-type") || "image/png";
+        companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
+        console.log("Logo converted to base64");
+      } catch (err) {
+        console.error(" Error fetching logo:", err.message);
+        companyLogoBase64 = defaultConfig.company_logo;
+      }
+    }
+
+    if (defaultConfig?.company_signature) {
+      try {
+        const fetch = require("node-fetch");
+        const signatureResponse = await fetch(defaultConfig.company_signature);
+        const signatureBuffer = await signatureResponse.buffer();
+        const signatureBase64 = signatureBuffer.toString("base64");
+        const signatureMimeType =
+          signatureResponse.headers.get("content-type") || "image/png";
+        companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
+        console.log(" Signature converted to base64");
+      } catch (err) {
+        console.error(" Error fetching signature:", err.message);
+        companySignatureBase64 = defaultConfig.company_signature;
+      }
+    }
+
+    const addressParts = [
+      defaultConfig?.street_address,
+      defaultConfig?.city,
+      defaultConfig?.state,
+      defaultConfig?.country,
+    ].filter(Boolean);
+    const fullAddress = addressParts.join(", ") || "Company Address";
+
+    const pdfData = {
+      companyLogo: companyLogoBase64 || defaultConfig?.company_logo || "",
+      companySignature:
+        companySignatureBase64 || defaultConfig?.company_signature || "",
+      companyName: defaultConfig?.company_name || "Company Name",
+      companyAddress: fullAddress,
+      companyEmail: defaultConfig?.website || "info@company.com",
+      companyPhone: defaultConfig?.phone_number || "Phone Number",
+      companySignatory: "HR Manager",
+
+      employeeName: appointmentLetter.appointment_candidate?.full_name || "N/A",
+      employeeCode:
+        appointmentLetter.appointment_candidate?.candidate_code || "N/A",
+      employeeEmail: appointmentLetter.appointment_candidate?.email || "N/A",
+      employeePhone: appointmentLetter.appointment_candidate?.phone || "N/A",
+
+      position:
+        appointmentLetter.appointment_designation?.designation_name || "N/A",
+
+      department:
+        appointmentLetter.appointment_candidate?.candidate_department
+          ?.department_name || "N/A",
+
+      designation:
+        appointmentLetter.appointment_designation?.designation_name || "N/A",
+
+      appointmentDate: appointmentLetter.issue_date,
+      joiningDate:
+        appointmentLetter.appointment_candidate?.actual_joining_date ||
+        appointmentLetter.appointment_candidate?.expected_joining_date,
+      termsSummary: appointmentLetter.terms_summary || "",
+      status: appointmentLetter.appointment_candidate?.status || "P",
+    };
+
+    console.log("Position:", pdfData.position);
+    console.log("Department:", pdfData.department);
+    console.log("Designation:", pdfData.designation);
+    console.log("Employee Code:", pdfData.employeeCode);
+    console.log("Joining Date:", pdfData.joiningDate);
+
+    return pdfData;
+  } catch (error) {
+    console.error("Error in getAppointmentLetterForPDF:", error);
+    throw new CustomError(
+      error.message || "Error fetching appointment letter data",
+      500
+    );
+  }
+};
+
+const getAllAppointmentLettersForBulkDownload = async (
+  filters = {},
+  advancedFilters = {}
+) => {
+  try {
+    const whereClause = {
+      ...filters,
+    };
+
+    if (Object.keys(advancedFilters).length > 0) {
+      whereClause.appointment_candidate = advancedFilters;
+    }
+
+    console.log("Final where clause:", JSON.stringify(whereClause, null, 2));
+
+    const appointmentLetters = await prisma.hrms_d_appointment_letter.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        designation_id: true,
+        candidate_id: true,
+        appointment_candidate: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            department_id: true,
+            designation_id: true,
+            employee_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
+            employee_designation: {
+              select: {
+                id: true,
+                designation_name: true,
+              },
+            },
+          },
+        },
+        appointment_designation: {
+          select: {
+            id: true,
+            designation_name: true,
+          },
+        },
+      },
+      orderBy: {
+        createdate: "desc",
+      },
+    });
+
+    console.log(
+      `Found ${appointmentLetters.length} appointment letters matching filters`
+    );
+
+    return appointmentLetters;
+  } catch (error) {
+    console.error("Error in getAllAppointmentLettersForBulkDownload:", error);
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -235,4 +449,7 @@ module.exports = {
   updateAppointmentLatter,
   deleteAppointmentLatter,
   getAllAppointmentLatter,
+  getAppointmentLetterForPDF,
+  getAllAppointmentLettersForBulkDownload,
+  getAppointmentLetterForPDF,
 };
