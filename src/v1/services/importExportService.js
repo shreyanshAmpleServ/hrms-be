@@ -41,8 +41,6 @@ const importDataFromExcel = async (filePath, tableName, createdBy = 1) => {
       };
     }
 
-    // ✅ CHOOSE IMPORT METHOD BASED ON YOUR PREFERENCE
-
     // Option 1: Advanced with duplicate handling
     const importResult = await importExportModel.bulkInsertData(
       parseResult.data,

@@ -11,7 +11,7 @@ const createOfferLetter = async (req, res, next) => {
   try {
     const data = {
       ...req.body,
-      createdby: req.user.id,
+      createdby: req.user.employee_id,
       log_inst: req.user.log_inst,
     };
     const reqData = await offerLatterService.createOfferLetter(data);
@@ -35,7 +35,7 @@ const updateOfferLetter = async (req, res, next) => {
   try {
     const data = {
       ...req.body,
-      updatedby: req.user.id,
+      updatedby: req.user.employee_id,
       log_inst: req.user.log_inst,
     };
     const reqData = await offerLatterService.updateOfferLetter(

@@ -106,7 +106,164 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
         }
       }
 
-    default:
+    case "job_posting":
+      if (reference_id) {
+        return await prisma.hrms_d_job_posting.findUnique({
+          where: { id: parseInt(reference_id) },
+          select: {
+            job_title: true,
+            job_code: true,
+            description: true,
+            required_experience: true,
+            posting_date: true,
+            closing_date: true,
+            status: true,
+          },
+        });
+      }
+      return null;
+
+    case "offer_letter":
+      if (reference_id) {
+        const offerLetter = await prisma.hrms_d_offer_letter.findUnique({
+          where: { id: parseInt(reference_id) },
+          include: {
+            offered_candidate: {
+              select: {
+                full_name: true,
+                email: true,
+              },
+            },
+            offer_letter_currencyId: {
+              select: {
+                currency_code: true,
+                currency_name: true,
+              },
+            },
+          },
+        });
+
+        if (offerLetter) {
+          return {
+            position: offerLetter.position || "N/A",
+            offered_salary: offerLetter.offered_salary || 0,
+            offer_date: offerLetter.offer_date
+              ? new Date(offerLetter.offer_date).toLocaleDateString()
+              : "N/A",
+            valid_until: offerLetter.valid_until
+              ? new Date(offerLetter.valid_until).toLocaleDateString()
+              : "N/A",
+            candidate_name: offerLetter.offered_candidate?.full_name || "N/A",
+            candidate_email: offerLetter.offered_candidate?.email || "N/A",
+            currency_code:
+              offerLetter.offer_letter_currencyId?.currency_code || "N/A",
+            currency_name:
+              offerLetter.offer_letter_currencyId?.currency_name || "N/A",
+            status:
+              offerLetter.status === "P"
+                ? "Pending"
+                : offerLetter.status === "A"
+                ? "Approved"
+                : offerLetter.status === "R"
+                ? "Rejected"
+                : offerLetter.status || "N/A",
+          };
+        }
+      }
+      return null;
+    case "appointment_letter":
+      if (reference_id) {
+        const appointmentLetter =
+          await prisma.hrms_d_appointment_letter.findUnique({
+            where: { id: parseInt(reference_id) },
+            include: {
+              appointment_candidate: {
+                select: {
+                  full_name: true,
+                  email: true,
+                },
+              },
+              appointment_designation: {
+                select: {
+                  designation_name: true,
+                },
+              },
+            },
+          });
+
+        if (appointmentLetter) {
+          return {
+            candidate_name:
+              appointmentLetter.appointment_candidate?.full_name || "N/A",
+            candidate_email:
+              appointmentLetter.appointment_candidate?.email || "N/A",
+            designation:
+              appointmentLetter.appointment_designation?.designation_name ||
+              "N/A",
+            position:
+              appointmentLetter.appointment_designation?.designation_name ||
+              "N/A",
+            joining_date: appointmentLetter.joining_date
+              ? new Date(appointmentLetter.joining_date).toLocaleDateString()
+              : "N/A",
+            issue_date: appointmentLetter.issue_date
+              ? new Date(appointmentLetter.issue_date).toLocaleDateString()
+              : "N/A",
+            employment_type: appointmentLetter.employment_type || "N/A",
+            contract_duration_months:
+              appointmentLetter.contract_duration_months || "N/A",
+            probation_period_months:
+              appointmentLetter.probation_period_months || "N/A",
+            reporting_manager_id:
+              appointmentLetter.reporting_manager_id || "N/A",
+            status: appointmentLetter.status || "Draft",
+            terms_summary: appointmentLetter.terms_summary || "N/A",
+            remarks: appointmentLetter.remarks || "N/A",
+          };
+        }
+      }
+      return null;
+    case "pay_component":
+      if (reference_id) {
+        const payComponent = await prisma.hrms_m_pay_component.findUnique({
+          where: { id: parseInt(reference_id) },
+          select: {
+            component_name: true,
+            component_code: true,
+            component_type: true,
+            is_taxable: true,
+            is_statutory: true,
+            pay_or_deduct: true,
+            is_advance: true,
+            status: true,
+            factor: true,
+            execution_order: true,
+          },
+        });
+
+        if (payComponent) {
+          return {
+            component_name: payComponent.component_name || "N/A",
+            component_code: payComponent.component_code || "N/A",
+            component_type: payComponent.component_type || "N/A",
+            is_taxable: payComponent.is_taxable === "Y" ? "Yes" : "No",
+            is_statutory: payComponent.is_statutory === "Y" ? "Yes" : "No",
+            pay_or_deduct:
+              payComponent.pay_or_deduct === "P" ? "Payment" : "Deduction",
+            is_advance: payComponent.is_advance === "Y" ? "Yes" : "No",
+            factor: payComponent.factor || "N/A",
+            execution_order: payComponent.execution_order || "N/A",
+            status:
+              payComponent.status === "P"
+                ? "Pending"
+                : payComponent.status === "A"
+                ? "Approved"
+                : payComponent.status === "R"
+                ? "Rejected"
+                : payComponent.status || "N/A",
+          };
+        }
+      }
       return null;
   }
 };

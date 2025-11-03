@@ -1,13 +1,15 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
+const { createRequest } = require("./requestsModel");
 
 const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {
     candidate_id: Number(data.candidate_id) || null,
-    issue_date: data.issue_date || new Date(),
+    issue_date: data.issue_date ? new Date(data.issue_date) : new Date(),
+    status: data.status || "P",
     designation_id: Number(data.designation_id) || null,
     terms_summary: data.terms_summary || "",
   };
@@ -43,6 +45,20 @@ const createAppointmentLatter = async (data) => {
         },
       },
     });
+    await createRequest({
+      requester_id: data.createdby || 1,
+      request_type: "appointment_letter",
+      reference_id: reqData.id,
+      request_data: `Appointment Letter for ${reqData.appointment_candidate?.full_name} - ${reqData.appointment_designation?.designation_name}`,
+      status: "P", // Pending approval
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
+    });
+
+    console.log(
+      ` Appointment letter created with ID: ${reqData.id} for candidate: ${reqData.appointment_candidate?.full_name}`
+    );
+    console.log(`Approval request initiated for appointment letter`);
     return reqData;
   } catch (error) {
     throw new CustomError(

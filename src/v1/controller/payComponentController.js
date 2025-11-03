@@ -4,9 +4,11 @@ const moment = require("moment");
 
 const createPayComponent = async (req, res, next) => {
   try {
+    const createdBy = req.user.employee_id;
     let departmentData = { ...req.body };
     const department = await payComponentService.createPayComponent(
-      departmentData
+      departmentData,
+      createdBy
     );
     res.status(201).success("Pay component created successfully", department);
   } catch (error) {

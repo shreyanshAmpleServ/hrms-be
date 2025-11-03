@@ -795,12 +795,11 @@ const validateWorkflow = async (req, res, next) => {
       where: { id: requester_id },
       select: {
         department_id: true,
-        designation_id: true, // ✅ ADDED
+        designation_id: true,
         hrms_employee_department: {
           select: { department_name: true },
         },
         hrms_employee_designation: {
-          // ✅ ADDED
           select: { designation_name: true },
         },
       },

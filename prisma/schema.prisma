@@ -548,6 +548,7 @@ model hrms_d_job_posting {
   updatedby                          Int?
   log_inst                           Int?
   job_code                           String                          @db.VarChar(20)
+  status                             String?                         @db.NVarChar(50)
   candidate_job_posting              hrms_d_candidate_master[]
   hrms_job_department                hrms_m_department_master?       @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_job_designation               hrms_m_designation_master?      @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -1354,6 +1355,7 @@ model hrms_m_pay_component {
   tax_code_id                           Int?
   gl_account_id                         Int?
   factor                                Int?                                            @db.SmallInt
+  status                                String?                                         @db.VarChar(50)
   payable_glaccount_id                  Int?
   project_id                            Int?
   cost_center1_id                       Int?

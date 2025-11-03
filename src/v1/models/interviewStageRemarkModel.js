@@ -767,23 +767,20 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       };
     }
 
-    console.log(
-      `📋 Candidate has ${candidateStages.length} snapshotted stages:`
-    );
+    console.log(` Candidate has ${candidateStages.length} snapshotted stages:`);
     candidateStages.forEach((stage) => {
       console.log(
         `   - Stage ${stage.stage_id}: ${stage.stage_name} (Seq: ${stage.sequence_order}, Status: ${stage.stage_status})`
       );
     });
 
-    // Find current stage in candidate's snapshots
     const currentStageIndex = candidateStages.findIndex(
       (stage) => stage.stage_id === parseInt(currentStageId)
     );
 
     if (currentStageIndex === -1) {
       console.error(
-        `❌ Stage ${currentStageId} not found in candidate's snapshotted stages`
+        ` Stage ${currentStageId} not found in candidate's snapshotted stages`
       );
       console.error(
         `   Available stages: [${candidateStages
@@ -799,20 +796,18 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
     }
 
     if (currentStageIndex === 0) {
-      console.log("✅ This is the first stage - allowed");
+      console.log("This is the first stage - allowed");
       return {
         allowed: true,
         message: "First stage - allowed",
       };
     }
 
-    // Get previous stages from candidate's snapshots
     const previousStages = candidateStages.slice(0, currentStageIndex);
     const previousStageIds = previousStages.map((s) => s.stage_id);
 
-    console.log(`📋 Previous stage IDs: [${previousStageIds.join(", ")}]`);
+    console.log(` Previous stage IDs: [${previousStageIds.join(", ")}]`);
 
-    // Check if remarks exist for previous stages
     const previousRemarks = await prisma.hrms_m_interview_stage_remark.findMany(
       {
         where: {

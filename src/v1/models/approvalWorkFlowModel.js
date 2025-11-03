@@ -112,7 +112,6 @@
 //       throw new CustomError("Input must be an array of data objects", 400);
 //     }
 
-//     // ✅ SERIALIZE DATA FIRST - Remove extra fields
 //     const serializedData = dataArray.map((data) => ({
 //       ...serializeApprovalWorkFlowData(data),
 //       createdby: data.createdby || 1,
@@ -157,12 +156,9 @@
 //       }
 //     }
 
-//     // ✅ NOW CREATE WITH CLEAN DATA
 //     const result = await prisma.hrms_d_approval_work_flow.createMany({
 //       data: serializedData,
 //     });
-
-//     console.log(`✅ Created ${result.count} approval workflows`);
 
 //     // Fetch and return created records with relations
 //     const createdWorkflows = await prisma.hrms_d_approval_work_flow.findMany({

@@ -1187,15 +1187,15 @@
 // };
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { createRequest } = require("./requestsModel");
 const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   let hiringStageValue = null;
   let documentTypeValue = null;
 
-  // Handle hiring stages
+  // Handle arrays for hiring stages
   if (
-    data.hiring_stage_ids &&
     Array.isArray(data.hiring_stage_ids) &&
     data.hiring_stage_ids.length > 0
   ) {
@@ -1204,9 +1204,8 @@ const serializeJobData = (data) => {
     hiringStageValue = String(data.hiring_stage_id);
   }
 
-  // Handle document types
+  // Handle arrays for document types
   if (
-    data.document_type_ids &&
     Array.isArray(data.document_type_ids) &&
     data.document_type_ids.length > 0
   ) {
@@ -1217,28 +1216,33 @@ const serializeJobData = (data) => {
     documentTypeValue = String(data.document_type_id);
   }
 
-  return {
-    department_id: Number(data.department_id) || null,
-    designation_id: Number(data.designation_id) || null,
-    hiring_stage_id: hiringStageValue,
+  // ONLY return fields that exist in your Prisma model
+  const serialized = {
     job_title: data.job_title || "",
-    document_type_id: documentTypeValue, // Now stores comma-separated string
-    reporting_manager_id: Number(data.reporting_manager_id) || null,
-    currency_id: Number(data.currency_id) || null,
-    annual_salary_from: Number(data.annual_salary_from) || null,
-    annual_salary_to: Number(data.annual_salary_to) || null,
-    due_date: data.due_date ? new Date(data.due_date) : null,
     description: data.description || "",
     required_experience: data.required_experience || "",
-    posting_date: data.posting_date ? new Date(data.posting_date) : null,
-    closing_date: data.closing_date ? new Date(data.closing_date) : null,
-    is_internal:
-      typeof data.is_internal === "boolean"
-        ? data.is_internal
-        : data.is_internal === "true" ||
-          data.is_internal === 1 ||
-          data.is_internal === "1",
+    is_internal: data.is_internal || false,
   };
+
+  // Optional fields - only add if provided
+  if (data.department_id) serialized.department_id = Number(data.department_id);
+  if (data.designation_id)
+    serialized.designation_id = Number(data.designation_id);
+  if (data.reporting_manager_id)
+    serialized.reporting_manager_id = Number(data.reporting_manager_id);
+  if (data.currency_id) serialized.currency_id = Number(data.currency_id);
+  if (data.annual_salary_from)
+    serialized.annual_salary_from = Number(data.annual_salary_from);
+  if (data.annual_salary_to)
+    serialized.annual_salary_to = Number(data.annual_salary_to);
+  if (data.due_date) serialized.due_date = new Date(data.due_date);
+  if (data.posting_date) serialized.posting_date = new Date(data.posting_date);
+  if (data.closing_date) serialized.closing_date = new Date(data.closing_date);
+  if (hiringStageValue) serialized.hiring_stage_id = hiringStageValue;
+  if (documentTypeValue) serialized.document_type_id = documentTypeValue;
+  if (data.status) serialized.status = data.status;
+
+  return serialized;
 };
 
 const parseHiringStageIds = (hiringStageId) => {
@@ -1252,7 +1256,6 @@ const parseHiringStageIds = (hiringStageId) => {
     .filter((id) => !isNaN(id) && id > 0);
 };
 
-// Parse document type IDs from comma-separated string
 const parseDocumentTypeIds = (documentTypeId) => {
   if (!documentTypeId || documentTypeId.trim() === "") {
     return [];
@@ -1550,6 +1553,18 @@ const createJobPosting = async (data) => {
         },
       },
     });
+    await createRequest({
+      requester_id: data.reporting_manager_id || data.createdby || 1,
+      request_type: "job_posting",
+      reference_id: jobPosting.id,
+      request_data: `Job Posting: ${jobPosting.job_title} (${jobPosting.job_code})`,
+      status: "P", // Pending approval
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
+    });
+
+    console.log(`Job posting created with ID: ${jobPosting.id}`);
+    console.log(`Approval request created for job posting`);
 
     return await enrichJobPosting(jobPosting);
   } catch (error) {

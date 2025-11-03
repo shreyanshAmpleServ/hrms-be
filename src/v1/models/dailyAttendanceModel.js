@@ -1587,7 +1587,6 @@ const bulkVerifyWithManualHR = async (
 //       const employee = employeeDetails[0]?.employee || employeeDetails[0] || {};
 //       messageBody = ` ATTENDANCE VERIFICATION
 
-// 👤 Manager Details:
 // • Name: ${managerDetails?.full_name || "Unknown"}
 // • Code: ${managerDetails?.employee_code || "N/A"}
 // • Designation: ${

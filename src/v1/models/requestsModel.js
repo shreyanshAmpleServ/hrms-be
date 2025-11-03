@@ -702,7 +702,7 @@ const createRequest = async (data) => {
           stage_name: parentData.stage_name,
           workflow_info: isGlobalWorkflow
             ? "(Global Workflow)"
-            : workflowType === "designation-specific" // ✅ ADDED
+            : workflowType === "designation-specific"
             ? `(${requester.hrms_employee_designation?.designation_name} Designation Workflow)`
             : `(${requester.hrms_employee_department?.department_name} Department Workflow)`,
           approver_department:
@@ -734,8 +734,6 @@ const createRequest = async (data) => {
     throw new CustomError(`Error creating request: ${error.message}`, 500);
   }
 };
-
-module.exports = { createRequest };
 
 const updateRequests = async (id, data) => {
   try {
@@ -1839,6 +1837,34 @@ const findRequestByRequestUsers = async (
             });
           }
         }
+        if (requestType === "job_posting" && referenceId) {
+          const jobPostingRequest = await prisma.hrms_d_job_posting.findUnique({
+            where: { id: parseInt(referenceId) },
+            select: {
+              id: true,
+              employee_id: true,
+              job_title: true,
+              job_code: true,
+              job_description: true,
+              job_location: true,
+              job_type: true,
+              job_status: true,
+              job_posting_employee: {
+                select: {
+                  full_name: true,
+                  id: true,
+                },
+              },
+            },
+          });
+          if (jobPostingRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: jobPostingRequest,
+            });
+          }
+        }
       })
     );
 
@@ -2031,6 +2057,38 @@ const takeActionOnRequest = async ({
             updatedate: new Date(),
           },
         });
+      } else if (request.request_type === "job_posting") {
+        await prisma.hrms_d_job_posting.update({
+          where: { id: request.reference_id },
+          data: {
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      } else if (request.request_type === "offer_letter") {
+        await prisma.hrms_d_offer_letter.update({
+          where: { id: request.reference_id },
+          data: {
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      } else if (request.request_type === "appointment_letter") {
+        await prisma.hrms_d_appointment_letter.update({
+          where: { id: request.reference_id },
+          data: {
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      } else if (request.request_type === "pay_component") {
+        await prisma.hrms_m_pay_component.update({
+          where: { id: request.reference_id },
+          data: {
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
       }
     }
 
@@ -2143,6 +2201,42 @@ const takeActionOnRequest = async ({
             where: { id: request.reference_id },
             data: {
               approval_status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "job_posting") {
+          await prisma.hrms_d_job_posting.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "offer_letter") {
+          await prisma.hrms_d_offer_letter.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "appointment_letter") {
+          await prisma.hrms_d_appointment_letter.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "pay_component") {
+          await prisma.hrms_m_pay_component.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
               updatedby: acted_by,
               updatedate: new Date(),
             },
@@ -2291,6 +2385,42 @@ const takeActionOnRequest = async ({
             where: { id: request.reference_id },
             data: {
               approval_status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "job_posting") {
+          await prisma.hrms_d_job_posting.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "offer_letter") {
+          await prisma.hrms_d_offer_letter.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "appointment_letter") {
+          await prisma.hrms_d_appointment_letter.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "pay_component") {
+          await prisma.hrms_m_pay_component.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
               updatedby: acted_by,
               updatedate: new Date(),
             },

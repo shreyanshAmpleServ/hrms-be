@@ -3,6 +3,7 @@ const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
 const prisma = new PrismaClient();
+const { createRequest } = require("./requestsModel");
 
 // Serialize pay component data
 const serializePayComponentData = (data) => ({
@@ -170,19 +171,17 @@ const createPayComponent = async (data) => {
     data.component_name = data.component_name.trim();
     data.component_code = data.component_code.trim();
 
+    // Validate component_code format
+    if (!/^\d+$/.test(data.component_code)) {
+      throw new CustomError("Invalid component code. Must be numeric.", 400);
+    }
+
+    // Check for existing component
     const existing = await prisma.hrms_m_pay_component.findFirst({
       where: {
         OR: [
-          {
-            component_name: {
-              equals: data.component_name,
-            },
-          },
-          {
-            component_code: {
-              equals: data.component_code,
-            },
-          },
+          { component_name: { equals: data.component_name } },
+          { component_code: { equals: data.component_code } },
         ],
       },
     });
@@ -204,41 +203,92 @@ const createPayComponent = async (data) => {
       }
     }
 
-    const result = await prisma.$transaction(async (prisma) => {
-      const reqData = await prisma.hrms_m_pay_component.create({
-        data: {
-          ...serializePayComponentData(data),
-          createdby: data.createdby || 1,
-          createdate: new Date(),
-          log_inst: data.log_inst || 1,
-        },
+    // Check if column already exists in payroll table
+    const columnExists = await prisma.$queryRawUnsafe(`
+      SELECT 1
+      FROM INFORMATION_SCHEMA.COLUMNS
+      WHERE TABLE_NAME = 'hrms_d_monthly_payroll_processing'
+      AND COLUMN_NAME = '${data.component_code}'
+    `);
 
-        include: {
-          pay_component_tax: true,
-          pay_component_project: true,
-          pay_component_cost_center1: true,
-          pay_component_cost_center2: true,
-          pay_component_cost_center3: true,
-          pay_component_cost_center4: true,
-          pay_component_cost_center5: true,
-          pay_component_for_line: true,
-          hrms_m_pay_component_formula: true,
-        },
-      });
+    // Create pay component with shorter transaction
+    const result = await prisma.$transaction(
+      async (prisma) => {
+        const reqData = await prisma.hrms_m_pay_component.create({
+          data: {
+            ...serializePayComponentData(data),
+            createdby: data.createdby,
+            createdate: new Date(),
+            log_inst: data.log_inst || 1,
+          },
+          include: {
+            pay_component_tax: true,
+            pay_component_project: true,
+            pay_component_cost_center1: true,
+            pay_component_cost_center2: true,
+            pay_component_cost_center3: true,
+            pay_component_cost_center4: true,
+            pay_component_cost_center5: true,
+            pay_component_for_line: true,
+            hrms_m_pay_component_formula: true,
+          },
+        });
 
-      // Ensure the component_code is a numeric string before using in SQL
-      if (!/^\d+$/.test(data.component_code)) {
-        throw new Error("Invalid column name. Must be numeric.");
+        // Only add column if it doesn't exist
+        if (!columnExists || columnExists.length === 0) {
+          await prisma.$executeRawUnsafe(`
+            ALTER TABLE hrms_d_monthly_payroll_processing
+            ADD [${data.component_code}] DECIMAL(18,4) NULL
+          `);
+          console.log(`Column [${data.component_code}] added to payroll table`);
+        } else {
+          console.log(
+            `Column [${data.component_code}] already exists in payroll table`
+          );
+        }
+
+        return reqData;
+      },
+      {
+        maxWait: 10000, // 10 seconds
+        timeout: 30000, // 30 seconds
       }
+    );
 
-      // Add column to monthly payroll table dynamically
-      await prisma.$executeRawUnsafe(`
-        ALTER TABLE hrms_d_monthly_payroll_processing
-        ADD [${data.component_code}] DECIMAL(18,4) NULL
-      `);
-
-      return reqData;
+    // Handle approval request outside transaction
+    const requester_id = data.createdby;
+    const requesterExists = await prisma.hrms_d_employee.findUnique({
+      where: { id: Number(requester_id) },
+      select: { id: true, full_name: true, employee_code: true },
     });
+
+    if (!requesterExists) {
+      // Rollback: delete the created component
+      await prisma.hrms_m_pay_component.delete({
+        where: { id: result.id },
+      });
+      throw new CustomError(
+        `Cannot create pay component: User ID ${requester_id} is not a valid employee.`,
+        403
+      );
+    }
+
+    // Create approval request
+    await createRequest({
+      requester_id: requester_id,
+      request_type: "pay_component",
+      reference_id: result.id,
+      request_data: `Pay Component: ${result.component_name} (${result.component_code}) - Type: ${result.component_type}`,
+      status: "P",
+      createdby: requester_id,
+      log_inst: data.log_inst || 1,
+    });
+
+    console.log(` Pay component created with ID: ${result.id}`);
+    console.log(` Approval request initiated`);
+    console.log(
+      `Requester: ${requesterExists.full_name} (ID: ${requester_id})`
+    );
 
     return result;
   } catch (error) {

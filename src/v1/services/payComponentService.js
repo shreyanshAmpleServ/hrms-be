@@ -1,7 +1,13 @@
 const payComponentModel = require("../models/payComponentModel");
 
-const createPayComponent = async (data) => {
-  return await payComponentModel.createPayComponent(data);
+const createPayComponent = async (data, createdBy) => {
+  const payComponentData = {
+    ...data,
+    createdby: createdBy,
+    log_inst: data.log_inst || 1,
+  };
+
+  return await payComponentModel.createPayComponent(payComponentData);
 };
 
 const findPayComponentById = async (id) => {
