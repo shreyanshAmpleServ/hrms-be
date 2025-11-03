@@ -1105,6 +1105,188 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
   }
 };
 
+const createRequiredDocumentsForCandidate = async (
+  candidateId,
+  jobPostingId,
+  createdBy,
+  logInst
+) => {
+  try {
+    if (!jobPostingId) {
+      console.log("No job posting ID provided, skipping document creation");
+      return [];
+    }
+
+    const jobPosting = await prisma.hrms_d_job_posting.findUnique({
+      where: { id: parseInt(jobPostingId) },
+      select: { document_type_id: true },
+    });
+
+    if (!jobPosting || !jobPosting.document_type_id) {
+      console.log("No document types defined for this job posting");
+      return [];
+    }
+
+    const documentTypeIds = jobPosting.document_type_id
+      .split(",")
+      .map((id) => parseInt(id.trim()))
+      .filter((id) => !isNaN(id));
+
+    if (documentTypeIds.length === 0) {
+      console.log("No valid document type IDs found");
+      return [];
+    }
+
+    const documentTypes = await prisma.hrms_m_document_type.findMany({
+      where: {
+        id: { in: documentTypeIds },
+        is_active: "Y",
+      },
+    });
+
+    const documentPromises = documentTypes.map((docType) => {
+      return prisma.hrms_d_candidate_documents.create({
+        data: {
+          candidate_id: candidateId,
+          type_id: docType.id,
+          name: docType.name,
+          path: null,
+          expiry_date: null,
+          status: "Pending",
+          remarks: null,
+          createdate: new Date(),
+          createdby: createdBy,
+          log_inst: logInst,
+          updatedate: null,
+          updatedby: null,
+        },
+      });
+    });
+
+    const createdDocuments = await Promise.all(documentPromises);
+
+    console.log(
+      `Created ${createdDocuments.length} required document records for candidate ${candidateId}`
+    );
+
+    return createdDocuments;
+  } catch (error) {
+    console.error("Error creating required documents:", error);
+    throw new CustomError(
+      `Error creating required documents: ${error.message}`,
+      500
+    );
+  }
+};
+
+// const createCandidateMaster = async (data) => {
+//   try {
+//     const fullName = data.full_name?.trim();
+
+//     if (!fullName) {
+//       throw new CustomError("Full name is required", 400);
+//     }
+
+//     const nameParts = fullName.split(" ");
+//     const firstName = nameParts[0];
+//     const lastName = nameParts.length > 1 ? nameParts[1] : "";
+
+//     const initials = `${firstName[0]}${lastName[0] || ""}`.toUpperCase();
+
+//     const allCodes = await prisma.hrms_d_candidate_master.findMany({
+//       select: { candidate_code: true },
+//     });
+
+//     let maxNumber = 0;
+
+//     for (const entry of allCodes) {
+//       const code = entry.candidate_code;
+//       const numberPart = code.replace(/^[A-Za-z]+/, "");
+//       const parsed = parseInt(numberPart);
+//       if (!isNaN(parsed) && parsed > maxNumber) {
+//         maxNumber = parsed;
+//       }
+//     }
+
+//     const nextNumber = maxNumber + 1;
+//     const newCandidateCode = `${initials}${String(nextNumber).padStart(
+//       3,
+//       "0"
+//     )}`;
+
+//     console.log(` Creating candidate: ${fullName} (${newCandidateCode})`);
+
+//     const reqData = await prisma.hrms_d_candidate_master.create({
+//       data: {
+//         ...serializeCandidateMasterData(data),
+//         candidate_code: newCandidateCode,
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst || 1,
+//       },
+//       include: {
+//         candidate_job_posting: {
+//           select: {
+//             id: true,
+//             job_title: true,
+//             hiring_stage_id: true,
+//           },
+//         },
+//         candidate_application_source: {
+//           select: {
+//             id: true,
+//             source_name: true,
+//           },
+//         },
+//         candidate_interview_stage: {
+//           select: {
+//             id: true,
+//             stage_name: true,
+//           },
+//         },
+//         candidate_master_applied_position: {
+//           select: {
+//             id: true,
+//             designation_name: true,
+//           },
+//         },
+//         candidate_department: {
+//           select: {
+//             id: true,
+//             department_name: true,
+//           },
+//         },
+//       },
+//     });
+
+//     console.log(` Candidate created with ID: ${reqData.id}`);
+
+//     if (reqData.job_posting) {
+//       await snapshotHiringStagesForCandidate(
+//         reqData.id,
+//         reqData.job_posting,
+//         data.createdby || 1,
+//         data.log_inst || 1
+//       );
+//     }
+
+//     const hiringStages = await getCandidateHiringStages(reqData.id);
+//     const documentTypes = await getCandidateDocumentTypes(reqData.id);
+
+//     return {
+//       ...reqData,
+//       hiring_stages: hiringStages,
+//       document_types: documentTypes,
+//     };
+//   } catch (error) {
+//     console.error(" Error creating candidate master:", error);
+//     throw new CustomError(
+//       `Error creating candidate master: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const createCandidateMaster = async (data) => {
   try {
     const fullName = data.full_name?.trim();
@@ -1156,6 +1338,7 @@ const createCandidateMaster = async (data) => {
             id: true,
             job_title: true,
             hiring_stage_id: true,
+            document_type_id: true, // Added this
           },
         },
         candidate_application_source: {
@@ -1187,8 +1370,17 @@ const createCandidateMaster = async (data) => {
 
     console.log(` Candidate created with ID: ${reqData.id}`);
 
+    // Create hiring stage snapshots
     if (reqData.job_posting) {
       await snapshotHiringStagesForCandidate(
+        reqData.id,
+        reqData.job_posting,
+        data.createdby || 1,
+        data.log_inst || 1
+      );
+
+      // Create required document records
+      await createRequiredDocumentsForCandidate(
         reqData.id,
         reqData.job_posting,
         data.createdby || 1,
@@ -1272,8 +1464,82 @@ const findCandidateMasterById = async (id) => {
   }
 };
 
+// const updateCandidateMaster = async (id, data) => {
+//   try {
+//     const updatedEntry = await prisma.hrms_d_candidate_master.update({
+//       where: { id: parseInt(id) },
+//       include: {
+//         candidate_job_posting: {
+//           select: {
+//             id: true,
+//             job_title: true,
+//             hiring_stage_id: true,
+//           },
+//         },
+//         candidate_application_source: {
+//           select: {
+//             id: true,
+//             source_name: true,
+//           },
+//         },
+//         candidate_interview_stage: {
+//           select: {
+//             id: true,
+//             stage_name: true,
+//           },
+//         },
+//         candidate_master_applied_position: {
+//           select: {
+//             id: true,
+//             designation_name: true,
+//           },
+//         },
+//         candidate_department: {
+//           select: {
+//             id: true,
+//             department_name: true,
+//           },
+//         },
+//       },
+//       data: {
+//         ...serializeCandidateMasterData(data),
+//         updatedby: data.updatedby || 1,
+//         updatedate: new Date(),
+//       },
+//     });
+
+//     const hiringStages = await getCandidateHiringStages(updatedEntry.id);
+//     const documentTypes = await getCandidateDocumentTypes(updatedEntry.id);
+
+//     return {
+//       ...updatedEntry,
+//       hiring_stages: hiringStages,
+//       document_types: documentTypes,
+//     };
+//   } catch (error) {
+//     console.error("Error updating candidate master:", error);
+//     throw new CustomError(
+//       `Error updating candidate master: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const updateCandidateMaster = async (id, data) => {
   try {
+    // Fetch the current candidate data to check if job_posting has changed
+    const existingCandidate = await prisma.hrms_d_candidate_master.findUnique({
+      where: { id: parseInt(id) },
+      select: {
+        id: true,
+        job_posting: true,
+      },
+    });
+
+    if (!existingCandidate) {
+      throw new CustomError("Candidate not found", 404);
+    }
+
     const updatedEntry = await prisma.hrms_d_candidate_master.update({
       where: { id: parseInt(id) },
       include: {
@@ -1282,6 +1548,7 @@ const updateCandidateMaster = async (id, data) => {
             id: true,
             job_title: true,
             hiring_stage_id: true,
+            document_type_id: true,
           },
         },
         candidate_application_source: {
@@ -1315,6 +1582,50 @@ const updateCandidateMaster = async (id, data) => {
         updatedate: new Date(),
       },
     });
+
+    // Check if job_posting has changed
+    const jobPostingChanged =
+      data.job_posting &&
+      existingCandidate.job_posting !== Number(data.job_posting);
+
+    if (jobPostingChanged) {
+      console.log(
+        `Job posting changed from ${existingCandidate.job_posting} to ${data.job_posting}`
+      );
+
+      // Delete existing hiring stages for old job posting
+      await prisma.hrms_d_candidate_hiring_stage.deleteMany({
+        where: {
+          candidate_id: parseInt(id),
+          job_posting_id: existingCandidate.job_posting,
+        },
+      });
+
+      // Delete existing document records for old job posting
+      await prisma.hrms_d_candidate_documents.deleteMany({
+        where: {
+          candidate_id: parseInt(id),
+        },
+      });
+
+      // Create new hiring stage snapshots
+      await snapshotHiringStagesForCandidate(
+        parseInt(id),
+        Number(data.job_posting),
+        data.updatedby || 1,
+        data.log_inst || 1
+      );
+
+      // Create new required documents
+      await createRequiredDocumentsForCandidate(
+        parseInt(id),
+        Number(data.job_posting),
+        data.updatedby || 1,
+        data.log_inst || 1
+      );
+
+      console.log(`Updated hiring stages and documents for new job posting`);
+    }
 
     const hiringStages = await getCandidateHiringStages(updatedEntry.id);
     const documentTypes = await getCandidateDocumentTypes(updatedEntry.id);
@@ -1812,4 +2123,5 @@ module.exports = {
   getCandidateHiringStages,
   snapshotHiringStagesForCandidate,
   getCandidateDocumentTypes,
+  createRequiredDocumentsForCandidate,
 };

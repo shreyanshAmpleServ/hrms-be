@@ -1842,19 +1842,8 @@ const findRequestByRequestUsers = async (
             where: { id: parseInt(referenceId) },
             select: {
               id: true,
-              employee_id: true,
               job_title: true,
               job_code: true,
-              job_description: true,
-              job_location: true,
-              job_type: true,
-              job_status: true,
-              job_posting_employee: {
-                select: {
-                  full_name: true,
-                  id: true,
-                },
-              },
             },
           });
           if (jobPostingRequest) {
