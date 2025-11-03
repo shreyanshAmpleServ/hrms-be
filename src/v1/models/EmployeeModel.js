@@ -410,7 +410,6 @@ const createLifeEvents = async (employeeId, events, createdby) => {
 const createEmployee = async (data) => {
   const { empAddressData, life_events: lifeEvents, ...employeeData } = data;
   try {
-    // Validate required fields
     if (!data.phone_number) {
       throw new CustomError(`Phone Number is required`, 400);
     }
@@ -439,7 +438,6 @@ const createEmployee = async (data) => {
       throw new CustomError(`Department is required`, 400);
     }
 
-    // Check for existing employee
     const existingEmployee = await prisma.hrms_d_employee.findFirst({
       where: {
         OR: [
@@ -475,7 +473,6 @@ const createEmployee = async (data) => {
 
     console.log("header_attendance_rule value:", data.header_attendance_rule);
 
-    // 1. Create employee first
     const employee = await prisma.hrms_d_employee.create({
       data: {
         ...serializedData,
@@ -485,7 +482,6 @@ const createEmployee = async (data) => {
       },
     });
 
-    // 2. Create addresses
     if (Array.isArray(empAddressData) && empAddressData.length > 0) {
       const addressDatas = empAddressData.map((addr) => ({
         ...serializeAddress(addr),
@@ -502,15 +498,12 @@ const createEmployee = async (data) => {
       }
     }
 
-    // 3. Create life events
     if (Array.isArray(lifeEvents) && lifeEvents.length > 0) {
       await createLifeEvents(employee.id, lifeEvents, data.createdby || 1);
     }
 
-    // 4. Handle transaction notification
     await handleTransactionNotification("m_employee", "A", employee.id);
 
-    // 5. Fetch and return complete employee data with life events
     const fullData = await prisma.hrms_d_employee.findFirst({
       where: { id: employee.id },
       include: {
@@ -572,7 +565,7 @@ const createEmployee = async (data) => {
             life_event_type: {
               select: {
                 id: true,
-                event_type: true,
+                event_type_name: true,
               },
             },
           },
@@ -818,7 +811,6 @@ const updateEmployee = async (id, data) => {
 
     const serializedData = serializeTags(updatedData);
 
-    // Get current employee data first
     const currentEmployee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -830,7 +822,6 @@ const updateEmployee = async (id, data) => {
       throw new CustomError("Employee not found", 404);
     }
 
-    // 1. Update employee data
     console.log("header_attendance_rule value:", data.header_attendance_rule);
 
     const employee = await prisma.hrms_d_employee.update({
@@ -838,12 +829,10 @@ const updateEmployee = async (id, data) => {
       data: serializedData,
     });
 
-    // 2. Handle address updates
     if (Array.isArray(empAddressData) && empAddressData.length > 0) {
       const newAddresses = empAddressData.filter((addr) => !addr.id);
       const existingAddresses = empAddressData.filter((addr) => addr.id);
 
-      // Delete addresses that are no longer present
       const currentAddressIds = currentEmployee.hrms_employee_address.map(
         (a) => a.id
       );
@@ -860,7 +849,6 @@ const updateEmployee = async (id, data) => {
         });
       }
 
-      // Update existing addresses
       for (const addr of existingAddresses) {
         await prisma.hrms_d_employee_address.update({
           where: { id: addr.id },
@@ -868,7 +856,6 @@ const updateEmployee = async (id, data) => {
         });
       }
 
-      // Create new addresses
       if (newAddresses.length > 0) {
         await prisma.hrms_d_employee_address.createMany({
           data: newAddresses.map((addr) => ({
@@ -879,15 +866,12 @@ const updateEmployee = async (id, data) => {
       }
     }
 
-    // 3. Handle life events updates
     if (Array.isArray(lifeEvents) && lifeEvents.length > 0) {
       await updateLifeEvents(parseInt(id), lifeEvents, data.updatedby || 1);
     }
 
-    // 4. Send transaction notification
     await handleTransactionNotification("m_employee", "U", parseInt(id));
 
-    // 5. Fetch updated data with life events
     const updatedEmp = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(id) },
       include: {

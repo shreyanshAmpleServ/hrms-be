@@ -812,7 +812,6 @@ const validateWorkflow = async (req, res, next) => {
       });
     }
 
-    // ✅ CHANGED: Try department first
     let workflows = await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
       request_type,
       requester.department_id,
@@ -821,7 +820,6 @@ const validateWorkflow = async (req, res, next) => {
 
     let workflowType = "department-specific";
 
-    // ✅ ADDED: Fallback to designation
     if (workflows.length === 0 && requester.designation_id) {
       workflows = await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
         request_type,
@@ -831,7 +829,6 @@ const validateWorkflow = async (req, res, next) => {
       workflowType = "designation-specific";
     }
 
-    // ✅ Fallback to global
     if (workflows.length === 0) {
       workflows = await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
         request_type,
@@ -851,7 +848,6 @@ const validateWorkflow = async (req, res, next) => {
         requester_department:
           requester.hrms_employee_department?.department_name ||
           "No Department",
-        // ✅ ADDED
         requester_designation:
           requester.hrms_employee_designation?.designation_name ||
           "No Designation",
@@ -861,7 +857,6 @@ const validateWorkflow = async (req, res, next) => {
           approver: w.approval_work_approver?.full_name,
           department:
             w.approval_work_approver?.hrms_employee_department?.department_name,
-          // ✅ ADDED
           designation:
             w.approval_work_approver?.hrms_employee_designation
               ?.designation_name,
