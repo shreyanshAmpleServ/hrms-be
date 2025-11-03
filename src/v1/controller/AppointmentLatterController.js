@@ -232,7 +232,7 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
 
     if (appointmentCount === 0) {
       throw new CustomError(
-        "No employees found matching the provided filters",
+        "No candidates found matching the provided filters",
         404
       );
     }
@@ -259,9 +259,9 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
         statusUrl: `/api/appointment-letter/bulk-download/status/${job.id}`,
         totalAppointmentLetters: appointmentCount,
         appliedFilters: {
-          employees:
-            employee_id_from || employee_id_to
-              ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+          candidates:
+            candidate_id_from || candidate_id_to
+              ? `${candidate_id_from || "Any"} to ${candidate_id_to || "Any"}`
               : "All",
           departments:
             department_id_from || department_id_to
