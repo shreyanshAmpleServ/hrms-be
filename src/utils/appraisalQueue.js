@@ -4,13 +4,11 @@ const fs = require("fs");
 const archiver = require("archiver");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const appointmentLatterModel = require("../v1/models/AppointmentLatterModel");
-const {
-  generateAppointmentLetterPDF,
-} = require("../utils/appointmentLetterPDF");
+const appraisalModel = require("../v1/models/AppraisalModel");
+const { generateAppraisalPDF } = require("../utils/appraisalPDF.js");
 const logger = require("../Comman/logger");
 
-const appointmentLetterQueue = new Queue("appointment-letter-bulk-download", {
+const appraisalQueue = new Queue("appraisal-bulk-download", {
   redis: {
     host: process.env.REDIS_HOST || "localhost",
     port: process.env.REDIS_PORT || 6379,
@@ -110,36 +108,35 @@ const getCompanyConfig = async () => {
   }
 };
 
-const getEmployeeName = (appointmentLetter) => {
-  if (appointmentLetter.appointment_candidate?.full_name) {
-    return appointmentLetter.appointment_candidate.full_name;
+const getEmployeeName = (appraisal) => {
+  if (appraisal.appraisal_employee?.full_name) {
+    return appraisal.appraisal_employee.full_name;
   }
-  if (appointmentLetter.appointment_candidate?.candidate_code) {
-    return appointmentLetter.appointment_candidate.candidate_code;
+  if (appraisal.appraisal_employee?.employee_code) {
+    return appraisal.appraisal_employee.employee_code;
   }
   return "Unknown";
 };
 
-appointmentLetterQueue.process(async (job) => {
+appraisalQueue.process(async (job) => {
   const { userId, filters, advancedFilters, jobId } = job.data;
 
-  console.log(`[Job ${jobId}] Starting bulk appointment letter download...`);
+  console.log(`[Job ${jobId}] Starting bulk appraisal download...`);
 
   try {
     await job.progress(10);
 
-    const appointmentLetters =
-      await appointmentLatterModel.getAllAppointmentLettersForBulkDownload(
-        filters || {},
-        advancedFilters || {}
-      );
-
-    console.log(
-      `[Job ${jobId}] Found ${appointmentLetters.length} appointment letters to process`
+    const appraisals = await appraisalModel.getAllAppraisalsForBulkDownload(
+      filters || {},
+      advancedFilters || {}
     );
 
-    if (appointmentLetters.length === 0) {
-      throw new Error("No appointment letters found");
+    console.log(
+      `[Job ${jobId}] Found ${appraisals.length} appraisals to process`
+    );
+
+    if (appraisals.length === 0) {
+      throw new Error("No appraisals found");
     }
 
     await job.progress(20);
@@ -148,23 +145,25 @@ appointmentLetterQueue.process(async (job) => {
     if (!fs.existsSync(tempDir)) {
       fs.mkdirSync(tempDir, { recursive: true });
     }
+
     const companyConfig = await getCompanyConfig();
     console.log(`[Job ${jobId}] Company configuration loaded`);
 
     const pdfPaths = [];
-    const totalLetters = appointmentLetters.length;
+    const totalAppraisals = appraisals.length;
 
-    for (let i = 0; i < totalLetters; i++) {
-      const appointmentLetter = appointmentLetters[i];
+    for (let i = 0; i < totalAppraisals; i++) {
+      const appraisal = appraisals[i];
 
       try {
-        const employeeName = getEmployeeName(appointmentLetter);
+        const employeeName = getEmployeeName(appraisal);
         console.log(
-          `[Job ${jobId}] Processing ${i + 1}/${totalLetters}: ${employeeName}`
+          `[Job ${jobId}] Processing ${
+            i + 1
+          }/${totalAppraisals}: ${employeeName}`
         );
-        const pdfData = await appointmentLatterModel.getAppointmentLetterForPDF(
-          appointmentLetter.id
-        );
+
+        const pdfData = await appraisalModel.getAppraisalForPDF(appraisal.id);
 
         const completePdfData = {
           ...pdfData,
@@ -180,32 +179,32 @@ appointmentLetterQueue.process(async (job) => {
         const sanitizedName = employeeName
           .replace(/[^a-z0-9]/gi, "_")
           .toLowerCase();
-        const fileName = `appointment_letter_${appointmentLetter.id}_${sanitizedName}.pdf`;
+        const fileName = `appraisal_${appraisal.id}_${sanitizedName}.pdf`;
         const filePath = path.join(tempDir, fileName);
 
-        await generateAppointmentLetterPDF(completePdfData, filePath);
+        await generateAppraisalPDF(completePdfData, filePath);
         pdfPaths.push({ path: filePath, name: fileName });
 
         console.log(`[Job ${jobId}] ✓ Generated: ${fileName}`);
 
-        const progress = 20 + Math.floor(((i + 1) / totalLetters) * 60);
+        const progress = 20 + Math.floor(((i + 1) / totalAppraisals) * 60);
         await job.progress(progress);
       } catch (error) {
         console.error(
-          `[Job ${jobId}] Error processing letter ${appointmentLetter.id}:`,
+          `[Job ${jobId}] Error processing appraisal ${appraisal.id}:`,
           error
         );
-        logger.error(`Error processing letter ${appointmentLetter.id}:`, error);
+        logger.error(`Error processing appraisal ${appraisal.id}:`, error);
       }
     }
 
     if (pdfPaths.length === 0) {
-      throw new Error("Failed to generate any appointment letter PDFs");
+      throw new Error("Failed to generate any appraisal PDFs");
     }
 
     await job.progress(85);
 
-    const zipFileName = `appointment_letters_bulk_${jobId}.zip`;
+    const zipFileName = `appraisals_bulk_${jobId}.zip`;
     const zipPath = path.join(
       process.cwd(),
       "uploads",
@@ -225,21 +224,21 @@ appointmentLetterQueue.process(async (job) => {
 
     await job.progress(100);
 
-    console.log(`[Job ${jobId}]Completed! Generated ${pdfPaths.length} PDFs`);
+    console.log(`[Job ${jobId}] Completed! Generated ${pdfPaths.length} PDFs`);
     logger.info(
-      `Job ${jobId} completed. Generated ${pdfPaths.length} appointment letters`
+      `Job ${jobId} completed. Generated ${pdfPaths.length} appraisals`
     );
 
     return {
       success: true,
       totalProcessed: pdfPaths.length,
-      totalRequested: appointmentLetters.length,
-      downloadUrl: `/api/appointment-letter/bulk-download/${jobId}`,
+      totalRequested: appraisals.length,
+      downloadUrl: `/api/appraisal/bulk-download/${jobId}`,
       fileName: zipFileName,
       zipPath: zipPath,
     };
   } catch (error) {
-    console.error(`[Job ${jobId}]  Failed:`, error);
+    console.error(`[Job ${jobId}] Failed:`, error);
     logger.error(`Job ${jobId} failed:`, error);
     throw error;
   }
@@ -271,18 +270,18 @@ function createZip(files, outputPath) {
   });
 }
 
-appointmentLetterQueue.on("completed", (job, result) => {
+appraisalQueue.on("completed", (job, result) => {
   console.log(`Job ${job.id} completed:`, result);
   logger.info(`Job completed:`, result);
 });
 
-appointmentLetterQueue.on("failed", (job, err) => {
+appraisalQueue.on("failed", (job, err) => {
   console.error(`Job ${job.id} failed:`, err.message);
   logger.error(`Job failed:`, err.message);
 });
 
-appointmentLetterQueue.on("progress", (job, progress) => {
+appraisalQueue.on("progress", (job, progress) => {
   console.log(`Job ${job.id} Progress: ${progress}%`);
 });
 
-module.exports = appointmentLetterQueue;
+module.exports = appraisalQueue;

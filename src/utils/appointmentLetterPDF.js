@@ -357,7 +357,6 @@ const appointmentLetterTemplate = `<!DOCTYPE html>
         <div class="signature-box">
             <div class="signature-block">
                 {{companySignature}}
-                <div class="signature-label">Authorized Signatory</div>
                 <div class="signature-label">{{companyName}}</div>
             </div>
             <div class="signature-block">
@@ -383,7 +382,6 @@ const appointmentLetterTemplate = `<!DOCTYPE html>
 const generateAppointmentLetterHTML = (data) => {
   return new Promise((resolve, reject) => {
     try {
-      // Generate pay components rows
       const payComponentsRows = (data.payComponents || [])
         .map(
           (component) =>
@@ -397,14 +395,12 @@ const generateAppointmentLetterHTML = (data) => {
         )
         .join("");
 
-      // Calculate total compensation (annual)
       const totalMonthly = (data.payComponents || []).reduce(
         (sum, c) => sum + parseFloat(c.amount || 0),
         0
       );
       const totalAnnual = (totalMonthly * 12).toFixed(2);
 
-      // Prepare template data
       const templateData = {
         companyLogo: data.companyLogo || "",
         companySignature: data.companySignature
@@ -432,7 +428,6 @@ const generateAppointmentLetterHTML = (data) => {
         companySignatory: data.companySignatory || "HR Manager",
       };
 
-      // Replace placeholders in template
       let htmlContent = appointmentLetterTemplate;
       Object.keys(templateData).forEach((key) => {
         const placeholder = new RegExp(`{{${key}}}`, "g");
@@ -480,7 +475,6 @@ const generateAppointmentLetterPDF = async (data, filePath) => {
       timeout: 60000,
     });
 
-    // Wait for all images to load
     await page.evaluate(() => {
       return Promise.all(
         Array.from(document.images)
@@ -494,7 +488,6 @@ const generateAppointmentLetterPDF = async (data, filePath) => {
       );
     });
 
-    // Small delay to ensure rendering
     await new Promise((resolve) => setTimeout(resolve, 1000));
 
     await page.pdf({
@@ -525,7 +518,6 @@ const generateAppointmentLetterPDF = async (data, filePath) => {
   }
 };
 
-// Helper function
 const formatDate = (date) => {
   if (!date) return "";
   return new Date(date).toLocaleDateString("en-GB", {
