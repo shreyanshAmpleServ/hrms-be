@@ -9,7 +9,7 @@
  */
 const originalConsoleLog = console.log;
 console.log = (...args) => {
-  return originalConsoleLog(...args);
+  // return originalConsoleLog(...args);
   return;
 };
 
@@ -24,6 +24,6 @@ console.log = (...args) => {
  */
 const originalConsoleError = console.error;
 console.error = (...args) => {
-  return originalConsoleError(...args);
+  // return originalConsoleError(...args);
   return;
 };

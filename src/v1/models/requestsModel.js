@@ -1844,6 +1844,34 @@ const findRequestByRequestUsers = async (
               id: true,
               job_title: true,
               job_code: true,
+              description: true,
+              required_experience: true,
+              due_date: true,
+              annual_salary_from: true,
+              annual_salary_to: true,
+              posting_date: true,
+              closing_date: true,
+              status: true,
+              is_internal: true,
+              hrms_job_department: {
+                select: {
+                  id: true,
+                  department_name: true,
+                },
+              },
+              hrms_job_designation: {
+                select: {
+                  id: true,
+                  designation_name: true,
+                },
+              },
+              job_posting_currency: {
+                select: {
+                  id: true,
+                  currency_code: true,
+                  currency_name: true,
+                },
+              },
             },
           });
           if (jobPostingRequest) {
@@ -1866,6 +1894,13 @@ const findRequestByRequestUsers = async (
                 offered_salary: true,
                 valid_until: true,
                 status: true,
+                offer_letter_currencyId: {
+                  select: {
+                    id: true,
+                    currency_code: true,
+                    currency_name: true,
+                  },
+                },
               },
             });
           if (offerLetterRequest) {
