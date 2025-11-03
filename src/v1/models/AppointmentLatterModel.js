@@ -403,19 +403,21 @@ const getAllAppointmentLettersForBulkDownload = async (
           select: {
             id: true,
             full_name: true,
-            employee_code: true,
-            department_id: true,
-            designation_id: true,
-            employee_department: {
+            email: true,
+            phone: true,
+            candidate_code: true,
+            expected_joining_date: true,
+            actual_joining_date: true,
+            date_of_birth: true,
+            gender: true,
+            nationality: true,
+            resume_path: true,
+            status: true,
+
+            candidate_department: {
               select: {
                 id: true,
                 department_name: true,
-              },
-            },
-            employee_designation: {
-              select: {
-                id: true,
-                designation_name: true,
               },
             },
           },

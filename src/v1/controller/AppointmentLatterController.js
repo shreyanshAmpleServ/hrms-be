@@ -86,7 +86,6 @@ const downloadAppointmentLetterPDF = async (req, res, next) => {
     const { id } = req.params;
     console.log(`Downloading appointment letter PDF for ID: ${id}`);
 
-    // FIXED: Using correct service name
     const appointmentLetterData =
       await AppointmentLatterService.getAppointmentLetterForPDF(id);
 
@@ -104,7 +103,6 @@ const downloadAppointmentLetterPDF = async (req, res, next) => {
 
     const filePath = path.join(uploadDir, fileName);
 
-    // FIXED: Added import for generateAppointmentLetterPDF
     await generateAppointmentLetterPDF(appointmentLetterData, filePath);
 
     console.log(`[info] Appointment letter PDF generated: ${filePath}`);
@@ -127,12 +125,11 @@ const downloadAppointmentLetterPDF = async (req, res, next) => {
   }
 };
 
-// ============ BULK DOWNLOAD ============
 const bulkDownloadAppointmentLetters = async (req, res, next) => {
   try {
     const {
-      employee_id_from,
-      employee_id_to,
+      candidate_id_from,
+      candidate_id_to,
       department_id_from,
       department_id_to,
       designation_id_from,
@@ -145,31 +142,31 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
     const filters = {};
     const advancedFilters = {};
 
-    // ============ EMPLOYEE ID RANGE ============
-    if (employee_id_from && employee_id_to) {
-      const minId = Number(employee_id_from);
-      const maxId = Number(employee_id_to);
+    if (candidate_id_from && candidate_id_to) {
+      const minId = Number(candidate_id_from);
+      const maxId = Number(candidate_id_to);
 
-      filters.employee_id = {
+      filters.candidate_id = {
         gte: Math.min(minId, maxId),
         lte: Math.max(minId, maxId),
       };
 
       console.log(
-        `Employee Range: ${Math.min(minId, maxId)} to ${Math.max(minId, maxId)}`
+        `Candidate Range: ${Math.min(minId, maxId)} to ${Math.max(
+          minId,
+          maxId
+        )}`
       );
-    } else if (employee_id_from) {
-      filters.employee_id = { gte: Number(employee_id_from) };
-    } else if (employee_id_to) {
-      filters.employee_id = { lte: Number(employee_id_to) };
+    } else if (candidate_id_from) {
+      filters.candidate_id = { gte: Number(candidate_id_from) };
+    } else if (candidate_id_to) {
+      filters.candidate_id = { lte: Number(candidate_id_to) };
     }
 
-    // ============ STATUS FILTER ============
     if (status) {
       filters.status = status;
     }
 
-    // ============ DATE RANGE FILTER ============
     if (startDate && endDate) {
       filters.appointment_date = {
         gte: new Date(startDate),
@@ -177,7 +174,6 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
       };
     }
 
-    // ============ DEPARTMENT ID RANGE ============
     if (department_id_from && department_id_to) {
       const minDept = Number(department_id_from);
       const maxDept = Number(department_id_to);
@@ -199,7 +195,6 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
       advancedFilters.department_id = { lte: Number(department_id_to) };
     }
 
-    // ============ DESIGNATION ID RANGE ============
     if (designation_id_from && designation_id_to) {
       const minDesig = Number(designation_id_from);
       const maxDesig = Number(designation_id_to);
@@ -221,7 +216,6 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
       advancedFilters.designation_id = { lte: Number(designation_id_to) };
     }
 
-    // ============ VALIDATE EMPLOYEES EXIST ============
     console.log("Validating employees exist...");
 
     const validationWhere = {
@@ -247,7 +241,6 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
       `Found ${appointmentCount} appointment letter(s) matching filters`
     );
 
-    // ============ CREATE JOB ============
     const jobId = uuidv4();
 
     const job = await appointmentLetterQueue.add({
@@ -290,7 +283,6 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
   }
 };
 
-// ============ CHECK STATUS ============
 const checkBulkDownloadStatus = async (req, res, next) => {
   try {
     const jobId = req.params.jobId;
@@ -316,7 +308,6 @@ const checkBulkDownloadStatus = async (req, res, next) => {
   }
 };
 
-// ============ DOWNLOAD FILE ============
 const downloadBulkAppointmentLetters = async (req, res, next) => {
   try {
     const jobId = req.params.jobId;

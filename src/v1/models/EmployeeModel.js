@@ -1015,6 +1015,16 @@ const findEmployeeById = async (id) => {
             full_name: true,
           },
         },
+        life_event_employee: {
+          include: {
+            life_event_type: {
+              select: {
+                id: true,
+                event_type_name: true,
+              },
+            },
+          },
+        },
         experiance_of_employee: true,
         eduction_of_employee: true,
       },
@@ -1118,6 +1128,16 @@ const getAllEmployee = async (
         },
         hrms_employee_bank: {
           select: { id: true, bank_name: true },
+        },
+        life_event_employee: {
+          include: {
+            life_event_type: {
+              select: {
+                id: true,
+                event_type_name: true,
+              },
+            },
+          },
         },
         experiance_of_employee: true,
         eduction_of_employee: true,
