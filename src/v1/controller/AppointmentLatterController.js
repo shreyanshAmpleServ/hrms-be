@@ -260,8 +260,8 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
         totalAppointmentLetters: appointmentCount,
         appliedFilters: {
           employees:
-            employee_id_from || employee_id_to
-              ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+            candidate_id_from || candidate_id_to
+              ? `${candidate_id_from || "Any"} to ${candidate_id_to || "Any"}`
               : "All",
           departments:
             department_id_from || department_id_to
