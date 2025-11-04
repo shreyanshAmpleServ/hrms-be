@@ -296,6 +296,61 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
         }
         return null;
       }
+    case "kpi_approval":
+      if (reference_id) {
+        const kpiData = await prisma.hrms_d_employee_kpi.findUnique({
+          where: { id: parseInt(reference_id) },
+          include: {
+            kpi_employee: {
+              select: {
+                id: true,
+                full_name: true,
+                employee_code: true,
+                hrms_employee_department: {
+                  select: {
+                    id: true,
+                    department_name: true,
+                  },
+                },
+              },
+            },
+            kpi_reviewer: {
+              select: {
+                id: true,
+                full_name: true,
+                employee_code: true,
+              },
+            },
+            kpi_contents: {
+              select: {
+                id: true,
+                kpi_name: true,
+                target_point: true,
+                achieved_point: true,
+                weightage_percentage: true,
+                achieved_percentage: true,
+                kpi_remarks: true,
+              },
+            },
+          },
+        });
+
+        if (kpiData) {
+          return {
+            id: kpiData.id,
+            employee_name: kpiData.kpi_employee?.full_name,
+            employee_code: kpiData.kpi_employee?.employee_code,
+            department:
+              kpiData.kpi_employee?.hrms_employee_department?.department_name,
+            reviewer_name: kpiData.kpi_reviewer?.full_name,
+            review_date: kpiData.review_date,
+            rating: kpiData.rating,
+            status: kpiData.status,
+            contents: kpiData.kpi_contents || [],
+          };
+        }
+        return null;
+      }
   }
 };
 

@@ -1575,6 +1575,108 @@ const findRequestByRequestUsers = async (
             });
           }
         }
+        if (requestType === "kpi_approval" && referenceId) {
+          // Parse the request_data to get kpi_id
+          let kpiId = referenceId;
+          try {
+            const requestData = JSON.parse(request.request_data);
+            kpiId = requestData.kpi_id || referenceId;
+          } catch (e) {
+            // If parsing fails, use reference_id
+          }
+
+          const kpiRequest = await prisma.hrms_d_employee_kpi.findUnique({
+            where: { id: parseInt(kpiId) },
+            include: {
+              kpi_employee: {
+                select: {
+                  id: true,
+                  full_name: true,
+                  employee_code: true,
+                },
+              },
+              kpi_reviewer: {
+                select: {
+                  id: true,
+                  full_name: true,
+                  employee_code: true,
+                },
+              },
+              kpi_contents: {
+                select: {
+                  kpi_name: true,
+                  target_point: true,
+                  achieved_point: true,
+                  weightage_percentage: true,
+                  achieved_percentage: true,
+                  kpi_remarks: true,
+                },
+              },
+              kpi_component_assignment: {
+                include: {
+                  kpi_component_lines: {
+                    include: {
+                      kpi_component_pay_component: {
+                        select: {
+                          id: true,
+                          component_name: true,
+                          component_code: true,
+                        },
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          });
+
+          if (kpiRequest) {
+            data.push({
+              ...request,
+              createdate: request.createdate,
+              reference: {
+                id: kpiRequest.id,
+                employee_name: kpiRequest.kpi_employee?.full_name,
+                employee_code: kpiRequest.kpi_employee?.employee_code,
+                reviewer_name: kpiRequest.kpi_reviewer?.full_name,
+                review_date: kpiRequest.review_date,
+                next_review_date: kpiRequest.next_review_date,
+                rating: kpiRequest.rating,
+                status: kpiRequest.status,
+                revise_component_assignment:
+                  kpiRequest.revise_component_assignment,
+                kpi_contents: kpiRequest.kpi_contents?.map((content) => ({
+                  kpi_name: content.kpi_name,
+                  target_point: content.target_point,
+                  achieved_point: content.achieved_point,
+                  weightage_percentage: content.weightage_percentage,
+                  achieved_percentage: content.achieved_percentage,
+                  remarks: content.kpi_remarks,
+                })),
+                component_assignment: kpiRequest.kpi_component_assignment
+                  ? {
+                      header_payroll_rule:
+                        kpiRequest.kpi_component_assignment.header_payroll_rule,
+                      effective_from:
+                        kpiRequest.kpi_component_assignment.effective_from,
+                      effective_to:
+                        kpiRequest.kpi_component_assignment.effective_to,
+                      change_percentage:
+                        kpiRequest.kpi_component_assignment.change_percentage,
+                      component_lines:
+                        kpiRequest.kpi_component_assignment.kpi_component_lines?.map(
+                          (line) => ({
+                            component_name:
+                              line.kpi_component_pay_component?.component_name,
+                            amount: line.amount,
+                          })
+                        ),
+                    }
+                  : null,
+              },
+            });
+          }
+        }
       })
     );
 
@@ -1661,28 +1763,6 @@ const takeActionOnRequest = async ({
     const company_name = company?.company_name || "HRMS System";
 
     let candidateName = null;
-    // if (request.request_type === "interview_stage" && request.reference_id) {
-    //   const interviewStage =
-    //     await prisma.hrms_m_interview_stage_remark.findUnique({
-    //       where: { id: request.reference_id },
-    //       include: {
-    //         interview_stage_candidate: {
-    //           select: { full_name: true },
-    //         },
-    //       },
-    //     });
-    //   candidateName =
-    //     interviewStage?.interview_stage_candidate?.full_name || null;
-    // }
-    // if (request?.reference_id) {
-    //   if (request.request_type === "interview_stage") {
-    //     await prisma.hrms_m_interview_stage_remark.update({
-    //       where: { id: request.reference_id },
-    //       data: {
-    //         updatedby: acted_by,
-    //         updatedate: new Date(),
-    //       },
-    //     });
 
     if (request.request_type === "interview_stage" && request.reference_id) {
       const interviewStage =
@@ -1794,6 +1874,14 @@ const takeActionOnRequest = async ({
         });
       } else if (request.request_type === "pay_component") {
         await prisma.hrms_d_employee_pay_component_assignment_header.update({
+          where: { id: request.reference_id },
+          data: {
+            updatedby: acted_by,
+            updatedate: new Date(),
+          },
+        });
+      } else if (request.request_type === "kpi_approval") {
+        await prisma.hrms_d_employee_kpi.update({
           where: { id: request.reference_id },
           data: {
             updatedby: acted_by,
@@ -1945,6 +2033,15 @@ const takeActionOnRequest = async ({
           });
         } else if (request.request_type === "pay_component") {
           await prisma.hrms_d_employee_pay_component_assignment_header.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "kpi_approval") {
+          await prisma.hrms_d_employee_kpi.update({
             where: { id: request.reference_id },
             data: {
               status: "R",
@@ -2129,6 +2226,15 @@ const takeActionOnRequest = async ({
           });
         } else if (request.request_type === "pay_component") {
           await prisma.hrms_d_employee_pay_component_assignment_header.update({
+            where: { id: request.reference_id },
+            data: {
+              status: "A",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
+        } else if (request.request_type === "kpi_approval") {
+          await prisma.hrms_d_employee_kpi.update({
             where: { id: request.reference_id },
             data: {
               status: "A",
