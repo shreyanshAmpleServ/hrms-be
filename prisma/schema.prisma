@@ -373,6 +373,9 @@ model hrms_d_employee {
   payment_recovery_employee                       hrms_d_payment_recovery[]
   job_posting_reporting_manager                   hrms_d_job_posting[]
   life_event_employee                             hrms_d_life_event[]
+  employee_kpi                                    hrms_d_employee_kpi[]                 @relation("EmployeeKPI")
+  kpi_reviewer                                    hrms_d_employee_kpi[]                @relation("KPIReviewer")
+  kpi_successor                                   hrms_d_employee_kpi_component_assignment[] @relation("KPISuccessor")
 }
 
 model hrms_d_employee_address {
@@ -1157,6 +1160,7 @@ model hrms_m_department_master {
   shift_department_id           hrms_m_shift_master[]
   approval_work_department      hrms_d_approval_work_flow[]
   candidate_department          hrms_d_candidate_master[]
+  kpi_component_department      hrms_d_employee_kpi_component_assignment[]
 }
 
 model hrms_m_designation_master {
@@ -1173,6 +1177,7 @@ model hrms_m_designation_master {
   hrms_employee_designation         hrms_d_employee[]
   hrms_job_designation              hrms_d_job_posting[]
   approval_work_flow_designation    hrms_d_approval_work_flow[]
+  kpi_component_designation         hrms_d_employee_kpi_component_assignment[]
 }
 
 model hrms_m_disciplinary_penalty {
@@ -1202,6 +1207,7 @@ model hrms_m_document_type {
   log_inst                 Int?
   is_active                String?                      @default("Y") @db.Char(1)
   candidate_documents_type hrms_d_candidate_documents[]
+  kpi_attachment_doc_type  hrms_d_employee_kpi_attachments[]
 }
 
 model hrms_m_employee_category {
@@ -1398,6 +1404,7 @@ model hrms_m_pay_component {
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
   tax_slab_pay_component                hrms_m_tax_slab_rule[]
   pay_component_for_contract            hrms_d_pay_component_contract[]
+  kpi_component_pay_component           hrms_d_employee_kpi_component_lines[]
 }
 
 model hrms_m_provident_fund {
@@ -2668,6 +2675,120 @@ model hrms_d_requests_approval {
   log_inst                  Int?
   request_approval_request  hrms_d_requests? @relation(fields: [request_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   request_approval_approver hrms_d_employee? @relation(fields: [approver_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+// Employee KPI Header
+model hrms_d_employee_kpi {
+  id                          Int                                   @id @default(autoincrement())
+  employee_id                 Int
+  reviewer_id                 Int
+  review_date                 DateTime                              @db.Date
+  review_remarks              String?                               @db.NVarChar(500)
+  next_review_date            DateTime?                             @db.Date
+  employment_type             String?                               @db.VarChar(50)
+  contract_expiry_date        DateTime?                             @db.Date
+  employment_remarks           String?                              @db.NVarChar(500)
+  rating                      Decimal?                              @db.Decimal(19, 6)
+  revise_component_assignment String?                               @default("N") @db.Char(1)
+  status                      String                                @default("Pending") @db.VarChar(20)
+  last_kpi_id                 Int?
+  createdate                  DateTime                              @default(now()) @db.DateTime
+  createdby                   Int
+  updatedate                  DateTime?                             @db.DateTime
+  updatedby                   Int?
+  log_inst                    Int?                                  @default(1)
+
+  kpi_employee                hrms_d_employee                       @relation("EmployeeKPI", fields: [employee_id], references: [id], onUpdate: NoAction)
+  kpi_reviewer                hrms_d_employee                       @relation("KPIReviewer", fields: [reviewer_id], references: [id], onUpdate: NoAction)
+  last_kpi                    hrms_d_employee_kpi?                  @relation("LastKPI", fields: [last_kpi_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  next_kpi                    hrms_d_employee_kpi[]                 @relation("LastKPI")
+  kpi_contents                hrms_d_employee_kpi_contents[]
+  kpi_component_assignment    hrms_d_employee_kpi_component_assignment?
+  kpi_attachments             hrms_d_employee_kpi_attachments[]
+}
+
+// Employee KPI Contents (Tab 1)
+model hrms_d_employee_kpi_contents {
+  id                              Int                  @id @default(autoincrement())
+  employee_kpi_id                 Int
+  kpi_name                        String?              @db.NVarChar(255)
+  kpi_remarks                     String?             @db.NVarChar(500)
+  weightage_percentage            Decimal?             @db.Decimal(19, 6)
+  target_point                    Decimal?             @db.Decimal(19, 6)
+  achieved_point                  Decimal?             @db.Decimal(19, 6)
+  achieved_percentage             Decimal?             @db.Decimal(19, 6)
+  kpi_drawing_type                String?              @db.NVarChar(100)
+  target_point_for_next_kpi       Decimal?             @db.Decimal(19, 6)
+  weightage_percentage_for_next_kpi Decimal?            @db.Decimal(19, 6)
+  createdate                      DateTime             @default(now()) @db.DateTime
+  createdby                       Int
+  updatedate                      DateTime?             @db.DateTime
+  updatedby                       Int?
+  log_inst                        Int?                 @default(1)
+
+  employee_kpi_header             hrms_d_employee_kpi                @relation(fields: [employee_kpi_id], references: [id], onUpdate: NoAction)
+}
+
+// Employee KPI Component Assignment (Sub-Form)
+model hrms_d_employee_kpi_component_assignment {
+  id                            Int                                    @id @default(autoincrement())
+  employee_kpi_id               Int                                    @unique
+  header_payroll_rule           String?                                @db.VarChar(100)
+  effective_from                DateTime?                              @db.Date
+  effective_to                  DateTime?                              @db.Date
+  status                        String                                 @default("Pending") @db.VarChar(20)
+  last_component_assignment_id  Int?
+  change_percentage             Decimal?                                @db.Decimal(19, 6)
+  department_id                 Int?
+  designation_id                Int?
+  position                      String?                                 @db.NVarChar(100)
+  successor_id                  Int?
+  createdate                    DateTime                                @default(now()) @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?                               @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?                                   @default(1)
+
+  employee_kpi_header           hrms_d_employee_kpi                     @relation(fields: [employee_kpi_id], references: [id], onUpdate: NoAction)
+  kpi_component_department      hrms_m_department_master?                @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kpi_component_designation     hrms_m_designation_master?               @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kpi_component_successor       hrms_d_employee?                        @relation("KPISuccessor", fields: [successor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kpi_component_lines           hrms_d_employee_kpi_component_lines[]
+}
+
+// Employee KPI Component Assignment Lines
+model hrms_d_employee_kpi_component_lines {
+  id                          Int                                    @id @default(autoincrement())
+  component_assignment_id     Int
+  pay_component_id            Int
+  amount                      Decimal                                 @db.Decimal(19, 6)
+  createdate                  DateTime                                @default(now()) @db.DateTime
+  createdby                   Int
+  log_inst                    Int?                                    @default(1)
+
+  kpi_component_assignment    hrms_d_employee_kpi_component_assignment @relation(fields: [component_assignment_id], references: [id], onUpdate: NoAction)
+  kpi_component_pay_component hrms_m_pay_component                     @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
+}
+
+// Employee KPI Attachments (Tab 2)
+model hrms_d_employee_kpi_attachments {
+  id                Int                    @id @default(autoincrement())
+  employee_kpi_id   Int
+  document_type_id  Int?
+  document_name     String?                 @db.NVarChar(255)
+  issue_date        DateTime?               @db.Date
+  expiry_date       DateTime?               @db.Date
+  status            String                  @default("Pending") @db.VarChar(20)
+  remarks           String?                 @db.NVarChar(500)
+  attachment_url    String?                 @db.NVarChar(500)
+  createdate        DateTime                @default(now()) @db.DateTime
+  createdby         Int
+  updatedate        DateTime?               @db.DateTime
+  updatedby         Int?
+  log_inst          Int?                    @default(1)
+
+  employee_kpi_header hrms_d_employee_kpi     @relation(fields: [employee_kpi_id], references: [id], onUpdate: NoAction)
+  kpi_attachment_doc_type hrms_m_document_type? @relation(fields: [document_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_templates {

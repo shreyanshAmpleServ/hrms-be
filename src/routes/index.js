@@ -150,6 +150,7 @@ const importExportRoutes = require("../v1/routes/importExportRoutes.js");
 const hiringStageRoute = require("../v1/routes/hiringStageRoute.js");
 const hiringStageValueRoute = require("../v1/routes/hiringStageValueRoute.js");
 const candidateDocumentsRoute = require("../v1/routes/candidateDocumentsRoute.js");
+const employeeKPIRoute = require("../v1/routes/employeeKPIRoutes.js");
 const router = express.Router();
 
 // Version 1 API
@@ -304,6 +305,7 @@ router.use("/v1", importExportRoutes);
 router.use("/v1", hiringStageRoute);
 router.use("/v1", hiringStageValueRoute);
 router.use("/v1", candidateDocumentsRoute);
+router.use("/v1/employee-kpi", employeeKPIRoute);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;

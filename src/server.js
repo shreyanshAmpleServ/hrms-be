@@ -13,7 +13,6 @@ const app = require("./app");
 const logger = require("./Comman/logger");
 const { initializeCronJobs } = require("./cronjobs");
 const { startScheduler } = require("./v1/services/alertWorkflowService.js");
-require("./utils/consoleLogs");
 
 const PORT = process.env.PORT || 5000;
 
