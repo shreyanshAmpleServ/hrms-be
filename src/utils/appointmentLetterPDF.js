@@ -361,7 +361,7 @@ const appointmentLetterTemplate = `<!DOCTYPE html>
             </div>
             <div class="signature-block">
                 <div class="signature-line">
-                    <div class="signature-label">Employee Signature</div>
+                    <div style="font-weight: bold; font-size: 14px;">{{employeeName}}</div>
                     <div class="signature-label">Date: _________________</div>
                 </div>
             </div>
