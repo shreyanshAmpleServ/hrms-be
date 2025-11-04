@@ -198,6 +198,7 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
   }
 };
 
+// ✅ COMPLETE FIXED: All required fields included
 const getAppraisalForPDF = async (id) => {
   try {
     if (!id) {
@@ -213,8 +214,6 @@ const getAppraisalForPDF = async (id) => {
             full_name: true,
             employee_code: true,
             email: true,
-            department_id: true,
-            designation_id: true,
             hrms_employee_department: {
               select: {
                 id: true,
@@ -265,9 +264,9 @@ const getAppraisalForPDF = async (id) => {
         const logoMimeType =
           logoResponse.headers.get("content-type") || "image/png";
         companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
-        console.log("Logo converted to base64");
+        console.log("✓ Logo converted to base64");
       } catch (err) {
-        console.error("Error fetching logo:", err.message);
+        console.error("✗ Error fetching logo:", err.message);
         companyLogoBase64 = defaultConfig.company_logo;
       }
     }
@@ -281,9 +280,9 @@ const getAppraisalForPDF = async (id) => {
         const signatureMimeType =
           signatureResponse.headers.get("content-type") || "image/png";
         companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
-        console.log("Signature converted to base64");
+        console.log("✓ Signature converted to base64");
       } catch (err) {
-        console.error("Error fetching signature:", err.message);
+        console.error("✗ Error fetching signature:", err.message);
         companySignatureBase64 = defaultConfig.company_signature;
       }
     }
@@ -296,6 +295,7 @@ const getAppraisalForPDF = async (id) => {
     ].filter(Boolean);
     const fullAddress = addressParts.join(", ") || "Company Address";
 
+    // ✅ COMPLETE FIXED: All fields with correct values
     const pdfData = {
       companyLogo: companyLogoBase64 || defaultConfig?.company_logo || "",
       companySignature:
@@ -304,7 +304,6 @@ const getAppraisalForPDF = async (id) => {
       companyAddress: fullAddress,
       companyEmail: defaultConfig?.website || "info@company.com",
       companyPhone: defaultConfig?.phone_number || "Phone Number",
-      companySignatory: "HR Manager",
 
       employeeName: appraisal.appraisal_employee?.full_name || "N/A",
       employeeCode: appraisal.appraisal_employee?.employee_code || "N/A",
@@ -314,27 +313,27 @@ const getAppraisalForPDF = async (id) => {
       position:
         appraisal.appraisal_employee?.hrms_employee_designation
           ?.designation_name || "N/A",
-
       department:
         appraisal.appraisal_employee?.hrms_employee_department
           ?.department_name || "N/A",
-
       designation:
         appraisal.appraisal_employee?.hrms_employee_designation
           ?.designation_name || "N/A",
 
       managerName: appraisal.appraisal_manager?.full_name || "HR Manager",
-      appraisalDate: appraisal.review_date || appraisal.effective_date,
+
+      appraisalDate: appraisal.createdate,
       appraisalPeriod: appraisal.review_period || "N/A",
       overallRating: parseFloat(appraisal.final_score || appraisal.rating) || 0,
       managerComments: appraisal.reviewer_comments || "No comments provided",
       employeeComments: appraisal.overall_remarks || "No comments provided",
+      companySignatory: "HR Manager",
     };
 
-    console.log("Position:", pdfData.position);
-    console.log("Department:", pdfData.department);
-    console.log("Designation:", pdfData.designation);
-    console.log("Employee Code:", pdfData.employeeCode);
+    console.log(" Appraisal Date:", pdfData.appraisalDate);
+    console.log(" Appraisal Period:", pdfData.appraisalPeriod);
+    console.log(" Overall Rating:", pdfData.overallRating);
+    console.log(" Manager Name:", pdfData.managerName);
 
     return pdfData;
   } catch (error) {
@@ -366,13 +365,20 @@ const getAllAppraisalsForBulkDownload = async (
       select: {
         id: true,
         employee_id: true,
+        review_date: true,
+        review_period: true,
+        final_score: true,
+        rating: true,
+        reviewer_comments: true,
+        overall_remarks: true,
+        createdate: true,
         appraisal_employee: {
           select: {
             id: true,
             full_name: true,
             employee_code: true,
             email: true,
-
+            phone: true,
             hrms_employee_department: {
               select: {
                 id: true,

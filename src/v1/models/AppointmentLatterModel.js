@@ -49,7 +49,7 @@ const createAppointmentLatter = async (data) => {
       request_type: "appointment_letter",
       reference_id: reqData.id,
       request_data: `Appointment Letter for ${reqData.appointment_candidate?.full_name} - ${reqData.appointment_designation?.designation_name}`,
-      status: "P", // Pending approval
+      status: "P",
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });
@@ -203,7 +203,6 @@ const getAllAppointmentLatter = async (
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
-    // const totalCount = await prisma.hrms_d_appointment_letter.count();
     const totalCount = await prisma.hrms_d_appointment_letter.count({
       where: filters,
     });

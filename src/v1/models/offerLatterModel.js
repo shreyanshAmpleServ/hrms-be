@@ -337,6 +337,43 @@ const getOfferLetterForPDF = async (id) => {
     console.log("Company Signature:", defaultConfig?.company_signature);
     console.log("Company Name:", defaultConfig?.company_name);
 
+    let companyLogoBase64 = "";
+    let companySignatureBase64 = "";
+
+    // ✅ FIXED: Convert logo to base64
+    if (defaultConfig?.company_logo) {
+      try {
+        const fetch = require("node-fetch");
+        const logoResponse = await fetch(defaultConfig.company_logo);
+        const logoBuffer = await logoResponse.buffer();
+        const logoBase64 = logoBuffer.toString("base64");
+        const logoMimeType =
+          logoResponse.headers.get("content-type") || "image/png";
+        companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
+        console.log("Logo converted to base64");
+      } catch (err) {
+        console.error("Error fetching logo:", err.message);
+        companyLogoBase64 = defaultConfig.company_logo;
+      }
+    }
+
+    // ✅ FIXED: Convert signature to base64 (THIS WAS MISSING PROPER CONVERSION)
+    if (defaultConfig?.company_signature) {
+      try {
+        const fetch = require("node-fetch");
+        const signatureResponse = await fetch(defaultConfig.company_signature);
+        const signatureBuffer = await signatureResponse.buffer();
+        const signatureBase64 = signatureBuffer.toString("base64");
+        const signatureMimeType =
+          signatureResponse.headers.get("content-type") || "image/png";
+        companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
+        console.log("Signature converted to base64");
+      } catch (err) {
+        console.error("Error fetching signature:", err.message);
+        companySignatureBase64 = defaultConfig.company_signature;
+      }
+    }
+
     let payComponents = [
       {
         componentName: "Base Salary",
@@ -424,9 +461,11 @@ const getOfferLetterForPDF = async (id) => {
     ].filter(Boolean);
     const fullAddress = addressParts.join(", ") || "Company Address";
 
+    // ✅ FIXED: Use companySignatureBase64 instead of defaultConfig?.company_signature
     const pdfData = {
-      companyLogo: defaultConfig?.company_logo || "",
-      companySignature: defaultConfig?.company_signature || "",
+      companyLogo: companyLogoBase64 || defaultConfig?.company_logo || "",
+      companySignature:
+        companySignatureBase64 || defaultConfig?.company_signature || "", // ✅ FIXED HERE
       companyName: defaultConfig?.company_name || "Company Name",
       companyAddress: fullAddress,
       companyEmail: defaultConfig?.website || "info@company.com",
@@ -486,17 +525,10 @@ const getAllOfferLettersForBulkDownload = async (
             id: true,
             full_name: true,
             department_id: true,
-            designation_id: true,
             candidate_department: {
               select: {
                 id: true,
                 department_name: true,
-              },
-            },
-            candidate_designation: {
-              select: {
-                id: true,
-                designation_name: true,
               },
             },
           },
