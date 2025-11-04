@@ -366,6 +366,7 @@ const appointmentLetterTemplate = `<!DOCTYPE html>
                 </div>
             </div>
         </div>
+        <div>
 
         <!-- Footer -->
         <div class="footer">
