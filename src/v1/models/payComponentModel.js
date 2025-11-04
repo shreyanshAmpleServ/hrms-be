@@ -3,7 +3,6 @@ const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
 const prisma = new PrismaClient();
-const { createRequest } = require("./requestsModel");
 
 // Serialize pay component data
 const serializePayComponentData = (data) => ({
@@ -272,23 +271,6 @@ const createPayComponent = async (data) => {
         403
       );
     }
-
-    // Create approval request
-    await createRequest({
-      requester_id: requester_id,
-      request_type: "pay_component",
-      reference_id: result.id,
-      request_data: `Pay Component: ${result.component_name} (${result.component_code}) - Type: ${result.component_type}`,
-      status: "P",
-      createdby: requester_id,
-      log_inst: data.log_inst || 1,
-    });
-
-    console.log(` Pay component created with ID: ${result.id}`);
-    console.log(` Approval request initiated`);
-    console.log(
-      `Requester: ${requesterExists.full_name} (ID: ${requester_id})`
-    );
 
     return result;
   } catch (error) {

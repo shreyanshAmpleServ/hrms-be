@@ -225,46 +225,77 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
       return null;
     case "pay_component":
       if (reference_id) {
-        const payComponent = await prisma.hrms_m_pay_component.findUnique({
-          where: { id: parseInt(reference_id) },
-          select: {
-            component_name: true,
-            component_code: true,
-            component_type: true,
-            is_taxable: true,
-            is_statutory: true,
-            pay_or_deduct: true,
-            is_advance: true,
-            status: true,
-            factor: true,
-            execution_order: true,
-          },
-        });
+        const payComponent =
+          await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
+            {
+              where: { id: parseInt(reference_id) },
+              include: {
+                hrms_d_employee: {
+                  // ✅ CORRECT field name
+                  select: {
+                    id: true,
+                    full_name: true,
+                    employee_code: true,
+                    hrms_employee_department: {
+                      select: {
+                        id: true,
+                        department_name: true,
+                      },
+                    },
+                  },
+                },
+                hrms_d_employee_pay_component_assignment_line: {
+                  include: {
+                    pay_component_for_line: {
+                      select: {
+                        id: true,
+                        component_name: true,
+                        component_code: true,
+                      },
+                    },
+                    pay_component_line_currency: {
+                      select: {
+                        id: true,
+                        currency_name: true,
+                        currency_code: true,
+                      },
+                    },
+                  },
+                },
+                branch_pay_component_header: {
+                  select: {
+                    id: true,
+                    branch_name: true,
+                  },
+                },
+              },
+            }
+          );
 
         if (payComponent) {
           return {
-            component_name: payComponent.component_name || "N/A",
-            component_code: payComponent.component_code || "N/A",
-            component_type: payComponent.component_type || "N/A",
-            is_taxable: payComponent.is_taxable === "Y" ? "Yes" : "No",
-            is_statutory: payComponent.is_statutory === "Y" ? "Yes" : "No",
-            pay_or_deduct:
-              payComponent.pay_or_deduct === "P" ? "Payment" : "Deduction",
-            is_advance: payComponent.is_advance === "Y" ? "Yes" : "No",
-            factor: payComponent.factor || "N/A",
-            execution_order: payComponent.execution_order || "N/A",
-            status:
-              payComponent.status === "P"
-                ? "Pending"
-                : payComponent.status === "A"
-                ? "Approved"
-                : payComponent.status === "R"
-                ? "Rejected"
-                : payComponent.status || "N/A",
+            id: payComponent.id,
+            employee_name: payComponent.hrms_d_employee?.full_name,
+            employee_code: payComponent.hrms_d_employee?.employee_code,
+            department:
+              payComponent.hrms_d_employee?.hrms_employee_department
+                ?.department_name,
+            branch: payComponent.branch_pay_component_header?.branch_name,
+            status: payComponent.status,
+            effective_from: payComponent.effective_from,
+            effective_to: payComponent.effective_to,
+            components:
+              payComponent.hrms_d_employee_pay_component_assignment_line?.map(
+                (line) => ({
+                  component_name: line.pay_component_for_line?.component_name,
+                  amount: line.amount,
+                  currency: line.pay_component_line_currency?.currency_code,
+                })
+              ),
           };
         }
+        return null;
       }
-      return null;
   }
 };
 

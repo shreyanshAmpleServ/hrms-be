@@ -1,10 +1,7 @@
 const express = require("express");
-const BasicPayController = require("../controller/BasicPayController"); // Assuming the controller is named BasicPayController.js
+const BasicPayController = require("../controller/BasicPayController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/UploadFileMiddleware");
-const {
-  setupNotificationMiddleware,
-} = require("../middlewares/notificationMiddleware");
 
 const router = express.Router();
 
@@ -12,14 +9,6 @@ router.post(
   "/basic-pay/import",
   authenticateToken,
   upload.single("file"),
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Component Assignment",
-      "import"
-    ),
   BasicPayController.importFromExcel
 );
 
@@ -42,19 +31,7 @@ router.post(
   upload.single("file"),
   BasicPayController.downloadPreviewExcel
 );
-router.post(
-  "/basic-pay",
-  authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Component Assignment",
-      "create"
-    ),
-  BasicPayController.createBasicPay
-);
+router.post("/basic-pay", authenticateToken, BasicPayController.createBasicPay);
 
 router.get(
   "/basic-pay/:id",
@@ -66,14 +43,6 @@ router.get(
 router.put(
   "/basic-pay/:id",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Component Assignment",
-      "update"
-    ),
   BasicPayController.updateBasicPay
 );
 
@@ -81,14 +50,6 @@ router.put(
 router.delete(
   "/basic-pay/:id",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Component Assignment",
-      "delete"
-    ),
   BasicPayController.deleteBasicPay
 );
 
