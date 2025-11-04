@@ -11,13 +11,13 @@ Add these models to your `schema.prisma` file following your existing patterns:
 ```prisma
 // Employee KPI Header
 model hrms_d_employee_kpi {
-  id                          Int                                  @id @default(autoincrement())
+  id                          Int                                   @id @default(autoincrement())
   employee_id                 Int
   reviewer_id                 Int
   review_date                 DateTime                              @db.Date
-  review_remarks              String?                              @db.NVarChar(500)
+  review_remarks              String?                               @db.NVarChar(500)
   next_review_date            DateTime?                             @db.Date
-  employment_type             String?                              @db.VarChar(50)
+  employment_type             String?                               @db.VarChar(50)
   contract_expiry_date        DateTime?                             @db.Date
   employment_remarks           String?                              @db.NVarChar(500)
   rating                      Decimal?                              @db.Decimal(19, 6)
@@ -32,11 +32,11 @@ model hrms_d_employee_kpi {
 
   kpi_employee                hrms_d_employee                       @relation("EmployeeKPI", fields: [employee_id], references: [id], onUpdate: NoAction)
   kpi_reviewer                hrms_d_employee                       @relation("KPIReviewer", fields: [reviewer_id], references: [id], onUpdate: NoAction)
-  last_kpi                    hrms_d_employee_kpi?                 @relation("LastKPI", fields: [last_kpi_id], references: [id], onUpdate: NoAction)
-  next_kpi                    hrms_d_employee_kpi[]                @relation("LastKPI")
+  last_kpi                    hrms_d_employee_kpi?                  @relation("LastKPI", fields: [last_kpi_id], references: [id], onUpdate: NoAction)
+  next_kpi                    hrms_d_employee_kpi[]                 @relation("LastKPI")
   kpi_contents                hrms_d_employee_kpi_contents[]
   kpi_component_assignment    hrms_d_employee_kpi_component_assignment?
-  kpi_attachments              hrms_d_employee_kpi_attachments[]
+  kpi_attachments             hrms_d_employee_kpi_attachments[]
 }
 
 // Employee KPI Contents (Tab 1)
