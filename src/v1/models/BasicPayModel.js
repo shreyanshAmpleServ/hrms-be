@@ -5,6 +5,7 @@ const xlsx = require("xlsx");
 
 const moment = require("moment");
 const { errorNotExist } = require("../../Comman/errorNotExist");
+const { createRequest } = require("./requestsModel");
 const requiredFields = {
   pay_component_id: "Pay Component is required",
   amount: "Amount is required",
@@ -20,13 +21,6 @@ const serializeHeaders = (data) => {
 
   // Required fields
   if ("employee_id" in data) serialized.employee_id = Number(data.employee_id);
-  // if ("effective_from" in data) {
-  //   serialized.effective_from = new Date(data.effective_from);
-  // }
-  // if ("effective_to" in data && data.effective_to) {
-  //   serialized.effective_to = new Date(data.effective_to);
-  // }
-  // Optional fields
   if ("department_id" in data)
     serialized.department_id = Number(data.department_id);
   if ("branch_id" in data) serialized.branch_id = Number(data.branch_id);
@@ -84,7 +78,6 @@ const serializePayLine = (data) => {
   };
 };
 
-// Parse  after retrieving it
 const parseData = (data) => {
   if (data && data.social_medias) {
     data.social_medias = JSON.parse(data.social_medias);
@@ -92,7 +85,6 @@ const parseData = (data) => {
   return data;
 };
 
-// Check if contactIds are valid and exist
 const validateContactsExist = async (contactIds) => {
   const contacts = await prisma.crms_m_contact.findMany({
     where: {
@@ -111,77 +103,273 @@ const validateContactsExist = async (contactIds) => {
 };
 
 // Create a new employee
+// const createBasicPay = async (data) => {
+//   const { payLineData, ...headerDatas } = data; // Separate `contactIds` from other deal data
+//   try {
+//     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
+//     if (!data.employee_id) {
+//       throw new CustomError(`Employee is required`, 400);
+//     }
+//     // if (!data.effective_from) {
+//     //   throw new CustomError(`Effective from  is required`, 400);
+//     // }
+//     if (!data.status) {
+//       throw new CustomError(`Status Type is required`, 400);
+//     }
+
+//     const existing =
+//       await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+//         where: { employee_id: Number(data.employee_id) },
+//       });
+//     if (existing) {
+//       throw new CustomError(
+//         "Component is already assigned for this employee.",
+//         400
+//       );
+//     }
+//     const serializedData = serializeHeaders(headerDatas);
+//     // Use transaction for atomicity
+//     const result = await prisma.$transaction(async (prisma) => {
+//       // Create the employee
+//       const payHeader =
+//         await prisma.hrms_d_employee_pay_component_assignment_header.create({
+//           data: {
+//             ...serializedData,
+//             // is_active: data.is_active || "Y",
+//             createdate: new Date(),
+//             createdby: data.createdby || 1,
+//             log_inst: data.log_inst || 1,
+//           },
+//         });
+//       // const serializedAddres = serializePayLine(payLineData);
+//       // // Map contacts to the employee
+//       // const addressDatas = {
+//       //   ...serializedAddres,
+//       //   employee_id: employee.id,
+//       // };
+//       const lineDatas = payLineData.map((addr) => ({
+//         ...serializePayLine(addr),
+//         parent_id: payHeader.id,
+//         createdate: new Date(),
+//         createdby: headerDatas.createdby || 1,
+//       }));
+//       for (const addr of payLineData) {
+//         for (const [field, message] of Object.entries(requiredFields)) {
+//           if (!addr[field]) {
+//             throw new CustomError(message, 400);
+//           }
+//         }
+//       }
+
+//       await prisma.hrms_d_employee_pay_component_assignment_line.createMany({
+//         data: lineDatas,
+//       });
+
+//       return payHeader?.id;
+//       // return fullData;
+//     });
+//     const fullData =
+//       await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+//         where: { id: result },
+//         include: {
+//           hrms_d_employee_pay_component_assignment_line: {
+//             include: {
+//               pay_component_line_currency: {
+//                 select: {
+//                   id: true,
+//                   currency_name: true,
+//                   currency_code: true,
+//                 },
+//               },
+//               // pay_component_line_tax_slab: {
+//               //   select: {
+//               //     id: true,
+//               //     pay_component_id: true,
+//               //     rule_type: true,
+//               //   },
+//               // },
+//               pay_component_line_project: {
+//                 select: {
+//                   id: true,
+//                   code: true,
+//                   name: true,
+//                 },
+//               },
+//               pay_component_line_cost_center1: {
+//                 select: {
+//                   id: true,
+//                   name: true,
+//                   dimension_id: true,
+//                 },
+//               },
+//               pay_component_line_cost_center2: {
+//                 select: {
+//                   id: true,
+//                   name: true,
+//                   dimension_id: true,
+//                 },
+//               },
+//               pay_component_line_cost_center3: {
+//                 select: {
+//                   id: true,
+//                   name: true,
+//                   dimension_id: true,
+//                 },
+//               },
+//               pay_component_line_cost_center4: {
+//                 select: {
+//                   id: true,
+//                   name: true,
+//                   dimension_id: true,
+//                 },
+//               },
+//               pay_component_line_cost_center5: {
+//                 select: {
+//                   id: true,
+//                   name: true,
+//                   dimension_id: true,
+//                 },
+//               },
+//             },
+//           },
+//           work_life_entry_pay_header: {
+//             select: {
+//               id: true,
+//               event_type: true,
+//               work_life_event_type: {
+//                 select: {
+//                   id: true,
+//                   event_type_name: true,
+//                 },
+//               },
+//             },
+//           },
+//           branch_pay_component_header: {
+//             select: { id: true, branch_name: true },
+//           },
+//           hrms_d_employee: {
+//             include: {
+//               hrms_employee_department: {
+//                 select: {
+//                   id: true,
+//                   department_name: true,
+//                 },
+//               },
+//               hrms_employee_designation: {
+//                 select: {
+//                   id: true,
+//                   designation_name: true,
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       });
+
+//     return parseData(fullData);
+//   } catch (error) {
+//     console.log("Error to Create employee : ", error);
+//     throw new CustomError(
+//       `Error creating employee: ${error.message}`,
+//       error.status || 500
+//     );
+//   }
+// };
+
 const createBasicPay = async (data) => {
-  const { payLineData, ...headerDatas } = data; // Separate `contactIds` from other deal data
   try {
-    await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     if (!data.employee_id) {
-      throw new CustomError(`Employee is required`, 400);
-    }
-    // if (!data.effective_from) {
-    //   throw new CustomError(`Effective from  is required`, 400);
-    // }
-    if (!data.status) {
-      throw new CustomError(`Status Type is required`, 400);
+      throw new CustomError("Employee ID is required", 400);
     }
 
     const existing =
       await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
-        where: { employee_id: Number(data.employee_id) },
+        where: {
+          employee_id: Number(data.employee_id),
+          status: { in: ["Active", "Pending"] },
+        },
       });
+
     if (existing) {
       throw new CustomError(
-        "Component is already assigned for this employee.",
+        "An active or pending pay component assignment already exists for this employee.",
         400
       );
     }
-    const serializedData = serializeHeaders(headerDatas);
-    // Use transaction for atomicity
-    const result = await prisma.$transaction(async (prisma) => {
-      // Create the employee
-      const payHeader =
-        await prisma.hrms_d_employee_pay_component_assignment_header.create({
-          data: {
-            ...serializedData,
-            // is_active: data.is_active || "Y",
-            createdate: new Date(),
-            createdby: data.createdby || 1,
-            log_inst: data.log_inst || 1,
-          },
-        });
-      // const serializedAddres = serializePayLine(payLineData);
-      // // Map contacts to the employee
-      // const addressDatas = {
-      //   ...serializedAddres,
-      //   employee_id: employee.id,
-      // };
-      const lineDatas = payLineData.map((addr) => ({
-        ...serializePayLine(addr),
-        parent_id: payHeader.id,
-        createdate: new Date(),
-        createdby: headerDatas.createdby || 1,
-      }));
-      for (const addr of payLineData) {
-        for (const [field, message] of Object.entries(requiredFields)) {
-          if (!addr[field]) {
-            throw new CustomError(message, 400);
-          }
-        }
-      }
 
-      await prisma.hrms_d_employee_pay_component_assignment_line.createMany({
-        data: lineDatas,
+    const { payLineData = [], ...headerData } = data;
+
+    if (!payLineData || payLineData.length === 0) {
+      throw new CustomError("At least one pay component line is required", 400);
+    }
+
+    const payComponentHeader =
+      await prisma.hrms_d_employee_pay_component_assignment_header.create({
+        data: {
+          ...serializeHeaders(headerData),
+          status: "Pending",
+          createdby: data.createdby || 1,
+          createdate: new Date(),
+          log_inst: data.log_inst || 1,
+        },
+        include: {
+          hrms_d_employee: {
+            select: {
+              id: true,
+              employee_code: true,
+              full_name: true,
+              email: true,
+            },
+          },
+          branch_pay_component_header: {
+            select: {
+              id: true,
+              branch_name: true,
+            },
+          },
+          work_life_entry_pay_header: {
+            select: {
+              id: true,
+              event_type: true,
+            },
+          },
+        },
       });
 
-      return payHeader?.id;
-      // return fullData;
+    const lineDatas = payLineData.map((line, index) => ({
+      parent_id: payComponentHeader.id,
+      ...serializePayLine(line),
+      line_num: index + 1,
+      createdate: new Date(),
+      createdby: data.createdby || 1,
+    }));
+
+    await prisma.hrms_d_employee_pay_component_assignment_line.createMany({
+      data: lineDatas,
     });
+
+    await createRequest({
+      requester_id: payComponentHeader.employee_id,
+      request_type: "pay_component",
+      reference_id: payComponentHeader.id,
+      request_data: `Pay component assignment for ${payComponentHeader.hrms_d_employee.full_name}`,
+      createdby: data.createdby || 1,
+      log_inst: data.log_inst || 1,
+    });
+
     const fullData =
-      await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
-        where: { id: result },
+      await prisma.hrms_d_employee_pay_component_assignment_header.findUnique({
+        where: { id: payComponentHeader.id },
         include: {
           hrms_d_employee_pay_component_assignment_line: {
             include: {
+              pay_component_for_line: {
+                select: {
+                  id: true,
+                  component_name: true,
+                  component_code: true,
+                },
+              },
               pay_component_line_currency: {
                 select: {
                   id: true,
@@ -189,74 +377,14 @@ const createBasicPay = async (data) => {
                   currency_code: true,
                 },
               },
-              // pay_component_line_tax_slab: {
-              //   select: {
-              //     id: true,
-              //     pay_component_id: true,
-              //     rule_type: true,
-              //   },
-              // },
-              pay_component_line_project: {
-                select: {
-                  id: true,
-                  code: true,
-                  name: true,
-                },
-              },
-              pay_component_line_cost_center1: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
-              pay_component_line_cost_center2: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
-              pay_component_line_cost_center3: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
-              pay_component_line_cost_center4: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
-              pay_component_line_cost_center5: {
-                select: {
-                  id: true,
-                  name: true,
-                  dimension_id: true,
-                },
-              },
             },
-          },
-          work_life_entry_pay_header: {
-            select: {
-              id: true,
-              event_type: true,
-              work_life_event_type: {
-                select: {
-                  id: true,
-                  event_type_name: true,
-                },
-              },
-            },
-          },
-          branch_pay_component_header: {
-            select: { id: true, branch_name: true },
           },
           hrms_d_employee: {
-            include: {
+            select: {
+              id: true,
+              employee_code: true,
+              full_name: true,
+              email: true,
               hrms_employee_department: {
                 select: {
                   id: true,
@@ -271,22 +399,39 @@ const createBasicPay = async (data) => {
               },
             },
           },
+          branch_pay_component_header: {
+            select: {
+              id: true,
+              branch_name: true,
+            },
+          },
+          work_life_entry_pay_header: {
+            select: {
+              id: true,
+              event_type: true,
+              work_life_event_type: {
+                select: {
+                  id: true,
+                  event_type_name: true,
+                },
+              },
+            },
+          },
         },
       });
 
-    return parseData(fullData);
+    return fullData;
   } catch (error) {
-    console.log("Error to Create employee : ", error);
+    console.error("Error creating pay component assignment:", error);
     throw new CustomError(
-      `Error creating employee: ${error.message}`,
+      `Error creating pay component assignment: ${error.message}`,
       error.status || 500
     );
   }
 };
 
-// Update an existing employee
 const updateBasicPay = async (id, data) => {
-  const { payLineData, ...headerDatas } = data; // Separate `contactIds` from other employee data
+  const { payLineData, ...headerDatas } = data;
   try {
     if (data.employee_id) {
       const existing =
@@ -308,11 +453,9 @@ const updateBasicPay = async (id, data) => {
     };
     const serializedData = serializeHeaders(updatedData);
 
-    // Filter address by existence of ID
     const newAddresses = payLineData?.filter((addr) => !addr.id) || [];
     const existingAddresses = payLineData?.filter((addr) => addr.id) || [];
 
-    // Prepare address data
     const newSerialized =
       newAddresses?.map((addr) => ({
         ...serializePayLine(addr),
@@ -321,10 +464,8 @@ const updateBasicPay = async (id, data) => {
         createdby: data.createdby || 1,
       })) || [];
 
-    // Use transaction for atomicity
     const result = await prisma.$transaction(
       async (prisma) => {
-        // Update the employee
         const employee =
           await prisma.hrms_d_employee_pay_component_assignment_header.update({
             where: { id: parseInt(id) },
@@ -340,12 +481,6 @@ const updateBasicPay = async (id, data) => {
             },
           });
 
-        // 2. Fetch current DB address IDs
-        // const dbAddresses = await prisma.hrms_d_employee_pay_component_assignment_header.findMany({
-        //   where: { employee_id: parseInt(id) },
-        //   select: { id: true },
-        // });
-
         if (Array.isArray(payLineData) && payLineData.length > 0) {
           const dbIds =
             employee?.hrms_d_employee_pay_component_assignment_line?.map(
@@ -360,7 +495,6 @@ const updateBasicPay = async (id, data) => {
               }
             }
           }
-          // 3. Delete removed addresses (if any)
           const toDeleteIds = payLineData
             ? dbIds.filter((id) => !requestIds.includes(id))
             : [];
@@ -372,7 +506,6 @@ const updateBasicPay = async (id, data) => {
             );
           }
 
-          // 4. Update existing addresses
           for (const addr of existingAddresses) {
             await prisma.hrms_d_employee_pay_component_assignment_line.update({
               where: { id: addr.id },
@@ -380,7 +513,6 @@ const updateBasicPay = async (id, data) => {
             });
           }
 
-          // 5. Create new addresses in bulk
           if (newSerialized.length > 0) {
             await prisma.hrms_d_employee_pay_component_assignment_line.createMany(
               {
@@ -389,14 +521,7 @@ const updateBasicPay = async (id, data) => {
             );
           }
         }
-        //  const serializedAddres = serializePayLine(payLineData);
-        // // Map contacts to the employee
-        // const addressDatas = {
-        //   ...serializedAddres,
-        //   employee_id: employee.id,
-        // };
-        // await prisma.hrms_d_employee_pay_component_assignment_header.update({ data: addressDatas });
-        // Retrieve the updated employee with hrms_d_employee_pay_component_assignment_header and employeeHistory included
+
         const updatedEmp =
           await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
             {

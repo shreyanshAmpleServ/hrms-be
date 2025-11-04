@@ -994,431 +994,6 @@ const findRequestByRequestTypeAndReferenceId = async (request) => {
   }
 };
 
-// const findRequestByRequestUsers = async (
-//   search = "",
-//   page = 1,
-//   size = 10,
-//   employee_id,
-//   requestType = "",
-//   status = "",
-//   requester_id,
-//   startDate,
-//   endDate,
-//   overall_status
-// ) => {
-//   page = !page || page == 0 ? 1 : page;
-//   size = size || 10;
-//   const skip = (page - 1) * size || 0;
-
-//   const filters = {};
-
-//   if (search) {
-//     filters.OR = [
-//       {
-//         request_type: { contains: search.toLowerCase() },
-//       },
-//       {
-//         request_data: { contains: search.toLowerCase() },
-//       },
-//     ];
-//   }
-
-//   if (requestType) {
-//     filters.request_type = { equals: requestType };
-//   }
-
-//   if (status) {
-//     filters.status = { equals: status };
-//   }
-
-//   if (overall_status) {
-//     filters.overall_status = { equals: overall_status };
-//   }
-
-//   if (requester_id) {
-//     filters.requester_id = { equals: requester_id };
-//   }
-
-//   if (startDate && endDate) {
-//     const start = new Date(startDate);
-//     const end = new Date(endDate);
-//     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-//       filters.createdate = { gte: start, lte: end };
-//     }
-//   }
-
-//   try {
-//     const reqData = await prisma.hrms_d_requests.findMany({
-//       where: filters,
-//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-//       include: {
-//         requests_employee: {
-//           select: {
-//             id: true,
-//             full_name: true,
-//             employee_code: true,
-//             profile_pic: true,
-//             createdate: true,
-//           },
-//         },
-//         request_approval_request: {
-//           orderBy: { sequence: "asc" },
-//           select: {
-//             id: true,
-//             request_id: true,
-//             approver_id: true,
-//             sequence: true,
-//             status: true,
-//             action_at: true,
-//             createdate: true,
-//             request_approval_approver: {
-//               select: {
-//                 id: true,
-//                 full_name: true,
-//                 employee_code: true,
-//               },
-//             },
-//           },
-//         },
-//       },
-//     });
-
-//     let data = [];
-
-//     await Promise.all(
-//       reqData.map(async (request) => {
-//         const requestType = request.request_type;
-//         const referenceId = request.reference_id;
-//         if (requestType === "interview_stage" && referenceId) {
-//           const interviewRemark =
-//             await prisma.hrms_m_interview_stage_remark.findUnique({
-//               where: { id: parseInt(referenceId) },
-//               select: {
-//                 id: true,
-//                 status: true,
-//                 stage_id: true,
-//                 remark: true,
-//                 stage_name: true,
-//                 interview_stage_candidate: {
-//                   select: {
-//                     id: true,
-//                     full_name: true,
-//                     candidate_code: true,
-//                   },
-//                 },
-//               },
-//             });
-//           if (interviewRemark) {
-//             data.push({
-//               ...request,
-//               createdate: request.createdate,
-//               reference: interviewRemark,
-//             });
-//           }
-//         }
-//         if (requestType === "leave_request" && referenceId) {
-//           const leaveRequest = await prisma.hrms_d_leave_application.findUnique(
-//             {
-//               where: { id: parseInt(referenceId) },
-//               select: {
-//                 id: true,
-//                 status: true,
-//                 leave_type_id: true,
-//                 start_date: true,
-//                 end_date: true,
-//                 reason: true,
-//                 leave_types: {
-//                   select: {
-//                     id: true,
-//                     leave_type: true,
-//                   },
-//                 },
-//               },
-//             }
-//           );
-//           if (leaveRequest) {
-//             data.push({
-//               ...request,
-//               createdate: request.createdate,
-//               reference: leaveRequest,
-//             });
-//           }
-//         }
-//         if (requestType === "loan_request" && referenceId) {
-//           const loanRequest = await prisma.hrms_d_loan_request.findUnique({
-//             where: { id: parseInt(referenceId) },
-//             select: {
-//               id: true,
-//               status: true,
-//               amount: true,
-//               emi_months: true,
-//               currency: true,
-//               loan_req_employee: {
-//                 select: {
-//                   id: true,
-//                   full_name: true,
-//                   employee_code: true,
-//                 },
-//               },
-//               loan_req_currency: {
-//                 select: {
-//                   id: true,
-//                   currency_code: true,
-//                   currency_name: true,
-//                 },
-//               },
-//               loan_emi_loan_request: {
-//                 select: {
-//                   id: true,
-//                   due_month: true,
-//                   due_year: true,
-//                   emi_amount: true,
-//                   status: true,
-//                   payslip_id: true,
-//                 },
-//               },
-//               loan_types: {
-//                 select: {
-//                   id: true,
-//                   loan_name: true,
-//                 },
-//               },
-//             },
-//           });
-//           if (loanRequest) {
-//             data.push({
-//               ...request,
-//               createdate: request.createdate,
-//               reference: loanRequest,
-//             });
-//           }
-//         }
-//         if (requestType === "advance_request" && referenceId) {
-//           const advancePayment =
-//             await prisma.hrms_d_advance_payment_entry.findUnique({
-//               where: { id: parseInt(referenceId) },
-//               select: {
-//                 id: true,
-//                 employee_id: true,
-//                 request_date: true,
-//                 amount_requested: true,
-//                 amount_approved: true,
-//                 approval_status: true,
-//                 approval_date: true,
-//                 approved_by: true,
-//                 reason: true,
-//                 repayment_schedule: true,
-//                 hrms_advance_payement_entry_employee: {
-//                   select: {
-//                     id: true,
-//                     full_name: true,
-//                     employee_code: true,
-//                     employee_currency: {
-//                       select: {
-//                         id: true,
-//                         currency_code: true,
-//                         currency_name: true,
-//                       },
-//                     },
-//                   },
-//                 },
-//                 hrms_advance_payement_entry_approvedBy: {
-//                   select: {
-//                     id: true,
-//                     full_name: true,
-//                   },
-//                 },
-//               },
-//             });
-//           if (advancePayment) {
-//             data.push({
-//               ...request,
-//               createdate: request.createdate,
-//               reference: advancePayment,
-//             });
-//           }
-//         }
-//         if (requestType === "asset_request" && referenceId) {
-//           const assetRequest = await prisma.hrms_d_asset_assignment.findUnique({
-//             where: { id: parseInt(referenceId) },
-//             select: {
-//               id: true,
-//               asset_type_id: true,
-//               asset_name: true,
-//               serial_number: true,
-//               issued_on: true,
-//               returned_on: true,
-//               status: true,
-//               asset_assignment_employee: {
-//                 select: {
-//                   id: true,
-//                   full_name: true,
-//                   employee_code: true,
-//                 },
-//               },
-//               asset_assignment_type: {
-//                 select: {
-//                   id: true,
-//                   id: true,
-//                   asset_type_name: true,
-//                   depreciation_rate: true,
-//                 },
-//               },
-//             },
-//           });
-//           if (assetRequest) {
-//             data.push({
-//               ...request,
-//               createdate: request.createdate,
-//               reference: assetRequest,
-//             });
-//           }
-//         }
-//         if (requestType === "probation_review" && referenceId) {
-//           const probationRequest =
-//             await prisma.hrms_d_probation_review.findUnique({
-//               where: { id: parseInt(referenceId) },
-//               select: {
-//                 id: true,
-//                 employee_id: true,
-//                 probation_end_date: true,
-//                 review_notes: true,
-//                 confirmation_status: true,
-//                 confirmation_date: true,
-//                 reviewer_id: true,
-//                 review_meeting_date: true,
-//                 performance_rating: true,
-//                 extension_required: true,
-//                 extension_reason: true,
-//                 extended_till_date: true,
-//                 next_review_date: true,
-//                 final_remarks: true,
-//                 probation_review_employee: {
-//                   select: {
-//                     id: true,
-//                     employee_code: true,
-//                     full_name: true,
-//                   },
-//                 },
-//                 probation_reviewer: {
-//                   select: {
-//                     id: true,
-//                     employee_code: true,
-//                     full_name: true,
-//                   },
-//                 },
-//               },
-//             });
-//           if (probationRequest) {
-//             data.push({
-//               ...request,
-//               createdate: request.createdate,
-//               reference: probationRequest,
-//             });
-//           }
-//         }
-//         if (requestType === "appraisal_review" && referenceId) {
-//           const appraisalRequest = await prisma.hrms_d_appraisal.findUnique({
-//             where: { id: parseInt(referenceId) },
-//             select: {
-//               id: true,
-//               employee_id: true,
-//               review_period: true,
-//               rating: true,
-//               reviewer_comments: true,
-//               appraisal_employee: {
-//                 select: {
-//                   full_name: true,
-//                   id: true,
-//                 },
-//               },
-//             },
-//           });
-//           if (appraisalRequest) {
-//             data.push({
-//               ...request,
-//               createdate: request.createdate,
-//               reference: appraisalRequest,
-//             });
-//           }
-//         }
-//         if (requestType === "leave_encashment" && referenceId) {
-//           const leaveEncashmentRequest =
-//             await prisma.hrms_d_leave_encashment.findUnique({
-//               where: { id: parseInt(referenceId) },
-//               select: {
-//                 id: true,
-//                 employee_id: true,
-//                 leave_type_id: true,
-//                 leave_days: true,
-//                 encashment_amount: true,
-//                 approval_status: true,
-//                 encashment_date: true,
-//                 basic_salary: true,
-//                 payroll_period: true,
-//                 total_amount: true,
-//                 entitled: true,
-//                 total_available: true,
-//                 used: true,
-//                 balance: true,
-//                 requested: true,
-//                 requested_date: true,
-//                 leave_encashment_employee: {
-//                   select: {
-//                     full_name: true,
-//                     id: true,
-//                   },
-//                 },
-//                 encashment_leave_types: {
-//                   select: {
-//                     leave_type: true,
-//                     id: true,
-//                   },
-//                 },
-//               },
-//             });
-//           if (leaveEncashmentRequest) {
-//             data.push({
-//               ...request,
-//               createdate: request.createdate,
-//               reference: leaveEncashmentRequest,
-//             });
-//           }
-//         }
-//       })
-//     );
-//     data.sort((a, b) => new Date(b.createdate) - new Date(a.createdate));
-//     const filteredData = data.filter((request) => {
-//       const approvals = request.request_approval_request;
-//       const approverIndex = approvals.findIndex(
-//         (approval) =>
-//           approval.approver_id === employee_id &&
-//           (status === "" || approval.status === status)
-//       );
-//       if (approverIndex === -1) {
-//         return false;
-//       }
-//       if (approverIndex === 0) {
-//         return true;
-//       }
-//       const prevApproval = approvals[approverIndex - 1];
-//       const shouldInclude = prevApproval?.status === "A";
-//       return shouldInclude;
-//     });
-
-//     const slideData = filteredData.slice(skip, skip + size);
-//     return {
-//       data: slideData,
-//       currentPage: page,
-//       size,
-//       totalPages: Math.ceil(filteredData.length / size),
-//       totalCount: filteredData.length,
-//     };
-//   } catch (error) {
-//     throw new CustomError(`${error.message}`, 503);
-//   }
-// };
-
 const findRequestByRequestUsers = async (
   search = "",
   page = 1,
@@ -1931,19 +1506,72 @@ const findRequestByRequestUsers = async (
         }
         if (requestType === "pay_component" && referenceId) {
           const payComponentRequest =
-            await prisma.hrms_m_pay_component.findUnique({
-              where: { id: parseInt(referenceId) },
-              select: {
-                id: true,
-                component_name: true,
-                component_code: true,
-              },
-            });
+            await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
+              {
+                where: { id: parseInt(referenceId) },
+                include: {
+                  hrms_d_employee: {
+                    select: {
+                      id: true,
+                      full_name: true,
+                      employee_code: true,
+                    },
+                  },
+                  hrms_d_employee_pay_component_assignment_line: {
+                    include: {
+                      pay_component_for_line: {
+                        select: {
+                          id: true,
+                          component_name: true,
+                          component_code: true,
+                        },
+                      },
+                      pay_component_line_currency: {
+                        select: {
+                          id: true,
+                          currency_name: true,
+                          currency_code: true,
+                        },
+                      },
+                    },
+                  },
+                  branch_pay_component_header: {
+                    select: {
+                      id: true,
+                      branch_name: true,
+                    },
+                  },
+                },
+              }
+            );
+
           if (payComponentRequest) {
             data.push({
               ...request,
               createdate: request.createdate,
-              reference: payComponentRequest,
+              reference: {
+                id: payComponentRequest.id,
+                employee_name: payComponentRequest.hrms_d_employee?.full_name,
+                employee_code:
+                  payComponentRequest.hrms_d_employee?.employee_code,
+                department:
+                  payComponentRequest.hrms_d_employee?.hrms_employee_department
+                    ?.department_name,
+                branch:
+                  payComponentRequest.branch_pay_component_header?.branch_name,
+                status: payComponentRequest.status,
+                effective_from: payComponentRequest.effective_from,
+                effective_to: payComponentRequest.effective_to,
+                components:
+                  payComponentRequest.hrms_d_employee_pay_component_assignment_line?.map(
+                    (line) => ({
+                      component_name:
+                        line.pay_component_for_line?.component_name,
+                      amount: line.amount,
+                      currency: line.pay_component_line_currency?.currency_code,
+                    })
+                  ),
+              },
             });
           }
         }
@@ -1982,6 +1610,7 @@ const findRequestByRequestUsers = async (
     throw new CustomError(`${error.message}`, 503);
   }
 };
+
 const takeActionOnRequest = async ({
   request_id,
   request_approval_id,
@@ -2164,7 +1793,7 @@ const takeActionOnRequest = async ({
           },
         });
       } else if (request.request_type === "pay_component") {
-        await prisma.hrms_m_pay_component.update({
+        await prisma.hrms_d_employee_pay_component_assignment_header.update({
           where: { id: request.reference_id },
           data: {
             updatedby: acted_by,
@@ -2315,7 +1944,7 @@ const takeActionOnRequest = async ({
             },
           });
         } else if (request.request_type === "pay_component") {
-          await prisma.hrms_m_pay_component.update({
+          await prisma.hrms_d_employee_pay_component_assignment_header.update({
             where: { id: request.reference_id },
             data: {
               status: "R",
@@ -2499,7 +2128,7 @@ const takeActionOnRequest = async ({
             },
           });
         } else if (request.request_type === "pay_component") {
-          await prisma.hrms_m_pay_component.update({
+          await prisma.hrms_d_employee_pay_component_assignment_header.update({
             where: { id: request.reference_id },
             data: {
               status: "A",

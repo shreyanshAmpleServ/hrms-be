@@ -157,21 +157,23 @@ const appraisalTemplate = `<!DOCTYPE html>
             width: 45%;
         }
 
+        .signature-image {
+            max-height: 60px;
+            max-width: 150px;
+            margin-bottom: 10px;
+            display: block;
+        }
+
         .signature-line {
             border-top: 2px solid #333;
-            margin-top: 60px;
+            margin-top: 10px;
             padding-top: 10px;
         }
 
         .signature-label {
             font-size: 12px;
             color: #555;
-        }
-
-        .signature-image {
-            max-height: 60px;
-            max-width: 150px;
-            margin-bottom: 10px;
+            margin-top: 5px;
         }
 
         .footer {
@@ -252,14 +254,14 @@ const appraisalTemplate = `<!DOCTYPE html>
         <div class="signature-box">
             <div class="signature-block">
                 {{companySignature}}
-                <div style="font-weight: bold;">{{managerName}}</div>
+                <div style="font-weight: bold; font-size: 14px;">{{managerName}}</div>
                 <div class="signature-label">Manager/Supervisor</div>
-                <div class="signature-label">Date: {{appraisalDate}}</div>
             </div>
             <div class="signature-block">
-                <div style="font-weight: bold;">{{employeeName}}</div>
-                <div class="signature-label">Employee Signature</div>
-                <div class="signature-label">Date: _________________</div>
+                <div class="signature-line" style="margin-top: 60px;">
+                    <div style="font-weight: bold; font-size: 14px;">{{employeeName}}</div>
+                    <div class="signature-label">Date: _________________</div>
+                    </div>
             </div>
         </div>
 
@@ -271,9 +273,6 @@ const appraisalTemplate = `<!DOCTYPE html>
 </body>
 </html>`;
 
-/**
- * Generate HTML appraisal report from data
- */
 const generateAppraisalHTML = (data) => {
   return new Promise((resolve, reject) => {
     try {
@@ -324,9 +323,6 @@ const generateAppraisalHTML = (data) => {
   });
 };
 
-/**
- * Generate Appraisal PDF using Puppeteer
- */
 const generateAppraisalPDF = async (data, filePath) => {
   let browser = null;
   try {

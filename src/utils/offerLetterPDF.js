@@ -1,4 +1,3 @@
-//2
 const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
@@ -201,6 +200,12 @@ const offerLetterTemplate = `<!DOCTYPE html>
             width: 45%;
         }
 
+        .signature-image {
+            max-height: 60px;
+            max-width: 150px;
+            margin-bottom: 10px;
+        }
+
         .signature-line {
             border-top: 2px solid #333;
             margin-top: 60px;
@@ -336,14 +341,12 @@ const offerLetterTemplate = `<!DOCTYPE html>
             <p>Sincerely,</p>
         </div>
 
-        <!-- Signatures -->
-     <div class="signature-box">
+        <div class="signature-box">
             <div class="signature-block">
-                <div class="signature-line">
-                    <div style="font-weight: bold;">{{companySignatory}}</div>
-                    <div class="signature-label">Authorized Signatory</div>
-                    <div class="signature-label">{{companyName}}</div>
-                </div>
+                {{companySignature}}
+                <div style="font-weight: bold;">{{companySignatory}}</div>
+                <div class="signature-label">Authorized Signatory</div>
+                <div class="signature-label">{{companyName}}</div>
             </div>
             <div class="signature-block">
                 <div class="signature-line">
@@ -352,8 +355,6 @@ const offerLetterTemplate = `<!DOCTYPE html>
                 </div>
             </div>
         </div>
-
-
 
         <!-- Footer -->
         <div class="footer">
@@ -384,14 +385,16 @@ const generateOfferLetterHTML = (data) => {
         )
         .join("");
 
-      // Calculate total compensation (annual)
       const totalMonthly = (data.payComponents || []).reduce(
         (sum, c) => sum + parseFloat(c.amount || 0),
         0
       );
       const totalAnnual = (totalMonthly * 12).toFixed(2);
 
-      // Prepare template data
+      const companySignatureHTML = data.companySignature
+        ? `<img src="${data.companySignature}" alt="Signature" class="signature-image">`
+        : `<p style="height: 60px;"></p>`;
+
       const templateData = {
         companyLogo: data.companyLogo || "",
         companyName: data.companyName || "Company Name",
@@ -410,9 +413,9 @@ const generateOfferLetterHTML = (data) => {
         currencyCode: data.currencyCode || "",
         totalCompensation: totalAnnual,
         companySignatory: data.companySignatory || "HR Manager",
+        companySignature: companySignatureHTML,
       };
 
-      // Replace placeholders in template
       let htmlContent = offerLetterTemplate;
       Object.keys(templateData).forEach((key) => {
         const placeholder = new RegExp(`{{${key}}}`, "g");
