@@ -1504,7 +1504,7 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "pay_component" && referenceId) {
+        if (requestType === "component_assignment" && referenceId) {
           const payComponentRequest =
             await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
               {
@@ -1872,7 +1872,7 @@ const takeActionOnRequest = async ({
             updatedate: new Date(),
           },
         });
-      } else if (request.request_type === "pay_component") {
+      } else if (request.request_type === "component_assignment") {
         await prisma.hrms_d_employee_pay_component_assignment_header.update({
           where: { id: request.reference_id },
           data: {
@@ -2031,7 +2031,7 @@ const takeActionOnRequest = async ({
               updatedate: new Date(),
             },
           });
-        } else if (request.request_type === "pay_component") {
+        } else if (request.request_type === "component_assignment") {
           await prisma.hrms_d_employee_pay_component_assignment_header.update({
             where: { id: request.reference_id },
             data: {
@@ -2224,7 +2224,7 @@ const takeActionOnRequest = async ({
               updatedate: new Date(),
             },
           });
-        } else if (request.request_type === "pay_component") {
+        } else if (request.request_type === "component_assignment") {
           await prisma.hrms_d_employee_pay_component_assignment_header.update({
             where: { id: request.reference_id },
             data: {

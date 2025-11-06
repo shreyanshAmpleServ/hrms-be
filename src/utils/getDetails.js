@@ -64,7 +64,6 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
         select: { leave_days: true, approval_status: true },
       });
     case "hiring_stage":
-      // ADD THIS NEW CASE
       if (reference_id) {
         const hiringStage = await prisma.hrms_d_hiring_stage.findUnique({
           where: { id: parseInt(reference_id) },
@@ -223,7 +222,7 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
         }
       }
       return null;
-    case "pay_component":
+    case "component_assignment":
       if (reference_id) {
         const payComponent =
           await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
@@ -231,7 +230,6 @@ const getRequestDetailsByType = async (request_type, reference_id) => {
               where: { id: parseInt(reference_id) },
               include: {
                 hrms_d_employee: {
-                  // ✅ CORRECT field name
                   select: {
                     id: true,
                     full_name: true,

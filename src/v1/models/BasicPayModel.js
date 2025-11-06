@@ -350,7 +350,7 @@ const createBasicPay = async (data) => {
 
     await createRequest({
       requester_id: payComponentHeader.employee_id,
-      request_type: "pay_component",
+      request_type: "component_assignment",
       reference_id: payComponentHeader.id,
       request_data: `Pay component assignment for ${payComponentHeader.hrms_d_employee.full_name}`,
       createdby: data.createdby || 1,
