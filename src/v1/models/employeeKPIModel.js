@@ -497,7 +497,7 @@ const createEmployeeKPI = async (data) => {
     );
 
     await createRequest({
-      requester_id: Number(data.employee_id),
+      requester_id: Number(data.reviewer_id),
       request_type: "kpi_approval",
       reference_id: kpiHeaderId,
       createdby: data.createdby || 1,
@@ -1116,7 +1116,7 @@ const updateEmployeeKPI = async (id, data) => {
     );
 
     await createRequest({
-      requester_id: Number(data.employee_id),
+      requester_id: Number(data.reviewer_id),
       request_type: "kpi_approval",
       reference_id: kpiId,
       createdby: data.createdby || 1,
