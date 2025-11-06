@@ -503,6 +503,43 @@ const downloadBulkOfferLetters = async (req, res, next) => {
     next(error);
   }
 };
+
+const stopBulkDownloadJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    const result = await offerLetterQueue.removeJob(jobId);
+
+    if (result) {
+      return res.status(200).json({
+        success: true,
+        message: `Job ${jobId} has been stopped and removed`,
+        jobId: jobId,
+      });
+    } else {
+      return res.status(404).json({
+        success: false,
+        message: `Job ${jobId} not found or already completed`,
+        jobId: jobId,
+      });
+    }
+  } catch (error) {
+    console.error("Error stopping job:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error stopping job",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createOfferLetter,
   findOfferLetterById,
@@ -514,4 +551,5 @@ module.exports = {
   bulkDownloadOfferLetters,
   checkBulkDownloadStatus,
   downloadBulkOfferLetters,
+  stopBulkDownloadJob,
 };

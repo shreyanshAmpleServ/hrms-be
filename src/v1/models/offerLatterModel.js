@@ -279,7 +279,231 @@ const updateOfferLetterStatus = async (id, data) => {
     );
   }
 };
+// const fetch = require("node-fetch");
 
+// const getOfferLetterForPDF = async (id) => {
+//   try {
+//     if (!id) {
+//       throw new CustomError("Offer letter ID is required", 400);
+//     }
+
+//     const offerLetter = await prisma.hrms_d_offer_letter.findUnique({
+//       where: {
+//         id: Number(id),
+//       },
+//       include: {
+//         offered_candidate: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//             email: true,
+//             phone: true,
+//             department_id: true,
+//             expected_joining_date: true,
+//             candidate_department: {
+//               select: {
+//                 department_name: true,
+//               },
+//             },
+//           },
+//         },
+//         offer_letter_currencyId: {
+//           select: {
+//             currency_code: true,
+//             currency_name: true,
+//           },
+//         },
+//       },
+//     });
+
+//     if (!offerLetter) {
+//       throw new CustomError("Offer letter not found", 404);
+//     }
+
+//     const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
+//       select: {
+//         company_logo: true,
+//         company_name: true,
+//         company_signature: true,
+//         street_address: true,
+//         city: true,
+//         state: true,
+//         country: true,
+//         phone_number: true,
+//         website: true,
+//       },
+//     });
+
+//     console.log("Company Logo:", defaultConfig?.company_logo);
+//     console.log("Company Signature:", defaultConfig?.company_signature);
+//     console.log("Company Name:", defaultConfig?.company_name);
+
+//     let companyLogoBase64 = "";
+//     let companySignatureBase64 = "";
+
+//     // ✅ FIXED: Convert logo to base64
+//     if (defaultConfig?.company_logo) {
+//       try {
+//         const fetch = require("node-fetch");
+//         const logoResponse = await fetch(defaultConfig.company_logo);
+//         const logoBuffer = await logoResponse.buffer();
+//         const logoBase64 = logoBuffer.toString("base64");
+//         const logoMimeType =
+//           logoResponse.headers.get("content-type") || "image/png";
+//         companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
+//         console.log("Logo converted to base64");
+//       } catch (err) {
+//         console.error("Error fetching logo:", err.message);
+//         companyLogoBase64 = defaultConfig.company_logo;
+//       }
+//     }
+
+//     // ✅ FIXED: Convert signature to base64 (THIS WAS MISSING PROPER CONVERSION)
+//     if (defaultConfig?.company_signature) {
+//       try {
+//         const fetch = require("node-fetch");
+//         const signatureResponse = await fetch(defaultConfig.company_signature);
+//         const signatureBuffer = await signatureResponse.buffer();
+//         const signatureBase64 = signatureBuffer.toString("base64");
+//         const signatureMimeType =
+//           signatureResponse.headers.get("content-type") || "image/png";
+//         companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
+//         console.log("Signature converted to base64");
+//       } catch (err) {
+//         console.error("Error fetching signature:", err.message);
+//         companySignatureBase64 = defaultConfig.company_signature;
+//       }
+//     }
+
+//     let payComponents = [
+//       {
+//         componentName: "Base Salary",
+//         componentCode: "BASIC",
+//         amount: offerLetter.offered_salary || 0,
+//         currencyCode: offerLetter.offer_letter_currencyId?.currency_code || "",
+//       },
+//     ];
+
+//     try {
+//       const employmentContract =
+//         await prisma.hrms_d_employment_contract.findFirst({
+//           where: {
+//             candidate_id: Number(offerLetter.candidate_id),
+//           },
+//           select: {
+//             id: true,
+//           },
+//           orderBy: {
+//             createdate: "desc",
+//           },
+//         });
+
+//       if (employmentContract) {
+//         const contractPayComponents =
+//           await prisma.hrms_d_pay_component_contract.findMany({
+//             where: {
+//               contract_id: Number(employmentContract.id),
+//             },
+//             include: {
+//               pay_component_for_contract: {
+//                 select: {
+//                   component_name: true,
+//                   component_code: true,
+//                 },
+//               },
+//             },
+//           });
+
+//         if (contractPayComponents.length > 0) {
+//           const currencyIds = [
+//             ...new Set(
+//               contractPayComponents.map((pc) => pc.currencyid).filter(Boolean)
+//             ),
+//           ];
+//           let currencies = {};
+
+//           if (currencyIds.length > 0) {
+//             const currencyData = await prisma.hrms_m_currency_master.findMany({
+//               where: {
+//                 id: { in: currencyIds },
+//               },
+//               select: {
+//                 id: true,
+//                 currency_code: true,
+//               },
+//             });
+
+//             currencies = currencyData.reduce((acc, curr) => {
+//               acc[curr.id] = curr.currency_code;
+//               return acc;
+//             }, {});
+//           }
+
+//           payComponents = contractPayComponents.map((pc) => ({
+//             componentName:
+//               pc.pay_component_for_contract?.component_name || "Component",
+//             componentCode: pc.pay_component_for_contract?.component_code || "",
+//             amount: pc.amount || 0,
+//             currencyCode: pc.currencyid
+//               ? currencies[pc.currencyid] || ""
+//               : offerLetter.offer_letter_currencyId?.currency_code || "",
+//           }));
+//         }
+//       }
+//     } catch (payComponentError) {
+//       console.error("Error fetching pay components:", payComponentError);
+//     }
+
+//     const addressParts = [
+//       defaultConfig?.street_address,
+//       defaultConfig?.city,
+//       defaultConfig?.state,
+//       defaultConfig?.country,
+//     ].filter(Boolean);
+//     const fullAddress = addressParts.join(", ") || "Company Address";
+
+//     // ✅ FIXED: Use companySignatureBase64 instead of defaultConfig?.company_signature
+//     const pdfData = {
+//       companyLogo: companyLogoBase64 || defaultConfig?.company_logo || "",
+//       companySignature:
+//         companySignatureBase64 || defaultConfig?.company_signature || "", // ✅ FIXED HERE
+//       companyName: defaultConfig?.company_name || "Company Name",
+//       companyAddress: fullAddress,
+//       companyEmail: defaultConfig?.website || "info@company.com",
+//       companyPhone: defaultConfig?.phone_number || "Phone Number",
+//       companySignatory: "HR Manager",
+
+//       candidateName: offerLetter.offered_candidate?.full_name || "N/A",
+//       candidateEmail: offerLetter.offered_candidate?.email || "N/A",
+//       candidatePhone: offerLetter.offered_candidate?.phone || "N/A",
+
+//       position: offerLetter.position || "N/A",
+//       department:
+//         offerLetter.offered_candidate?.candidate_department?.department_name ||
+//         "N/A",
+//       offerDate: offerLetter.offer_date,
+//       validUntil: offerLetter.valid_until,
+//       expectedJoiningDate: offerLetter.offered_candidate?.expected_joining_date,
+
+//       payComponents: payComponents,
+//       currencyCode: offerLetter.offer_letter_currencyId?.currency_code || "",
+//       currencyName: offerLetter.offer_letter_currencyId?.currency_name || "",
+//     };
+
+//     return pdfData;
+//   } catch (error) {
+//     console.error("Error in getOfferLetterForPDF:", error);
+//     throw new CustomError(
+//       error.message || "Error fetching offer letter data",
+//       500
+//     );
+//   }
+// };
+
+// ✅ At the top of the file
+const fetch = require("node-fetch");
+
+// Then in getOfferLetterForPDF function:
 const getOfferLetterForPDF = async (id) => {
   try {
     if (!id) {
@@ -287,9 +511,7 @@ const getOfferLetterForPDF = async (id) => {
     }
 
     const offerLetter = await prisma.hrms_d_offer_letter.findUnique({
-      where: {
-        id: Number(id),
-      },
+      where: { id: Number(id) },
       include: {
         offered_candidate: {
           select: {
@@ -300,9 +522,7 @@ const getOfferLetterForPDF = async (id) => {
             department_id: true,
             expected_joining_date: true,
             candidate_department: {
-              select: {
-                department_name: true,
-              },
+              select: { department_name: true },
             },
           },
         },
@@ -340,40 +560,38 @@ const getOfferLetterForPDF = async (id) => {
     let companyLogoBase64 = "";
     let companySignatureBase64 = "";
 
-    // ✅ FIXED: Convert logo to base64
+    // ✅ FIXED: Don't re-require fetch inside try block
     if (defaultConfig?.company_logo) {
       try {
-        const fetch = require("node-fetch");
         const logoResponse = await fetch(defaultConfig.company_logo);
         const logoBuffer = await logoResponse.buffer();
         const logoBase64 = logoBuffer.toString("base64");
         const logoMimeType =
           logoResponse.headers.get("content-type") || "image/png";
         companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
-        console.log("Logo converted to base64");
+        console.log("✓ Logo converted to base64");
       } catch (err) {
-        console.error("Error fetching logo:", err.message);
+        console.error("✗ Error fetching logo:", err.message);
         companyLogoBase64 = defaultConfig.company_logo;
       }
     }
 
-    // ✅ FIXED: Convert signature to base64 (THIS WAS MISSING PROPER CONVERSION)
     if (defaultConfig?.company_signature) {
       try {
-        const fetch = require("node-fetch");
         const signatureResponse = await fetch(defaultConfig.company_signature);
         const signatureBuffer = await signatureResponse.buffer();
         const signatureBase64 = signatureBuffer.toString("base64");
         const signatureMimeType =
           signatureResponse.headers.get("content-type") || "image/png";
         companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
-        console.log("Signature converted to base64");
+        console.log("✓ Signature converted to base64");
       } catch (err) {
-        console.error("Error fetching signature:", err.message);
+        console.error("✗ Error fetching signature:", err.message);
         companySignatureBase64 = defaultConfig.company_signature;
       }
     }
 
+    // Rest of your code...
     let payComponents = [
       {
         componentName: "Base Salary",
@@ -386,29 +604,18 @@ const getOfferLetterForPDF = async (id) => {
     try {
       const employmentContract =
         await prisma.hrms_d_employment_contract.findFirst({
-          where: {
-            candidate_id: Number(offerLetter.candidate_id),
-          },
-          select: {
-            id: true,
-          },
-          orderBy: {
-            createdate: "desc",
-          },
+          where: { candidate_id: Number(offerLetter.candidate_id) },
+          select: { id: true },
+          orderBy: { createdate: "desc" },
         });
 
       if (employmentContract) {
         const contractPayComponents =
           await prisma.hrms_d_pay_component_contract.findMany({
-            where: {
-              contract_id: Number(employmentContract.id),
-            },
+            where: { contract_id: Number(employmentContract.id) },
             include: {
               pay_component_for_contract: {
-                select: {
-                  component_name: true,
-                  component_code: true,
-                },
+                select: { component_name: true, component_code: true },
               },
             },
           });
@@ -423,15 +630,9 @@ const getOfferLetterForPDF = async (id) => {
 
           if (currencyIds.length > 0) {
             const currencyData = await prisma.hrms_m_currency_master.findMany({
-              where: {
-                id: { in: currencyIds },
-              },
-              select: {
-                id: true,
-                currency_code: true,
-              },
+              where: { id: { in: currencyIds } },
+              select: { id: true, currency_code: true },
             });
-
             currencies = currencyData.reduce((acc, curr) => {
               acc[curr.id] = curr.currency_code;
               return acc;
@@ -461,11 +662,10 @@ const getOfferLetterForPDF = async (id) => {
     ].filter(Boolean);
     const fullAddress = addressParts.join(", ") || "Company Address";
 
-    // ✅ FIXED: Use companySignatureBase64 instead of defaultConfig?.company_signature
     const pdfData = {
       companyLogo: companyLogoBase64 || defaultConfig?.company_logo || "",
       companySignature:
-        companySignatureBase64 || defaultConfig?.company_signature || "", // ✅ FIXED HERE
+        companySignatureBase64 || defaultConfig?.company_signature || "",
       companyName: defaultConfig?.company_name || "Company Name",
       companyAddress: fullAddress,
       companyEmail: defaultConfig?.website || "info@company.com",
@@ -488,6 +688,13 @@ const getOfferLetterForPDF = async (id) => {
       currencyCode: offerLetter.offer_letter_currencyId?.currency_code || "",
       currencyName: offerLetter.offer_letter_currencyId?.currency_name || "",
     };
+
+    console.log("✓ PDF data prepared successfully");
+    console.log("✓ Logo included:", pdfData.companyLogo ? "YES" : "NO");
+    console.log(
+      "✓ Signature included:",
+      pdfData.companySignature ? "YES" : "NO"
+    );
 
     return pdfData;
   } catch (error) {

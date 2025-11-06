@@ -55,4 +55,9 @@ router.get(
   AppointmentLatterController.downloadBulkAppointmentLetters
 );
 
+router.delete(
+  "/appointment-letter/stop/:jobId",
+  AppointmentLatterController.stopBulkDownloadJob
+);
+
 module.exports = router;

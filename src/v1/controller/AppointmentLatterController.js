@@ -357,6 +357,69 @@ const downloadBulkAppointmentLetters = async (req, res, next) => {
   }
 };
 
+const stopBulkDownloadJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    console.log(`Attempting to stop job: ${jobId}`);
+
+    // Get job state first
+    const jobDetails = await appointmentLetterQueue.getJobDetails(jobId);
+
+    if (!jobDetails) {
+      return res.status(404).json({
+        success: false,
+        message: `Job ${jobId} not found`,
+        jobId: jobId,
+      });
+    }
+
+    console.log(`Job ${jobId} state: ${jobDetails.state}`);
+
+    // Try to remove job
+    try {
+      const result = await appointmentLetterQueue.removeJob(jobId);
+
+      if (result) {
+        return res.status(200).json({
+          success: true,
+          message: `Job ${jobId} has been stopped (was in ${jobDetails.state} state)`,
+          jobId: jobId,
+          previousState: jobDetails.state,
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: `Could not stop job ${jobId}`,
+          jobId: jobId,
+          state: jobDetails.state,
+        });
+      }
+    } catch (removeError) {
+      console.log(`Job ${jobId} removal had issues, but cleanup attempted`);
+      return res.status(200).json({
+        success: true,
+        message: `Job ${jobId} cleanup completed (was in ${jobDetails.state} state)`,
+        jobId: jobId,
+        note: "Job may have already finished",
+      });
+    }
+  } catch (error) {
+    console.error("Error stopping job:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error stopping job",
+      error: error.message,
+    });
+  }
+};
 module.exports = {
   createAppointmentLatter,
   findAppointmentLatterById,
@@ -367,4 +430,5 @@ module.exports = {
   bulkDownloadAppointmentLetters,
   checkBulkDownloadStatus,
   downloadBulkAppointmentLetters,
+  stopBulkDownloadJob,
 };

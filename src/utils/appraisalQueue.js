@@ -1,11 +1,299 @@
+// const Queue = require("bull");
+// const path = require("path");
+// const fs = require("fs");
+// const archiver = require("archiver");
+// const { PrismaClient } = require("@prisma/client");
+// const prisma = new PrismaClient();
+// const appraisalModel = require("../v1/models/AppraisalModel");
+// const { generateAppraisalPDF } = require("../utils/appraisalPDF.js");
+// const logger = require("../Comman/logger");
+
+// const appraisalQueue = new Queue("appraisal-bulk-download", {
+//   redis: {
+//     host: process.env.REDIS_HOST || "localhost",
+//     port: process.env.REDIS_PORT || 6379,
+//   },
+// });
+
+// const getCompanyConfig = async () => {
+//   try {
+//     const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
+//       select: {
+//         company_logo: true,
+//         company_name: true,
+//         company_signature: true,
+//         street_address: true,
+//         city: true,
+//         state: true,
+//         country: true,
+//         phone_number: true,
+//         website: true,
+//       },
+//     });
+
+//     if (!defaultConfig) {
+//       return {
+//         companyLogo: "",
+//         companySignature: "",
+//         companyName: "Company Name",
+//         companyAddress: "",
+//         companyEmail: "info@company.com",
+//         companyPhone: "Phone Number",
+//         companySignatory: "HR Manager",
+//       };
+//     }
+
+//     let companyLogoBase64 = "";
+//     let companySignatureBase64 = "";
+
+//     if (defaultConfig.company_logo) {
+//       try {
+//         const fetch = require("node-fetch");
+//         const logoResponse = await fetch(defaultConfig.company_logo);
+//         const logoBuffer = await logoResponse.buffer();
+//         const logoBase64 = logoBuffer.toString("base64");
+//         const logoMimeType =
+//           logoResponse.headers.get("content-type") || "image/png";
+//         companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
+//       } catch (err) {
+//         logger.error("Error fetching logo:", err.message);
+//         companyLogoBase64 = defaultConfig.company_logo;
+//       }
+//     }
+
+//     if (defaultConfig.company_signature) {
+//       try {
+//         const fetch = require("node-fetch");
+//         const signatureResponse = await fetch(defaultConfig.company_signature);
+//         const signatureBuffer = await signatureResponse.buffer();
+//         const signatureBase64 = signatureBuffer.toString("base64");
+//         const signatureMimeType =
+//           signatureResponse.headers.get("content-type") || "image/png";
+//         companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
+//       } catch (err) {
+//         logger.error("Error fetching signature:", err.message);
+//         companySignatureBase64 = defaultConfig.company_signature;
+//       }
+//     }
+
+//     const addressParts = [
+//       defaultConfig.street_address,
+//       defaultConfig.city,
+//       defaultConfig.state,
+//       defaultConfig.country,
+//     ].filter(Boolean);
+//     const fullAddress = addressParts.join(", ") || "Company Address";
+
+//     return {
+//       companyLogo: companyLogoBase64 || defaultConfig.company_logo || "",
+//       companySignature:
+//         companySignatureBase64 || defaultConfig.company_signature || "",
+//       companyName: defaultConfig.company_name || "Company Name",
+//       companyAddress: fullAddress,
+//       companyEmail: defaultConfig.website || "info@company.com",
+//       companyPhone: defaultConfig.phone_number || "Phone Number",
+//       companySignatory: "HR Manager",
+//     };
+//   } catch (error) {
+//     logger.error("Error fetching company config:", error);
+//     return {
+//       companyLogo: "",
+//       companySignature: "",
+//       companyName: "Company Name",
+//       companyAddress: "",
+//       companyEmail: "info@company.com",
+//       companyPhone: "Phone Number",
+//       companySignatory: "HR Manager",
+//     };
+//   }
+// };
+
+// const getEmployeeName = (appraisal) => {
+//   if (appraisal.appraisal_employee?.full_name) {
+//     return appraisal.appraisal_employee.full_name;
+//   }
+//   if (appraisal.appraisal_employee?.employee_code) {
+//     return appraisal.appraisal_employee.employee_code;
+//   }
+//   return "Unknown";
+// };
+
+// appraisalQueue.process(async (job) => {
+//   const { userId, filters, advancedFilters, jobId } = job.data;
+
+//   console.log(`[Job ${jobId}] Starting bulk appraisal download...`);
+
+//   try {
+//     await job.progress(10);
+
+//     const appraisals = await appraisalModel.getAllAppraisalsForBulkDownload(
+//       filters || {},
+//       advancedFilters || {}
+//     );
+
+//     console.log(
+//       `[Job ${jobId}] Found ${appraisals.length} appraisals to process`
+//     );
+
+//     if (appraisals.length === 0) {
+//       throw new Error("No appraisals found");
+//     }
+
+//     await job.progress(20);
+
+//     const tempDir = path.join(process.cwd(), "temp", jobId);
+//     if (!fs.existsSync(tempDir)) {
+//       fs.mkdirSync(tempDir, { recursive: true });
+//     }
+
+//     const companyConfig = await getCompanyConfig();
+//     console.log(`[Job ${jobId}] Company configuration loaded`);
+
+//     const pdfPaths = [];
+//     const totalAppraisals = appraisals.length;
+
+//     for (let i = 0; i < totalAppraisals; i++) {
+//       const appraisal = appraisals[i];
+
+//       try {
+//         const employeeName = getEmployeeName(appraisal);
+//         console.log(
+//           `[Job ${jobId}] Processing ${
+//             i + 1
+//           }/${totalAppraisals}: ${employeeName}`
+//         );
+
+//         const pdfData = await appraisalModel.getAppraisalForPDF(appraisal.id);
+
+//         const completePdfData = {
+//           ...pdfData,
+//           ...companyConfig,
+//         };
+
+//         console.log(`[Job ${jobId}] PDF Data:`, {
+//           employeeName: completePdfData.employeeName,
+//           position: completePdfData.position,
+//           department: completePdfData.department,
+//         });
+
+//         const sanitizedName = employeeName
+//           .replace(/[^a-z0-9]/gi, "_")
+//           .toLowerCase();
+//         const fileName = `appraisal_${appraisal.id}_${sanitizedName}.pdf`;
+//         const filePath = path.join(tempDir, fileName);
+
+//         await generateAppraisalPDF(completePdfData, filePath);
+//         pdfPaths.push({ path: filePath, name: fileName });
+
+//         console.log(`[Job ${jobId}] ✓ Generated: ${fileName}`);
+
+//         const progress = 20 + Math.floor(((i + 1) / totalAppraisals) * 60);
+//         await job.progress(progress);
+//       } catch (error) {
+//         console.error(
+//           `[Job ${jobId}] Error processing appraisal ${appraisal.id}:`,
+//           error
+//         );
+//         logger.error(`Error processing appraisal ${appraisal.id}:`, error);
+//       }
+//     }
+
+//     if (pdfPaths.length === 0) {
+//       throw new Error("Failed to generate any appraisal PDFs");
+//     }
+
+//     await job.progress(85);
+
+//     const zipFileName = `appraisals_bulk_${jobId}.zip`;
+//     const zipPath = path.join(
+//       process.cwd(),
+//       "uploads",
+//       "bulk-downloads",
+//       zipFileName
+//     );
+
+//     const zipDir = path.dirname(zipPath);
+//     if (!fs.existsSync(zipDir)) {
+//       fs.mkdirSync(zipDir, { recursive: true });
+//     }
+
+//     await createZip(pdfPaths, zipPath);
+//     await job.progress(95);
+
+//     fs.rmSync(tempDir, { recursive: true, force: true });
+
+//     await job.progress(100);
+
+//     console.log(`[Job ${jobId}] Completed! Generated ${pdfPaths.length} PDFs`);
+//     logger.info(
+//       `Job ${jobId} completed. Generated ${pdfPaths.length} appraisals`
+//     );
+
+//     return {
+//       success: true,
+//       totalProcessed: pdfPaths.length,
+//       totalRequested: appraisals.length,
+//       downloadUrl: `/api/appraisal/bulk-download/${jobId}`,
+//       fileName: zipFileName,
+//       zipPath: zipPath,
+//     };
+//   } catch (error) {
+//     console.error(`[Job ${jobId}] Failed:`, error);
+//     logger.error(`Job ${jobId} failed:`, error);
+//     throw error;
+//   }
+// });
+
+// function createZip(files, outputPath) {
+//   return new Promise((resolve, reject) => {
+//     const output = fs.createWriteStream(outputPath);
+//     const archive = archiver("zip", {
+//       zlib: { level: 9 },
+//     });
+
+//     output.on("close", () => {
+//       console.log(`ZIP created: ${archive.pointer()} bytes`);
+//       resolve();
+//     });
+
+//     archive.on("error", (err) => {
+//       reject(err);
+//     });
+
+//     archive.pipe(output);
+
+//     files.forEach((file) => {
+//       archive.file(file.path, { name: file.name });
+//     });
+
+//     archive.finalize();
+//   });
+// }
+
+// appraisalQueue.on("completed", (job, result) => {
+//   console.log(`Job ${job.id} completed:`, result);
+//   logger.info(`Job completed:`, result);
+// });
+
+// appraisalQueue.on("failed", (job, err) => {
+//   console.error(`Job ${job.id} failed:`, err.message);
+//   logger.error(`Job failed:`, err.message);
+// });
+
+// appraisalQueue.on("progress", (job, progress) => {
+//   console.log(`Job ${job.id} Progress: ${progress}%`);
+// });
+
+// module.exports = appraisalQueue;
+
 const Queue = require("bull");
 const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
 const { PrismaClient } = require("@prisma/client");
 const prisma = new PrismaClient();
-const appraisalModel = require("../v1/models/AppraisalModel");
-const { generateAppraisalPDF } = require("../utils/appraisalPDF.js");
+const appraisalModel = require("../v1/models/AppraisalModel.js");
+const { generateAppraisalPDF } = require("../utils/appraisalPDF");
 const logger = require("../Comman/logger");
 
 const appraisalQueue = new Queue("appraisal-bulk-download", {
@@ -15,123 +303,32 @@ const appraisalQueue = new Queue("appraisal-bulk-download", {
   },
 });
 
-const getCompanyConfig = async () => {
-  try {
-    const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
-      select: {
-        company_logo: true,
-        company_name: true,
-        company_signature: true,
-        street_address: true,
-        city: true,
-        state: true,
-        country: true,
-        phone_number: true,
-        website: true,
-      },
-    });
-
-    if (!defaultConfig) {
-      return {
-        companyLogo: "",
-        companySignature: "",
-        companyName: "Company Name",
-        companyAddress: "",
-        companyEmail: "info@company.com",
-        companyPhone: "Phone Number",
-        companySignatory: "HR Manager",
-      };
-    }
-
-    let companyLogoBase64 = "";
-    let companySignatureBase64 = "";
-
-    if (defaultConfig.company_logo) {
-      try {
-        const fetch = require("node-fetch");
-        const logoResponse = await fetch(defaultConfig.company_logo);
-        const logoBuffer = await logoResponse.buffer();
-        const logoBase64 = logoBuffer.toString("base64");
-        const logoMimeType =
-          logoResponse.headers.get("content-type") || "image/png";
-        companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
-      } catch (err) {
-        logger.error("Error fetching logo:", err.message);
-        companyLogoBase64 = defaultConfig.company_logo;
-      }
-    }
-
-    if (defaultConfig.company_signature) {
-      try {
-        const fetch = require("node-fetch");
-        const signatureResponse = await fetch(defaultConfig.company_signature);
-        const signatureBuffer = await signatureResponse.buffer();
-        const signatureBase64 = signatureBuffer.toString("base64");
-        const signatureMimeType =
-          signatureResponse.headers.get("content-type") || "image/png";
-        companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
-      } catch (err) {
-        logger.error("Error fetching signature:", err.message);
-        companySignatureBase64 = defaultConfig.company_signature;
-      }
-    }
-
-    const addressParts = [
-      defaultConfig.street_address,
-      defaultConfig.city,
-      defaultConfig.state,
-      defaultConfig.country,
-    ].filter(Boolean);
-    const fullAddress = addressParts.join(", ") || "Company Address";
-
-    return {
-      companyLogo: companyLogoBase64 || defaultConfig.company_logo || "",
-      companySignature:
-        companySignatureBase64 || defaultConfig.company_signature || "",
-      companyName: defaultConfig.company_name || "Company Name",
-      companyAddress: fullAddress,
-      companyEmail: defaultConfig.website || "info@company.com",
-      companyPhone: defaultConfig.phone_number || "Phone Number",
-      companySignatory: "HR Manager",
-    };
-  } catch (error) {
-    logger.error("Error fetching company config:", error);
-    return {
-      companyLogo: "",
-      companySignature: "",
-      companyName: "Company Name",
-      companyAddress: "",
-      companyEmail: "info@company.com",
-      companyPhone: "Phone Number",
-      companySignatory: "HR Manager",
-    };
-  }
-};
-
-const getEmployeeName = (appraisal) => {
-  if (appraisal.appraisal_employee?.full_name) {
-    return appraisal.appraisal_employee.full_name;
-  }
-  if (appraisal.appraisal_employee?.employee_code) {
-    return appraisal.appraisal_employee.employee_code;
-  }
-  return "Unknown";
-};
+const cancelledJobs = new Set();
 
 appraisalQueue.process(async (job) => {
-  const { userId, filters, advancedFilters, jobId } = job.data;
+  const { userId, filters, jobId } = job.data;
 
   console.log(`[Job ${jobId}] Starting bulk appraisal download...`);
+  logger.info(`[Job ${jobId}] Starting bulk appraisal download...`);
 
   try {
+    if (cancelledJobs.has(job.id.toString())) {
+      console.log(`[Job ${job.id}] Cancelled before starting`);
+      cancelledJobs.delete(job.id.toString());
+      throw new Error("Job was cancelled");
+    }
+
     await job.progress(10);
 
     const appraisals = await appraisalModel.getAllAppraisalsForBulkDownload(
       filters || {},
-      advancedFilters || {}
+      {}
     );
 
     console.log(
+      `[Job ${jobId}] Found ${appraisals.length} appraisals to process`
+    );
+    logger.info(
       `[Job ${jobId}] Found ${appraisals.length} appraisals to process`
     );
 
@@ -146,46 +343,43 @@ appraisalQueue.process(async (job) => {
       fs.mkdirSync(tempDir, { recursive: true });
     }
 
-    const companyConfig = await getCompanyConfig();
-    console.log(`[Job ${jobId}] Company configuration loaded`);
-
     const pdfPaths = [];
     const totalAppraisals = appraisals.length;
 
     for (let i = 0; i < totalAppraisals; i++) {
+      if (cancelledJobs.has(job.id.toString())) {
+        console.log(
+          `[Job ${job.id}] Cancelled during processing at ${i}/${totalAppraisals}`
+        );
+        logger.warn(
+          `[Job ${job.id}] Cancelled during processing at ${i}/${totalAppraisals}`
+        );
+        cancelledJobs.delete(job.id.toString());
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        throw new Error("Job was cancelled by user");
+      }
+
       const appraisal = appraisals[i];
 
       try {
-        const employeeName = getEmployeeName(appraisal);
         console.log(
-          `[Job ${jobId}] Processing ${
-            i + 1
-          }/${totalAppraisals}: ${employeeName}`
+          `[Job ${jobId}] Processing ${i + 1}/${totalAppraisals}: ${
+            appraisal.appraisal_employee?.full_name
+          }`
         );
 
         const pdfData = await appraisalModel.getAppraisalForPDF(appraisal.id);
 
-        const completePdfData = {
-          ...pdfData,
-          ...companyConfig,
-        };
-
-        console.log(`[Job ${jobId}] PDF Data:`, {
-          employeeName: completePdfData.employeeName,
-          position: completePdfData.position,
-          department: completePdfData.department,
-        });
-
-        const sanitizedName = employeeName
+        const sanitizedName = (
+          appraisal.appraisal_employee?.full_name || "Unknown"
+        )
           .replace(/[^a-z0-9]/gi, "_")
           .toLowerCase();
         const fileName = `appraisal_${appraisal.id}_${sanitizedName}.pdf`;
         const filePath = path.join(tempDir, fileName);
 
-        await generateAppraisalPDF(completePdfData, filePath);
+        await generateAppraisalPDF(pdfData, filePath);
         pdfPaths.push({ path: filePath, name: fileName });
-
-        console.log(`[Job ${jobId}] ✓ Generated: ${fileName}`);
 
         const progress = 20 + Math.floor(((i + 1) / totalAppraisals) * 60);
         await job.progress(progress);
@@ -194,12 +388,10 @@ appraisalQueue.process(async (job) => {
           `[Job ${jobId}] Error processing appraisal ${appraisal.id}:`,
           error
         );
-        logger.error(`Error processing appraisal ${appraisal.id}:`, error);
+        logger.error(
+          `[Job ${jobId}] Error processing appraisal ${appraisal.id}: ${error.message}`
+        );
       }
-    }
-
-    if (pdfPaths.length === 0) {
-      throw new Error("Failed to generate any appraisal PDFs");
     }
 
     await job.progress(85);
@@ -224,10 +416,8 @@ appraisalQueue.process(async (job) => {
 
     await job.progress(100);
 
-    console.log(`[Job ${jobId}] Completed! Generated ${pdfPaths.length} PDFs`);
-    logger.info(
-      `Job ${jobId} completed. Generated ${pdfPaths.length} appraisals`
-    );
+    console.log(`[Job ${jobId}] Completed successfully!`);
+    logger.info(`[Job ${jobId}] Completed successfully!`);
 
     return {
       success: true,
@@ -239,7 +429,7 @@ appraisalQueue.process(async (job) => {
     };
   } catch (error) {
     console.error(`[Job ${jobId}] Failed:`, error);
-    logger.error(`Job ${jobId} failed:`, error);
+    logger.error(`[Job ${jobId}] Failed: ${error.message}`);
     throw error;
   }
 });
@@ -252,7 +442,7 @@ function createZip(files, outputPath) {
     });
 
     output.on("close", () => {
-      console.log(`ZIP created: ${archive.pointer()} bytes`);
+      console.log(`ZIP created: ${archive.pointer()} total bytes`);
       resolve();
     });
 
@@ -262,6 +452,7 @@ function createZip(files, outputPath) {
 
     archive.pipe(output);
 
+    // Add all files to ZIP
     files.forEach((file) => {
       archive.file(file.path, { name: file.name });
     });
@@ -270,18 +461,152 @@ function createZip(files, outputPath) {
   });
 }
 
+appraisalQueue.removeJob = async (jobId) => {
+  try {
+    const job = await appraisalQueue.getJob(jobId);
+
+    if (!job) {
+      console.log(`[Job ${jobId}] Not found`);
+      logger.warn(`[Job ${jobId}] Not found`);
+      return false;
+    }
+
+    const state = await job.getState();
+    console.log(`[Job ${jobId}] Current state: ${state}`);
+    logger.info(`[Job ${jobId}] Current state: ${state}`);
+
+    cancelledJobs.add(jobId.toString());
+    console.log(`[Job ${jobId}] Added to cancellation list`);
+
+    if (state === "completed") {
+      console.log(`[Job ${jobId}] Already completed, cleaning up files only`);
+
+      const tempDir = path.join(process.cwd(), "temp", jobId);
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        console.log(`[Job ${jobId}] ✓ Temp directory cleaned`);
+      }
+
+      try {
+        await job.remove();
+      } catch (err) {
+        console.log(`[Job ${jobId}] Already removed from queue`);
+      }
+
+      cancelledJobs.delete(jobId.toString());
+      return true;
+    }
+
+    if (state === "failed") {
+      console.log(`[Job ${jobId}] Already failed, cleaning up`);
+
+      const tempDir = path.join(process.cwd(), "temp", jobId);
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
+
+      try {
+        await job.remove();
+      } catch (err) {
+        console.log(`[Job ${jobId}] Already removed from queue`);
+      }
+
+      cancelledJobs.delete(jobId.toString());
+      return true;
+    }
+
+    if (state === "active" || state === "waiting" || state === "delayed") {
+      console.log(`[Job ${jobId}] Marked for cancellation (${state})`);
+
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      try {
+        await job.remove();
+        console.log(`[Job ${jobId}] ✓ Removed successfully`);
+      } catch (err) {
+        console.log(`[Job ${jobId}] Removal attempted: ${err.message}`);
+      }
+
+      const tempDir = path.join(process.cwd(), "temp", jobId);
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        console.log(`[Job ${jobId}] ✓ Temp directory cleaned`);
+      }
+
+      return true;
+    }
+
+    console.log(`[Job ${jobId}] Unknown state: ${state}`);
+    cancelledJobs.delete(jobId.toString());
+    return false;
+  } catch (error) {
+    console.error(`[Job ${jobId}] Error removing job:`, error.message);
+    logger.error(`[Job ${jobId}] Error removing job: ${error.message}`);
+
+    try {
+      const tempDir = path.join(process.cwd(), "temp", jobId);
+      if (fs.existsSync(tempDir)) {
+        fs.rmSync(tempDir, { recursive: true, force: true });
+        console.log(`[Job ${jobId}]  Temp directory cleaned despite error`);
+      }
+    } catch (cleanupError) {
+      console.error(`[Job ${jobId}] Cleanup error:`, cleanupError.message);
+    }
+
+    throw error;
+  }
+};
+
+appraisalQueue.getJobDetails = async (jobId) => {
+  try {
+    const job = await appraisalQueue.getJob(jobId);
+
+    if (!job) {
+      return null;
+    }
+
+    const state = await job.getState();
+    const progress = job._progress || 0;
+
+    return {
+      id: job.id,
+      state: state,
+      progress: progress,
+      attempts: job.attemptsMade,
+      data: job.data,
+      returnvalue: job.returnvalue,
+      failedReason: job.failedReason,
+      processedOn: job.processedOn,
+      finishedOn: job.finishedOn,
+      isCancelled: cancelledJobs.has(jobId.toString()),
+    };
+  } catch (error) {
+    console.error(`Error getting job ${jobId}:`, error);
+    logger.error(`Error getting job ${jobId}: ${error.message}`);
+    throw error;
+  }
+};
+
 appraisalQueue.on("completed", (job, result) => {
-  console.log(`Job ${job.id} completed:`, result);
-  logger.info(`Job completed:`, result);
+  console.log(` Job ${job.id} completed:`, result);
+  logger.info(` Job ${job.id} completed`);
+  cancelledJobs.delete(job.id.toString());
 });
 
 appraisalQueue.on("failed", (job, err) => {
-  console.error(`Job ${job.id} failed:`, err.message);
-  logger.error(`Job failed:`, err.message);
+  console.error(` Job ${job.id} failed:`, err.message);
+  logger.error(` Job ${job.id} failed: ${err.message}`);
+  cancelledJobs.delete(job.id.toString());
+});
+
+appraisalQueue.on("removed", (job) => {
+  console.log(` Job ${job.id} was removed/cancelled`);
+  logger.warn(` Job ${job.id} was removed/cancelled`);
+  cancelledJobs.delete(job.id.toString());
 });
 
 appraisalQueue.on("progress", (job, progress) => {
-  console.log(`Job ${job.id} Progress: ${progress}%`);
+  console.log(`Job ${job.id} progress: ${progress}%`);
 });
 
 module.exports = appraisalQueue;

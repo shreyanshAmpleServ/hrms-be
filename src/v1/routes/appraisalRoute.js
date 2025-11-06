@@ -51,4 +51,9 @@ router.get(
   appraisalController.downloadBulkAppraisals
 );
 
+router.delete(
+  "/appraisal-entry/stop/:jobId",
+  appraisalController.stopBulkDownloadJob
+);
+
 module.exports = router;

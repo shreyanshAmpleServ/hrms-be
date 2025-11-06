@@ -59,4 +59,9 @@ router.get(
   offerLatterController.downloadBulkOfferLetters
 );
 
+router.delete(
+  "/offer-letter/stop/:jobId",
+  offerLatterController.stopBulkDownloadJob
+);
+
 module.exports = router;

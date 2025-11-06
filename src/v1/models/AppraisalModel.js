@@ -378,7 +378,6 @@ const getAllAppraisalsForBulkDownload = async (
             full_name: true,
             employee_code: true,
             email: true,
-            phone: true,
             hrms_employee_department: {
               select: {
                 id: true,

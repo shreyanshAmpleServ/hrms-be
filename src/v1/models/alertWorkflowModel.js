@@ -7,7 +7,7 @@ const CustomError = require("../../utils/CustomError");
 // const prisma = new PrismaClient({
 //   log: process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
 // });
-
+//4 nov changes
 let prisma;
 
 const getPrismaClient = () => {
@@ -125,6 +125,7 @@ const getAlertWorkflowById = async (id) => {
     try {
       const workflow = await prisma.hrms_d_alert_workflow.findUnique({
         where: { id: parseInt(id) },
+        // include: { alert_workflow_alert_logs: true },
       });
 
       if (!workflow) {
@@ -143,7 +144,6 @@ const getAlertWorkflowById = async (id) => {
         retries > 1
       ) {
         retries--;
-        // Wait before retrying (exponential backoff)
         await new Promise((resolve) =>
           setTimeout(resolve, 1000 * (4 - retries))
         );
