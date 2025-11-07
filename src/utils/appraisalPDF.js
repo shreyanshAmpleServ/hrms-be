@@ -1,7 +1,6 @@
 const fs = require("fs");
 const path = require("path");
 const puppeteer = require("puppeteer");
-const fetch = require("node-fetch");
 const logger = require("../Comman/logger");
 
 const appraisalTemplate = `<!DOCTYPE html>
