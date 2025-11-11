@@ -1078,6 +1078,7 @@ const updateEmployeeKPI = async (id, data) => {
         if (!existingKPI) {
           throw new CustomError("Employee KPI not found", 404);
         }
+
         const employee = await tx.hrms_d_employee.findUnique({
           where: { id: Number(data.employee_id) },
           select: { employment_type: true },
@@ -1086,7 +1087,7 @@ const updateEmployeeKPI = async (id, data) => {
         const contents = data.contents || [];
         let totalWeightedAchieved = 0;
 
-        contents.forEach((item, idx) => {
+        contents.forEach((item) => {
           const targetPoint = Number(item.target_point) || 0;
           const achievedPoint = Number(item.achieved_point) || 0;
           const weightage = Number(item.weightage_percentage) || 0;
@@ -1108,6 +1109,94 @@ const updateEmployeeKPI = async (id, data) => {
             updatedate: new Date(),
           },
         });
+
+        await tx.hrms_d_employee_kpi_contents.deleteMany({
+          where: { employee_kpi_id: Number(id) },
+        });
+
+        if (contents.length > 0) {
+          for (const content of contents) {
+            const targetPoint = Number(content.target_point) || 0;
+            const achievedPoint = Number(content.achieved_point) || 0;
+            const achievedPercent =
+              targetPoint > 0 ? (achievedPoint / targetPoint) * 100 : 0;
+
+            await tx.hrms_d_employee_kpi_contents.create({
+              data: {
+                employee_kpi_id: updatedKPI.id,
+                kpi_name: content.kpi_name || "",
+                kpi_remarks: content.kpi_remarks || "",
+                weightage_percentage: Number(content.weightage_percentage) || 0,
+                target_point: targetPoint,
+                achieved_point: achievedPoint,
+                achieved_percentage: achievedPercent,
+                kpi_drawing_type:
+                  content.kpi_drawing_type || "Active for Current & Next KPI",
+                target_point_for_next_kpi:
+                  Number(content.target_point_for_next_kpi) || 0,
+                weightage_percentage_for_next_kpi:
+                  Number(content.weightage_percentage_for_next_kpi) || 0,
+                createdby: data.createdby || 1,
+                createdate: new Date(),
+              },
+            });
+          }
+        }
+
+        if (
+          data.revise_component_assignment === "Y" &&
+          data.component_assignment
+        ) {
+          const existingAssignments =
+            await tx.hrms_d_employee_kpi_component_assignment.findMany({
+              where: { employee_kpi_id: Number(id) },
+              select: { id: true },
+            });
+
+          const assignmentIds = existingAssignments.map((a) => a.id);
+
+          if (assignmentIds.length > 0) {
+            await tx.hrms_d_employee_kpi_component_lines.deleteMany({
+              where: {
+                component_assignment_id: { in: assignmentIds },
+              },
+            });
+
+            await tx.hrms_d_employee_kpi_component_assignment.deleteMany({
+              where: { employee_kpi_id: Number(id) },
+            });
+          }
+        }
+
+        await tx.hrms_d_employee_kpi_attachments.deleteMany({
+          where: { employee_kpi_id: Number(id) },
+        });
+
+        if (data.attachments && data.attachments.length > 0) {
+          for (const attachment of data.attachments) {
+            await tx.hrms_d_employee_kpi_attachments.create({
+              data: {
+                employee_kpi_id: updatedKPI.id,
+                document_type_id: attachment.document_type_id
+                  ? Number(attachment.document_type_id)
+                  : null,
+                document_name: attachment.document_name || "",
+                issue_date: attachment.issue_date
+                  ? new Date(attachment.issue_date)
+                  : new Date(),
+                expiry_date: attachment.expiry_date
+                  ? new Date(attachment.expiry_date)
+                  : null,
+                status: "Pending",
+                remarks: attachment.remarks || "",
+                attachment_url: attachment.attachment_url || "",
+                createdby: data.createdby || 1,
+                createdate: new Date(),
+              },
+            });
+          }
+        }
+
         return updatedKPI.id;
       },
       {
@@ -1126,6 +1215,7 @@ const updateEmployeeKPI = async (id, data) => {
     const result = await findEmployeeKPIById(kpiId);
     return result;
   } catch (error) {
+    console.error("Error in updateEmployeeKPI:", error);
     throw new CustomError(`Error updating Employee KPI: ${error.message}`, 500);
   }
 };

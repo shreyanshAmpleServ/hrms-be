@@ -4,14 +4,130 @@ const { executeActions } = require("./actionExecutor");
 const prisma = new PrismaClient();
 require("./consoleLogs");
 
+async function updateLogWithRetry(logId, data, maxRetries = 3) {
+  for (let attempt = 0; attempt < maxRetries; attempt++) {
+    try {
+      return await prisma.hrms_d_alert_log.update({
+        where: { id: logId },
+        data: data,
+      });
+    } catch (error) {
+      const isWriteConflict =
+        error.message?.includes("write conflict") ||
+        error.message?.includes("deadlock") ||
+        error.code === "P2034";
+
+      if (isWriteConflict && attempt < maxRetries - 1) {
+        const delay = Math.pow(2, attempt) * 100; // 100ms, 200ms, 400ms
+        console.log(
+          `[Retry] Log update failed, retrying in ${delay}ms (attempt ${
+            attempt + 1
+          }/${maxRetries})`
+        );
+        await new Promise((resolve) => setTimeout(resolve, delay));
+      } else {
+        throw error;
+      }
+    }
+  }
+}
+// const runWorkflow = async (workflowId, workflow) => {
+//   const log = await prisma.hrms_d_alert_log.create({
+//     data: {
+//       workflow_id: workflowId,
+//       status: "RUNNING",
+//       details: JSON.stringify({ started_at: new Date().toISOString() }),
+//     },
+//   });
+
+//   try {
+//     const employees = await getTargetEmployees(workflow);
+//     const eligible = employees.filter((emp) =>
+//       evaluateConditions(emp, workflow.conditions)
+//     );
+
+//     console.log(
+//       `${eligible.length} employees are eligible for workflow ${workflowId}`
+//     );
+
+//     if (eligible.length > 0) {
+//       console.log(
+//         `   Eligible employees: ${eligible
+//           .map((emp) => `${emp.full_name} (${emp.employee_code})`)
+//           .join(", ")}`
+//       );
+//     }
+
+//     let actionResults = [];
+//     if (eligible.length > 0) {
+//       actionResults = await executeActions(eligible, workflow.actions);
+//       console.log(
+//         ` Actions executed for ${eligible.length} eligible employees`
+//       );
+//     } else {
+//       console.log(` No eligible employees found, skipping actions`);
+//       actionResults = [
+//         {
+//           type: "Email",
+//           status: "SKIPPED",
+//           reason: "No eligible employees",
+//         },
+//       ];
+//     }
+
+//     await prisma.hrms_d_alert_log.update({
+//       where: { id: log.id },
+//       data: {
+//         status: "COMPLETED",
+//         details: JSON.stringify({
+//           ...JSON.parse(log.details),
+//           completed_at: new Date().toISOString(),
+//           eligible_count: eligible.length,
+//           total_employees: employees.length,
+//           action_results: actionResults,
+//         }),
+//       },
+//     });
+
+//     // console.log(` Workflow ${workflowId} completed successfully`);
+//     return { eligible_count: eligible.length, action_results: actionResults };
+//   } catch (error) {
+//     console.error(`[error] Workflow ${workflowId} failed: ${error.message}`);
+
+//     await prisma.hrms_d_alert_log.update({
+//       where: { id: log.id },
+//       data: {
+//         status: "FAILED",
+//         details: JSON.stringify({
+//           ...JSON.parse(log.details || "{}"),
+//           error: error.message,
+//           failed_at: new Date().toISOString(),
+//         }),
+//       },
+//     });
+
+//     throw error;
+//   }
+// };
+
 const runWorkflow = async (workflowId, workflow) => {
-  const log = await prisma.hrms_d_alert_log.create({
-    data: {
-      workflow_id: workflowId,
-      status: "RUNNING",
-      details: JSON.stringify({ started_at: new Date().toISOString() }),
-    },
-  });
+  let log;
+
+  try {
+    // Create log with retry
+    log = await prisma.hrms_d_alert_log.create({
+      data: {
+        workflow_id: workflowId,
+        status: "RUNNING",
+        details: JSON.stringify({ started_at: new Date().toISOString() }),
+      },
+    });
+  } catch (error) {
+    console.error(
+      `[Error] Failed to create log for workflow ${workflowId}: ${error.message}`
+    );
+    throw error;
+  }
 
   try {
     const employees = await getTargetEmployees(workflow);
@@ -48,36 +164,40 @@ const runWorkflow = async (workflowId, workflow) => {
       ];
     }
 
-    await prisma.hrms_d_alert_log.update({
-      where: { id: log.id },
-      data: {
-        status: "COMPLETED",
-        details: JSON.stringify({
-          ...JSON.parse(log.details),
-          completed_at: new Date().toISOString(),
-          eligible_count: eligible.length,
-          total_employees: employees.length,
-          action_results: actionResults,
-        }),
-      },
+    // Update log with retry logic
+    await updateLogWithRetry(log.id, {
+      status: "COMPLETED",
+      details: JSON.stringify({
+        started_at: JSON.parse(log.details).started_at,
+        completed_at: new Date().toISOString(),
+        eligible_count: eligible.length,
+        total_employees: employees.length,
+        action_results: actionResults,
+      }),
     });
 
-    // console.log(` Workflow ${workflowId} completed successfully`);
     return { eligible_count: eligible.length, action_results: actionResults };
   } catch (error) {
-    console.error(`[error] Workflow ${workflowId} failed: ${error.message}`);
+    console.error(`[Error] Workflow ${workflowId} failed: ${error.message}`);
 
-    await prisma.hrms_d_alert_log.update({
-      where: { id: log.id },
-      data: {
-        status: "FAILED",
-        details: JSON.stringify({
-          ...JSON.parse(log.details || "{}"),
-          error: error.message,
-          failed_at: new Date().toISOString(),
-        }),
-      },
-    });
+    // Attempt to update log status to FAILED with retry
+    if (log?.id) {
+      try {
+        await updateLogWithRetry(log.id, {
+          status: "FAILED",
+          details: JSON.stringify({
+            started_at: JSON.parse(log.details || "{}").started_at,
+            error: error.message,
+            error_stack: error.stack,
+            failed_at: new Date().toISOString(),
+          }),
+        });
+      } catch (updateError) {
+        console.error(
+          `[Error] Failed to update log status to FAILED: ${updateError.message}`
+        );
+      }
+    }
 
     throw error;
   }
