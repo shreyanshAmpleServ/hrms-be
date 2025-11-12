@@ -271,19 +271,44 @@ module.exports.evaluateConditions = (employee, conditions) => {
         empValue = null;
         // console.log(`Probation end date: null`);
       }
-    } else if (field === "attendance_marked") {
-      const today = new Date().toISOString().split("T")[0];
+    }
+    // else if (field === "attendance_marked") {
+    //   // const today = new Date().toISOString().split("T")[0];
+
+    //   const today = new Date().toLocaleDateString("en-CA"); // always gives YYYY-MM-DD in local timezone
+
+    //   if (employee.hrms_daily_attendance_employee?.length > 0) {
+    //     const todayAttendance = employee.hrms_daily_attendance_employee.find(
+    //       (att) =>
+    //         att.attendance_date && formatDate(att.attendance_date) === today
+    //     );
+    //     empValue = todayAttendance ? true : false;
+    //   } else {
+    //     empValue = false;
+    //   }
+    //   console.log(employee.full_name, employee.hrms_daily_attendance_employee);
+
+    //   // console.log(`   Attendance marked for ${today}: ${empValue}`);
+    // }
+    else if (field === "attendance_marked") {
+      // Use local date in YYYY-MM-DD
+      const today = new Date().toLocaleDateString("en-CA");
 
       if (employee.hrms_daily_attendance_employee?.length > 0) {
         const todayAttendance = employee.hrms_daily_attendance_employee.find(
-          (att) =>
-            att.attendance_date && formatDate(att.attendance_date) === today
+          (att) => {
+            const attDate = new Date(att.attendance_date).toLocaleDateString(
+              "en-CA"
+            );
+            return attDate === today;
+          }
         );
-        empValue = todayAttendance ? true : false;
+        empValue = Boolean(todayAttendance);
       } else {
         empValue = false;
       }
-      // console.log(`   Attendance marked for ${today}: ${empValue}`);
+
+      console.log(`   Attendance marked for ${today}: ${empValue}`);
     } else if (field === "document_expiry_date") {
       // Handle document expiry conditions
       let documentExpiryDate = null;
