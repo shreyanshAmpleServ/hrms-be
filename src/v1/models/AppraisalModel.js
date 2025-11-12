@@ -198,7 +198,6 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
   }
 };
 
-// ✅ COMPLETE FIXED: All required fields included
 const getAppraisalForPDF = async (id) => {
   try {
     if (!id) {
@@ -295,7 +294,6 @@ const getAppraisalForPDF = async (id) => {
     ].filter(Boolean);
     const fullAddress = addressParts.join(", ") || "Company Address";
 
-    // ✅ COMPLETE FIXED: All fields with correct values
     const pdfData = {
       companyLogo: companyLogoBase64 || defaultConfig?.company_logo || "",
       companySignature:
