@@ -4,7 +4,7 @@
   "main": "index.js",
   "scripts": {
     "start": "nodemon src/server.js",
-    "postinstall": "npx @puppeteer/browsers install chrome@138.0.7204.168 --path .puppeteer",
+    "postinstall": "npx @puppeteer/browsers install chrome@138.0.7204.168 --path .puppeteer && npx @puppeteer/browsers install chrome@138.0.7204.168 --path src/.puppeteer",
     "generate": "npx rimraf node_modules/.prisma && npx prisma generate && nodemon src/server.js",
     "worker": "node src/utils/emailWorker.js"
   },
