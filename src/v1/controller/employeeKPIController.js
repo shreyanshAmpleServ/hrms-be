@@ -183,6 +183,45 @@ const createEmployeeKPI = async (req, res, next) => {
     data.attachments = attachments;
     data.createdby = req.user?.id || 1;
 
+    // Check if there's an existing pending KPI for this employee
+    if (data.employee_id) {
+      const existingKPI = await employeeKPIModel.findPendingKPIForEmployee(
+        data.employee_id
+      );
+
+      if (existingKPI) {
+        // Merge new contents with existing contents
+        const existingContents = existingKPI.kpi_contents || [];
+        const newContents = data.contents || [];
+
+        // Map existing contents to the expected format
+        const mappedExistingContents = existingContents.map((content) => ({
+          kpi_name: content.kpi_name || "",
+          kpi_remarks: content.kpi_remarks || "",
+          weightage_percentage: content.weightage_percentage || 0,
+          target_point: content.target_point || 0,
+          achieved_point: content.achieved_point || 0,
+          kpi_drawing_type:
+            content.kpi_drawing_type || "Active for Current & Next KPI",
+          target_point_for_next_kpi: content.target_point_for_next_kpi || 0,
+          weightage_percentage_for_next_kpi:
+            content.weightage_percentage_for_next_kpi || 0,
+        }));
+
+        // Combine existing and new contents
+        const mergedContents = [...mappedExistingContents, ...newContents];
+        data.contents = mergedContents;
+
+        // Update the existing KPI instead of creating a new one
+        const result = await employeeKPIModel.updateEmployeeKPI(
+          existingKPI.id,
+          data
+        );
+        return res.status(200).json({ success: true, data: result });
+      }
+    }
+
+    // If no existing KPI found, create a new one
     const result = await employeeKPIModel.createEmployeeKPI(data);
     res.status(201).json({ success: true, data: result });
   } catch (error) {
