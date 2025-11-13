@@ -14,7 +14,7 @@ const register = async (req, res, next) => {
 const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
-    const data = await loginUser(email, password);
+    const data = await loginUser(req.prisma, email, password);
 
     // Set token in HTTP-Only cookie
     res.cookie("authToken", data.token, {

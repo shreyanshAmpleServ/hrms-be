@@ -42,11 +42,22 @@ const findDepartmentById = async (id) => {
 
 const updateDepartment = async (id, data) => {
   try {
+    const allowedFields = {
+      department_name: data.department_name,
+      is_active: data.is_active,
+      log_inst: data.log_inst,
+    };
+
+    const updateData = Object.fromEntries(
+      Object.entries(allowedFields).filter(([_, v]) => v !== undefined)
+    );
+
     const updateddepartment = await prisma.hrms_m_department_master.update({
       where: { id: parseInt(id) },
       data: {
-        ...data,
+        ...updateData,
         updatedate: new Date(),
+        updatedby: data.updatedby || 1,
       },
     });
     return updateddepartment;

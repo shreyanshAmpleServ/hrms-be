@@ -120,10 +120,10 @@ const registerUser = async (email, password, fullName = null, role_id) => {
   }
 };
 
-const loginUser = async (email, password) => {
+const loginUser = async (prisma, email, password) => {
   try {
     // Fetch the user from the database
-    const user = await userModel.findUserByEmail(email);
+    const user = await userModel.findUserByEmail(prisma, email);
     if (!user) throw new CustomError("User not found", 401);
 
     // Validate password
