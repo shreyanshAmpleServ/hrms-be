@@ -46,6 +46,7 @@ async function disconnectAll() {
   );
   await Promise.all(disconnectPromises);
   prismaInstances.clear();
+  prismaInstances.clear();
 }
 
 module.exports = {

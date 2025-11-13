@@ -265,7 +265,7 @@ const findUserByEmail = async (prisma, email) => {
 
     if (!user) throw new CustomError("User not found", 404);
     console.log("User found", user);
-    return await getUserWithRole(user.id, true);
+    return await getUserWithRole(prisma, user.id, true);
   } catch (error) {
     console.log(error);
     throw new CustomError(`Error finding user by email: ${error.message}`, 503);
