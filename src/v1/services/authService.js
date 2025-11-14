@@ -96,6 +96,7 @@ const registerUser = async (email, password, fullName = null, role_id) => {
     const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
 
     // Check if the user already exists in the database
+
     const existingUser = await userModel.findUserByEmail(email);
     if (existingUser) {
       throw new CustomError("User already registered", 400);
