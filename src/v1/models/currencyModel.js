@@ -5,16 +5,22 @@ const prisma = new PrismaClient();
 const createCurrency = async (data) => {
   try {
     const existingName = await prisma.hrms_m_currency_master.findFirst({
-      where: { currency_name: data.currency_name },
+      where: {
+        currency_name: { equals: data.currency_name },
+      },
     });
+
     if (existingName) {
       throw new CustomError("Currency name already exists", 400);
     }
 
     if (data.currency_code) {
       const existingCode = await prisma.hrms_m_currency_master.findFirst({
-        where: { currency_code: data.currency_code },
+        where: {
+          currency_code: { equals: data.currency_code, mode: "insensitive" },
+        },
       });
+
       if (existingCode) {
         throw new CustomError("Currency code already exists", 400);
       }
@@ -32,7 +38,7 @@ const createCurrency = async (data) => {
 
     return currency;
   } catch (error) {
-    throw new CustomError(`Error creating currency: ${error.message}`, 500);
+    throw new CustomError(` ${error.message}`, 500);
   }
 };
 
@@ -55,13 +61,16 @@ const findCurrencyById = async (id) => {
 
 const updateCurrency = async (id, data) => {
   try {
+    const numericId = parseInt(id);
+
     if (data.currency_name) {
       const existingName = await prisma.hrms_m_currency_master.findFirst({
         where: {
-          currency_name: data.currency_name,
-          NOT: { id: parseInt(id) },
+          currency_name: { equals: data.currency_name },
+          NOT: { id: numericId },
         },
       });
+
       if (existingName) {
         throw new CustomError("Currency name already exists", 400);
       }
@@ -70,17 +79,18 @@ const updateCurrency = async (id, data) => {
     if (data.currency_code) {
       const existingCode = await prisma.hrms_m_currency_master.findFirst({
         where: {
-          currency_code: data.currency_code,
-          NOT: { id: parseInt(id) },
+          currency_code: { equals: data.currency_code },
+          NOT: { id: numericId },
         },
       });
+
       if (existingCode) {
         throw new CustomError("Currency code already exists", 400);
       }
     }
 
     const updatedCurrency = await prisma.hrms_m_currency_master.update({
-      where: { id: parseInt(id) },
+      where: { id: numericId },
       data: {
         ...data,
         updatedate: new Date(),
@@ -89,7 +99,7 @@ const updateCurrency = async (id, data) => {
 
     return updatedCurrency;
   } catch (error) {
-    throw new CustomError(`Error updating currency: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
