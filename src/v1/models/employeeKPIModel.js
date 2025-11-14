@@ -414,10 +414,28 @@ const findEmployeeKPIById = async (id) => {
             kpi_component_lines: {
               include: {
                 kpi_component_pay_component: {
-                  select: {
-                    id: true,
-                    component_name: true,
-                    component_code: true,
+                  include: {
+                    pay_component_cost_center1: {
+                      select: { id: true, name: true },
+                    },
+                    pay_component_cost_center2: {
+                      select: { id: true, name: true },
+                    },
+                    pay_component_cost_center3: {
+                      select: { id: true, name: true },
+                    },
+                    pay_component_cost_center4: {
+                      select: { id: true, name: true },
+                    },
+                    pay_component_cost_center5: {
+                      select: { id: true, name: true },
+                    },
+                    pay_component_project: {
+                      select: { id: true, name: true },
+                    },
+                    pay_component_tax: {
+                      select: { id: true, name: true, code: true },
+                    },
                   },
                 },
               },
