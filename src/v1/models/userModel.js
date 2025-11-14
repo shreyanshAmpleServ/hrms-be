@@ -1,6 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
+// const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 // Helper function to define fields returned for a user
 const getUserFields = (is_password = false) => ({
@@ -18,7 +18,7 @@ const getUserFields = (is_password = false) => ({
   updatedate: true,
 });
 
-const getRolePermission = async (role_id) => {
+const getRolePermission = async (prisma, role_id) => {
   if (!role_id) return null;
   const role = await prisma.hrms_d_role_permissions.findFirst({
     where: { role_id },
@@ -27,7 +27,7 @@ const getRolePermission = async (role_id) => {
   return role ? JSON.parse(role.permissions) : null;
 };
 // Common method to fetch a user with role name
-const getUserWithRole = async (userId, is_password = false) => {
+const getUserWithRole = async (prisma, userId, is_password = false) => {
   const user = await prisma.hrms_m_user.findUnique({
     where: { id: userId },
     select: {
@@ -55,7 +55,7 @@ const getUserWithRole = async (userId, is_password = false) => {
   if (!user) throw new CustomError("User not found", 404);
 
   const roleId = user?.hrms_d_user_role?.[0]?.hrms_m_role?.id || null;
-  const permission = roleId ? await getRolePermission(roleId) : null;
+  const permission = roleId ? await getRolePermission(prisma, roleId) : null;
   // console.log("Fetching permissions" ,roleId,JSON.parse(permission?.permissions))
 
   return {
@@ -67,7 +67,7 @@ const getUserWithRole = async (userId, is_password = false) => {
   };
 };
 
-const createUser = async (data) => {
+const createUser = async (prisma, data) => {
   try {
     if (data.employee_id) {
       const existingUser = await prisma.hrms_m_user.findFirst({
@@ -181,7 +181,7 @@ const createUser = async (data) => {
 };
 
 // Update a user and their role
-const updateUser = async (id, data) => {
+const updateUser = async (prisma, id, data) => {
   try {
     if (data.employee_id) {
       const employee = await prisma.hrms_d_employee.findUnique({
@@ -249,7 +249,7 @@ const updateUser = async (id, data) => {
     }
 
     // Step 5: Return full user details
-    return await getUserWithRole(updatedUser.id);
+    return await getUserWithRole(prisma, updatedUser.id);
   } catch (error) {
     console.log(error);
     throw new CustomError(`Error updating user: ${error.message}`, 500);
@@ -257,7 +257,7 @@ const updateUser = async (id, data) => {
 };
 
 // Find a user by email and include role
-const findUserByEmail = async (email) => {
+const findUserByEmail = async (prisma, email) => {
   try {
     const user = await prisma.hrms_m_user.findFirst({
       where: { email },
@@ -265,7 +265,7 @@ const findUserByEmail = async (email) => {
 
     if (!user) throw new CustomError("User not found", 404);
     console.log("User found", user);
-    return await getUserWithRole(user.id, true);
+    return await getUserWithRole(prisma, user.id, true);
   } catch (error) {
     console.log(error);
     throw new CustomError(`Error finding user by email: ${error.message}`, 503);
@@ -273,16 +273,16 @@ const findUserByEmail = async (email) => {
 };
 
 // Find a user by ID and include role
-const findUserById = async (id) => {
+const findUserById = async (prisma, id) => {
   try {
-    return await getUserWithRole(parseInt(id));
+    return await getUserWithRole(prisma, parseInt(id));
   } catch (error) {
     throw new CustomError(`Error finding user by ID: ${error.message}`, 503);
   }
 };
 
 // Delete a user
-const deleteUser = async (id) => {
+const deleteUser = async (prisma, id) => {
   try {
     await prisma.hrms_d_user_role.deleteMany({
       where: { user_id: parseInt(id) },
@@ -379,6 +379,7 @@ const deleteUser = async (id) => {
 // };
 
 const getAllUsers = async (
+  prisma,
   search,
   page,
   size,

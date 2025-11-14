@@ -268,7 +268,6 @@
 const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 
-// Configure PrismaClient with optimized settings
 let prisma;
 
 const getPrismaClient = () => {
@@ -296,7 +295,6 @@ const getPrismaClient = () => {
 
 prisma = getPrismaClient();
 
-// Enhanced retry wrapper for database operations
 const withRetry = async (operation, retries = 3, baseDelay = 1000) => {
   let lastError;
 
@@ -306,7 +304,6 @@ const withRetry = async (operation, retries = 3, baseDelay = 1000) => {
     } catch (error) {
       lastError = error;
 
-      // Don't retry CustomErrors (they're already handled)
       if (error instanceof CustomError && error.statusCode !== 503) {
         throw error;
       }
@@ -336,7 +333,6 @@ const withRetry = async (operation, retries = 3, baseDelay = 1000) => {
     }
   }
 
-  // Only throw after all retries exhausted
   if (lastError.message && lastError.message.includes("connection pool")) {
     throw new CustomError(
       "Database connection pool exhausted. Please try again later.",
@@ -346,7 +342,6 @@ const withRetry = async (operation, retries = 3, baseDelay = 1000) => {
   throw lastError;
 };
 
-// Serialize workflow data for database
 const serializeWorkflowData = (data) => ({
   name: data.name,
   description: data.description,
@@ -404,7 +399,6 @@ const updateAlertWorkflow = async (id, data) => {
   console.log(`Input data:`, JSON.stringify(data, null, 2));
 
   try {
-    // Test if we can read the record first
     console.log(`Testing read access for ID ${id}...`);
     const testRead = await prisma.hrms_d_alert_workflow.findUnique({
       where: { id: parseInt(id) },
@@ -418,7 +412,6 @@ const updateAlertWorkflow = async (id, data) => {
 
     console.log(`Attempting direct update for: ${requestId}`);
 
-    // Prepare clean update data
     const updateData = {
       name: data.name,
       description: data.description,
@@ -441,16 +434,12 @@ const updateAlertWorkflow = async (id, data) => {
       updatedate: new Date(),
       log_inst: data.log_inst || 1,
     };
-
-    // Remove undefined values
     Object.keys(updateData).forEach(
       (key) => updateData[key] === undefined && delete updateData[key]
     );
-
     console.log(`Update data prepared:`, JSON.stringify(updateData, null, 2));
     console.log(`Executing update now...`);
 
-    // Add a timeout wrapper
     const updateWithTimeout = Promise.race([
       prisma.hrms_d_alert_workflow.update({
         where: { id: parseInt(id) },
@@ -464,7 +453,6 @@ const updateAlertWorkflow = async (id, data) => {
     const updated = await updateWithTimeout;
     console.log(`Update completed successfully: ${requestId}`);
 
-    // Skip the additional fetch for now to isolate the issue
     return updated;
   } catch (error) {
     console.error(`Update failed for ${requestId}:`, error.message);
@@ -519,8 +507,8 @@ const getAlertWorkflows = async (search, page, size, startDate, endDate) => {
       where: filters,
       skip,
       take: size,
-      // REMOVE OR LIMIT THE INCLUDE - This is causing the issue
-      // include: { alert_workflow_alert_logs: true }, // Remove this line
+
+      // include: { alert_workflow_alert_logs: true }, ]
       select: {
         id: true,
         name: true,
@@ -545,7 +533,6 @@ const getAlertWorkflows = async (search, page, size, startDate, endDate) => {
       orderBy: [{ createdate: "desc" }, { updatedate: "desc" }],
     });
 
-    // Parse JSON fields
     workflows.forEach((w) => {
       w.conditions = JSON.parse(w.conditions || "[]");
       w.actions = JSON.parse(w.actions || "[]");

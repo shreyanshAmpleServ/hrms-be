@@ -735,6 +735,27 @@ const getLastComponentAssignmentForEmployee = async (employeeId) => {
   }
 };
 
+const findPendingKPIForEmployee = async (employeeId) => {
+  try {
+    const pendingKPI = await prisma.hrms_d_employee_kpi.findFirst({
+      where: {
+        employee_id: Number(employeeId),
+        status: "Pending",
+      },
+      orderBy: { createdate: "desc" },
+      include: {
+        kpi_contents: true,
+      },
+    });
+    return pendingKPI;
+  } catch (error) {
+    throw new CustomError(
+      `Error finding pending KPI for employee: ${error.message}`,
+      503
+    );
+  }
+};
+
 const getAllEmployeeKPI = async (
   page,
   size,
@@ -1275,4 +1296,5 @@ module.exports = {
   getAllEmployeeKPI,
   updateEmployeeKPI,
   deleteEmployeeKPI,
+  findPendingKPIForEmployee,
 };

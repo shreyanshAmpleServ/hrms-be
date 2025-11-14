@@ -292,14 +292,15 @@ module.exports.evaluateConditions = (employee, conditions) => {
     // }
     else if (field === "attendance_marked") {
       // Use local date in YYYY-MM-DD
-      const today = new Date().toLocaleDateString("en-CA");
+      // const today = new Date().toLocaleDateString("en-CA");
+      const today = new Date().toISOString().split("T")[0];
 
       if (employee.hrms_daily_attendance_employee?.length > 0) {
         const todayAttendance = employee.hrms_daily_attendance_employee.find(
           (att) => {
-            const attDate = new Date(att.attendance_date).toLocaleDateString(
-              "en-CA"
-            );
+            const attDate = new Date(att.attendance_date)
+              .toISOString()
+              .split("T")[0];
             return attDate === today;
           }
         );
@@ -310,18 +311,15 @@ module.exports.evaluateConditions = (employee, conditions) => {
 
       console.log(`   Attendance marked for ${today}: ${empValue}`);
     } else if (field === "document_expiry_date") {
-      // Handle document expiry conditions
       let documentExpiryDate = null;
-      let alertBeforeDays = 30; // Default alert before 30 days
+      let alertBeforeDays = 30;
 
-      // Get employee documents with expiry dates
       if (employee.document_upload_employee?.length > 0) {
         const activeDocuments = employee.document_upload_employee.filter(
           (doc) => doc.is_active === "Y" && doc.expiry_date
         );
 
         if (activeDocuments.length > 0) {
-          // Sort by earliest expiry date
           const sortedDocs = activeDocuments.sort(
             (a, b) => new Date(a.expiry_date) - new Date(b.expiry_date)
           );
@@ -329,7 +327,6 @@ module.exports.evaluateConditions = (employee, conditions) => {
           const earliestDoc = sortedDocs[0];
           documentExpiryDate = earliestDoc.expiry_date;
 
-          // Get alert before days from document type if available
           if (earliestDoc.document_type_id && employee.document_types) {
             const docType = employee.document_types.find(
               (dt) => dt.id === earliestDoc.document_type_id
@@ -360,7 +357,6 @@ module.exports.evaluateConditions = (employee, conditions) => {
             )} (${daysUntil} days from now)`
           );
 
-          // Skip if document already expired
           if (daysUntil < 0) {
             console.log(
               ` Document already expired ${Math.abs(
@@ -623,14 +619,27 @@ module.exports.evaluateConditions = (employee, conditions) => {
       );
       return false;
     }
+    // Convert string booleans or numbers to proper types for comparison
+    // --- Normalize types before comparison ---
+    let compareValue = value;
+    if (typeof value === "string") {
+      const lowerVal = value.toLowerCase().trim();
+      if (lowerVal === "true") compareValue = true;
+      else if (lowerVal === "false") compareValue = false;
+      else if (!isNaN(value) && value !== "") compareValue = Number(value);
+    }
+
+    console.log(
+      `    Comparing: empValue (${empValue} - ${typeof empValue}) with compareValue (${compareValue} - ${typeof compareValue})`
+    );
 
     let conditionMet = false;
-    if (operator === "<=") conditionMet = empValue <= value;
-    else if (operator === ">=") conditionMet = empValue >= value;
-    else if (operator === "=") conditionMet = empValue == value;
-    else if (operator === "<") conditionMet = empValue < value;
-    else if (operator === ">") conditionMet = empValue > value;
-    else if (operator === "!=") conditionMet = empValue != value;
+    if (operator === "<=") conditionMet = empValue <= compareValue;
+    else if (operator === ">=") conditionMet = empValue >= compareValue;
+    else if (operator === "=") conditionMet = empValue == compareValue;
+    else if (operator === "<") conditionMet = empValue < compareValue;
+    else if (operator === ">") conditionMet = empValue > compareValue;
+    else if (operator === "!=") conditionMet = empValue != compareValue;
 
     // console.log(`   Condition result: ${conditionMet}`);
 

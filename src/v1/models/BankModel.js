@@ -1,9 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
+// const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
 
 // Create a new bank
-const createBank = async (data) => {
+const createBank = async (prisma, data) => {
   try {
     console.log("data", data);
     const bank = await prisma.hrms_m_bank_master.create({
@@ -23,7 +23,7 @@ const createBank = async (data) => {
 };
 
 // Find an bank by ID
-const findBankById = async (id) => {
+const findBankById = async (prisma, id) => {
   try {
     const bank = await prisma.hrms_m_bank_master.findUnique({
       where: { id: parseInt(id) },
@@ -38,7 +38,7 @@ const findBankById = async (id) => {
 };
 
 // Update an bank
-const updateBank = async (id, data) => {
+const updateBank = async (prisma, id, data) => {
   try {
     const updatedbank = await prisma.hrms_m_bank_master.update({
       where: { id: parseInt(id) },
@@ -54,7 +54,7 @@ const updateBank = async (id, data) => {
 };
 
 // Delete an bank
-const deleteBank = async (id) => {
+const deleteBank = async (prisma, id) => {
   try {
     await prisma.hrms_m_bank_master.delete({
       where: { id: parseInt(id) },

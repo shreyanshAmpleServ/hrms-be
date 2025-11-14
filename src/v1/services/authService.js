@@ -90,19 +90,25 @@ require("dotenv").config();
 const jwtSecret = process.env.JWT_SECRET;
 const BCRYPT_COST = 8;
 
-const registerUser = async (email, password, fullName = null, role_id) => {
+const registerUser = async (
+  prisma,
+  email,
+  password,
+  fullName = null,
+  role_id
+) => {
   try {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
 
     // Check if the user already exists in the database
-    const existingUser = await userModel.findUserByEmail(email);
+    const existingUser = await userModel.findUserByEmail(prisma, email);
     if (existingUser) {
       throw new CustomError("User already registered", 400);
     }
 
     // Create the user in the database
-    const user = await userModel.createUser({
+    const user = await userModel.createUser(prisma, {
       username: email,
       email,
       password: hashedPassword,
@@ -120,10 +126,10 @@ const registerUser = async (email, password, fullName = null, role_id) => {
   }
 };
 
-const loginUser = async (email, password) => {
+const loginUser = async (prisma, email, password) => {
   try {
     // Fetch the user from the database
-    const user = await userModel.findUserByEmail(email);
+    const user = await userModel.findUserByEmail(prisma, email);
     if (!user) throw new CustomError("User not found", 401);
 
     // Validate password
