@@ -21,14 +21,26 @@ const serializeLeaveTypeMasterData = (data) => ({
 // Create a new leave type master
 const createLeaveType = async (data) => {
   try {
+    const existing = await prisma.hrms_m_leave_type_master.findFirst({
+      where: {
+        leave_type: data.leave_type.trim(),
+      },
+    });
+
+    if (existing) {
+      throw new CustomError("Leave type already exists", 400);
+    }
+
     const reqData = await prisma.hrms_m_leave_type_master.create({
       data: {
         ...serializeLeaveTypeMasterData(data),
+        leave_type: data.leave_type.trim(),
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
     });
+
     return reqData;
   } catch (error) {
     throw new CustomError(
@@ -59,16 +71,35 @@ const findLeaveTypById = async (id) => {
 // Update leave type master
 const updateLeaveType = async (id, data) => {
   try {
+    const leaveType = data.leave_type.trim();
+
+    const duplicate = await prisma.hrms_m_leave_type_master.findFirst({
+      where: {
+        leave_type: leaveType,
+        NOT: { id: parseInt(id) },
+      },
+    });
+
+    if (duplicate) {
+      throw new CustomError("Leave type already exists", 400);
+    }
+
     const updatedEntry = await prisma.hrms_m_leave_type_master.update({
       where: { id: parseInt(id) },
       data: {
         ...serializeLeaveTypeMasterData(data),
+        leave_type: leaveType,
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
     });
+
     return updatedEntry;
   } catch (error) {
+    if (error.code === "P2002") {
+      throw new CustomError("Leave type already exists", 400);
+    }
+
     throw new CustomError(
       `Error updating leave type master: ${error.message}`,
       500
