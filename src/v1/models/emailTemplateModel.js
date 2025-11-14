@@ -105,23 +105,24 @@ const getEmailTemplateById = async (id) => {
   }
 };
 
-// Update email template
 const updateEmailTemplate = async (id, data) => {
   try {
     await validateEmailTemplateData({ ...data, id });
 
+    const { key, ...restData } = data;
+
     const result = await prisma.hrms_d_templates.update({
       where: { id: Number(id) },
       data: {
-        ...serializeEmailTemplateData(data),
+        ...serializeEmailTemplateData(restData),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
     });
+
     return result;
   } catch (error) {
     console.log(error);
-
     throw new CustomError(
       `Error updating email template: ${error.message}`,
       500
