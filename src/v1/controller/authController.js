@@ -4,7 +4,13 @@ const register = async (req, res, next) => {
   try {
     const { email, password, full_name = null, role_id } = req.body;
 
-    const user = await registerUser(email, password, full_name, role_id);
+    const user = await registerUser(
+      req.prisma,
+      email,
+      password,
+      full_name,
+      role_id
+    );
     res.status(201).success("User registered successfully", user);
   } catch (error) {
     next(error);

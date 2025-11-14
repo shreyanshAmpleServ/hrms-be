@@ -55,7 +55,7 @@ const getUserWithRole = async (prisma, userId, is_password = false) => {
   if (!user) throw new CustomError("User not found", 404);
 
   const roleId = user?.hrms_d_user_role?.[0]?.hrms_m_role?.id || null;
-  const permission = roleId ? await getRolePermission(roleId) : null;
+  const permission = roleId ? await getRolePermission(prisma, roleId) : null;
   // console.log("Fetching permissions" ,roleId,JSON.parse(permission?.permissions))
 
   return {
@@ -249,7 +249,7 @@ const updateUser = async (prisma, id, data) => {
     }
 
     // Step 5: Return full user details
-    return await getUserWithRole(updatedUser.id);
+    return await getUserWithRole(prisma, updatedUser.id);
   } catch (error) {
     console.log(error);
     throw new CustomError(`Error updating user: ${error.message}`, 500);
@@ -379,6 +379,7 @@ const deleteUser = async (prisma, id) => {
 // };
 
 const getAllUsers = async (
+  prisma,
   search,
   page,
   size,
