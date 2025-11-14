@@ -38,7 +38,7 @@ const createCurrency = async (data) => {
 
     return currency;
   } catch (error) {
-    throw new CustomError(`Error creating currency: ${error.message}`, 500);
+    throw new CustomError(` ${error.message}`, 500);
   }
 };
 
@@ -99,7 +99,7 @@ const updateCurrency = async (id, data) => {
 
     return updatedCurrency;
   } catch (error) {
-    throw new CustomError(`Error updating currency: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
