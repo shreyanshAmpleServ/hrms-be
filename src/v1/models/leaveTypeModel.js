@@ -43,10 +43,7 @@ const createLeaveType = async (data) => {
 
     return reqData;
   } catch (error) {
-    throw new CustomError(
-      `Error creating leave type master: ${error.message}`,
-      500
-    );
+    throw new CustomError(` ${error.message}`, 500);
   }
 };
 
@@ -100,10 +97,7 @@ const updateLeaveType = async (id, data) => {
       throw new CustomError("Leave type already exists", 400);
     }
 
-    throw new CustomError(
-      `Error updating leave type master: ${error.message}`,
-      500
-    );
+    throw new CustomError(` ${error.message}`, 500);
   }
 };
 
