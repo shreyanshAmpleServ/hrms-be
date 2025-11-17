@@ -1,4 +1,4 @@
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy");
 
 // const prismaInstances = new Map();
 
@@ -55,7 +55,7 @@
 //   disconnectAll,
 // };
 
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const logger = require("../Comman/logger");
 
 const prismaInstances = new Map();

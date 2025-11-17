@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const { connect } = require("puppeteer");
 const { id } = require("zod/v4/locales");
-const prisma = new PrismaClient();
 
 const serializeTaxData = (data) => ({
   pay_component_id: parseInt(data.pay_component_id) || null,

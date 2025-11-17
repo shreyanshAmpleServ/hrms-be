@@ -1,8 +1,8 @@
 const dailyAttendanceService = require("../services/dailyAttendanceService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../../utils/prismaProxy");
+
 const attendanceScheduler = require("../services/attendanceScheduler");
 
 const createDefaultAttendanceForToday = async (req, res, next) => {

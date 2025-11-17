@@ -1,7 +1,7 @@
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy");
 // const CustomError = require("../../utils/CustomError");
 // const { parse } = require("dotenv");
-// const prisma = new PrismaClient();
+//
 
 // const serializeJobData = (data) => {
 //   let hiringStageValue = null;
@@ -701,9 +701,9 @@
 // };
 
 //II
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy");
 // const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+//
 
 // const serializeJobData = (data) => {
 //   let hiringStageValue = null;
@@ -1186,10 +1186,9 @@
 //   getAllJobPosting,
 // };
 
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("./requestsModel");
-const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   let hiringStageValue = null;

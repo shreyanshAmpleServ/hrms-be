@@ -1,4 +1,4 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const moment = require("moment");
@@ -6,7 +6,6 @@ const sendEmail = require("../../utils/mailer");
 const logger = require("../../Comman/logger");
 const { templateKeyMap } = require("../../utils/templateKeyMap");
 const { generateEmailContent } = require("../../utils/emailTemplates");
-const prisma = new PrismaClient();
 
 const notificationLogModel = require("./notificationLogModel");
 

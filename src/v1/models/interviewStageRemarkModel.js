@@ -1,6 +1,6 @@
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy");
 // const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+//
 // const { createRequest } = require("./requestsModel.js");
 
 // const serializeRemarkData = (data) => ({
@@ -696,10 +696,9 @@
 //   stopHiringProcess,
 // };
 
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("../models/requestsModel");
-const prisma = new PrismaClient();
 
 const serializeRemarkData = (data) => ({
   candidate_id: data.candidate_id ? Number(data.candidate_id) : null,

@@ -85,10 +85,10 @@
 // const alertWorkflowModel = require("../models/alertWorkflowModel.js");
 // const { runWorkflow } = require("../../utils/alertWorkflowRunner.js");
 // const cron = require("node-cron");
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy");
 // const CustomError = require("../../utils/CustomError");
 
-// const prisma = new PrismaClient();
+//
 // const jobs = {};
 
 // const safeJsonParse = (data) => {
@@ -306,10 +306,9 @@
 const alertWorkflowModel = require("../models/alertWorkflowModel.js");
 const { runWorkflow } = require("../../utils/alertWorkflowRunner.js");
 const cron = require("node-cron");
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 
-const prisma = new PrismaClient();
 const jobs = {};
 
 const safeJsonParse = (data) => {

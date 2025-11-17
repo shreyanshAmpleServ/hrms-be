@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 // Serializer
 const serializeSettlementData = (data) => ({

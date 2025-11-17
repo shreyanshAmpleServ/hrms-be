@@ -5,8 +5,8 @@ const fs = require("fs");
 const appointmentLetterQueue = require("../../utils/appointmentLetterQueue.js");
 const path = require("path");
 const { v4: uuidv4 } = require("uuid");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../../utils/prismaProxy");
+
 const {
   generateAppointmentLetterPDF,
 } = require("../../utils/appointmentLetterPDF.js");

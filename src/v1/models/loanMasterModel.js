@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 const serializeLoanMasterData = (data) => ({
   loan_code: data.loan_code || null,

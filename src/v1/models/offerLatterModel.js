@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
-const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {

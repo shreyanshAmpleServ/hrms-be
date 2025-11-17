@@ -174,9 +174,8 @@ Add relation (around line 1185):
 ### 1. Model: `src/v1/models/employeeKPIModel.js`
 
 ```jsx
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 const serializeEmployeeKPIData = (data, defaultEmploymentType = null) => ({
   employee_id: Number(data.employee_id),

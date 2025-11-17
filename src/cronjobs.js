@@ -6,8 +6,8 @@
 const cron = require("node-cron");
 const logger = require("./Comman/logger");
 const moment = require("moment-timezone");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../../utils/prismaProxy");
+
 const {
   contractExpiryAlertFn,
   getAllEmploymentContract,

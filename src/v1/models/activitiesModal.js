@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 const combineDateAndTime = (date, time) => {
   const dateObj = new Date(date); // Convert due_date (ISO format) to Date object

@@ -1,7 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const { includes } = require("zod/v4");
-const prisma = new PrismaClient();
+
 const { DateTime, Interval } = require("luxon");
 
 const timeStringToDecimal = (timeStr) => {

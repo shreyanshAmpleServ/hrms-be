@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const { parse } = require("dotenv");
 const { createRequest } = require("./requestsModel");
-const prisma = new PrismaClient();
 
 // Serialize leave encashment data
 const serializeLeaveEncashmentData = (data) => ({

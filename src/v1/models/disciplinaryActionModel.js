@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const { id } = require("zod/v4/locales");
-const prisma = new PrismaClient();
 
 // Serialize disciplinary action data
 const serializeDisciplinaryActionData = (data) => ({

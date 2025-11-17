@@ -1,6 +1,6 @@
 // const logger = require("../Comman/logger");
-// const { PrismaClient } = require("@prisma/client");
-// const prisma = new PrismaClient();
+// const { prisma } = require("../../utils/prismaProxy");
+//
 // const sendEmail = require("./../utils/mailer.js");
 
 // async function executeActions(employees, actions = []) {
@@ -86,8 +86,8 @@
 
 // II
 // const logger = require("../Comman/logger");
-// const { PrismaClient } = require("@prisma/client");
-// const prisma = new PrismaClient();
+// const { prisma } = require("../../utils/prismaProxy");
+//
 // const sendEmail = require("./../utils/mailer.js");
 
 // async function executeActions(employees, actions = []) {
@@ -180,8 +180,8 @@
 
 /// III working
 // const logger = require("../Comman/logger");
-// const { PrismaClient } = require("@prisma/client");
-// const prisma = new PrismaClient();
+// const { prisma } = require("../../utils/prismaProxy");
+//
 // const sendEmail = require("./../utils/mailer.js");
 
 // async function executeActions(employees, actions = []) {
@@ -356,8 +356,8 @@
 
 //II
 const logger = require("../Comman/logger");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../../utils/prismaProxy");
+
 const sendEmail = require("./../utils/mailer.js");
 const { late } = require("zod");
 

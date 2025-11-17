@@ -1,4 +1,4 @@
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy");
 // const CustomError = require("../../utils/CustomError");
 
 // // Configure PrismaClient with optimized settings
@@ -265,7 +265,7 @@
 //   getAlertWorkflows,
 // };
 
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 
 let prisma;

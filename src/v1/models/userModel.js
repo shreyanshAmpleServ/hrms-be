@@ -1,6 +1,6 @@
-// // const { PrismaClient } = require("@prisma/client");
+// // const { prisma } = require("../../utils/prismaProxy");
 // const CustomError = require("../../utils/CustomError");
-// // const prisma = new PrismaClient();
+// //
 
 // // Helper function to define fields returned for a user
 // const getUserFields = (is_password = false) => ({

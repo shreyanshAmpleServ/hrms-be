@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 const e = require("express");
-const prisma = new PrismaClient();
 
 // Serialize education data
 const serializeEducationData = (data) => ({

@@ -1,6 +1,6 @@
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy");
 // const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+//
 // const employeeModel = require("./EmployeeModel");
 
 // const serializeCandidateMasterData = (data) => ({
@@ -760,9 +760,9 @@
 //   createEmployeeFromCandidate,
 // };
 
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+
 const employeeModel = require("./EmployeeModel");
 
 const serializeCandidateMasterData = (data) => ({

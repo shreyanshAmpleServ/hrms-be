@@ -1,6 +1,6 @@
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+//
 
 // Create a new bank
 const createBank = async (prisma, data) => {
