@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
 // Helper function to define fields returned for a lead

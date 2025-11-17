@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../utils/prismaProxy.js");
 
 const getRequestDetailsByType = async (request_type, reference_id) => {
   switch (request_type) {

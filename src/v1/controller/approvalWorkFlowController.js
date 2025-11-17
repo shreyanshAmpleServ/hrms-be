@@ -350,7 +350,7 @@
 //       });
 //     }
 
-//     const { prisma } = require("../../utils/prismaProxy");
+//     const { prisma } = require("../../utils/prismaProxy.js");
 //
 
 //     const requester = await prisma.hrms_d_employee.findUnique({
@@ -788,7 +788,7 @@ const validateWorkflow = async (req, res, next) => {
       });
     }
 
-    const { prisma } = require("../../utils/prismaProxy");
+    const { prisma } = require("../../utils/prismaProxy.js");
 
     const requester = await prisma.hrms_d_employee.findUnique({
       where: { id: requester_id },

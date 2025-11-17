@@ -1,4 +1,4 @@
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const CustomError = require("../../utils/CustomError");
 //
 // const { createRequest } = require("./requestsModel.js");
@@ -696,7 +696,7 @@
 //   stopHiringProcess,
 // };
 
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("../models/requestsModel");
 

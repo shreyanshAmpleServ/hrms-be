@@ -1,4 +1,4 @@
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const CustomError = require("../../utils/CustomError");
 
 // // Configure PrismaClient with optimized settings
@@ -265,35 +265,33 @@
 //   getAlertWorkflows,
 // };
 
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
-let prisma;
+// const getPrismaClient = () => {
+//   if (!prisma) {
+//     prisma = new PrismaClient({
+//       log:
+//         process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
+//       datasources: {
+//         db: {
+//           url: process.env.DATABASE_URL,
+//         },
+//       },
+//     });
 
-const getPrismaClient = () => {
-  if (!prisma) {
-    prisma = new PrismaClient({
-      log:
-        process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL,
-        },
-      },
-    });
+//     const cleanup = async () => {
+//       await prisma.$disconnect();
+//     };
 
-    const cleanup = async () => {
-      await prisma.$disconnect();
-    };
+//     process.on("beforeExit", cleanup);
+//     process.on("SIGINT", cleanup);
+//     process.on("SIGTERM", cleanup);
+//   }
+//   return prisma;
+// };
 
-    process.on("beforeExit", cleanup);
-    process.on("SIGINT", cleanup);
-    process.on("SIGTERM", cleanup);
-  }
-  return prisma;
-};
-
-prisma = getPrismaClient();
+// prisma = getPrismaClient();
 
 const withRetry = async (operation, retries = 3, baseDelay = 1000) => {
   let lastError;

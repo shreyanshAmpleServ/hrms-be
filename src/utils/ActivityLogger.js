@@ -1,4 +1,4 @@
-// // const { prisma } = require("../../utils/prismaProxy");
+// // const { prisma } = require("../../utils/prismaProxy.js");
 // //
 
 // // /**
@@ -36,7 +36,7 @@
 
 // // module.exports = { logActivity };
 
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 //
 
 // /**
@@ -78,7 +78,7 @@
 // };
 
 // module.exports = { logActivity };
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../utils/prismaProxy.js");
 
 const logActivity = async ({
   employee_id,

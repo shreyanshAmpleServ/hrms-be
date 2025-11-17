@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");

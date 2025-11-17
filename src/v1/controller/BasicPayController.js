@@ -2,7 +2,7 @@ const BasicPayService = require("../services/BasicPayService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const XLSX = require("xlsx");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 
 const createBasicPay = async (req, res, next) => {
   try {

@@ -3,7 +3,7 @@
  * @module surveyResponseModel
  */
 
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { z } = require("zod");
 

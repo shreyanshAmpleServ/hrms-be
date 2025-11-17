@@ -1,4 +1,4 @@
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
 
@@ -642,7 +642,7 @@
 // module.exports = { setupNotificationMiddleware };
 
 // II without channel
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
 
@@ -905,7 +905,7 @@
 // module.exports = { setupNotificationMiddleware };
 
 //III.1-with diff template(Old)
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
 
@@ -1467,6 +1467,7 @@
 
 //III.2-with diff template(New)
 const { prisma } = require("../../utils/prismaProxy");
+
 const sendEmail = require("../../utils/mailer.js");
 const { generateEmailContent } = require("../../utils/emailTemplates.js");
 

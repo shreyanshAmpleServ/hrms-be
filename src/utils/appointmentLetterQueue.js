@@ -2,7 +2,7 @@
 // const path = require("path");
 // const fs = require("fs");
 // const archiver = require("archiver");
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 //
 // const appointmentLatterModel = require("../v1/models/AppointmentLatterModel");
 // const {
@@ -291,7 +291,7 @@ const Queue = require("bull");
 const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../utils/prismaProxy.js");
 
 const appointmentLatterModel = require("../v1/models/AppointmentLatterModel.js");
 const { generateAppraisalPDF } = require("../utils/appraisalPDF");

@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../utils/prismaProxy.js");
 const CustomError = require("../utils/CustomError"); // make sure path is correct
 
 const errorNotExist = async (modelName, id, name) => {

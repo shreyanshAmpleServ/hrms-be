@@ -6,7 +6,7 @@ const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const offerLetterQueue = require("../../utils/offerLetterQueue");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 
 const createOfferLetter = async (req, res, next) => {
   try {

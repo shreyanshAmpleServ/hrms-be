@@ -1,4 +1,4 @@
-// // const { prisma } = require("../../utils/prismaProxy");
+// // const { prisma } = require("../../utils/prismaProxy.js");
 // const CustomError = require("../../utils/CustomError");
 // //
 
@@ -463,7 +463,7 @@
 //   getAllUsers,
 // };
 
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
 const findUserByEmailForLogin = async (tenantPrisma, email) => {

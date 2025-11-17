@@ -1,4 +1,4 @@
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 
 //
 
@@ -75,7 +75,7 @@
 
 // module.exports = { generateEmailContent, formatRequestType, renderDetailsHtml };
 
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../utils/prismaProxy.js");
 
 const formatRequestType = (type) =>
   type?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ?? "";

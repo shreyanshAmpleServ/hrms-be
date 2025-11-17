@@ -21,7 +21,7 @@
 const app = require("./app");
 const logger = require("./Comman/logger");
 const { initializeCronJobs } = require("./cronjobs");
-const { startScheduler } = require("./v1/services/alertWorkflowService.js");
+// const { startScheduler } = require("./v1/services/alertWorkflowService.js");
 const { disconnectAll } = require("./config/db.js");
 
 const PORT = process.env.PORT || 5000;
@@ -31,14 +31,14 @@ const server = app.listen(PORT, "0.0.0.0", async () => {
 
   initializeCronJobs();
 
-  try {
-    await startScheduler();
-    logger.info("Alert workflow scheduler started successfully");
-  } catch (error) {
-    logger.error("Failed to start alert workflow scheduler:", error);
-  }
+  //   try {
+  //     await startScheduler();
+  //     logger.info("Alert workflow scheduler started successfully");
+  //   } catch (error) {
+  //     logger.error("Failed to start alert workflow scheduler:", error);
+  //   }
+  // });
 });
-
 const gracefulShutdown = async (signal) => {
   logger.info(`${signal} received. Starting graceful shutdown...`);
 

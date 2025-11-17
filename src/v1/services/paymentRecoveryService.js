@@ -1,5 +1,5 @@
 const paymentRecoveryModel = require("../models/paymentRecoveryModel.js");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 
 const createPaymentRecovery = async (data) => {
   return await paymentRecoveryModel.createPaymentRecovery(data);

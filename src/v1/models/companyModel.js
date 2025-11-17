@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
 // Serialize/parse logic for any complex fields (if needed in the future)

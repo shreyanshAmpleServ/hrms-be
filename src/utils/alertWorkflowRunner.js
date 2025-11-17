@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../utils/prismaProxy.js");
 const { evaluateConditions } = require("./conditionEvaluator");
 const { executeActions } = require("./actionExecutor");
 

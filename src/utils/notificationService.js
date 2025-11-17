@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const { generateEmailContent } = require("./emailTemplates");
 const sendEmail = require("./mailer");
 

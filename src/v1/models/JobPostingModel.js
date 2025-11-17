@@ -1,4 +1,4 @@
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const CustomError = require("../../utils/CustomError");
 // const { parse } = require("dotenv");
 //
@@ -701,7 +701,7 @@
 // };
 
 //II
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const CustomError = require("../../utils/CustomError");
 //
 
@@ -1186,7 +1186,7 @@
 //   getAllJobPosting,
 // };
 
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("./requestsModel");
 

@@ -11,7 +11,7 @@ const {
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 
 const sendEmail = require("../../utils/mailer");
 const {

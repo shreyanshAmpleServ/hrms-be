@@ -40,6 +40,49 @@
 
 const jwt = require("jsonwebtoken");
 const { withTenantContext } = require("../../utils/prismaProxy");
+const { startScheduler } = require("../services/alertWorkflowService");
+const logger = require("../../Comman/logger");
+
+// const authenticateToken = (req, res, next) => {
+//   const token =
+//     req.cookies.authToken || req.headers.authorization?.split(" ")[1];
+
+//   if (!token) {
+//     return res.status(401).json({
+//       success: false,
+//       message: "Access denied. No token provided.",
+//     });
+//   }
+
+//   try {
+//     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+//     const tenantDb = decoded.tenantDb;
+
+//     if (!tenantDb) {
+//       return res.status(401).json({
+//         success: false,
+//         message: "Invalid token. No tenant database found.",
+//       });
+//     }
+
+//     req.user = decoded;
+//     req.tenantDb = tenantDb;
+
+//     console.log(` Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
+
+//     withTenantContext(tenantDb, () => {
+//       next();
+//     });
+//   } catch (error) {
+//     return res.status(403).json({
+//       success: false,
+//       message:
+//         error.name === "TokenExpiredError" ? "Token expired" : "Invalid token",
+//     });
+//   }
+// };
+
+let schedulerInitialized = false;
 
 const authenticateToken = (req, res, next) => {
   const token =
@@ -66,9 +109,24 @@ const authenticateToken = (req, res, next) => {
     req.user = decoded;
     req.tenantDb = tenantDb;
 
-    console.log(` Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
+    console.log(`Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
 
-    withTenantContext(tenantDb, () => {
+    withTenantContext(tenantDb, async () => {
+      if (!schedulerInitialized) {
+        try {
+          logger.info(
+            " Starting alert workflow scheduler (first authenticated request)..."
+          );
+          await startScheduler();
+          schedulerInitialized = true;
+          logger.info(" Alert workflow scheduler started successfully");
+        } catch (error) {
+          logger.error(
+            "Failed to start alert workflow scheduler:",
+            error.message
+          );
+        }
+      }
       next();
     });
   } catch (error) {
@@ -79,5 +137,4 @@ const authenticateToken = (req, res, next) => {
     });
   }
 };
-
 module.exports = { authenticateToken };

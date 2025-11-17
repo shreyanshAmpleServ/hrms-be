@@ -1,5 +1,5 @@
 const cron = require("node-cron");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 
 // Schedule to run at midnight (00:00) every day
 const scheduleDefaultAttendance = () => {

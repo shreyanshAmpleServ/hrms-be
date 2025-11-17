@@ -4,7 +4,7 @@ const moment = require("moment");
 const { generateEmailContent } = require("../../utils/emailTemplates");
 const sendEmail = require("../../utils/mailer");
 const { templateKeyMap } = require("../../utils/templateKeyMap");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 
 // const createNotificationSetup = async (req, res, next) => {
 //   try {

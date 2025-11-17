@@ -1,5 +1,5 @@
 // const nodemailer = require("nodemailer");
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 //
 
 // const sendEmail = async ({ to, subject, html, log_inst }) => {
@@ -43,7 +43,7 @@
 // module.exports = sendEmail;
 
 const nodemailer = require("nodemailer");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../utils/prismaProxy.js");
 
 const sendEmail = async ({ to, subject, html, log_inst }) => {
   try {

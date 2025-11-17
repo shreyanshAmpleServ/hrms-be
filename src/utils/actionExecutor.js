@@ -1,5 +1,5 @@
 // const logger = require("../Comman/logger");
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 //
 // const sendEmail = require("./../utils/mailer.js");
 
@@ -86,7 +86,7 @@
 
 // II
 // const logger = require("../Comman/logger");
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 //
 // const sendEmail = require("./../utils/mailer.js");
 
@@ -180,7 +180,7 @@
 
 /// III working
 // const logger = require("../Comman/logger");
-// const { prisma } = require("../../utils/prismaProxy");
+// const { prisma } = require("../../utils/prismaProxy.js");
 //
 // const sendEmail = require("./../utils/mailer.js");
 
@@ -356,7 +356,7 @@
 
 //II
 const logger = require("../Comman/logger");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../utils/prismaProxy.js");
 
 const sendEmail = require("./../utils/mailer.js");
 const { late } = require("zod");

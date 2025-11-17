@@ -1,7 +1,7 @@
 const dailyAttendanceService = require("../services/dailyAttendanceService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const { prisma } = require("../../utils/prismaProxy");
+const { prisma } = require("../../utils/prismaProxy.js");
 
 const attendanceScheduler = require("../services/attendanceScheduler");
 
