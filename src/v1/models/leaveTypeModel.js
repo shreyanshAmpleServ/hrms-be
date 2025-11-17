@@ -1,6 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+// const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
+const { prisma } = require("../../utils/prismaProxy");
 
 // Serialize leave type master data
 const serializeLeaveTypeMasterData = (data) => ({

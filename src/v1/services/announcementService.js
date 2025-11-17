@@ -1,8 +1,9 @@
 const announcementModel = require("../models/announcementModel.js");
-const { PrismaClient } = require("@prisma/client");
+// const { PrismaClient } = require("@prisma/client");
 const cron = require("node-cron");
 const { deleteFromBackblaze } = require("../../utils/uploadBackblaze.js");
-const prisma = new PrismaClient();
+// const prisma = new PrismaClient();
+const { prisma } = require("../../utils/prismaProxy");
 
 const jobs = {};
 const oneTimeJobs = new Map();
