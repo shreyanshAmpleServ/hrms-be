@@ -251,6 +251,75 @@ const cron = require("node-cron");
 
 const scheduledJobs = new Map();
 
+const createAlertWorkflow = async (data) => {
+  const workflow = await alertWorkflowModel.createAlertWorkflow(data);
+  if (workflow.is_active === "Y" && workflow.schedule_cron) {
+    scheduleCron(workflow.id, workflow.schedule_cron);
+  }
+  return workflow;
+};
+
+const getAllAlertWorkflows = async (search, page, size, startDate, endDate) => {
+  return await alertWorkflowModel.getAlertWorkflows(
+    search,
+    page,
+    size,
+    startDate,
+    endDate
+  );
+};
+const getAlertWorkflowById = async (id) => {
+  return await alertWorkflowModel.getAlertWorkflowById(id);
+};
+const updateAlertWorkflow = async (id, data) => {
+  if (jobs[id]) {
+    console.log(` Stopping cron job for workflow ${id}`);
+    jobs[id].stop();
+    delete jobs[id];
+  }
+
+  const workflow = await alertWorkflowModel.updateAlertWorkflow(id, data);
+
+  if (workflow.is_active === "Y" && workflow.schedule_cron) {
+    console.log(` Restarting cron job for workflow ${id}`);
+    scheduleCron(workflow.id, workflow.schedule_cron);
+  } else {
+    console.log(` Workflow ${id} is paused - cron job not scheduled`);
+  }
+
+  return workflow;
+};
+
+const deleteAlertWorkflow = async (id) => {
+  if (jobs[id]) {
+    console.log(` Stopping cron job for workflow ${id} before deletion`);
+    jobs[id].stop();
+    delete jobs[id];
+  }
+  return await alertWorkflowModel.deleteAlertWorkflow(id);
+};
+
+const runAlertWorkflow = async (workflowId) => {
+  try {
+    const workflow = await getAlertWorkflowById(workflowId);
+    if (!workflow) throw new CustomError("Workflow not found", 404);
+
+    if (workflow.is_active !== "Y") {
+      throw new CustomError("Workflow is paused and cannot be executed", 400);
+    }
+
+    const parsedWorkflow = {
+      ...workflow,
+      conditions: safeJsonParse(workflow.conditions),
+      actions: safeJsonParse(workflow.actions),
+    };
+
+    await runWorkflow(workflow.id, parsedWorkflow);
+  } catch (error) {
+    console.error(`Manual workflow execution failed:`, error);
+    throw error;
+  }
+};
 const startScheduler = async () => {
   try {
     logger.info("Initializing alert workflows from tenant database...");
@@ -270,9 +339,7 @@ const init = async () => {
 
     const workflows = await alertWorkflowModel.getAlertWorkflows(null, 1, 1000);
 
-    logger.info(
-      ` Found ${workflows.data.length} active workflows to schedule`
-    );
+    logger.info(` Found ${workflows.data.length} active workflows to schedule`);
 
     for (const workflow of workflows.data) {
       try {
@@ -329,7 +396,7 @@ const scheduleWorkflow = async (workflow) => {
     },
     {
       scheduled: true,
-      timezone: "Asia/Kolkata", 
+      timezone: "Asia/Kolkata",
     }
   );
 
@@ -340,13 +407,19 @@ const scheduleWorkflow = async (workflow) => {
 };
 
 const executeWorkflow = async (workflow) => {
-
-
   logger.info(` Processing workflow: ${workflow.name}`);
-
-  
 };
 
+const stopAllJobs = () => {
+  console.log("[info] Stopping all scheduled jobs...");
+  Object.keys(jobs).forEach((workflowId) => {
+    if (jobs[workflowId]) {
+      jobs[workflowId].stop();
+      delete jobs[workflowId];
+    }
+  });
+  console.log("[info] All scheduled jobs stopped");
+};
 const stopScheduler = () => {
   logger.info(" Stopping all scheduled workflows...");
 
@@ -359,10 +432,29 @@ const stopScheduler = () => {
   logger.info(" All workflows stopped");
 };
 
+process.on("SIGINT", () => {
+  console.log("[info] SIGINT received - shutting down gracefully");
+  stopAllJobs();
+  process.exit(0);
+});
+
+process.on("SIGTERM", () => {
+  console.log("[info] SIGTERM received - shutting down gracefully");
+  stopAllJobs();
+  process.exit(0);
+});
+
 module.exports = {
+  createAlertWorkflow,
+  getAllAlertWorkflows,
+  getAlertWorkflowById,
+  updateAlertWorkflow,
+  deleteAlertWorkflow,
+  runAlertWorkflow,
   startScheduler,
   stopScheduler,
   scheduleWorkflow,
   executeWorkflow,
   init,
+  stopAllJobs,
 };

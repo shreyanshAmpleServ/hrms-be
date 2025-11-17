@@ -1,4 +1,4 @@
-// const { prisma } = require("../../utils/prismaProxy.js");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 //
 
@@ -144,6 +144,7 @@ const getAllBank = async (search, page, size, is_active) => {
       totalCount: totalCount,
     };
   } catch (error) {
+    console.log(error);
     throw new CustomError("Error retrieving banks", 503);
   }
 };
