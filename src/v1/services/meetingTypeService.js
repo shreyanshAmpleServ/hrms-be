@@ -1,4 +1,5 @@
 const meetingTypeModel = require('../models/meetingTypeModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createMeetingType = async (data) => {
     return await meetingTypeModel.createMeetingType(data);

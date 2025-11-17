@@ -1,4 +1,5 @@
 const latterTypeModel = require("../models/latterTypeModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLatterType = async (data) => {
   return await latterTypeModel.createLatterType(data);

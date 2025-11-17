@@ -1,6 +1,7 @@
 const solutionsService = require('../services/solutionsService');
 const CustomError = require('../../utils/CustomError');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const sanitizeSolutionData = (data) => {
   return {

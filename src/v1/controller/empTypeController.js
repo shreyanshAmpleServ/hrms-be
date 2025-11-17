@@ -1,6 +1,7 @@
 const empTypeService = require("../services/empTypeService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEmpType = async (req, res, next) => {
   try {

@@ -1,4 +1,5 @@
 const hrLetterModel = require("../models/hrLetterModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createhrLetter = async (data) => {
   return await hrLetterModel.createhrLetter(data);

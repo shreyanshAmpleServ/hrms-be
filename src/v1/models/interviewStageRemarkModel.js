@@ -1,6 +1,4 @@
-// const { PrismaClient } = require("@prisma/client");
-// const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+// // const CustomError = require("../../utils/CustomError");
 // const { createRequest } = require("./requestsModel.js");
 
 // const serializeRemarkData = (data) => ({
@@ -696,10 +694,9 @@
 //   stopHiringProcess,
 // };
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { createRequest } = require("../models/requestsModel");
-const prisma = new PrismaClient();
 
 const serializeRemarkData = (data) => ({
   candidate_id: data.candidate_id ? Number(data.candidate_id) : null,
@@ -714,7 +711,9 @@ const serializeRemarkData = (data) => ({
 });
 
 const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     console.log(
       `Checking if previous hiring stages are approved for candidate ${candidateId}`
     );
@@ -910,6 +909,7 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
   }
 };
 const convertSnapshotIdToStageId = async (candidateId, possibleSnapshotId) => {
+  const prisma = getPrisma();
   try {
     console.log(
       `Checking if stage_id ${possibleSnapshotId} is a snapshot ID for candidate ${candidateId}`
@@ -964,6 +964,7 @@ const convertSnapshotIdToStageId = async (candidateId, possibleSnapshotId) => {
 };
 
 const createInterviewStageRemark = async (data) => {
+  const prisma = getPrisma();
   try {
     const actualStageId = await convertSnapshotIdToStageId(
       Number(data.candidate_id),
@@ -1068,6 +1069,7 @@ const createInterviewStageRemark = async (data) => {
 };
 
 const checkAndUpdateCandidateStatus = async (candidateId, hiringStageId) => {
+  const prisma = getPrisma();
   try {
     console.log(
       ` Checking candidate ${candidateId} status for hiring stage ${hiringStageId}`
@@ -1299,6 +1301,7 @@ const stopHiringProcess = async (
 };
 
 const updateInterviewStageRemarkStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const interviewStageRemarkId = parseInt(id);
 
@@ -1420,7 +1423,9 @@ const updateInterviewStageRemarkStatus = async (id, data) => {
 };
 
 const findInterviewStageRemarkById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const remark = await prisma.hrms_m_interview_stage_remark.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -1449,7 +1454,9 @@ const findInterviewStageRemarkById = async (id) => {
 };
 
 const updateInterviewStageRemark = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedRemark = await prisma.hrms_m_interview_stage_remark.update({
       where: { id: parseInt(id) },
       data: {
@@ -1494,7 +1501,9 @@ const updateInterviewStageRemark = async (id, data) => {
 };
 
 const deleteInterviewStageRemark = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_interview_stage_remark.delete({
       where: { id: parseInt(id) },
     });
@@ -1511,6 +1520,7 @@ const deleteInterviewStageRemark = async (id) => {
 };
 
 const getAllInterviewStageRemark = async (search, page, size, candidateId) => {
+  const prisma = getPrisma();
   try {
     page = page && page > 0 ? page : 1;
     size = size || 10;

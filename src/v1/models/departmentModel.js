@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDepartment = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const department = await prisma.hrms_m_department_master.create({
       data: {
         department_name: data.department_name,
@@ -23,7 +24,9 @@ const createDepartment = async (data) => {
 };
 
 const findDepartmentById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const department = await prisma.hrms_m_department_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -41,7 +44,9 @@ const findDepartmentById = async (id) => {
 };
 
 const updateDepartment = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const allowedFields = {
       department_name: data.department_name,
       is_active: data.is_active,
@@ -67,7 +72,9 @@ const updateDepartment = async (id, data) => {
 };
 
 const deleteDepartment = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_department_master.delete({
       where: { id: parseInt(id) },
     });
@@ -137,7 +144,9 @@ const getAllDepartments = async (
 };
 
 const getDepartmentOptions = async (is_active) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     let where = {};
     if (typeof is_active === "boolean") {
       where.is_active = is_active ? "Y" : "N";

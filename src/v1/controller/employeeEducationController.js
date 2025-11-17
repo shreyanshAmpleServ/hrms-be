@@ -1,6 +1,7 @@
 const employeeEducationService = require("../services/employeeEducationService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEmployeeEducation = async (req, res, next) => {
   try {

@@ -1,7 +1,5 @@
-// const { PrismaClient } = require("@prisma/client");
-// const CustomError = require("../../utils/CustomError");
+// // const CustomError = require("../../utils/CustomError");
 // const { parse } = require("dotenv");
-// const prisma = new PrismaClient();
 
 // const serializeJobData = (data) => {
 //   let hiringStageValue = null;
@@ -701,9 +699,7 @@
 // };
 
 //II
-// const { PrismaClient } = require("@prisma/client");
-// const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+// // const CustomError = require("../../utils/CustomError");
 
 // const serializeJobData = (data) => {
 //   let hiringStageValue = null;
@@ -1186,10 +1182,9 @@
 //   getAllJobPosting,
 // };
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { createRequest } = require("./requestsModel");
-const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   let hiringStageValue = null;
@@ -1269,6 +1264,7 @@ const parseDocumentTypeIds = (documentTypeId) => {
 };
 
 const enrichWithHiringStages = async (jobPosting) => {
+  const prisma = getPrisma();
   if (!jobPosting) return null;
 
   const stageIds = parseHiringStageIds(jobPosting.hiring_stage_id);
@@ -1316,6 +1312,7 @@ const enrichWithHiringStages = async (jobPosting) => {
 };
 
 const enrichWithDocumentTypes = async (jobPosting) => {
+  const prisma = getPrisma();
   if (!jobPosting) return null;
 
   const docTypeIds = parseDocumentTypeIds(jobPosting.document_type_id);
@@ -1361,6 +1358,7 @@ const enrichJobPosting = async (jobPosting) => {
 };
 
 const enrichMultipleWithHiringStages = async (jobPostings) => {
+  const prisma = getPrisma();
   if (!jobPostings || jobPostings.length === 0) return [];
 
   const allStageIds = new Set();
@@ -1436,6 +1434,7 @@ const enrichMultipleWithHiringStages = async (jobPostings) => {
 };
 
 const createJobPosting = async (data) => {
+  const prisma = getPrisma();
   try {
     const department = await prisma.hrms_m_department_master.findUnique({
       where: { id: data.department_id },
@@ -1574,7 +1573,9 @@ const createJobPosting = async (data) => {
 };
 
 const findJobPostingById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const jobPosting = await prisma.hrms_d_job_posting.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -1619,7 +1620,9 @@ const findJobPostingById = async (id) => {
 };
 
 const updateJobPosting = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Validate hiring stages
     if (
       data.hiring_stage_ids &&
@@ -1710,7 +1713,9 @@ const updateJobPosting = async (id, data) => {
 };
 
 const deleteJobPosting = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_job_posting.delete({
       where: { id: parseInt(id) },
     });
@@ -1727,6 +1732,7 @@ const deleteJobPosting = async (id) => {
 };
 
 const getAllJobPosting = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new call status
 const createCallStatus = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callStatus = await prisma.CallStatuses.create({
       data: {
         name: data.name,
@@ -22,7 +23,9 @@ const createCallStatus = async (data) => {
 
 // Find a call status by ID
 const findCallStatusById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callStatus = await prisma.CallStatuses.findUnique({
       where: { id: parseInt(id) },
     });
@@ -40,7 +43,9 @@ const findCallStatusById = async (id) => {
 
 // Update a call status
 const updateCallStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedCallStatus = await prisma.CallStatuses.update({
       where: { id: parseInt(id) },
       data: {
@@ -56,7 +61,9 @@ const updateCallStatus = async (id, data) => {
 
 // Delete a call status
 const deleteCallStatus = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.CallStatuses.delete({
       where: { id: parseInt(id) },
     });
@@ -74,7 +81,9 @@ const deleteCallStatus = async (id) => {
 
 // Get all call statuses
 const getAllCallStatuses = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callStatuses = await prisma.CallStatuses.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

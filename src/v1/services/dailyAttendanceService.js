@@ -1,5 +1,6 @@
 const { verify } = require("jsonwebtoken");
 const dailyAttendanceModel = require("../models/dailyAttendanceModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDailyAttendance = async (data) => {
   return await dailyAttendanceModel.createDailyAttendance(data);

@@ -2,6 +2,7 @@ const importExportModel = require("../models/importExportModel.js");
 const xlsx = require("xlsx");
 const ExcelJS = require("exceljs");
 const fs = require("fs");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const parseExcelFile = async (filePath, tableName) => {
   try {

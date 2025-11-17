@@ -1,4 +1,5 @@
 const CampaignModel = require('../models/CampaignModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCampaign = async (data) => {
   return await CampaignModel.createCampaign(data);

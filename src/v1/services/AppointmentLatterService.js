@@ -1,4 +1,5 @@
 const AppointmentLatterModel = require("../models/AppointmentLatterModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAppointmentLatter = async (data) => {
   return await AppointmentLatterModel.createAppointmentLatter(data);

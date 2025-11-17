@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize request approval data
 const serializeRequestApprovalData = (data) => ({
@@ -14,7 +13,9 @@ const serializeRequestApprovalData = (data) => ({
 
 // Create approval entry
 const createRequestApproval = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_requests_approval.create({
       data: {
         ...serializeRequestApprovalData(data),
@@ -46,7 +47,9 @@ const createRequestApproval = async (data) => {
 
 // Update approval entry
 const updateRequestApproval = async (approval_id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_requests_approval.update({
       where: { approval_id: parseInt(approval_id) },
       data: {
@@ -78,7 +81,9 @@ const updateRequestApproval = async (approval_id, data) => {
 
 // Delete approval entry
 const deleteRequestApproval = async (approval_id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_requests_approval.delete({
       where: { approval_id: parseInt(approval_id) },
     });
@@ -204,7 +209,9 @@ const getAllRequestApproval = async (
 
 // Get by ID
 const findRequestApproval = async (approval_id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_requests_approval.findUnique({
       where: { approval_id: parseInt(approval_id) },
       include: {

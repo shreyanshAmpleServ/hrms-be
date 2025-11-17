@@ -1,4 +1,5 @@
 const departmentModel = require("../models/departmentModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDepartment = async (data) => {
   return await departmentModel.createDepartment(data);

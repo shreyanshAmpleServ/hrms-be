@@ -1,6 +1,7 @@
 // src/services/cronOrchestrator.js
 const prisma = require("../../prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { getAlertWorkflowById } = require("../models/alertWorkflowModel.js");
 
 class CronOrchestrator {

@@ -1,4 +1,5 @@
 const LeaveEncashmentModel = require("../models/LeaveEncashmentModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLeaveEncashment = async (data) => {
   return await LeaveEncashmentModel.createLeaveEncashment(data);

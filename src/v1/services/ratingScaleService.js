@@ -1,4 +1,5 @@
 const ratingScaleModel = require("../models/ratingScaleModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRatingScale = async (data) => {
   return await ratingScaleModel.createRatingScale(data);

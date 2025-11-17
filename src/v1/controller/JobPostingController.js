@@ -1,6 +1,7 @@
 const JobPostingService = require("../services/JobPostingService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const createJobPosting = async (req, res, next) => {
   try {
     const data = {

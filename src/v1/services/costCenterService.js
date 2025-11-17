@@ -1,4 +1,5 @@
 const costCenterModel = require("../models/costCenterModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCostCenter = async (data) => {
   return await costCenterModel.createCostCenter(data);

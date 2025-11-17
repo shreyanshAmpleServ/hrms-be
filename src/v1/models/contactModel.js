@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize `socialProfiles` before saving it
 const serializeSocialProfiles = (data) => {
@@ -19,7 +18,9 @@ const parseSocialProfiles = (contact) => {
 };
 
 const createContact = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const serializedData = serializeSocialProfiles(data);
 
     const contact = await prisma.crms_m_contact.create({
@@ -61,7 +62,9 @@ const createContact = async (data) => {
 };
 
 const findContactById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const contact = await prisma.crms_m_contact.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -92,7 +95,9 @@ const findContactById = async (id) => {
 };
 
 const findContactByEmail = async (email) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const contact = await prisma.crms_m_contact.findFirst({
       where: { email },
       include: {
@@ -123,7 +128,9 @@ const findContactByEmail = async (email) => {
 };
 
 const updateContact = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Add a date field with the current timestamp
     const updatedData = {
       ...data,
@@ -162,7 +169,9 @@ const updateContact = async (id, data) => {
 };
 
 const deleteContact = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Delete dependent rows in crms_d_deal_contacts
     await prisma.dealContacts.deleteMany({
       where: { contactId: parseInt(id) },
@@ -184,7 +193,9 @@ const deleteContact = async (id) => {
 };
 
 const getAllContacts = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;

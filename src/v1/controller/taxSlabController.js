@@ -1,5 +1,6 @@
 const taxSlabService = require("../services/taxSlabService");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTaxSlab = async (req, res, next) => {
   try {

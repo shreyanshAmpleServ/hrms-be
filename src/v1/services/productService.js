@@ -1,4 +1,5 @@
 const productModal = require('../models/productModal');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createProduct = async (data) => {
     return await productModal.createProduct(data);

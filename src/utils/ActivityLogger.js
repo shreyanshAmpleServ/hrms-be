@@ -79,7 +79,6 @@
 
 // module.exports = { logActivity };
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 
 const logActivity = async ({
   employee_id,

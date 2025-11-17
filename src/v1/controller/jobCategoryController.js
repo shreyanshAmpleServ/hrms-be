@@ -1,6 +1,7 @@
 const jobCategoryService = require("../services/jobCategoryService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createJobCategory = async (req, res, next) => {
   try {

@@ -1,4 +1,5 @@
 const offerLatterModel = require("../models/offerLatterModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createOfferLetter = async (data) => {
   return await offerLatterModel.createOfferLetter(data);

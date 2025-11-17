@@ -1,6 +1,7 @@
 const arrearAdjustmentsService = require("../services/arrearAdjustmentsService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createArrearAdjustment = async (req, res, next) => {
   try {

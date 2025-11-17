@@ -53,6 +53,7 @@
 // };
 
 const approvalWorkFlowModel = require("../models/approvalWorkFlowModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createApprovalWorkFlow = async (data) => {
   return await approvalWorkFlowModel.createApprovalWorkFlow(data);

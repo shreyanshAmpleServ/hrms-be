@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
 
 const serializeLoanEmiSchedule = (data) => ({
   loan_request_id: Number(data.loan_request_id),
@@ -16,7 +15,9 @@ const serializeLoanEmiSchedule = (data) => ({
 });
 
 const createLoanEmiSchedule = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_loan_emi_schedule.create({
       data: serializeLoanEmiSchedule(data),
       include: {
@@ -100,7 +101,9 @@ const getAllLoanEmiSchedule = async (
 };
 
 const findLoanEmiScheduleById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_loan_emi_schedule.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -127,7 +130,9 @@ const findLoanEmiScheduleById = async (id) => {
 };
 
 const updateLoanEmiSchedule = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_loan_emi_schedule.update({
       where: { id: parseInt(id) },
       data: {
@@ -154,7 +159,9 @@ const updateLoanEmiSchedule = async (id, data) => {
   }
 };
 const deleteLoanEmiSchedule = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_loan_emi_schedule.delete({
       where: { id: parseInt(id) },
     });
@@ -172,6 +179,7 @@ const deleteLoanEmiSchedule = async (id) => {
 };
 
 const updateLoanEmiScheduleStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const loanEmiId = parseInt(id);
     console.log("Loan Emi ID: ", loanEmiId);

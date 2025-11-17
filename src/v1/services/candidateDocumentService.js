@@ -1,4 +1,5 @@
 const candidateDocumentModel = require("../models/candidateDocumentModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCandidateDocument = async (data) => {
   return await candidateDocumentModel.createCandidateDocument(data);

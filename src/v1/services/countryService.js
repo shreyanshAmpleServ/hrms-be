@@ -1,4 +1,5 @@
 const countryModel = require("../models/countryModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCountryService = async (data) => {
   return await countryModel.createCountry(data);

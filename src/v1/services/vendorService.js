@@ -1,6 +1,7 @@
 const vendorModel = require('../models/vendorModel');
 const BCRYPT_COST = 8;
 const bcrypt = require('bcryptjs');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createVendor = async (data) => {
   // const hashedPasswordPromise = bcrypt.hash(data?.password, BCRYPT_COST);

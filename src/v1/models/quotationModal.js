@@ -1,20 +1,21 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new quotation
-const createQuotation = async (orderData,orderItemsData) => {
+const createQuotation = async (orderData, orderItemsData) => {
+  const prisma = getPrisma();
   try {
-    console.log("Modal of Create quotation : ", orderData)
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    console.log("Modal of Create quotation : ", orderData);
+    const result = await prisma.$transaction(async () => {
       // Step 1: Create the Order
       const createdOrder = await prisma.crms_d_quotations.create({
         data: {
           ...orderData,
-          vendor_id : Number(orderData?.vendor_id) || null,
-          currency : Number(orderData?.currency) || null,
-          sales_type : Number(orderData?.sales_type) || null,
-          rounding_amount : Number(orderData?.rounding_amount) || null,
+          vendor_id: Number(orderData?.vendor_id) || null,
+          currency: Number(orderData?.currency) || null,
+          sales_type: Number(orderData?.sales_type) || null,
+          rounding_amount: Number(orderData?.rounding_amount) || null,
           createdate: new Date(),
           updatedate: new Date(),
           updatedby: orderData.createdby || 1,
@@ -23,43 +24,42 @@ const createQuotation = async (orderData,orderItemsData) => {
       });
       // Step 2: Create OrderItems using the created order's ID
       const orderItems = await prisma.crms_d_quotation_items.createMany({
-        data: orderItemsData.map(item => ({
+        data: orderItemsData.map((item) => ({
           ...item,
-          item_id : Number(item?.item_id) || null,
-          tax_id : Number(item?.tax_id) || null,
+          item_id: Number(item?.item_id) || null,
+          tax_id: Number(item?.tax_id) || null,
           parent_id: Number(createdOrder.id),
         })),
       });
 
-     // Fetch the newly created order with associated data
-     const orderWithDetails = await prisma.crms_d_quotations.findUnique({
-      where: { id: createdOrder.id },
-      include: {
-        quotation_items: true,
-        quotation_vendor:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            billing_zipcode:true,
-            billing_city:true,
-            country:true,
-            state:true,
-            billing_street:true
-
-          }
-        },
-        quotation_currency: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
+      // Fetch the newly created order with associated data
+      const orderWithDetails = await prisma.crms_d_quotations.findUnique({
+        where: { id: createdOrder.id },
+        include: {
+          quotation_items: true,
+          quotation_vendor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              billing_zipcode: true,
+              billing_city: true,
+              country: true,
+              state: true,
+              billing_street: true,
+            },
+          },
+          quotation_currency: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
           },
         },
-      },
-    });
+      });
 
-    return orderWithDetails;
+      return orderWithDetails;
     });
 
     return result;
@@ -71,8 +71,10 @@ const createQuotation = async (orderData,orderItemsData) => {
 
 // Update a quotation
 const updateQuotaion = async (orderId, orderData, orderItemsData) => {
+  const prisma = getPrisma();
   try {
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    const result = await prisma.$transaction(async () => {
       // Step 1: Update the Order
       const updatedOrder = await prisma.crms_d_quotations.update({
         where: { id: Number(orderId) },
@@ -80,8 +82,12 @@ const updateQuotaion = async (orderId, orderData, orderItemsData) => {
           ...orderData,
           vendor_id: orderData?.vendor_id ? Number(orderData.vendor_id) : null,
           currency: orderData?.currency ? Number(orderData.currency) : null,
-          sales_type: orderData?.sales_type ? Number(orderData.sales_type) : null,
-          rounding_amount: orderData?.rounding_amount ? Number(orderData.rounding_amount) : null,
+          sales_type: orderData?.sales_type
+            ? Number(orderData.sales_type)
+            : null,
+          rounding_amount: orderData?.rounding_amount
+            ? Number(orderData.rounding_amount)
+            : null,
           // due_date: orderData?.due_date ? due_date.toISOString() : "",
           // apr_date: orderData?.apr_date ? apr_date.toISOString() : "",
           updatedate: new Date(),
@@ -103,25 +109,63 @@ const updateQuotaion = async (orderId, orderData, orderItemsData) => {
           parent_id: Number(orderId),
         })),
       });
-      
+      // Fetch the newly created order with associated data
+      const orderWithDetails = await prisma.crms_d_quotations.findUnique({
+        where: { id: updatedOrder.id },
+        include: {
+          quotation_items: true,
+          quotation_vendor: {
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              billing_zipcode: true,
+              billing_city: true,
+              country: true,
+              state: true,
+              billing_street: true,
+            },
+          },
+          quotation_currency: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+        },
+      });
 
-     // Fetch the newly created order with associated data
-     const orderWithDetails = await prisma.crms_d_quotations.findUnique({
-      where: { id: updatedOrder.id },
+      return orderWithDetails;
+    });
+
+    return result;
+  } catch (error) {
+    console.error("Transaction failed:", error);
+    throw new Error("Failed to update quotation and quotation items");
+  }
+};
+
+// Find a quotation by ID
+const findQuotationById = async (id) => {
+  const prisma = getPrisma();
+  try {
+    const prisma = getPrisma();
+    const users = await prisma.crms_d_quotations.findUnique({
+      where: { id: parseInt(id) },
       include: {
-        quotation_items: true,
-        quotation_vendor:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            billing_zipcode:true,
-            billing_city:true,
-            country:true,
-            state:true,
-            billing_street:true
-
-          }
+        quotation_items: true, // Include the related order items
+        quotation_vendor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            billing_zipcode: true,
+            billing_city: true,
+            country: true,
+            state: true,
+            billing_street: true,
+          },
         },
         quotation_currency: {
           select: {
@@ -132,59 +176,19 @@ const updateQuotaion = async (orderId, orderData, orderItemsData) => {
         },
       },
     });
-
-    return orderWithDetails;
-
-    });
-
-    return result;
-  } catch (error) {
-    console.error("Transaction failed:", error);
-    throw new Error("Failed to update quotation and quotation items");
-  }
-};
-
-// Find a quotation by ID 
-const findQuotationById = async (id) => {
-  try {
-    const users = await prisma.crms_d_quotations.findUnique({
-      where:{ id: parseInt(id)},
-      include: {
-        quotation_items: true, // Include the related order items
-        quotation_vendor:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            billing_zipcode:true,
-            billing_city:true,
-            country:true,
-            state:true,
-            billing_street:true
-
-          }
-        },
-        quotation_currency:{
-          select:{
-            id:true,
-            name:true,
-            code:true
-          }
-        }
-      },
-     
-    });
     return users;
   } catch (error) {
-    console.log("Error in Details of Product ", error)
+    console.log("Error in Details of Product ", error);
     throw new CustomError(`Error finding user by ID: ${error.message}`, 503);
   }
 };
 
 // Delete a Order
 const deleteQuotation = async (orderId) => {
+  const prisma = getPrisma();
   try {
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    const result = await prisma.$transaction(async () => {
       // Delete Order Items first
       await prisma.crms_d_quotation_items.deleteMany({
         where: { parent_id: Number(orderId) },
@@ -204,11 +208,10 @@ const deleteQuotation = async (orderId) => {
     throw new Error("Failed to delete quotation and associated items");
   }
 };
-
-
-const getAllQuotaion = async (search ,page , size ,startDate, endDate) => {
+const getAllQuotaion = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;
     const filters = {};
@@ -217,8 +220,8 @@ const getAllQuotaion = async (search ,page , size ,startDate, endDate) => {
       filters.OR = [
         {
           quotation_vendor: {
-                name: { contains: search.toLowerCase() },
-            },
+            name: { contains: search.toLowerCase() },
+          },
         },
         {
           quotation_code: { contains: search.toLowerCase() },
@@ -252,26 +255,25 @@ const getAllQuotaion = async (search ,page , size ,startDate, endDate) => {
       take: size,
       include: {
         quotation_items: true, // Include the related order items
-        quotation_vendor:{
-          select:{
-            id:true,
-            name:true,
-            email:true,
-            billing_zipcode:true,
-            billing_city:true,
-            country:true,
-            state:true,
-            billing_street:true
-
-          }
+        quotation_vendor: {
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            billing_zipcode: true,
+            billing_city: true,
+            country: true,
+            state: true,
+            billing_street: true,
+          },
         },
-        quotation_currency:{
-          select:{
-            id:true,
-            name:true,
-            code:true
-          }
-        }
+        quotation_currency: {
+          select: {
+            id: true,
+            name: true,
+            code: true,
+          },
+        },
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
@@ -283,35 +285,34 @@ const getAllQuotaion = async (search ,page , size ,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
   } catch (error) {
-    console.log("Error quotation Modal : ", error)
+    console.log("Error quotation Modal : ", error);
     throw new CustomError("Error retrieving quotation", 503);
   }
 };
 
 // Generate Order Code
 const generateQuotaionCode = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const latestOrder = await prisma.crms_d_quotations.findFirst({
-      orderBy: { id: 'desc' }
+      orderBy: { id: "desc" },
     });
-     const nextId = latestOrder ? latestOrder.id + 1 : 1;
+    const nextId = latestOrder ? latestOrder.id + 1 : 1;
     return `QUO-00${nextId}`;
-} catch (error) {
-    console.log("Error to generation Quotation code : ", error)
-    throw new CustomError('Error retrieving quotation code', 503);
-}
+  } catch (error) {
+    console.log("Error to generation Quotation code : ", error);
+    throw new CustomError("Error retrieving quotation code", 503);
+  }
 };
-
-
-
 module.exports = {
   createQuotation,
   findQuotationById,
   updateQuotaion,
   deleteQuotation,
   getAllQuotaion,
-  generateQuotaionCode
+  generateQuotaionCode,
 };

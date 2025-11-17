@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize timesheet project data
 const serializeTimesheetProjectData = (data) => ({
@@ -17,7 +16,9 @@ const serializeTimesheetProjectData = (data) => ({
 
 // Create a new timesheet project
 const createTimeSheetProject = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_timesheet_project.create({
       data: {
         ...serializeTimesheetProjectData(data),
@@ -41,7 +42,9 @@ const createTimeSheetProject = async (data) => {
 
 // Find timesheet project by ID
 const findTimeSheetProjectById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_timesheet_project.findUnique({
       where: { id: parseInt(id) },
     });
@@ -59,7 +62,9 @@ const findTimeSheetProjectById = async (id) => {
 
 // Update timesheet project
 const updateTimeSheetProject = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_m_timesheet_project.update({
       where: { id: parseInt(id) },
       include: {
@@ -83,7 +88,9 @@ const updateTimeSheetProject = async (id, data) => {
 
 // Delete timesheet project
 const deleteTimeSheetProject = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_timesheet_project.delete({
       where: { id: parseInt(id) },
     });

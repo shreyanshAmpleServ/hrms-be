@@ -12,6 +12,17 @@ const seederService = require("../v1/services/seederService");
 // Get command line arguments
 const args = process.argv.slice(2);
 
+// Check if first argument looks like it might be missing the space after --
+if (args.length > 0 && args[0].startsWith("--")) {
+  console.error("\n❌ Error: Missing space after '--'!");
+  console.log("\n⚠️  You used: npm run seed:admin --DCC_HRMS_HESU");
+  console.log("✅ Correct:   npm run seed:admin -- DCC_HRMS_HESU");
+  console.log(
+    "\nNote: There must be a space between '--' and the database name."
+  );
+  process.exit(1);
+}
+
 // Parse arguments
 const dbName = args[0];
 const email = args[1] || "admin@hrms.com";
@@ -24,9 +35,13 @@ if (!dbName) {
   console.log("\nUsage:");
   console.log("  npm run seed:admin -- <dbName> [email] [password] [fullName]");
   console.log("\nExamples:");
+  console.log("  npm run seed:admin -- DCC_HRMS_HESU");
   console.log("  npm run seed:admin -- hrms_production");
   console.log(
     '  npm run seed:admin -- hrms_production admin@example.com "SecurePass123" "Super Admin"'
+  );
+  console.log(
+    "\n⚠️  Important: There must be a space between '--' and the database name!"
   );
   console.log("\nOptions:");
   console.log("  dbName    - Database name (required)");

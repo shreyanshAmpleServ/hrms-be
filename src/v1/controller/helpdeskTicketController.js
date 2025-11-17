@@ -1,6 +1,7 @@
 const helpdeskTicketService = require("../services/helpDeskTicketService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createHelpdeskTicket = async (req, res, next) => {
   try {

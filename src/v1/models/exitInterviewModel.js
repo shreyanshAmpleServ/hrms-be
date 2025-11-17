@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize exit interview data
 const serializeExitInterview = (data) => ({
@@ -12,7 +11,9 @@ const serializeExitInterview = (data) => ({
 });
 // Create a new exit interview
 const createExitInterview = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_exit_interview.create({
       data: {
         ...serializeExitInterview(data),
@@ -41,7 +42,9 @@ const createExitInterview = async (data) => {
 
 // Find an exit interview by ID
 const findExitInterviewById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_exit_interview.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -68,7 +71,9 @@ const findExitInterviewById = async (id) => {
 
 // Update an exit interview
 const updateExitInterview = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const payload = {
       ...serializeExitInterview(data),
       updatedby: Number(data.updatedby) || 1,
@@ -98,7 +103,9 @@ const updateExitInterview = async (id, data) => {
 
 // Delete an exit interview
 const deleteExitInterview = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_exit_interview.delete({
       where: { id: parseInt(id) },
     });
@@ -116,6 +123,7 @@ const deleteExitInterview = async (id) => {
 
 // Get all exit interviews
 const getAllExitInterviews = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

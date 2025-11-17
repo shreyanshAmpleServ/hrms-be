@@ -1,9 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 const xlsx = require("xlsx");
 
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
 const requiredFields = {
@@ -86,6 +85,7 @@ const parseData = (data) => {
 };
 
 const validateContactsExist = async (contactIds) => {
+  const prisma = getPrisma();
   const contacts = await prisma.crms_m_contact.findMany({
     where: {
       id: {
@@ -129,7 +129,7 @@ const validateContactsExist = async (contactIds) => {
 //     }
 //     const serializedData = serializeHeaders(headerDatas);
 //     // Use transaction for atomicity
-//     const result = await prisma.$transaction(async (prisma) => {
+//     const result = await prisma.$transaction(async () => {
 //       // Create the employee
 //       const payHeader =
 //         await prisma.hrms_d_employee_pay_component_assignment_header.create({
@@ -277,6 +277,7 @@ const validateContactsExist = async (contactIds) => {
 // };
 
 const createBasicPay = async (data) => {
+  const prisma = getPrisma();
   try {
     if (!data.employee_id) {
       throw new CustomError("Employee ID is required", 400);
@@ -431,8 +432,10 @@ const createBasicPay = async (data) => {
 };
 
 const updateBasicPay = async (id, data) => {
+  const prisma = getPrisma();
   const { payLineData, ...headerDatas } = data;
   try {
+    const prisma = getPrisma();
     if (data.employee_id) {
       const existing =
         await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
@@ -465,7 +468,7 @@ const updateBasicPay = async (id, data) => {
       })) || [];
 
     const result = await prisma.$transaction(
-      async (prisma) => {
+      async () => {
         const employee =
           await prisma.hrms_d_employee_pay_component_assignment_header.update({
             where: { id: parseInt(id) },
@@ -639,7 +642,9 @@ const updateBasicPay = async (id, data) => {
 
 // Find a employee by its ID
 const findBasicPayById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const employee =
       await prisma.hrms_d_employee_pay_component_assignment_header.findUnique({
         where: { id: parseInt(id) },
@@ -891,8 +896,10 @@ const getAllBasicPay = async (
 };
 
 const deleteBasicPay = async (id) => {
+  const prisma = getPrisma();
   try {
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    const result = await prisma.$transaction(async () => {
       // Step 1: Delete related data from DealContacts
       await prisma.hrms_d_employee_pay_component_assignment_line.deleteMany({
         where: { parent_id: parseInt(id) },
@@ -916,6 +923,7 @@ const deleteBasicPay = async (id) => {
 };
 
 const importFromExcel = async (rows) => {
+  const prisma = getPrisma();
   const importedData = [];
   let createdCount = 0;
   let updatedCount = 0;
@@ -955,6 +963,7 @@ const importFromExcel = async (rows) => {
     const data = latestRows[employeeId];
 
     try {
+      const prisma = getPrisma();
       const existing =
         await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
           where: { employee_id: data.employee_id },
@@ -1058,6 +1067,7 @@ const downloadSampleExcel = async () => {
 };
 
 const getAllPayComponents = async () => {
+  const prisma = getPrisma();
   return await prisma.hrms_m_pay_component.findMany({
     select: {
       id: true,
@@ -1068,7 +1078,9 @@ const getAllPayComponents = async () => {
 };
 
 const createOrUpdateBasicPay = async (headerData, payLines) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const { employee_id } = headerData;
     if (!employee_id) throw new CustomError("Employee ID is required", 400);
 
@@ -1147,7 +1159,9 @@ const createOrUpdateBasicPay = async (headerData, payLines) => {
 };
 
 const findBasicPayByEmployeeId = async (employeeId) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     if (!employeeId) {
       return null;
     }

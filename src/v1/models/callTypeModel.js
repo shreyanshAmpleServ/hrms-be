@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new call type
 const createCallType = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callType = await prisma.crms_m_calltype.create({
       data: {
         name: data.name,
@@ -22,7 +23,9 @@ const createCallType = async (data) => {
 
 // Find a call type by ID
 const findCallTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callType = await prisma.crms_m_calltype.findUnique({
       where: { id: parseInt(id) },
     });
@@ -40,7 +43,9 @@ const findCallTypeById = async (id) => {
 
 // Update a call type
 const updateCallType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedCallType = await prisma.crms_m_calltype.update({
       where: { id: parseInt(id) },
       data: {
@@ -56,7 +61,9 @@ const updateCallType = async (id, data) => {
 
 // Delete a call type
 const deleteCallType = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.crms_m_calltype.delete({
       where: { id: parseInt(id) },
     });
@@ -74,7 +81,9 @@ const deleteCallType = async (id) => {
 
 // Get all call types
 const getAllCallTypes = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callTypes = await prisma.crms_m_calltype.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

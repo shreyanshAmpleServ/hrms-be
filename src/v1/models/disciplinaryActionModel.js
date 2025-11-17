@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { id } = require("zod/v4/locales");
-const prisma = new PrismaClient();
 
 // Serialize disciplinary action data
 const serializeDisciplinaryActionData = (data) => ({
@@ -20,7 +19,9 @@ const serializeDisciplinaryActionData = (data) => ({
 
 // Create a new disciplinary action
 const createDisciplinaryAction = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_disciplinary_action.create({
       data: {
         ...serializeDisciplinaryActionData(data),
@@ -60,7 +61,9 @@ const createDisciplinaryAction = async (data) => {
 
 // Find disciplinary action by ID
 const findDisciplinaryActionById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_disciplinary_action.findUnique({
       where: { id: parseInt(id) },
     });
@@ -78,7 +81,9 @@ const findDisciplinaryActionById = async (id) => {
 
 // Update disciplinary action
 const updateDisciplinaryAction = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_disciplinary_action.update({
       where: { id: parseInt(id) },
       data: {
@@ -118,7 +123,9 @@ const updateDisciplinaryAction = async (id, data) => {
 
 // Delete disciplinary action
 const deleteDisciplinaryAction = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_disciplinary_action.delete({
       where: { id: parseInt(id) },
     });
@@ -241,6 +248,7 @@ const getAllDisciplinaryAction = async (
 };
 
 const updateDisciplinaryActionStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const disciplinaryActionId = parseInt(id);
     if (isNaN(disciplinaryActionId)) {

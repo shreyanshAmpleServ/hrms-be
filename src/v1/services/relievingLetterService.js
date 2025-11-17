@@ -1,4 +1,5 @@
 const relievingLetterModel = require("../models/relievingLetterModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRelievingLetter = async (data) => {
   return await relievingLetterModel.createRelievingLetter(data);

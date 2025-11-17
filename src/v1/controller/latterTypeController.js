@@ -1,6 +1,7 @@
 const latterTypeService = require("../services/latterTypeService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { uploadToBackblaze } = require("../../utils/uploadBackblaze");
 const fs = require("fs").promises;
 

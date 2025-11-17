@@ -1,4 +1,5 @@
 const assetAssignmentModel = require("../models/assetAassignmentModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAssetAssignment = async (data) => {
   return await assetAssignmentModel.createAssetAssignment(data);

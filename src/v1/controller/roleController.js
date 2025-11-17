@@ -1,5 +1,6 @@
 const roleService = require('../services/roleService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRole = async (req, res, next) => {
   try {

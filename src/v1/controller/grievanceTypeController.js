@@ -1,5 +1,6 @@
 const grievanceTypeService = require('../services/grievanceTypeService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 const moment = require("moment")
 
 

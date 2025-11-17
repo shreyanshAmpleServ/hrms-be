@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize notification log data
 const serializeNotificationLog = (data) => ({
@@ -14,6 +13,7 @@ const serializeNotificationLog = (data) => ({
 
 // Create a new notification log
 const createNotificationLog = async (data, user) => {
+  const prisma = getPrisma();
   try {
     const created = await prisma.hrms_d_notification_log.create({
       data: {
@@ -40,6 +40,7 @@ const createNotificationLog = async (data, user) => {
 // Find a notification log by ID
 const findNotificationLogById = async (id) => {
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_notification_log.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -60,6 +61,7 @@ const findNotificationLogById = async (id) => {
 
 // Update a notification log
 const updateNotificationLog = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updated = await prisma.hrms_d_notification_log.update({
       where: { id: parseInt(id) },
@@ -86,6 +88,7 @@ const updateNotificationLog = async (id, data) => {
 // Delete a notification log
 const deleteNotificationLog = async (id) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_notification_log.delete({
       where: { id: parseInt(id) },
     });
@@ -110,6 +113,7 @@ const getAllNotificationLog = async (
   user
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -174,7 +178,10 @@ const getAllNotificationLog = async (
       totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving notification logs", 400);
+    throw new CustomError(
+      `Error retrieving notification logs: ${error.message}`,
+      error.status || 500
+    );
   }
 };
 

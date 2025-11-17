@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createWorkEventType = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const finalData = await prisma.hrms_m_work_life_event_type.create({
       data: {
         event_type_name: data.event_type_name || "",
@@ -27,7 +28,9 @@ const createWorkEventType = async (data) => {
 };
 
 const findWorkEventTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const data = await prisma.hrms_m_work_life_event_type.findUnique({
       where: { id: parseInt(id) },
     });
@@ -45,7 +48,9 @@ const findWorkEventTypeById = async (id) => {
 };
 
 const updateWorkEventType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_work_life_event_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -63,7 +68,9 @@ const updateWorkEventType = async (id, data) => {
 };
 
 const deleteWorkEventType = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_m_work_life_event_type.delete({
       where: { id: parseInt(id) },
     });
@@ -106,6 +113,7 @@ const getAllWorkEventType = async (
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_work_life_event_type.findMany({
       where: filters,
       skip: skip,

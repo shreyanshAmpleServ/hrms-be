@@ -1,4 +1,5 @@
 const lostReasonModel = require('../models/lostReasonModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLostReason = async (data) => {
     return await lostReasonModel.createLostReason(data);

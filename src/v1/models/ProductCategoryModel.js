@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new Category
 const createProductCategory = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const Category = await prisma.crms_m_product_category.create({
       data: {
         name: data.name,
@@ -22,7 +23,9 @@ const createProductCategory = async (data) => {
 
 // Find an Category by ID
 const findCategoryById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const Category = await prisma.crms_m_product_category.findUnique({
       where: { id: parseInt(id) },
     });
@@ -40,7 +43,9 @@ const findCategoryById = async (id) => {
 
 // Update an Category
 const updateProductCategory = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedCategory = await prisma.crms_m_product_category.update({
       where: { id: parseInt(id) },
       data: {
@@ -56,7 +61,9 @@ const updateProductCategory = async (id, data) => {
 
 // Delete an Category
 const deleteProductCategory = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.crms_m_product_category.delete({
       where: { id: parseInt(id) },
     });
@@ -74,7 +81,9 @@ const deleteProductCategory = async (id) => {
 
 // Get all crms_m_product_category
 const getAllProductCategory = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const productCategory = await prisma.crms_m_product_category.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

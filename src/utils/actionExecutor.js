@@ -357,7 +357,6 @@
 //II
 const logger = require("../Comman/logger");
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 const sendEmail = require("./../utils/mailer.js");
 const { late } = require("zod");
 

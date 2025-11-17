@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { record } = require("zod/v4");
-const prisma = new PrismaClient();
 
 // Serialize payroll data
 const serializePayrollData = (data) => ({
@@ -21,10 +20,13 @@ const serializePayrollData = (data) => ({
 });
 
 const createMonthlyPayroll = async (data) => {
+  const prisma = getPrisma();
   try {
     const serializedData = serializePayrollData(data);
+    const prisma = getPrisma();
     const { employee_id, payroll_month } = serializedData;
     try {
+      const prisma = getPrisma();
       if (!employee_id || !payroll_month) {
         throw new CustomError("Missing employee_id or payroll_month", 400);
       }
@@ -81,9 +83,10 @@ const createMonthlyPayroll = async (data) => {
 
 // Find payroll entry by ID
 const findMonthlyPayrollById = async (id) => {
-  const prismaClient = new PrismaClient();
+  const prisma = getPrisma();
 
   try {
+    const prisma = getPrisma();
     console.log("ID received:", id, "Type:", typeof id);
     if (!id) {
       throw new CustomError("ID parameter is required", 400);
@@ -112,7 +115,9 @@ const findMonthlyPayrollById = async (id) => {
 
 // Update payroll entry
 const updateMonthlyPayroll = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_monthly_payroll_processing.update({
       where: { id: parseInt(id) },
       include: {
@@ -141,7 +146,9 @@ const updateMonthlyPayroll = async (id, data) => {
 
 // Delete payroll entry
 const deleteMonthlyPayroll = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_monthly_payroll_processing.delete({
       where: { id: parseInt(id) },
     });
@@ -220,7 +227,9 @@ const getAllMonthlyPayroll = async (
 
 // Mothly payroll stored procedure
 const callMonthlyPayrollSP = async (params) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const {
       paymonth,
       payyear,
@@ -267,7 +276,9 @@ const triggerMonthlyPayrollCalculationSP = async ({
   employee_id,
   taxable_amount,
 }) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     if (!employee_id || !taxable_amount) {
       throw new CustomError("Missing employee_id or taxable_amount", 400);
     }
@@ -289,7 +300,9 @@ const triggerMonthlyPayrollCalculationSP = async ({
 };
 
 const getComponentNames = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.$queryRawUnsafe(
       `SELECT * FROM vw_hrms_get_component_names`
     );
@@ -301,6 +314,7 @@ const getComponentNames = async () => {
 };
 
 const createOrUpdatePayrollBulk = async (rows, user) => {
+  const prisma = getPrisma();
   const processed = [];
 
   const safeDate = (val) => {
@@ -565,7 +579,9 @@ const getGeneratedMonthlyPayroll = async (
 };
 
 const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const payroll = await prisma.$queryRawUnsafe(`
       SELECT 
         mp.*,  

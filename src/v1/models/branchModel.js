@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new branch
 const createBranch = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const branch = await prisma.hrms_m_branch_master.create({
       data: {
         company_id: Number(data.company_id),
@@ -33,7 +34,9 @@ const createBranch = async (data) => {
 
 // Find a branch by ID
 const findBranchById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const branch = await prisma.hrms_m_branch_master.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -57,7 +60,9 @@ const findBranchById = async (id) => {
 
 // Update a branch
 const updateBranch = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedbranch = await prisma.hrms_m_branch_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -83,7 +88,9 @@ const updateBranch = async (id, data) => {
 
 // Delete a branch
 const deleteBranch = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_branch_master.delete({
       where: { id: parseInt(id) },
     });

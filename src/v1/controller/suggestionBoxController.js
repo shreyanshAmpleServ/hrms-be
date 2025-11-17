@@ -1,6 +1,7 @@
 const suggestionBoxService = require("../services/suggestionBoxService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createSuggestionBox = async (req, res, next) => {
   try {

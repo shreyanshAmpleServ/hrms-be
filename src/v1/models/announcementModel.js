@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeAnnouncementData = (data) => ({
   title: data.title || "",
@@ -14,7 +13,9 @@ const serializeAnnouncementData = (data) => ({
 });
 
 const createAnnouncement = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_announcement.create({
       data: {
         ...serializeAnnouncementData(data),
@@ -32,7 +33,9 @@ const createAnnouncement = async (data) => {
 };
 
 const findAnnouncementById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_announcement.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -59,7 +62,9 @@ const findAnnouncementById = async (id) => {
 };
 
 const updateAnnouncement = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_announcement.update({
       where: { id: parseInt(id) },
 
@@ -81,7 +86,9 @@ const updateAnnouncement = async (id, data) => {
 };
 
 const deleteAnnouncement = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_announcement.delete({
       where: { id: parseInt(id) },
     });
@@ -98,6 +105,7 @@ const deleteAnnouncement = async (id) => {
 };
 
 const getAllAnnouncement = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -162,6 +170,7 @@ const logAnnouncementAction = async (
   createdby = null
 ) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_announcement_log.create({
       data: {
         announcement_id: parseInt(announcementId),

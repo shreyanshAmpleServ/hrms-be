@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEarlyLeave = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_d_early_leave.create({
       data: {
         employee_id: data.employee_id,
@@ -62,7 +63,9 @@ const createEarlyLeave = async (data) => {
 };
 
 const findEarlyLeaveById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_d_early_leave.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -114,7 +117,9 @@ const findEarlyLeaveById = async (id) => {
 };
 
 const updateEarlyLeave = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_d_early_leave.update({
       where: { id: parseInt(id) },
       data: {
@@ -162,7 +167,9 @@ const updateEarlyLeave = async (id, data) => {
 };
 
 const deleteEarlyLeave = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_early_leave.delete({
       where: { id: parseInt(id) },
     });
@@ -290,6 +297,7 @@ const updateEarlyLeaveStatus = async (
   remarks = null
 ) => {
   try {
+    const prisma = getPrisma();
     const updateData = {
       status,
       remarks,

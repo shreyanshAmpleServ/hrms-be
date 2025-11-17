@@ -1,4 +1,5 @@
 const defaultConfigurationModel = require("../models/defaultConfigurationModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDefaultConfiguration = async (data) => {
   return await defaultConfigurationModel.createDefaultConfiguration(data);

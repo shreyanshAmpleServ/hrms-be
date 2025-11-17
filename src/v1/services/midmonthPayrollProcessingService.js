@@ -1,5 +1,6 @@
 const midmonthPayrollProcessingModel = require("../models/midmonthPayrollProcessingModel.js");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createMidMonthPayrollProcessing = async (data) => {
   return await midmonthPayrollProcessingModel.createMidMonthPayrollProcessing(

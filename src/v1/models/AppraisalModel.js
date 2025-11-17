@@ -1,10 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
-
-const prisma = new PrismaClient();
-
 const serializeData = (data) => {
   return {
     employee_id: Number(data.employee_id) || null,
@@ -33,7 +29,9 @@ const serializeData = (data) => {
 };
 
 const createAppraisalEntry = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const reqData = await prisma.hrms_d_appraisal.create({
       data: {
@@ -69,7 +67,9 @@ const createAppraisalEntry = async (data) => {
 };
 
 const findAppraisalEntryById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_appraisal.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -94,7 +94,9 @@ const findAppraisalEntryById = async (id) => {
 };
 
 const updateAppraisalEntry = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const updatedAppraisalEntry = await prisma.hrms_d_appraisal.update({
       where: { id: parseInt(id) },
@@ -122,7 +124,9 @@ const updateAppraisalEntry = async (id, data) => {
 };
 
 const deleteAppraisalEntry = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_appraisal.delete({
       where: { id: parseInt(id) },
     });
@@ -139,6 +143,7 @@ const deleteAppraisalEntry = async (id) => {
 };
 
 const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -199,6 +204,7 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
 };
 
 const getAppraisalForPDF = async (id) => {
+  const prisma = getPrisma();
   try {
     if (!id) {
       throw new CustomError("Appraisal ID is required", 400);
@@ -273,6 +279,7 @@ const getAppraisalForPDF = async (id) => {
     if (defaultConfig?.company_signature) {
       try {
         const fetch = require("node-fetch");
+        const { getPrisma } = require("../../config/prismaContext.js");
         const signatureResponse = await fetch(defaultConfig.company_signature);
         const signatureBuffer = await signatureResponse.buffer();
         const signatureBase64 = signatureBuffer.toString("base64");
@@ -348,6 +355,7 @@ const getAllAppraisalsForBulkDownload = async (
   advancedFilters = {}
 ) => {
   try {
+    const prisma = getPrisma();
     const whereClause = {
       ...filters,
     };

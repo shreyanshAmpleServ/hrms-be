@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDesignation = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const designation = await prisma.hrms_m_designation_master.create({
       data: {
         designation_name: data.designation_name,
@@ -22,7 +23,9 @@ const createDesignation = async (data) => {
 };
 
 const findDesignationById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const designation = await prisma.hrms_m_designation_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -39,7 +42,9 @@ const findDesignationById = async (id) => {
 };
 
 const updateDesignation = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedDesignation = await prisma.hrms_m_designation_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -54,7 +59,9 @@ const updateDesignation = async (id, data) => {
 };
 
 const deleteDesignation = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_m_designation_master.delete({
       where: { id: parseInt(id) },
     });
@@ -106,6 +113,7 @@ const getAllDesignation = async (
 
     console.log("Filters applied:", filters);
 
+    const prisma = getPrisma();
     const designations = await prisma.hrms_m_designation_master.findMany({
       where: filters,
       skip,
@@ -160,7 +168,9 @@ const getAllDesignation = async (
 // };
 
 const getDesignationOptions = async (is_active) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     let where = {};
 
     let isActiveValue;

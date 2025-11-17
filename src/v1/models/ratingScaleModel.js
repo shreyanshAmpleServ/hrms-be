@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRatingScale = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_rating_scale.create({
       data: {
         rating_value: data.rating_value || null,
@@ -25,7 +26,9 @@ const createRatingScale = async (data) => {
 };
 
 const findRatingScaleById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_rating_scale.findUnique({
       where: { id: parseInt(id) },
     });
@@ -43,7 +46,9 @@ const findRatingScaleById = async (id) => {
 };
 
 const updateRatingScale = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_rating_scale.update({
       where: { id: parseInt(id) },
       data: {
@@ -58,7 +63,9 @@ const updateRatingScale = async (id, data) => {
 };
 
 const deleteRatingScale = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_rating_scale.delete({
       where: { id: parseInt(id) },
     });

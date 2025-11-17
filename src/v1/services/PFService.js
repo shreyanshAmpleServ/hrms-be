@@ -1,4 +1,5 @@
 const PFModel = require("../models/PFModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPF = async (data) => {
   return await PFModel.createPF(data);

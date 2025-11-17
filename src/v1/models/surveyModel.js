@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createSurvey = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const finalData = await prisma.hrms_m_survey_master.create({
       data: {
         survey_title: data.survey_title || "",
@@ -27,7 +28,9 @@ const createSurvey = async (data) => {
 };
 
 const findSurveyById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const data = await prisma.hrms_m_survey_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -42,7 +45,9 @@ const findSurveyById = async (id) => {
 };
 
 const updateSurvey = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_survey_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -57,7 +62,9 @@ const updateSurvey = async (id, data) => {
 };
 
 const deleteSurvey = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_m_survey_master.delete({
       where: { id: parseInt(id) },
     });
@@ -82,6 +89,7 @@ const getAllSurvey = async (
   is_active
 ) => {
   try {
+    const prisma = getPrisma();
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

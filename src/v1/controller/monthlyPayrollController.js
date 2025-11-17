@@ -4,6 +4,7 @@ const moment = require("moment");
 const { success } = require("zod/v4");
 const fs = require("fs");
 const path = require("path");
+const { getPrisma } = require("../../config/prismaContext.js");
 const {
   uploadToBackblazeWithValidation,
   deleteFromBackblaze,

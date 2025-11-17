@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCountry = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const country = await prisma.hrms_m_country_master.create({
       data: {
         ...data,
@@ -24,7 +25,9 @@ const createCountry = async (data) => {
 };
 
 const findCountryById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const country = await prisma.hrms_m_country_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -39,7 +42,9 @@ const findCountryById = async (id) => {
 };
 
 const updateCountry = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedCountry = await prisma.hrms_m_country_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -54,7 +59,9 @@ const updateCountry = async (id, data) => {
 };
 
 const deleteCountry = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_m_country_master.delete({
       where: { id: parseInt(id) },
     });
@@ -71,7 +78,9 @@ const deleteCountry = async (id) => {
 };
 
 const getAllCountries = async (is_active) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const filters = {};
 
     if (typeof is_active === "boolean") {

@@ -1,4 +1,5 @@
 const probationReviewModel = require("../models/probationReviewModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createProbationReview = async (data) => {
   return await probationReviewModel.createProbationReview(data);

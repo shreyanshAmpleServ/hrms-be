@@ -1,4 +1,5 @@
 const AttachmentModel = require('../models/FileAttachmentModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAttachment = async (data) => {
     return await AttachmentModel.createAttachment(data);

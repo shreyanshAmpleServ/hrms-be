@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createReviewTemp = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_review_template.create({
       data: {
         template_name: data.template_name || "",
@@ -28,7 +29,9 @@ const createReviewTemp = async (data) => {
 };
 
 const findReviewTempById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_review_template.findUnique({
       where: { id: parseInt(id) },
     });
@@ -46,7 +49,9 @@ const findReviewTempById = async (id) => {
 };
 
 const updateReviewTemp = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_review_template.update({
       where: { id: parseInt(id) },
       data: {
@@ -64,7 +69,9 @@ const updateReviewTemp = async (id, data) => {
 };
 
 const deleteReviewTemp = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_review_template.delete({
       where: { id: parseInt(id) },
     });

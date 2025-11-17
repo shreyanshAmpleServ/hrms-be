@@ -1,6 +1,7 @@
 const midmonthPayrollProcessingService = require("../services/midmonthPayrollProcessingService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createMidMonthPayrollProcessing = async (req, res, next) => {
   try {

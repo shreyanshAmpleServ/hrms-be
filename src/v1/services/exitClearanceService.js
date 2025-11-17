@@ -1,4 +1,5 @@
 const exitClearanceModel = require("../models/exitClearanceModal.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createExitClearance = async (data) => {
   return await exitClearanceModel.createExitClearance(data);

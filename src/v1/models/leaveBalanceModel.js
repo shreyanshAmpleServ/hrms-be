@@ -3,9 +3,8 @@
  * @module leaveBalanceModel
  */
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 /**
  * Normalizes leave balance detail entries by ensuring default values.
@@ -51,6 +50,7 @@ const basePayload = (data) => ({
  * @returns {Promise<Object>} The created leave balance record.
  */
 const createLeaveBalance = async (data) => {
+  const prisma = getPrisma();
   const isExist = await prisma.hrms_d_leave_balance.findFirst({
     where: {
       employee_id: Number(data.employee_id),
@@ -106,7 +106,9 @@ const createLeaveBalance = async (data) => {
  * @returns {Promise<Object>} The updated leave balance record.
  */
 const updateLeaveBalance = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updated = await prisma.hrms_d_leave_balance.update({
       where: { id: Number(id) },
       data: basePayload(data),
@@ -140,6 +142,7 @@ const updateLeaveBalance = async (id, data) => {
  * @returns {Promise<Object>} The leave balance record and its details.
  */
 const findLeaveBalanceById = async (id) => {
+  const prisma = getPrisma();
   try {
     const leaveBalance = await prisma.hrms_d_leave_balance.findUnique({
       where: { id: Number(id) },
@@ -170,6 +173,7 @@ const findLeaveBalanceById = async (id) => {
  * @returns {Promise<Object>} The leave balance record and its details.
  */
 const findLeaveBalanceByEmployeeId = async (employeeId) => {
+  const prisma = getPrisma();
   try {
     const leaveBalance = await prisma.hrms_d_leave_balance.findFirst({
       where: { employee_id: Number(employeeId) },
@@ -202,7 +206,9 @@ const findLeaveBalanceByEmployeeId = async (employeeId) => {
  * @returns {Promise<void>}
  */
 const deleteLeaveBalance = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_leave_balance.delete({ where: { id: Number(id) } });
   } catch (error) {
     if (error.code === "P2003") {
@@ -224,6 +230,7 @@ const deleteLeaveBalance = async (id) => {
  * @returns {Promise<Object>} Paginated leave balances with meta.
  */
 const getAllLeaveBalances = async (search, page = 1, size = 10, is_active) => {
+  const prisma = getPrisma();
   try {
     const skip = (page - 1) * size;
     const where = search
@@ -275,7 +282,9 @@ const getAllLeaveBalances = async (search, page = 1, size = 10, is_active) => {
  * @returns {Promise<Object>} Leave balance data.
  */
 const getLeaveBalanceByEmployee = async (employeeId, leaveTypeId) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const employeeIdInt = Number(employeeId);
     const leaveTypeIdInt = leaveTypeId ? Number(leaveTypeId) : undefined;
 

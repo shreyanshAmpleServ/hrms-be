@@ -1,6 +1,4 @@
-// const { PrismaClient } = require("@prisma/client");
-// const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+// // const CustomError = require("../../utils/CustomError");
 
 // const serializeApprovalWorkFlowData = (data) => ({
 //   request_type: data.request_type || "",
@@ -583,9 +581,8 @@
 //   getDepartmentsWithWorkflows,
 // };
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeApprovalWorkFlowData = (data) => ({
   request_type: data.request_type || "",
@@ -693,6 +690,7 @@ const serializeApprovalWorkFlowData = (data) => ({
 // };
 
 const createApprovalWorkFlow = async (dataArray) => {
+  const prisma = getPrisma();
   try {
     if (!Array.isArray(dataArray)) {
       throw new CustomError("Input must be an array of data objects", 400);
@@ -783,7 +781,9 @@ const createApprovalWorkFlow = async (dataArray) => {
 };
 
 const findApprovalWorkFlow = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_approval_work_flow.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -821,7 +821,9 @@ const findApprovalWorkFlow = async (id) => {
 };
 
 const updateApprovalWorkFlow = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     if (!id || isNaN(Number(id))) {
       throw new CustomError("Invalid or missing ID for update", 400);
     }
@@ -897,7 +899,9 @@ const updateApprovalWorkFlow = async (id, data) => {
 };
 
 const deleteApprovalWorkFlow = async (requestType) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_approval_work_flow.deleteMany({
       where: { request_type: requestType },
     });
@@ -911,7 +915,9 @@ const deleteApprovalWorkFlow = async (requestType) => {
 };
 
 const deleteApprovalWorkFlows = async (ids) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_approval_work_flow.deleteMany({
       where: { id: { in: ids } },
     });
@@ -931,6 +937,7 @@ const getAllApprovalWorkFlow = async (
   endDate
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
 
@@ -1142,6 +1149,7 @@ const getAllApprovalWorkFlowByRequest = async (
   designation_id = null
 ) => {
   try {
+    const prisma = getPrisma();
     const includeConfig = {
       approval_work_approver: {
         select: {
@@ -1360,7 +1368,9 @@ const getAllApprovalWorkFlowByRequest = async (
 };
 
 const getDepartmentsWithWorkflows = async (request_type) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const departments = await prisma.hrms_d_approval_work_flow.findMany({
       where: {
         request_type,
@@ -1393,7 +1403,9 @@ const getDepartmentsWithWorkflows = async (request_type) => {
   }
 };
 const getDesignationsWithWorkflows = async (request_type) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const designations = await prisma.hrms_d_approval_work_flow.findMany({
       where: {
         request_type,

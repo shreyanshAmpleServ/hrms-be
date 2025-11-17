@@ -1,6 +1,7 @@
 const LeaveEncashmentService = require("../services/LeaveEncashmentService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLeaveEncashment = async (req, res, next) => {
   try {

@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize `tags` before saving it
 const serializeTags = (data) => {
@@ -20,6 +19,7 @@ const parseTags = (deal) => {
 
 // Check if contactIds are valid and exist
 const validateContactsExist = async (contactIds) => {
+  const prisma = getPrisma();
   const contacts = await prisma.crms_m_contact.findMany({
     where: {
       id: {
@@ -38,8 +38,10 @@ const validateContactsExist = async (contactIds) => {
 
 // Create a new deal
 const createDeal = async (data) => {
+  const prisma = getPrisma();
   const { contactIds, ...dealData } = data; // Separate `contactIds` from other deal data
   try {
+    const prisma = getPrisma();
     const serializedData = serializeTags(dealData);
 
     // Validate that all contactIds exist in the crms_m_contact table
@@ -48,7 +50,7 @@ const createDeal = async (data) => {
     }
 
     // Use transaction for atomicity
-    const result = await prisma.$transaction(async (prisma) => {
+    const result = await prisma.$transaction(async () => {
       // Create the deal
       const deal = await prisma.crms_d_campaign.create({
         data: serializedData,
@@ -87,8 +89,10 @@ const createDeal = async (data) => {
 
 // Update an existing deal
 const updateDeal = async (id, data) => {
+  const prisma = getPrisma();
   const { contactIds, ...dealData } = data; // Separate `contactIds` from other deal data
   try {
+    const prisma = getPrisma();
     const updatedData = {
       ...dealData,
       updatedDate: new Date(),
@@ -101,7 +105,7 @@ const updateDeal = async (id, data) => {
     }
 
     // Use transaction for atomicity
-    const result = await prisma.$transaction(async (prisma) => {
+    const result = await prisma.$transaction(async () => {
       // Update the deal
       const deal = await prisma.Deal.update({
         where: { id: parseInt(id) },
@@ -149,7 +153,9 @@ const updateDeal = async (id, data) => {
 
 // Find a deal by its ID
 const findDealById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const deal = await prisma.Deal.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -178,6 +184,7 @@ const getAllDeals = async (
   priority
 ) => {
   try {
+    const prisma = getPrisma();
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -259,7 +266,9 @@ const getAllDeals = async (
 };
 
 const deleteDeal = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Step 1: Delete related data from DealContacts
     await prisma.dealContacts.deleteMany({
       where: { dealId: parseInt(id) },

@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new case
 const createCases = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Create the case
     const cases = await prisma.crms_d_cases.create({
       data: {
@@ -41,7 +42,9 @@ const createCases = async (data) => {
 
 // Update a case
 const updateCases = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedCase = await prisma.crms_d_cases.update({
       where: { id: parseInt(id) },
       data: {
@@ -84,7 +87,9 @@ const updateCases = async (id, data) => {
 
 // Find a case by ID
 const findCasesById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const caseData = await prisma.crms_d_cases.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -110,7 +115,9 @@ const findCasesById = async (id) => {
 
 // Delete a case
 const deleteCase = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.crms_d_cases.delete({
       where: { id: parseInt(id) },
     });
@@ -128,6 +135,7 @@ const deleteCase = async (id) => {
 
 // Get all cases
 const getAllCases = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = page || 1;
     size = size || 10;
@@ -203,7 +211,9 @@ const getAllCases = async (search, page, size, startDate, endDate) => {
 };
 // Get all case reasons
 const getAllCaseReasons = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const cases = await prisma.crms_m_case_reasons.findMany({
       include: {
         case_reasons: true,
@@ -219,7 +229,9 @@ const getAllCaseReasons = async () => {
 };
 // Generate Case number
 const generateCaseNumber = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const cases = await prisma.crms_d_cases.findFirst({
       orderBy: { id: "desc" },
     });

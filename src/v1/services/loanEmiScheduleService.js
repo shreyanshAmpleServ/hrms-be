@@ -1,4 +1,5 @@
 const loanEmiScheduleModel = require("../models/loanEmiScheduleModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLoanEmiSchedule = async (data) => {
   return await loanEmiScheduleModel.createLoanEmiSchedule(data);

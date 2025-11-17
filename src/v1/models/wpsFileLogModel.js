@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
 
 const serializeData = (data) => {
   return {
@@ -14,7 +13,9 @@ const serializeData = (data) => {
 
 // Create a new wps file
 const createWPSFile = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_wps_file_log.create({
       data: {
         ...serializeData(data),
@@ -31,7 +32,9 @@ const createWPSFile = async (data) => {
 
 // Find a wps file by ID
 const findWPSFileById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_wps_file_log.findUnique({
       where: { id: parseInt(id) },
     });
@@ -49,7 +52,9 @@ const findWPSFileById = async (id) => {
 
 // Update a wps file
 const updateWPSFile = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedWPSFile = await prisma.hrms_d_wps_file_log.update({
       where: { id: parseInt(id) },
       data: {
@@ -66,7 +71,9 @@ const updateWPSFile = async (id, data) => {
 
 // Delete a wps file
 const deleteWPSFile = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_wps_file_log.delete({
       where: { id: parseInt(id) },
     });
@@ -84,6 +91,7 @@ const deleteWPSFile = async (id) => {
 
 // Get all wps files
 const getAllWPSFile = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

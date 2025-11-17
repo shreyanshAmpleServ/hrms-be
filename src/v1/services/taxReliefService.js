@@ -1,4 +1,5 @@
 const taxReliefModel = require("../models/taxReliefModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTaxRelief = async (data) => {
   return await taxReliefModel.createTaxRelief(data);

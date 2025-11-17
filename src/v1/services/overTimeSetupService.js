@@ -1,4 +1,5 @@
 const overTimeSetupModel = require("../models/overTimeSetupModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createOverTimeSetup = async (data) => {
   return await overTimeSetupModel.createOverTimeSetup(data);

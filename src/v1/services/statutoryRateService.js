@@ -1,4 +1,5 @@
 const statutoryRateModel = require("../models/statutoryRateModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createStatutoryRate = async (data) => {
   return await statutoryRateModel.createStatutoryRate(data);

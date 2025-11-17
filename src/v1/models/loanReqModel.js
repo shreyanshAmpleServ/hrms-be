@@ -1,11 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
 const { Prisma } = require("@prisma/client");
 const { createRequest } = require("./requestsModel");
 
 const calculateLoanSummary = async (loanId) => {
+  const prisma = getPrisma();
   const [summary] = await prisma.$queryRaw`
     SELECT 
       lr.id AS loan_request_id,
@@ -51,6 +51,7 @@ const serializeData = (data) => {
 };
 
 const createLoanRequest = async (data) => {
+  const prisma = getPrisma();
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
@@ -135,6 +136,7 @@ const createLoanRequest = async (data) => {
 };
 
 const findLoanRequestById = async (id) => {
+  const prisma = getPrisma();
   try {
     const reqData = await prisma.hrms_d_loan_request.findUnique({
       where: { id: parseInt(id) },
@@ -224,6 +226,7 @@ WHERE lr.id = ${parseInt(id)}
 };
 
 const updateLoanRequest = async (id, data) => {
+  const prisma = getPrisma();
   try {
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
@@ -325,7 +328,9 @@ const updateLoanRequest = async (id, data) => {
 };
 
 const deleteLoanRequest = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.$transaction(async (tx) => {
       const loanId = parseInt(id);
 
@@ -354,6 +359,7 @@ const deleteLoanRequest = async (id) => {
 };
 
 const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -511,6 +517,7 @@ const getAllLoanRequest = async (search, page, size, startDate, endDate) => {
 };
 
 const updateLoanReqStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     console.log("Loan Request ID: ", id);
     const loanReqId = parseInt(id);

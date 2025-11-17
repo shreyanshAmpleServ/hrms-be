@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { parse } = require("dotenv");
-const prisma = new PrismaClient();
 
 // Serialize goal sheet assignment data
 const serializeGoalSheetAssignmentData = (data) => {
@@ -33,7 +32,9 @@ const serializeGoalSheetAssignmentData = (data) => {
 
 // Create a new goal sheet assignment
 const createGoalSheet = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_goal_sheet_assignment.create({
       data: {
         ...serializeGoalSheetAssignmentData(data),
@@ -66,7 +67,9 @@ const createGoalSheet = async (data) => {
 
 // Find goal sheet assignment by ID
 const findGoalSheetById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_goal_sheet_assignment.findUnique({
       where: { id: parseInt(id) },
     });
@@ -84,6 +87,7 @@ const findGoalSheetById = async (id) => {
 
 // Update goal sheet assignment
 const updateGoalSheet = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const existing = await prisma.hrms_d_goal_sheet_assignment.findUnique({
       where: { id: parseInt(id) },
@@ -127,6 +131,7 @@ const updateGoalSheet = async (id, data) => {
 
 // Delete goal sheet assignment
 const deleteGoalSheet = async (id) => {
+  const prisma = getPrisma();
   try {
     const progressEntryCount = await prisma.hrms_d_kpi_progress_entry.count({
       where: { goal_id: Number(id) },
@@ -156,6 +161,7 @@ const deleteGoalSheet = async (id) => {
 
 // Get all goal sheet assignments with pagination and search
 const getAllGoalSheet = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -222,6 +228,7 @@ const getAllGoalSheet = async (search, page, size, startDate, endDate) => {
 };
 
 const updateGoalSheetStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     console.log("Goal sheet id :", id);
     const goalSheetId = parseInt(id);

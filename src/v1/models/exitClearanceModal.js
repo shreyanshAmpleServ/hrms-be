@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { number } = require("zod/v4");
 const { id } = require("date-fns/locale");
-const prisma = new PrismaClient();
 
 // Serialize exit clearance data
 const serializeExitClearance = (data) => ({
@@ -13,6 +12,7 @@ const serializeExitClearance = (data) => ({
 });
 
 const createExitClearance = async (data) => {
+  const prisma = getPrisma();
   try {
     if (!Array.isArray(data.children) || data.children.length === 0) {
       throw new CustomError("Children field is required", 400);
@@ -105,7 +105,9 @@ const createExitClearance = async (data) => {
 };
 
 const findExitClearanceById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_exit_clearance.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -135,6 +137,7 @@ const findExitClearanceById = async (id) => {
 };
 
 const updateExitClearance = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const parentId = parseInt(id);
     await prisma.hrms_d_exit_clearance.update({
@@ -213,6 +216,7 @@ const updateExitClearance = async (id, data) => {
 
 // Delete an exit clearance
 const deleteExitClearance = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.hrms_d_exit_clearance1.deleteMany({
       where: { parent_id: parseInt(id) },
@@ -235,6 +239,7 @@ const deleteExitClearance = async (id) => {
 
 // Get all exit clearances with pagination and search
 const getAllExitClearance = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -326,7 +331,9 @@ const getAllExitClearance = async (search, page, size, startDate, endDate) => {
 };
 
 const checkBulkClearance = async (employeeIds, month, year) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const all = await prisma.hrms_d_exit_clearance.findMany({
       where: {
         employee_id: { in: employeeIds.map(Number) },

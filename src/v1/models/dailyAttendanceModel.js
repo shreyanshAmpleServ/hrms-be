@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { includes } = require("zod/v4");
-const prisma = new PrismaClient();
 const { DateTime, Interval } = require("luxon");
 
 const timeStringToDecimal = (timeStr) => {
@@ -41,6 +40,7 @@ const serializeAttendanceData = async (data) => {
 };
 
 const getStatusFromWorkingHours = async (employeeId, working_hours) => {
+  const prisma = getPrisma();
   if (!employeeId || working_hours == null) return null;
 
   const employee = await prisma.hrms_d_employee.findUnique({
@@ -66,7 +66,9 @@ const getStatusFromWorkingHours = async (employeeId, working_hours) => {
 };
 
 const createDailyAttendance = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const serializedData = await serializeAttendanceData(data);
     const reqData = await prisma.hrms_d_daily_attendance_entry.create({
       data: {
@@ -96,7 +98,9 @@ const createDailyAttendance = async (data) => {
 };
 
 const findDailyAttendanceById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_daily_attendance_entry.findUnique({
       where: { id: parseInt(id) },
     });
@@ -114,6 +118,7 @@ const findDailyAttendanceById = async (id) => {
 
 // Update attendance entry
 const upsertDailyAttendance = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const serializedData = await serializeAttendanceData(data);
 
@@ -165,7 +170,9 @@ const upsertDailyAttendance = async (id, data) => {
 
 // Delete attendance entry
 const deleteDailyAttendance = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_daily_attendance_entry.delete({
       where: { id: parseInt(id) },
     });
@@ -189,6 +196,7 @@ const getAllDailyAttendance = async (
   endDate
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -445,6 +453,7 @@ const getAttendanceSummaryByEmployee = async (
 };
 
 const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     const empId = Number(employeeId);
     if (!empId) throw new CustomError("Invalid employee ID", 400);
@@ -764,7 +773,9 @@ const getManagerTeamAttendance = async (
 };
 
 const getAllHRUsers = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const hrByDesignation = await prisma.hrms_d_employee.findMany({
       where: {
         status: "Active",
@@ -882,6 +893,7 @@ const verifyAttendanceWithManualHR = async (
   notify_HR = true
 ) => {
   try {
+    const prisma = getPrisma();
     const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update({
       where: { id: parseInt(attendance_id) },
       data: {
@@ -1348,6 +1360,7 @@ const bulkVerifyWithManualHR = async (
 
     for (const record of attendanceRecords) {
       try {
+        const prisma = getPrisma();
         await prisma.hrms_d_daily_attendance_entry.update({
           where: { id: record.id },
           data: {
@@ -1814,6 +1827,7 @@ const getVerificationStatusForHR = async (
   manager_id
 ) => {
   try {
+    const prisma = getPrisma();
     const skip = (page - 1) * size;
     const take = parseInt(size);
 
@@ -1921,6 +1935,7 @@ const getVerificationStatusForHR = async (
 };
 
 const getVerificationSummary = async (startDate, endDate, manager_id) => {
+  const prisma = getPrisma();
   try {
     const whereCondition = {
       manager_verified: { not: null },
@@ -2006,7 +2021,9 @@ const getVerificationSummary = async (startDate, endDate, manager_id) => {
 };
 
 const getAllManagersWithVerifications = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const managers = await prisma.hrms_d_employee.findMany({
       where: {
         id: {

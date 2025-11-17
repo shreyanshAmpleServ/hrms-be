@@ -1,6 +1,7 @@
 const competencyTrackingService = require('../services/competencyTrackingService');
 const CustomError = require('../../utils/CustomError');
 const moment = require('moment');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCompetencyTracking = async (req, res, next) => {
     try {

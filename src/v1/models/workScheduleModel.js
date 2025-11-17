@@ -1,8 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createWorkSchedule = async (data) => {
+  const prisma = getPrisma();
   try {
     const newSchedule = await prisma.hrms_m_work_schedule_template.create({
       data: {
@@ -53,7 +53,9 @@ const createWorkSchedule = async (data) => {
   }
 };
 const findWorkScheduleById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_work_schedule_template.findUnique({
       where: { id: parseInt(id) },
     });
@@ -70,7 +72,9 @@ const findWorkScheduleById = async (id) => {
 };
 
 const updateWorkSchedule = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const upsertedData = await prisma.hrms_m_work_schedule_template.upsert({
       where: { id: parseInt(id) },
       update: {
@@ -97,7 +101,9 @@ const updateWorkSchedule = async (id, data) => {
 };
 
 const deleteWorkSchedule = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_work_schedule_template.delete({
       where: { id: parseInt(id) },
     });

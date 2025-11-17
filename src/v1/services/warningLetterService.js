@@ -1,4 +1,5 @@
 const warningLetterModel = require("../models/warningLetterModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createWarningLetter = async (data) => {
   return await warningLetterModel.createWarningLetter(data);

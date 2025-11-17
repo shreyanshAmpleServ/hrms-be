@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize medical record data
 const serializeMedicalRecordData = (data) => ({
@@ -21,7 +20,9 @@ const serializeMedicalRecordData = (data) => ({
 
 // Create medical records
 const createMedicalRecord = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_medical_record.create({
       data: {
         ...serializeMedicalRecordData(data),
@@ -50,7 +51,9 @@ const createMedicalRecord = async (data) => {
 
 // Find medical record by ID
 const findMedicalRecord = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const record = await prisma.hrms_d_medical_record.findUnique({
       where: { id: parseInt(id) },
     });
@@ -68,7 +71,9 @@ const findMedicalRecord = async (id) => {
 
 // Update medical record
 const updateMedicalRecord = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updated = await prisma.hrms_d_medical_record.update({
       where: { id: parseInt(id) },
       data: {
@@ -97,7 +102,9 @@ const updateMedicalRecord = async (id, data) => {
 
 // Delete medical record
 const deleteMedicalRecord = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_medical_record.delete({
       where: { id: parseInt(id) },
     });
@@ -115,6 +122,7 @@ const deleteMedicalRecord = async (id) => {
 
 // Get all medical records with pagination and search
 const getAllMedicalRecord = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page <= 0 ? 1 : page;
     size = size || 10;

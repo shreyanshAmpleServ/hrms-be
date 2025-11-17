@@ -1,4 +1,5 @@
 const paySlipModel = require("../models/paySlipModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPaySlip = async (data) => {
   return await paySlipModel.createPaySlip(data);

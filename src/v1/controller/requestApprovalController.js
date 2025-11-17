@@ -1,6 +1,7 @@
 const requestApprovalService = require("../services/requestApprovalService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRequestApproval = async (req, res, next) => {
   try {

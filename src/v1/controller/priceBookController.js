@@ -1,6 +1,7 @@
 const priceBookService = require('../services/priceBookService');
 const CustomError = require('../../utils/CustomError');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPriceBook = async (req, res, next) => {
     try {

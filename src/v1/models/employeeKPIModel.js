@@ -1,11 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("./requestsModel");
-const prisma = new PrismaClient();
-
-if (!prisma) {
-  throw new Error("Prisma client failed to initialize");
-}
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeEmployeeKPIData = (data, defaultEmploymentType = null) => ({
   employee_id: Number(data.employee_id),
@@ -32,6 +27,7 @@ const serializeEmployeeKPIData = (data, defaultEmploymentType = null) => ({
 
 const createEmployeeKPI = async (data) => {
   try {
+    const prisma = getPrisma();
     const kpiHeaderId = await prisma.$transaction(
       async (tx) => {
         const employee = await tx.hrms_d_employee.findUnique({
@@ -272,6 +268,7 @@ const createEmployeeKPI = async (data) => {
 
 const approveEmployeeKPI = async (kpiId, approverId) => {
   try {
+    const prisma = getPrisma();
     return await prisma.$transaction(async (tx) => {
       const kpi = await tx.hrms_d_employee_kpi.findUnique({
         where: { id: Number(kpiId) },
@@ -399,6 +396,7 @@ const approveEmployeeKPI = async (kpiId, approverId) => {
 
 const findEmployeeKPIById = async (id) => {
   try {
+    const prisma = getPrisma();
     const kpi = await prisma.hrms_d_employee_kpi.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -464,6 +462,7 @@ const findEmployeeKPIById = async (id) => {
 };
 const getLastKPIForEmployee = async (employeeId) => {
   try {
+    const prisma = getPrisma();
     const lastKPI = await prisma.hrms_d_employee_kpi.findFirst({
       where: {
         employee_id: Number(employeeId),
@@ -482,6 +481,7 @@ const getLastKPIForEmployee = async (employeeId) => {
 
 const getLastComponentAssignmentForEmployee = async (employeeId) => {
   try {
+    const prisma = getPrisma();
     const lastAssignment =
       await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
         where: {
@@ -514,6 +514,7 @@ const getLastComponentAssignmentForEmployee = async (employeeId) => {
 
 const findPendingKPIForEmployee = async (employeeId) => {
   try {
+    const prisma = getPrisma();
     const pendingKPI = await prisma.hrms_d_employee_kpi.findFirst({
       where: {
         employee_id: Number(employeeId),
@@ -543,6 +544,7 @@ const getAllEmployeeKPI = async (
   status
 ) => {
   try {
+    const prisma = getPrisma();
     page = page && page != 0 ? Number(page) : 1;
     size = size ? Number(size) : 10;
     const skip = (page - 1) * size;
@@ -861,6 +863,7 @@ const getAllEmployeeKPI = async (
 
 const updateEmployeeKPI = async (id, data) => {
   try {
+    const prisma = getPrisma();
     const kpiId = await prisma.$transaction(
       async (tx) => {
         const existingKPI = await tx.hrms_d_employee_kpi.findUnique({
@@ -1020,6 +1023,7 @@ const updateEmployeeKPI = async (id, data) => {
 
 const deleteEmployeeKPI = async (id) => {
   try {
+    const prisma = getPrisma();
     return await prisma.$transaction(async (tx) => {
       const kpi = await tx.hrms_d_employee_kpi.findUnique({
         where: { id: Number(id) },

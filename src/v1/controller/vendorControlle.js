@@ -4,6 +4,7 @@ const moment = require("moment");
 const { generateFullUrl } = require('../../utils/helper');
 const { uploadToBackblaze, deleteFromBackblaze } = require('../../utils/uploadBackblaze');
 const vendorModel = require('../models/vendorModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 // const sanitizeData = (data) => {
 //     const { repeatPassword, role_id, ...sanitizedData } = data; // Exclude repeatPassword
 //     return {

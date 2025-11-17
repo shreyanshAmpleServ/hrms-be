@@ -1,8 +1,6 @@
 const { PrismaClient, Prisma } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-
-const prisma = new PrismaClient();
-
+const { getPrisma } = require("../../config/prismaContext.js");
 const serializePFData = (data) => ({
   pf_name: data.pf_name || "",
   employer_contribution:
@@ -21,7 +19,9 @@ const serializePFData = (data) => ({
 });
 
 const createPF = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_provident_fund.create({
       data: {
         ...serializePFData(data),
@@ -40,7 +40,9 @@ const createPF = async (data) => {
 };
 
 const findPFById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_provident_fund.findUnique({
       where: { id: parseInt(id) },
     });
@@ -55,7 +57,9 @@ const findPFById = async (id) => {
 };
 
 const updatePF = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_provident_fund.update({
       where: { id: parseInt(id) },
       data: {
@@ -70,7 +74,9 @@ const updatePF = async (id, data) => {
 };
 
 const deletePF = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_provident_fund.delete({
       where: { id: parseInt(id) },
     });
@@ -88,6 +94,7 @@ const deletePF = async (id) => {
 
 // Get all PF
 const getAllPF = async (page, size, search, startDate, endDate, is_active) => {
+  const prisma = getPrisma();
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;

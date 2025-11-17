@@ -1,4 +1,5 @@
 const companyModel = require('../models/companyModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCompany = async (data) => {
   return await companyModel.createCompany(data);

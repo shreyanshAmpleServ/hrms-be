@@ -1,4 +1,5 @@
 const arrearAdjustmentsModel = require("../models/arrearAdjustmentsModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createArrearAdjustment = async (data) => {
   return await arrearAdjustmentsModel.createArrearAdjustment(data);

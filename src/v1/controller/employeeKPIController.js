@@ -1,4 +1,5 @@
 const employeeKPIModel = require("../models/employeeKPIModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { uploadToBackblaze } = require("../../utils/uploadBackblaze");
 
 const createEmployeeKPI = async (req, res, next) => {

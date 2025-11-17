@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createStatutoryRate = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const salaryStructure = await prisma.hrms_m_statutory_rate.create({
       data: {
         country_code: data.country_code,
@@ -31,7 +32,9 @@ const createStatutoryRate = async (data) => {
 };
 
 const findStatutoryRateById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const salaryStructure = await prisma.hrms_m_statutory_rate.findUnique({
       where: { id: parseInt(id) },
     });
@@ -49,7 +52,9 @@ const findStatutoryRateById = async (id) => {
 };
 
 const updateStatutoryRate = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedSalaryStructure = await prisma.hrms_m_statutory_rate.update({
       where: { id: parseInt(id) },
       data: {
@@ -68,7 +73,9 @@ const updateStatutoryRate = async (id, data) => {
 };
 
 const deleteStatutoryRate = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_statutory_rate.delete({
       where: { id: parseInt(id) },
     });

@@ -3,6 +3,7 @@ const CustomError = require("../../utils/CustomError");
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {

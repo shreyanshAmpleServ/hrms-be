@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const {
   sendEmailNotification,
@@ -108,7 +107,9 @@ const combineDateAndTime = (date, time) => {
 // Create a new call
 
 const createCalls = async (data, user) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     if (!data.call_start_date || !data.call_start_time) {
       throw new CustomError("Call start date and time cannot be null", 400);
     }
@@ -206,7 +207,9 @@ const createCalls = async (data, user) => {
 
 // Find a call  by ID
 const findCallsById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const calls = await prisma.crms_calls.findUnique({
       where: { id: parseInt(id) },
     });
@@ -221,7 +224,9 @@ const findCallsById = async (id) => {
 
 // Update a call
 const updateCalls = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedCalls = await prisma.crms_calls.update({
       where: { id: parseInt(id) },
       data: {
@@ -315,7 +320,9 @@ const updateCalls = async (id, data) => {
 
 // Delete a call
 const deleteCalls = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.crms_calls.delete({
       where: { id: parseInt(id) },
     });
@@ -333,6 +340,7 @@ const deleteCalls = async (id) => {
 
 // Get all call results
 const getAllCalls = async (data) => {
+  const prisma = getPrisma();
   try {
     page = !data?.page || data?.page == 0 ? 1 : data?.page;
     size = data?.size || 10;

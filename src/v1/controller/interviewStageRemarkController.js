@@ -1,6 +1,7 @@
 const interviewStageRemarkService = require("../services/interviewStageRemarkService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createInterviewStageRemark = async (req, res, next) => {
   try {

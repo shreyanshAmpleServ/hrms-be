@@ -8,6 +8,7 @@ const {
   findLeaveBalanceByEmployeeId,
 } = require("../models/leaveBalanceModel");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 /**
  * Controller for creating leave balance

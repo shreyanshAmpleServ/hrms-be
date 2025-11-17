@@ -1,4 +1,5 @@
 const hiringStageValueModel = require("../models/hiringStageValueModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createHiringStageValue = async (data) => {
   return await hiringStageValueModel.createHiringStageValue(data);

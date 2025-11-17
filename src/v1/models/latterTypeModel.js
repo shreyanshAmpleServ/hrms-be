@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLatterType = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const finalData = await prisma.hrms_m_letter_type.create({
       data: {
         letter_name: data.letter_name || "",
@@ -23,7 +24,9 @@ const createLatterType = async (data) => {
 };
 
 const findLatterTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const data = await prisma.hrms_m_letter_type.findUnique({
       where: { id: parseInt(id) },
     });
@@ -56,7 +59,9 @@ const findLatterTypeById = async (id) => {
 // };
 
 const updateLatterType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     if ("id" in data) delete data.id;
 
     const updatedData = await prisma.hrms_m_letter_type.update({
@@ -74,7 +79,9 @@ const updateLatterType = async (id, data) => {
 };
 
 const deleteLatterType = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_m_letter_type.delete({
       where: { id: parseInt(id) },
     });
@@ -100,6 +107,7 @@ const getAllLatterType = async (
   is_active
 ) => {
   try {
+    const prisma = getPrisma();
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

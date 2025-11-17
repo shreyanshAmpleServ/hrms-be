@@ -1,4 +1,5 @@
 const trainingFeedbackModel = require('../models/trainingFeedbackModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTrainingFeedback = async (data) => {
     return await trainingFeedbackModel.createTrainingFeedback(data);

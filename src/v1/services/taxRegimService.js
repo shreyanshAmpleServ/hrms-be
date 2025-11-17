@@ -1,4 +1,5 @@
 const taxRegimModel = require("../models/taxRegimModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTaxRegime = async (data) => {
   return await taxRegimModel.createTaxRegime(data);

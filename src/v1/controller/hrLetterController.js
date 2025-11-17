@@ -2,6 +2,7 @@ const hrLetterService = require("../services/hrLetterService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
 const fs = require("fs");
+const { getPrisma } = require("../../config/prismaContext.js");
 const {
   uploadToBackblaze,
   deleteFromBackblaze,

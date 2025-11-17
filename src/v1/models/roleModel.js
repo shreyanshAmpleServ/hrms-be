@@ -1,9 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new role
 const createRole = async (data) => {
+  const prisma = getPrisma();
   try {
     // Check if role name (case-insensitive) already exists
     const existingRole = await prisma.hrms_m_role.findFirst({
@@ -36,6 +36,7 @@ const createRole = async (data) => {
 
 // Find a role by ID
 const findRoleById = async (id) => {
+  const prisma = getPrisma();
   try {
     const role = await prisma.hrms_m_role.findUnique({
       where: { id: parseInt(id) },
@@ -51,6 +52,7 @@ const findRoleById = async (id) => {
 
 // Update a role
 const updateRole = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updatedRole = await prisma.hrms_m_role.update({
       where: { id: parseInt(id) },
@@ -67,6 +69,7 @@ const updateRole = async (id, data) => {
 
 // Delete a role
 const deleteRole = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.hrms_m_role.delete({
       where: { id: parseInt(id) },
@@ -85,6 +88,7 @@ const deleteRole = async (id) => {
 
 // Get all roles
 const getAllRoles = async () => {
+  const prisma = getPrisma();
   try {
     const roles = await prisma.hrms_m_role.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],

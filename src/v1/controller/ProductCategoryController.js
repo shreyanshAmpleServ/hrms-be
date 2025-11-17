@@ -1,5 +1,6 @@
 const productCategoryService = require('../services/productCategoryService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createProductCategory = async (req, res, next) => {
     try {

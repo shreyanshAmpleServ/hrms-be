@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeHiringStageValueData = (data) => ({
   value: data.value || "",
@@ -8,6 +7,7 @@ const serializeHiringStageValueData = (data) => ({
 
 const createHiringStageValue = async (data) => {
   try {
+    const prisma = getPrisma();
     const newRecord = await prisma.hrms_d_hiring_stage_value.create({
       data: {
         ...serializeHiringStageValueData(data),
@@ -28,6 +28,7 @@ const createHiringStageValue = async (data) => {
 
 const getHiringStageValueById = async (id) => {
   try {
+    const prisma = getPrisma();
     const record = await prisma.hrms_d_hiring_stage_value.findUnique({
       where: { id: parseInt(id) },
     });
@@ -43,6 +44,7 @@ const getHiringStageValueById = async (id) => {
 
 const updateHiringStageValue = async (id, data) => {
   try {
+    const prisma = getPrisma();
     const updatedRecord = await prisma.hrms_d_hiring_stage_value.update({
       where: { id: parseInt(id) },
       data: {
@@ -62,6 +64,7 @@ const updateHiringStageValue = async (id, data) => {
 
 const deleteHiringStageValue = async (id) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_hiring_stage_value.delete({
       where: { id: parseInt(id) },
     });
@@ -85,6 +88,7 @@ const getAllHiringStageValues = async (
   endDate
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : parseInt(page);
     size = size ? parseInt(size) : 10;
     const skip = (page - 1) * size;

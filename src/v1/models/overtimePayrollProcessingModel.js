@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serializer to prepare data for insert/update
 const serializeOvertimeData = (data) => ({
@@ -100,6 +99,7 @@ const serializeOvertimeData = (data) => ({
 // };
 
 const createOvertimePayrollProcessing = async (dataArray) => {
+  const prisma = getPrisma();
   try {
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       throw new CustomError("Input must be a non-empty array", 400);
@@ -110,6 +110,7 @@ const createOvertimePayrollProcessing = async (dataArray) => {
     await Promise.all(
       dataArray.map(async (data) => {
         try {
+          const prisma = getPrisma();
           const requiredFields = [
             "employee_id",
             "payroll_month",
@@ -289,6 +290,7 @@ const getAllOvertimePayrollProcessing = async (
 
 // GET BY ID
 const findOvertimePayrollProcessingById = async (id) => {
+  const prisma = getPrisma();
   const result = await prisma.hrms_d_employee_payroll_adjustment.findUnique({
     where: { id: Number(id) },
   });
@@ -298,7 +300,9 @@ const findOvertimePayrollProcessingById = async (id) => {
 
 // UPDATE
 const updateOvertimePayrollProcessing = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_employee_payroll_adjustment.update({
       where: { id: Number(id) },
       data: {
@@ -345,7 +349,9 @@ const updateOvertimePayrollProcessing = async (id, data) => {
 
 // DELETE
 const deleteOvertimePayrollProcessing = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_employee_payroll_adjustment.delete({
       where: { id: Number(id) },
     });
@@ -407,7 +413,9 @@ const deleteOvertimePayrollProcessing = async (id) => {
 // };
 
 const callOvertimePostingSP = async (params) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const {
       paymonth,
       payyear,

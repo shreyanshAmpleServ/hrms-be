@@ -1,6 +1,7 @@
 const currencyService = require("../services/currencyService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCurrency = async (req, res, next) => {
   try {

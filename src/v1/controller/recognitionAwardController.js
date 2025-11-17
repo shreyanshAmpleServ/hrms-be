@@ -1,6 +1,7 @@
 const recognitionAwardService = require("../services/recognitionAwardService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRecognitionAward = async (req, res, next) => {
   try {

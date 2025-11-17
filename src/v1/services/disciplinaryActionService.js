@@ -1,4 +1,5 @@
 const disciplinaryActionModel = require("../models/disciplinaryActionModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 const createDisciplinaryAction = async (data) => {
   return await disciplinaryActionModel.createDisciplinaryAction(data);
 };

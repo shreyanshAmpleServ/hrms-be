@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize leave type master data
 const serializeLeaveTypeMasterData = (data) => ({
@@ -20,7 +19,9 @@ const serializeLeaveTypeMasterData = (data) => ({
 
 // Create a new leave type master
 const createLeaveType = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_leave_type_master.create({
       data: {
         ...serializeLeaveTypeMasterData(data),
@@ -40,7 +41,9 @@ const createLeaveType = async (data) => {
 
 // Find leave type master by ID
 const findLeaveTypById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_leave_type_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -58,7 +61,9 @@ const findLeaveTypById = async (id) => {
 
 // Update leave type master
 const updateLeaveType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_m_leave_type_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -78,7 +83,9 @@ const updateLeaveType = async (id, data) => {
 
 // Delete leave type master
 const deleteLeaveType = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_leave_type_master.delete({
       where: { id: parseInt(id) },
     });

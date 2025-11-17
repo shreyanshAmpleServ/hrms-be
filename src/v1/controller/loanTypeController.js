@@ -1,6 +1,7 @@
 const loanTypeService = require("../services/loanTypeService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLoanType = async (req, res, next) => {
   try {

@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new source
 const createSource = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const source = await prisma.Sources.create({
       data: {
         name: data.name,
@@ -22,7 +23,9 @@ const createSource = async (data) => {
 
 // Find a source by ID
 const findSourceById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const source = await prisma.Sources.findUnique({
       where: { id: parseInt(id) },
     });
@@ -37,7 +40,9 @@ const findSourceById = async (id) => {
 
 // Update a source
 const updateSource = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedSource = await prisma.Sources.update({
       where: { id: parseInt(id) },
       data: {
@@ -53,7 +58,9 @@ const updateSource = async (id, data) => {
 
 // Delete a source
 const deleteSource = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.Sources.delete({
       where: { id: parseInt(id) },
     });
@@ -71,7 +78,9 @@ const deleteSource = async (id) => {
 
 // Get all sources
 const getAllSources = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const sources = await prisma.Sources.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

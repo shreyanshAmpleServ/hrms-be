@@ -1,6 +1,7 @@
 const successionPlanService = require("../services/successionPlanService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Controller on create a new succession plan
 const createSuccessionPlan = async (req, res, next) => {

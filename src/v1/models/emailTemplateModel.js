@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize email template data
 const serializeEmailTemplateData = (data) => ({
@@ -16,6 +15,7 @@ const serializeEmailTemplateData = (data) => ({
 });
 
 const validateEmailTemplateData = async (data) => {
+  const prisma = getPrisma();
   const errors = [];
 
   if (!data.body || data.body.trim() === "") {
@@ -66,7 +66,9 @@ const validateEmailTemplateData = async (data) => {
 };
 
 const createEmailTemplate = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await validateEmailTemplateData(data);
 
     const result = await prisma.hrms_d_templates.create({
@@ -89,7 +91,9 @@ const createEmailTemplate = async (data) => {
 
 // Find email template by ID
 const getEmailTemplateById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const result = await prisma.hrms_d_templates.findUnique({
       where: { id: Number(id) },
     });
@@ -106,7 +110,9 @@ const getEmailTemplateById = async (id) => {
 };
 
 const updateEmailTemplate = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await validateEmailTemplateData({ ...data, id });
 
     const { key, ...restData } = data;
@@ -132,7 +138,9 @@ const updateEmailTemplate = async (id, data) => {
 
 // Delete email template
 const deleteEmailTemplate = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_d_templates.delete({
       where: { id: Number(id) },
     });
@@ -193,7 +201,9 @@ const deleteEmailTemplate = async (id) => {
 // };
 
 const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

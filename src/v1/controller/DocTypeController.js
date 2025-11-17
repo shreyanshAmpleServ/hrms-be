@@ -1,6 +1,7 @@
 const DocTypeService = require("../services/DocTypeService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDocType = async (req, res, next) => {
   try {

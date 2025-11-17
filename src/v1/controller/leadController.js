@@ -2,6 +2,7 @@ const leadService = require('../services/leadService');
 const CustomError = require('../../utils/CustomError');
 const { generateFullUrl } = require('../../utils/helper');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { findLeadById } = require('../models/leadModel');
 const { deleteFromBackblaze, uploadToBackblaze } = require('../../utils/uploadBackblaze');
 

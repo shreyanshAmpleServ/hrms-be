@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeProjectData = (data) => ({
   code: data.code,
@@ -16,6 +15,7 @@ const serializeProjectData = (data) => ({
 });
 
 const createProject = async (data) => {
+  const prisma = getPrisma();
   try {
     const result = await prisma.hrms_m_projects.create({
       data: serializeProjectData(data),
@@ -44,6 +44,7 @@ const getAllProjects = async (
   is_active
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -108,6 +109,7 @@ const getAllProjects = async (
 };
 
 const findProjectById = async (id) => {
+  const prisma = getPrisma();
   try {
     const result = await prisma.hrms_m_projects.findUnique({
       where: { id: parseInt(id) },
@@ -130,6 +132,7 @@ const findProjectById = async (id) => {
 };
 
 const updateProject = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const result = await prisma.hrms_m_projects.update({
       where: { id: parseInt(id) },
@@ -155,6 +158,7 @@ const updateProject = async (id, data) => {
 };
 
 const deleteProject = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.hrms_m_projects.delete({
       where: { id: parseInt(id) },

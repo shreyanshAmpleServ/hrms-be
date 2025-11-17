@@ -1,4 +1,5 @@
 const medicalRecordModel = require("../models/medicalRecordModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createMedicalRecord = async (data) => {
   return await medicalRecordModel.createMedicalRecord(data);

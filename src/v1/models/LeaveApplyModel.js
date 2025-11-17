@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { createRequest } = require("./requestsModel.js");
-const prisma = new PrismaClient();
 
 // Serialize leave application data
 const serializeLeaveApplicationData = (data) => ({
@@ -24,6 +23,7 @@ const serializeLeaveApplicationData = (data) => ({
 
 // Create a new leave application
 const createLeaveApplication = async (data) => {
+  const prisma = getPrisma();
   console.log(Object.keys(prisma.hrms_d_requests.fields));
   const startDate = new Date(data.start_date);
   startDate.setUTCHours(0, 0, 0, 0);
@@ -57,6 +57,7 @@ const createLeaveApplication = async (data) => {
   }
 
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_leave_application.create({
       data: {
         ...serializeLeaveApplicationData(data),
@@ -111,7 +112,9 @@ const createLeaveApplication = async (data) => {
 
 // Find leave application by ID
 const findLeaveApplicationById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_leave_application.findUnique({
       where: { id: parseInt(id) },
     });
@@ -129,7 +132,9 @@ const findLeaveApplicationById = async (id) => {
 
 // Update leave applications
 const updateLeaveApplication = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_leave_application.update({
       where: { id: parseInt(id) },
       data: {
@@ -178,7 +183,9 @@ const updateLeaveApplication = async (id, data) => {
 
 // Delete leave application
 const deleteLeaveApplication = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_leave_application.delete({
       where: { id: parseInt(id) },
     });
@@ -288,6 +295,7 @@ const getAllLeaveApplication = async (
 };
 
 const updateLeaveStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const leaveId = parseInt(id);
     if (isNaN(leaveId)) {

@@ -59,6 +59,7 @@ const upload = multer({
 module.exports = upload;
 
 // const multer = require("multer");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // const fileFilter = (req, file, cb) => {
 //   const allowedTypes = [

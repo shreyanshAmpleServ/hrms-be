@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { parse } = require("dotenv");
-const prisma = new PrismaClient();
 
 const serializeData = (data) => {
   return {
@@ -28,7 +27,9 @@ const serializeData = (data) => {
 
 // Create a new loan request
 const createGrievanceSubmission = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     await errorNotExist("hrms_d_employee", data.assigned_to, "Assign to");
     const reqData = await prisma.hrms_d_grievance.create({
@@ -68,7 +69,9 @@ const createGrievanceSubmission = async (data) => {
 
 // Find a loan request by ID
 const findGrievanceSubmissionById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_grievance.findUnique({
       where: { id: parseInt(id) },
     });
@@ -86,7 +89,9 @@ const findGrievanceSubmissionById = async (id) => {
 
 // Update a loan request
 const updateGrievanceSubmission = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     if (data.employee_id) {
       await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     } else {
@@ -130,7 +135,9 @@ const updateGrievanceSubmission = async (id, data) => {
 
 // Delete a loan request
 const deleteGrievanceSubmission = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_grievance.delete({
       where: { id: parseInt(id) },
     });
@@ -247,6 +254,7 @@ const getAllGrievanceSubmission = async (
 };
 
 const updateGrievanceSubmissionStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const grievanceSubmissionId = parseInt(id);
     if (isNaN(grievanceSubmissionId)) {

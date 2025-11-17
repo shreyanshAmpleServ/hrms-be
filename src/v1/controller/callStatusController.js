@@ -1,5 +1,6 @@
 const callStatusService = require('../services/callStatusesService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCallStatus = async (req, res, next) => {
     try {

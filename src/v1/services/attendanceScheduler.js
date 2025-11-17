@@ -1,11 +1,11 @@
 const cron = require("node-cron");
-const { PrismaClient } = require("@prisma/client");
+const { getPrisma } = require("../../config/prismaContext.js");
 
-const prisma = new PrismaClient();
 
 // Schedule to run at midnight (00:00) every day
 const scheduleDefaultAttendance = () => {
   // Cron pattern: '0 0 * * *' means every day at midnight
+  const prisma = getPrisma();
   cron.schedule(
     "0 0 * * *",
     async () => {
@@ -111,6 +111,7 @@ const scheduleDefaultAttendance = () => {
 
 // Function to manually trigger the attendance creation (for testing)
 const createDefaultAttendanceForDate = async (targetDate = null) => {
+  const prisma = getPrisma();
   try {
     const date = targetDate ? new Date(targetDate) : new Date();
     date.setHours(0, 0, 0, 0);

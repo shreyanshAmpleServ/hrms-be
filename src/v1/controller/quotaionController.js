@@ -2,6 +2,7 @@ const quotaionService = require('../services/quotaionService');
 const CustomError = require('../../utils/CustomError');
 const { generateFullUrl } = require('../../utils/helper');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { uploadToBackblaze } = require('../../utils/uploadBackblaze');
 const { deleteFromBackblaze } = require('../../utils/uploadBackblaze');
 const { findQuotationById } = require('../models/quotationModal');

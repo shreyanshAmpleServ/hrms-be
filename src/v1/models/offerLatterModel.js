@@ -1,8 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
-const prisma = new PrismaClient();
+const fetch = require("node-fetch");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeJobData = (data) => {
   return {
@@ -17,6 +17,7 @@ const serializeJobData = (data) => {
 
 const createOfferLetter = async (data) => {
   try {
+    const prisma = getPrisma();
     await errorNotExist(
       "hrms_d_candidate_master",
       data.candidate_id,
@@ -63,6 +64,7 @@ const createOfferLetter = async (data) => {
 // Find a offer letter by ID
 const findOfferLetterById = async (id) => {
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_offer_letter.findUnique({
       where: { id: parseInt(id) },
     });
@@ -81,6 +83,7 @@ const findOfferLetterById = async (id) => {
 // Update a offer letter
 const updateOfferLetter = async (id, data) => {
   try {
+    const prisma = getPrisma();
     await errorNotExist(
       "hrms_d_candidate_master",
       data.candidate_id,
@@ -119,6 +122,7 @@ const updateOfferLetter = async (id, data) => {
 // Delete a offer letter
 const deleteOfferLetter = async (id) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_offer_letter.delete({
       where: { id: parseInt(id) },
     });
@@ -144,6 +148,7 @@ const getAllOfferLetter = async (
   candidate_id
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -215,15 +220,19 @@ const getAllOfferLetter = async (
       totalCount: totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving offer letters", 503);
+    throw new CustomError(
+      `Error retrieving offer letters: ${error.message}`,
+      error.status || 500
+    );
   }
 };
 
 const updateOfferLetterStatus = async (id, data) => {
   try {
+    const prisma = getPrisma();
     const offerLetterId = parseInt(id);
 
-    if (isNaN(leaveId)) {
+    if (isNaN(offerLetterId)) {
       throw new CustomError("Invalid Offer Letter ID", 400);
     }
 
@@ -254,7 +263,7 @@ const updateOfferLetterStatus = async (id, data) => {
     const updatedEntry = await prisma.hrms_d_offer_letter.update({
       where: { id: offerLetterId },
       include: {
-        offered_caZndidate: {
+        offered_candidate: {
           select: {
             full_name: true,
             id: true,
@@ -280,10 +289,9 @@ const updateOfferLetterStatus = async (id, data) => {
   }
 };
 
-const fetch = require("node-fetch");
-
 const getOfferLetterForPDF = async (id) => {
   try {
+    const prisma = getPrisma();
     if (!id) {
       throw new CustomError("Offer letter ID is required", 400);
     }
@@ -487,6 +495,7 @@ const getAllOfferLettersForBulkDownload = async (
   advancedFilters = {}
 ) => {
   try {
+    const prisma = getPrisma();
     const whereClause = {
       ...filters,
     };

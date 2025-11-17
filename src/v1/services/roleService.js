@@ -1,4 +1,5 @@
 const roleModel = require('../models/roleModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRole = async (data) => {
   return await roleModel.createRole(data);

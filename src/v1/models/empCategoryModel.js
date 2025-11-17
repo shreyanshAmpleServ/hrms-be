@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEmpCategory = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const empCategory = await prisma.hrms_m_employee_category.create({
       data: {
         category_name: data.category_name,
@@ -26,7 +27,9 @@ const createEmpCategory = async (data) => {
 };
 
 const findEmpCategoryById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const empCategory = await prisma.hrms_m_employee_category.findUnique({
       where: { id: parseInt(id) },
     });
@@ -44,7 +47,9 @@ const findEmpCategoryById = async (id) => {
 };
 
 const updateEmpCategory = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEmpCategory = await prisma.hrms_m_employee_category.update({
       where: { id: parseInt(id) },
       data: {
@@ -62,7 +67,9 @@ const updateEmpCategory = async (id, data) => {
 };
 
 const deleteEmpCategory = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_employee_category.delete({
       where: { id: parseInt(id) },
     });

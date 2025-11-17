@@ -1,5 +1,5 @@
 const bcrypt = require("bcryptjs");
-const { getPrismaClient } = require("../../config/db.js");
+const { getPrisma, getPrismaClient } = require("../../config/prismaContext.js");
 const CustomError = require("../../utils/CustomError");
 
 const BCRYPT_COST = 8;
@@ -14,6 +14,17 @@ const isDatabaseEmpty = async (prisma) => {
     const userCount = await prisma.hrms_m_user.count();
     return userCount === 0;
   } catch (error) {
+    // If table doesn't exist, database schema hasn't been migrated yet
+    if (error.message && error.message.includes("does not exist")) {
+      throw new CustomError(
+        `Database tables do not exist. Please run Prisma migrations first:\n` +
+          `  npx prisma migrate dev\n` +
+          `Or push the schema:\n` +
+          `  npx prisma db push\n` +
+          `Original error: ${error.message}`,
+        400
+      );
+    }
     throw new CustomError(`Error checking database: ${error.message}`, 500);
   }
 };
@@ -203,7 +214,7 @@ const createSuperAdminUser = async (
  * Main seeder function to create Super Admin
  * @param {string} dbName - Database name
  * @param {Object} options - Optional user details (email, password, fullName)
- * @param {Object} [existingPrisma] - Optional existing Prisma client (from tenantMiddleware)
+ * @param {Object} existingPrisma - Optional existing Prisma client (for API usage)
  * @returns {Promise<Object>} - Seeder result
  */
 const seedSuperAdmin = async (
@@ -216,8 +227,24 @@ const seedSuperAdmin = async (
   existingPrisma = null
 ) => {
   try {
-    // Use existing Prisma client if provided (from tenantMiddleware), otherwise create new one
-    const prisma = existingPrisma || getPrismaClient(dbName);
+    // Get Prisma client - use existing one if provided (from API), otherwise create one for CLI
+    let prisma;
+    if (existingPrisma) {
+      prisma = existingPrisma;
+    } else if (dbName) {
+      // CLI usage - create Prisma client directly for the specified database
+      prisma = getPrismaClient(dbName);
+    } else {
+      // Try to get from context (API usage)
+      try {
+        prisma = getPrisma();
+      } catch (error) {
+        throw new CustomError(
+          "Database name is required for CLI usage, or tenantMiddleware must be applied for API usage.",
+          400
+        );
+      }
+    }
 
     // Check if database is empty
     const isEmpty = await isDatabaseEmpty(prisma);

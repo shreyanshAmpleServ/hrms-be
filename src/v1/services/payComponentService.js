@@ -1,4 +1,5 @@
 const payComponentModel = require("../models/payComponentModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPayComponent = async (data, createdBy) => {
   const payComponentData = {

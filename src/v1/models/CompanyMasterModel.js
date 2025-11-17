@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new company
 const createCompany = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const company = await prisma.hrms_m_company_master.create({
       data: {
         ...data,
@@ -27,7 +28,9 @@ const createCompany = async (data) => {
 
 // Find a company by ID
 const findCompanyById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const company = await prisma.hrms_m_company_master.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -45,7 +48,9 @@ const findCompanyById = async (id) => {
 
 // Update a company
 const updateCompany = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedcompany = await prisma.hrms_m_company_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -66,7 +71,9 @@ const updateCompany = async (id, data) => {
 
 // Delete a company
 const deleteCompany = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_company_master.delete({
       where: { id: parseInt(id) },
     });

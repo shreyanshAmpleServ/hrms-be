@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize relieving letter data
 const serializeRelievingLetter = (data) => ({
@@ -11,7 +10,9 @@ const serializeRelievingLetter = (data) => ({
 
 // Create a new relieving letter
 const createRelievingLetter = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_relieving_letter.create({
       data: {
         ...serializeRelievingLetter(data),
@@ -40,7 +41,9 @@ const createRelievingLetter = async (data) => {
 
 // Find a relieving letter by ID
 const findRelievingLetterById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_relieving_letter.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -67,7 +70,9 @@ const findRelievingLetterById = async (id) => {
 
 // Update a relieving letter
 const updateRelievingLetter = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedLetter = await prisma.hrms_d_relieving_letter.update({
       where: { id: parseInt(id) },
       include: {
@@ -96,7 +101,9 @@ const updateRelievingLetter = async (id, data) => {
 
 // Delete a relieving letter
 const deleteRelievingLetter = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_relieving_letter.delete({
       where: { id: parseInt(id) },
     });

@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { id } = require("date-fns/locale");
-const prisma = new PrismaClient();
 
 // Serializer
 // const serializeMidmonthPayrollData = (data) => ({
@@ -111,6 +110,7 @@ const serializeMidmonthPayrollData = (data) => ({
 // };
 
 const createMidMonthPayrollProcessing = async (dataArray) => {
+  const prisma = getPrisma();
   try {
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       throw new CustomError("Input must be a non-empty array", 400);
@@ -121,6 +121,7 @@ const createMidMonthPayrollProcessing = async (dataArray) => {
     await Promise.all(
       dataArray.map(async (data) => {
         try {
+          const prisma = getPrisma();
           const requiredFields = [
             "employee_id",
             "payroll_month",
@@ -336,7 +337,9 @@ const getAllMidMonthPayrollProcessing = async (
 };
 
 const findMidMonthPayrollProcessingById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result =
       await prisma.hrms_d_employee_payroll_deduction_schedule.findUnique({
         where: { id: parseInt(id) },
@@ -353,7 +356,9 @@ const findMidMonthPayrollProcessingById = async (id) => {
 
 // Updates
 const updateMidMonthPayrollProcessing = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result =
       await prisma.hrms_d_employee_payroll_deduction_schedule.update({
         where: { id: parseInt(id) },
@@ -419,7 +424,9 @@ const updateMidMonthPayrollProcessing = async (id, data) => {
 
 // Delete
 const deleteMidMonthPayrollProcessing = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_employee_payroll_deduction_schedule.delete({
       where: { id: parseInt(id) },
     });
@@ -473,7 +480,9 @@ const deleteMidMonthPayrollProcessing = async (id) => {
 // };
 
 const callMidMonthPostingSP = async (params) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const {
       paymonth,
       payyear,

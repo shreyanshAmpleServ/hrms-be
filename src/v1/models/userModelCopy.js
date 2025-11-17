@@ -1,10 +1,11 @@
-const { PrismaClient } = require('@prisma/client');
 const CustomError = require('../../utils/CustomError');
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new user
 const createUser = async (data) => {
+   const prisma = getPrisma();
    try {
+       const prisma = getPrisma();
         const user = await prisma.crms_m_user.create({
             data: {
                 ...data,
@@ -23,7 +24,9 @@ const createUser = async (data) => {
 
 // Find a user by email
 const findUserByEmail = async (email) => {
+    const prisma = getPrisma();
     try {
+        const prisma = getPrisma();
         const user = await prisma.crms_m_user.findFirst({
             where: { email },
             select: {
@@ -51,7 +54,9 @@ const findUserByEmail = async (email) => {
 
 // Find a user by ID
 const findUserById = async (id) => {
+    const prisma = getPrisma();
     try {
+        const prisma = getPrisma();
         const user = await prisma.crms_m_user.findUnique({
             where: { id: parseInt(id) },
             select: {
@@ -78,7 +83,9 @@ const findUserById = async (id) => {
 
 // Update a user
 const updateUser = async (id, data) => {
+    const prisma = getPrisma();
     try {
+        const prisma = getPrisma();
         const updatedUser = await prisma.crms_m_user.update({
             where: { id: parseInt(id) },
             data: {
@@ -94,7 +101,9 @@ const updateUser = async (id, data) => {
 
 // Delete a user
 const deleteUser = async (id) => {
+    const prisma = getPrisma();
     try {
+        const prisma = getPrisma();
         await prisma.crms_m_user.delete({
             where: { id: parseInt(id) },
         });
@@ -105,7 +114,9 @@ const deleteUser = async (id) => {
 
 // Get all users
 const getAllUsers = async () => {
+    const prisma = getPrisma();
     try {
+        const prisma = getPrisma();
         const users = await prisma.crms_m_user.findMany({
             orderBy: [
                 { updatedate: 'desc' },

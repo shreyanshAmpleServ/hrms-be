@@ -2,6 +2,7 @@ const orderService = require('../services/orderService');
 const CustomError = require('../../utils/CustomError');
 const { generateFullUrl } = require('../../utils/helper');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { uploadToBackblaze, deleteFromBackblaze } = require('../../utils/uploadBackblaze');
 const { findOrderById } = require('../models/orderModal');
 

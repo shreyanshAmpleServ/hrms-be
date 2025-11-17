@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
 
 const serializeTimeSheetData = (data) => ({
   employee_id: data.employee_id ? Number(data.employee_id) : null,
@@ -23,7 +22,9 @@ const serializeTimeSheetData = (data) => ({
 });
 
 const createTimeSheet = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
     const reqData = await prisma.hrms_d_time_sheet.create({
@@ -57,7 +58,9 @@ const createTimeSheet = async (data) => {
 };
 
 const findTimeSheetById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_time_sheet.findUnique({
       where: { id: parseInt(id) },
     });
@@ -75,7 +78,9 @@ const findTimeSheetById = async (id) => {
 
 // Update a time sheet
 const updateTimeSheet = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_time_sheet.update({
       where: { id: parseInt(id) },
 
@@ -103,7 +108,9 @@ const updateTimeSheet = async (id, data) => {
 };
 // Delete a time sheet
 const deleteTimeSheet = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_time_sheet.delete({
       where: { id: parseInt(id) },
     });
@@ -121,6 +128,7 @@ const deleteTimeSheet = async (id) => {
 
 // Get all time sheets
 const getAllTimeSheet = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : parseInt(page);
     size = size ? parseInt(size) : 10;

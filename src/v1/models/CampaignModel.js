@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize  before saving it
 const serializeTags = (data) => {
@@ -22,6 +21,7 @@ const parseTags = (deal) => {
 
 // Check if contactIds are valid and exist
 const validateContactsExist = async (contactIds) => {
+  const prisma = getPrisma();
   const contacts = await prisma.crms_m_contact.findMany({
     where: {
       id: {
@@ -40,8 +40,10 @@ const validateContactsExist = async (contactIds) => {
 
 // Create a new campaign
 const createCampaign = async (data) => {
+  const prisma = getPrisma();
   const { contact_ids, lead_ids, ...campaignData } = data; // Separate `contactIds` from other deal data
   try {
+    const prisma = getPrisma();
     const serializedData = serializeTags(campaignData);
 
     // Validate that all contactIds exist in the crms_m_contact table
@@ -50,7 +52,7 @@ const createCampaign = async (data) => {
     }
 
     // Use transaction for atomicity
-    const result = await prisma.$transaction(async (prisma) => {
+    const result = await prisma.$transaction(async () => {
       // Create the campaign
       const campaign = await prisma.crms_d_campaign.create({
         data: {
@@ -97,8 +99,10 @@ const createCampaign = async (data) => {
 
 // Update an existing campaign
 const updateCampaign = async (id, data) => {
+  const prisma = getPrisma();
   const { contact_ids, ...campaignData } = data; // Separate `contactIds` from other campaign data
   try {
+    const prisma = getPrisma();
     const updatedData = {
       ...campaignData,
       updatedDate: new Date(),
@@ -112,7 +116,7 @@ const updateCampaign = async (id, data) => {
     }
 
     // Use transaction for atomicity
-    const result = await prisma.$transaction(async (prisma) => {
+    const result = await prisma.$transaction(async () => {
       // Update campaign-contact mappings
       if (contact_ids && contact_ids.length) {
         // Delete existing mappings
@@ -170,7 +174,9 @@ const updateCampaign = async (id, data) => {
 
 // Find a campaign by its ID
 const findCampaignById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const campaign = await prisma.crms_d_campaign.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -286,6 +292,7 @@ const getAllCampaign = async (
 };
 
 const deleteCampaign = async (id) => {
+  const prisma = getPrisma();
   try {
     // Step 1: Delete related data from DealContacts
     await prisma.CampaignContacts.deleteMany({

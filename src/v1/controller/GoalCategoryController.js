@@ -1,6 +1,7 @@
 const GoalCategoryService = require("../services/GoalCategoryService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createGoalCategory = async (req, res, next) => {
   try {

@@ -1,4 +1,5 @@
 const dealModel = require('../models/dealModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDeal = async (data) => {
   return await dealModel.createDeal(data);

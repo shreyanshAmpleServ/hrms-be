@@ -6,6 +6,7 @@ const {
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze");
 const fs = require("fs");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLeaveApplication = async (req, res, next) => {
   try {

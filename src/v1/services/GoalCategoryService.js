@@ -1,4 +1,5 @@
 const GoalCategoryModel = require("../models/GoalCategoryModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createGoalCategory = async (data) => {
   return await GoalCategoryModel.createGoalCategory(data);

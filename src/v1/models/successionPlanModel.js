@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize succession plan data
 const serializeSuccessionPlanData = (data) => ({
@@ -35,7 +34,9 @@ const serializeSuccessionPlanData = (data) => ({
 
 // Create a new succession plan
 const createSuccessionPlan = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_succession_plan.create({
       data: {
         ...serializeSuccessionPlanData(data),
@@ -90,7 +91,9 @@ const createSuccessionPlan = async (data) => {
 
 // Find succession plan by ID
 const findSuccessionPlanById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_succession_plan.findUnique({
       where: { id: parseInt(id) },
     });
@@ -108,7 +111,9 @@ const findSuccessionPlanById = async (id) => {
 
 // Update succession plan
 const updateSuccessionPlan = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_succession_plan.update({
       where: { id: parseInt(id) },
       data: {
@@ -163,7 +168,9 @@ const updateSuccessionPlan = async (id, data) => {
 
 // Delete succession plan
 const deleteSuccessionPlan = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_succession_plan.delete({
       where: { id: parseInt(id) },
     });

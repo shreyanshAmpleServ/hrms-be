@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize arrear adjustment data
 const serializeArrearAdjustmentData = (data) => ({
@@ -14,7 +13,9 @@ const serializeArrearAdjustmentData = (data) => ({
 
 // Create a new arrear adjustment
 const createArrearAdjustment = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const serializedData = serializeArrearAdjustmentData(data);
 
     // Destructure to extract employee_id and use relation field
@@ -53,7 +54,9 @@ const createArrearAdjustment = async (data) => {
 
 // Find arrear adjustment by ID
 const findArrearAdjustmentById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_arrear_adjustments.findUnique({
       where: { id: parseInt(id) },
     });
@@ -71,7 +74,9 @@ const findArrearAdjustmentById = async (id) => {
 
 // Update arrear adjustment
 const updateArrearAdjustment = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_arrear_adjustments.update({
       where: { id: parseInt(id) },
       include: {
@@ -100,7 +105,9 @@ const updateArrearAdjustment = async (id, data) => {
 
 // Delete arrear adjustment
 const deleteArrearAdjustment = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_arrear_adjustments.delete({
       where: { id: parseInt(id) },
     });

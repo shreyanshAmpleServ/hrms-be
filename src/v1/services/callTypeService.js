@@ -1,4 +1,5 @@
 const callTypeModel = require('../models/callTypeModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCallType = async (data) => {
     return await callTypeModel.createCallType(data);

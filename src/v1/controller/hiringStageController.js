@@ -1,5 +1,6 @@
 const hiringStageService = require("../services/hiringStageService.js");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createHiringStage = async (req, res, next) => {
   try {

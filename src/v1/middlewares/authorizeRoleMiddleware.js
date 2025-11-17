@@ -1,3 +1,4 @@
+const { getPrisma } = require("../../config/prismaContext.js");
 const authorizeRole = (allowedRoles = []) => {
   return (req, res, next) => {
     const userRole = req.user?.role;

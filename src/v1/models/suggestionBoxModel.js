@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize employee suggestion data
 const serializeEmployeeSuggestion = (data) => ({
@@ -12,6 +11,7 @@ const serializeEmployeeSuggestion = (data) => ({
 
 // Create a new suggestion box
 const createSuggestionBox = async (data) => {
+  const prisma = getPrisma();
   try {
     const created = await prisma.hrms_d_employee_suggestion.create({
       data: {
@@ -37,7 +37,9 @@ const createSuggestionBox = async (data) => {
 
 // Find a suggestion box by ID
 const findSuggestionBoxById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_employee_suggestion.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -58,6 +60,7 @@ const findSuggestionBoxById = async (id) => {
 
 // Update a suggestion box
 const updateSuggestionBox = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updated = await prisma.hrms_d_employee_suggestion.update({
       where: { id: parseInt(id) },
@@ -84,7 +87,9 @@ const updateSuggestionBox = async (id, data) => {
 
 // Delete a suggestion box
 const deleteSuggestionBox = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_employee_suggestion.delete({
       where: { id: parseInt(id) },
     });
@@ -102,6 +107,7 @@ const deleteSuggestionBox = async (id) => {
 
 // Get all suggestion boxes
 const getAllSuggestionBox = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

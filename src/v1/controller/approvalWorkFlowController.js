@@ -349,10 +349,6 @@
 //         message: "request_type and requester_id are required",
 //       });
 //     }
-
-//     const { PrismaClient } = require("@prisma/client");
-//     const prisma = new PrismaClient();
-
 //     const requester = await prisma.hrms_d_employee.findUnique({
 //       where: { id: requester_id },
 //       select: {
@@ -453,6 +449,7 @@ const approvalWorkFlowService = require("../services/approvalWorkFlowService.js"
 const approvalWorkFlowModel = require("../models/approvalWorkFlowModel.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { request } = require("express");
 
 const createApprovalWorkFlow = async (req, res, next) => {
@@ -778,6 +775,7 @@ const getWorkflowSummary = async (req, res, next) => {
 };
 
 const validateWorkflow = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const { request_type, requester_id } = req.body;
 
@@ -787,10 +785,6 @@ const validateWorkflow = async (req, res, next) => {
         message: "request_type and requester_id are required",
       });
     }
-
-    const { PrismaClient } = require("@prisma/client");
-    const prisma = new PrismaClient();
-
     const requester = await prisma.hrms_d_employee.findUnique({
       where: { id: requester_id },
       select: {

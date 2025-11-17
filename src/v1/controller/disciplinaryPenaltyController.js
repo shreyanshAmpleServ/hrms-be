@@ -1,6 +1,7 @@
 const disciplinaryPenaltyService = require("../services/disciplinaryPenaltyService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDisciplinaryPenalty = async (req, res, next) => {
   try {

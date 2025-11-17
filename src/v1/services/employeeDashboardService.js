@@ -1,4 +1,5 @@
 const employeeDashboardModel = require("../controller/employeeDashboardModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const getEmployeeDashboardData = async (filterDays) => {
   return await employeeDashboardModel.getEmployeeDashboardData(filterDays);

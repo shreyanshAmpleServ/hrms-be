@@ -1,4 +1,5 @@
 const successionPlanModel = require("../models/successionPlanModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createSuccessionPlan = async (data) => {
   return await successionPlanModel.createSuccessionPlan(data);

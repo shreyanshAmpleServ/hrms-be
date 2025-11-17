@@ -1,7 +1,6 @@
 const { PrismaClient } = require("@prisma/client");
 const { evaluateConditions } = require("./conditionEvaluator");
 const { executeActions } = require("./actionExecutor");
-const prisma = new PrismaClient();
 require("./consoleLogs");
 
 async function updateLogWithRetry(logId, data, maxRetries = 3) {

@@ -2,6 +2,7 @@ const contactService = require('../services/contactService');
 const CustomError = require('../../utils/CustomError');
 const { generateFullUrl } = require('../../utils/helper');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { uploadToBackblaze } = require('../../utils/uploadBackblaze');
 const { findContactById } = require('../models/contactModel');
 

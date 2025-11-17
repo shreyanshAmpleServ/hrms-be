@@ -1,4 +1,5 @@
 const goalSheetModel = require("../models/goalSheetModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createGoalSheet = async (data) => {
   return await goalSheetModel.createGoalSheet(data);

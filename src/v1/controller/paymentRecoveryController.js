@@ -1,6 +1,7 @@
 const paymentRecoveryService = require("../services/paymentRecoveryService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPaymentRecovery = async (req, res, next) => {
   try {

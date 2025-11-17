@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Helper function to define fields returned for a user
 const getUserFields = (is_password = false) => ({
@@ -19,6 +18,7 @@ const getUserFields = (is_password = false) => ({
 
 // Common method to fetch a user with role name
 const getUserWithRole = async (userId, is_password = false) => {
+  const prisma = getPrisma();
   const user = await prisma.crms_m_vendor.findUnique({
     where: { id: userId },
     select: {
@@ -47,6 +47,7 @@ const getUserWithRole = async (userId, is_password = false) => {
 
 // Create a new Vendor
 const createVendor = async (data) => {
+  const prisma = getPrisma();
   try {
     // Create the Vendor
     const user = await prisma.crms_m_vendor.create({
@@ -80,6 +81,7 @@ const createVendor = async (data) => {
 
 // Update a Vendor
 const updateVendor = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updatedVendor = await prisma.crms_m_vendor.update({
       where: { id: parseInt(id) },
@@ -109,6 +111,7 @@ const updateVendor = async (id, data) => {
 
 // Find a user by email and include role
 const findUserByEmail = async (email) => {
+  const prisma = getPrisma();
   try {
     const user = await prisma.crms_m_vendor.findFirst({
       where: { email },
@@ -125,6 +128,7 @@ const findUserByEmail = async (email) => {
 
 // Find a user by ID and include role
 const findVendorById = async (id) => {
+  const prisma = getPrisma();
   try {
     const users = await prisma.crms_m_vendor.findUnique({
       where: { id: parseInt(id) },
@@ -159,6 +163,7 @@ const findVendorById = async (id) => {
 
 // Delete a Vendor
 const deleteVendor = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.crms_m_vendor.delete({
       where: { id: parseInt(id) },
@@ -177,6 +182,7 @@ const deleteVendor = async (id) => {
 
 // Get all users and include their roles
 const getAllVendors = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = page || 1;
     size = size || 10;

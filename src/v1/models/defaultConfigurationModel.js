@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize default configuration data
 const serializeDefaultConfig = (data) => ({
@@ -40,7 +39,9 @@ const serializeDefaultConfig = (data) => ({
 });
 
 const createDefaultConfiguration = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const reqData = await prisma.hrms_d_default_configurations.create({
       data: {
         ...serializeDefaultConfig(data),
@@ -69,7 +70,9 @@ const createDefaultConfiguration = async (data) => {
 
 // Find a default configuration by ID
 const findDefaultConfiguration = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const reqData = await prisma.hrms_d_default_configurations.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -95,7 +98,9 @@ const findDefaultConfiguration = async (id) => {
 
 // Update a default configuration
 const updateDefaultConfiguration = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const payload = {
       ...serializeDefaultConfig(data),
       updatedby: Number(data.updatedby) || 1,
@@ -127,7 +132,9 @@ const updateDefaultConfiguration = async (id, data) => {
 
 // Delete a default configuration
 const deleteDefaultConfiguration = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_d_default_configurations.delete({
       where: { id: parseInt(id) },
     });
@@ -145,7 +152,9 @@ const deleteDefaultConfiguration = async (id) => {
 
 // Get all default configurations (with optional search, pagination, date filter)
 const getAllDefaultConfiguration = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const data = await prisma.hrms_d_default_configurations.findFirst({
       include: {
         default_configuration_state: {
@@ -164,6 +173,7 @@ const getAllDefaultConfiguration = async () => {
 };
 
 const updateDefaultConfigurationModel = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const isUpdate = id && !isNaN(Number(id));
     const basePayload = serializeDefaultConfig(data);

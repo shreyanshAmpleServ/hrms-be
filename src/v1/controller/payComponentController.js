@@ -1,6 +1,7 @@
 const payComponentService = require("../services/payComponentService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPayComponent = async (req, res, next) => {
   try {

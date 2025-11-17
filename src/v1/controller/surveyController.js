@@ -1,6 +1,7 @@
 const surveyService = require("../services/surveyService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createSurvey = async (req, res, next) => {
   try {

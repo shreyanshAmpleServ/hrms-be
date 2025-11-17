@@ -1,6 +1,7 @@
 const exitInterviewService = require("../services/exitInterviewService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createExitInterview = async (req, res, next) => {
   try {

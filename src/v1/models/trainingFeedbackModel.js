@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
 
 const serializeData = (data) => {
   return {
@@ -14,7 +13,9 @@ const serializeData = (data) => {
 
 // Create a new training feedback
 const createTrainingFeedback = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const reqData = await prisma.hrms_d_training_feedback.create({
       data: {
@@ -39,7 +40,9 @@ const createTrainingFeedback = async (data) => {
 
 // Find a training feedback by ID
 const findTrainingFeedbackById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const reqData = await prisma.hrms_d_training_feedback.findUnique({
       where: { id: parseInt(id) },
     });
@@ -57,7 +60,9 @@ const findTrainingFeedbackById = async (id) => {
 
 // Update a training feedback
 const updateTrainingFeedback = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
     const updatedTrainingFeedback =
@@ -84,7 +89,9 @@ const updateTrainingFeedback = async (id, data) => {
 
 // Delete a training feedback
 const deleteTrainingFeedback = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_d_training_feedback.delete({
       where: { id: parseInt(id) },
     });
@@ -109,6 +116,7 @@ const getAllTrainingFeedback = async (
   endDate
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

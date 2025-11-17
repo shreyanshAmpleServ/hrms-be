@@ -1,6 +1,7 @@
 const overTimeSetupService = require("../services/overTimeSetupService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createOverTimeSetup = async (req, res, next) => {
   try {

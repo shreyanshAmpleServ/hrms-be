@@ -1,9 +1,5 @@
-// const { PrismaClient } = require("@prisma/client");
-// const sendEmail = require("../../utils/mailer.js");
+// // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
-
-// const prisma = new PrismaClient();
-
 // const processedRequests = new Set();
 
 // const setupNotificationMiddleware = async (
@@ -642,12 +638,8 @@
 // module.exports = { setupNotificationMiddleware };
 
 // II without channel
-// const { PrismaClient } = require("@prisma/client");
-// const sendEmail = require("../../utils/mailer.js");
+// // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
-
-// const prisma = new PrismaClient();
-
 // const templateKeyMap = {
 //   notificationSetupCreated: "notification_setup_created",
 //   notificationSetupUpdated: "notification_setup_updated",
@@ -905,12 +897,8 @@
 // module.exports = { setupNotificationMiddleware };
 
 //III.1-with diff template(Old)
-// const { PrismaClient } = require("@prisma/client");
-// const sendEmail = require("../../utils/mailer.js");
+// // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
-
-// const prisma = new PrismaClient();
-
 // const templateKeyMap = {
 //   notificationSetupCreated: "notification_setup_created",
 //   notificationSetupUpdated: "notification_setup_updated",
@@ -1466,11 +1454,9 @@
 // module.exports = { setupNotificationMiddleware };
 
 //III.2-with diff template(New)
-const { PrismaClient } = require("@prisma/client");
+const { getPrisma } = require("../../config/prismaContext.js");
 const sendEmail = require("../../utils/mailer.js");
 const { generateEmailContent } = require("../../utils/emailTemplates.js");
-
-const prisma = new PrismaClient();
 
 const templateKeyMap = {
   email: {
@@ -1534,6 +1520,7 @@ const processNotification = async (
   action
 ) => {
   try {
+    const prisma = getPrisma();
     console.log(
       `Processing notification for action_type: ${action_type}, action: ${action}`
     );
@@ -1814,6 +1801,7 @@ const sendSystemNotification = async (
   req
 ) => {
   try {
+    const prisma = getPrisma();
     const systemTemplateKey = getTemplateKeyForChannel(action, "system");
     const template = await generateEmailContent(
       systemTemplateKey,

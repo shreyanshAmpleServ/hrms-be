@@ -1,4 +1,5 @@
 const eventLogModel = require('../models/eventLogModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEventLog = async (data) => {
     return await eventLogModel.createEventLog(data);

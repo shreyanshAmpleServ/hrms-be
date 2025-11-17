@@ -1,6 +1,7 @@
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Helper function to ensure directory exists
 const ensureDir = (dir) => {

@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new contact stage
 const createContactStage = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const contactStage = await prisma.ContactStages.create({
       data: {
         name: data.name,
@@ -25,7 +26,9 @@ const createContactStage = async (data) => {
 
 // Find a contact stage by ID
 const findContactStageById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const contactStage = await prisma.ContactStages.findUnique({
       where: { id: parseInt(id) },
     });
@@ -43,7 +46,9 @@ const findContactStageById = async (id) => {
 
 // Update a contact stage
 const updateContactStage = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedContactStage = await prisma.ContactStages.update({
       where: { id: parseInt(id) },
       data: {
@@ -62,7 +67,9 @@ const updateContactStage = async (id, data) => {
 
 // Delete a contact stage
 const deleteContactStage = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.ContactStages.delete({
       where: { id: parseInt(id) },
     });
@@ -80,7 +87,9 @@ const deleteContactStage = async (id) => {
 
 // Get all contact stages
 const getAllContactStages = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const contactStages = await prisma.ContactStages.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

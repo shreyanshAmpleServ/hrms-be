@@ -1,4 +1,5 @@
 const bankModel = require("../models/BankModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createBank = async (data) => {
   return await bankModel.createBank(data);

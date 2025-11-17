@@ -1,5 +1,6 @@
 const lostReasonService = require('../services/lostReasonService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLostReason = async (req, res, next) => {
     try {

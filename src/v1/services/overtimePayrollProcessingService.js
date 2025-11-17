@@ -1,5 +1,6 @@
 const overtimePayrollProcessingModel = require("../models/overtimePayrollProcessingModel.js");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createOvertimePayrollProcessing = async (data) => {
   return await overtimePayrollProcessingModel.createOvertimePayrollProcessing(

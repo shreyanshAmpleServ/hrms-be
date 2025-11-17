@@ -1,5 +1,6 @@
 const statesService = require("../services/stateService");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createState = async (req, res, next) => {
   try {

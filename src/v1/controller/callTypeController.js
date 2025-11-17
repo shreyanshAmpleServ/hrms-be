@@ -1,5 +1,6 @@
 const callTypeService = require('../services/callTypeService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCallType = async (req, res, next) => {
     try {

@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new call type
 const createAttachment = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const callType = await prisma.crms_attachments.create({
       data: {
         ...data,
@@ -42,7 +43,9 @@ const createAttachment = async (data) => {
 
 // Find a call type by ID
 const findAttachmentById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const documents = await prisma.crms_attachments.findUnique({
       where: { id: parseInt(id) },
     });
@@ -60,7 +63,9 @@ const findAttachmentById = async (id) => {
 
 // Update a call type
 const updateAttachment = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedCallType = await prisma.crms_attachments.update({
       where: { id: parseInt(Number(id)) },
       data: {
@@ -99,7 +104,9 @@ const updateAttachment = async (id, data) => {
 
 // Delete a call type
 const deleteAttachment = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.crms_attachments.delete({
       where: { id: parseInt(id) },
     });

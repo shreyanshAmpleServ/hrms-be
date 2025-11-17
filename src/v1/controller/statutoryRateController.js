@@ -1,6 +1,7 @@
 const statutoryRateService = require("../services/statutoryRateService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createStatutoryRate = async (req, res, next) => {
   try {

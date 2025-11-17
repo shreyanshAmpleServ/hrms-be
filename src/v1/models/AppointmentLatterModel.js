@@ -1,10 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
-
-const prisma = new PrismaClient();
-
+const { getPrisma } = require("../../config/prismaContext.js");
 const serializeJobData = (data) => {
   return {
     candidate_id: Number(data.candidate_id) || null,
@@ -16,6 +13,7 @@ const serializeJobData = (data) => {
 };
 
 const createAppointmentLatter = async (data) => {
+  const prisma = getPrisma();
   try {
     await errorNotExist(
       "hrms_d_candidate_master",
@@ -68,6 +66,7 @@ const createAppointmentLatter = async (data) => {
 };
 
 const findAppointmentLatterById = async (id) => {
+  const prisma = getPrisma();
   try {
     const reqData = await prisma.hrms_d_appointment_letter.findUnique({
       where: { id: parseInt(id) },
@@ -85,6 +84,7 @@ const findAppointmentLatterById = async (id) => {
 };
 
 const updateAppointmentLatter = async (id, data) => {
+  const prisma = getPrisma();
   try {
     await errorNotExist(
       "hrms_d_candidate_master",
@@ -124,7 +124,9 @@ const updateAppointmentLatter = async (id, data) => {
 };
 
 const deleteAppointmentLatter = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_appointment_letter.delete({
       where: { id: parseInt(id) },
     });
@@ -149,6 +151,7 @@ const getAllAppointmentLatter = async (
   candidate_id
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -221,6 +224,7 @@ const getAllAppointmentLatter = async (
 };
 
 const getAppointmentLetterForPDF = async (id) => {
+  const prisma = getPrisma();
   try {
     if (!id) {
       throw new CustomError("Appointment letter ID is required", 400);
@@ -306,6 +310,7 @@ const getAppointmentLetterForPDF = async (id) => {
     if (defaultConfig?.company_signature) {
       try {
         const fetch = require("node-fetch");
+
         const signatureResponse = await fetch(defaultConfig.company_signature);
         const signatureBuffer = await signatureResponse.buffer();
         const signatureBase64 = signatureBuffer.toString("base64");
@@ -382,6 +387,7 @@ const getAllAppointmentLettersForBulkDownload = async (
   advancedFilters = {}
 ) => {
   try {
+    const prisma = getPrisma();
     const whereClause = {
       ...filters,
     };

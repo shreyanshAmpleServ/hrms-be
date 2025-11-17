@@ -4,8 +4,7 @@ const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const appraisalQueue = require("../../utils/appraisalQueue.js");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 

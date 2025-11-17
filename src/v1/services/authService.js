@@ -85,30 +85,25 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 const userModel = require("../models/userModel"); // Import the user model
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 require("dotenv").config();
 
 const jwtSecret = process.env.JWT_SECRET;
 const BCRYPT_COST = 8;
 
-const registerUser = async (
-  prisma,
-  email,
-  password,
-  fullName = null,
-  role_id
-) => {
+const registerUser = async (email, password, fullName = null, role_id) => {
   try {
     // Hash the password
     const hashedPassword = await bcrypt.hash(password, BCRYPT_COST);
 
     // Check if the user already exists in the database
-    const existingUser = await userModel.findUserByEmail(prisma, email);
+    const existingUser = await userModel.findUserByEmail(email);
     if (existingUser) {
       throw new CustomError("User already registered", 400);
     }
 
     // Create the user in the database
-    const user = await userModel.createUser(prisma, {
+    const user = await userModel.createUser({
       username: email,
       email,
       password: hashedPassword,
@@ -126,10 +121,10 @@ const registerUser = async (
   }
 };
 
-const loginUser = async (prisma, email, password) => {
+const loginUser = async (email, password) => {
   try {
     // Fetch the user from the database
-    const user = await userModel.findUserByEmail(prisma, email);
+    const user = await userModel.findUserByEmail(email);
     if (!user) throw new CustomError("User not found", 401);
 
     // Validate password

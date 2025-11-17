@@ -1,4 +1,5 @@
 const empCategoryModel = require("../models/empCategoryModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEmpCategory = async (data) => {
   return await empCategoryModel.createEmpCategory(data);

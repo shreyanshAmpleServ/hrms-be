@@ -1,4 +1,5 @@
 const requestApprovalModel = require("../models/requestApprovalModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRequestApproval = async (data) => {
   return await requestApprovalModel.createRequestApproval(data);

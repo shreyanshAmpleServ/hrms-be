@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serializer
 const serializeSettlementData = (data) => ({
@@ -43,7 +42,9 @@ const serializeSettlementData = (data) => ({
 
 //  Create
 const createFinalSettlementProcessing = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_finalsettlement_processing.create({
       data: {
         ...serializeSettlementData(data),
@@ -130,7 +131,9 @@ const getAllFinalSettlementProcessing = async (
 
 // Get By ID
 const findFinalSettlementProcessingById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_finalsettlement_processing.findUnique({
       where: { id: parseInt(id) },
     });
@@ -143,7 +146,9 @@ const findFinalSettlementProcessingById = async (id) => {
 
 // Update
 const updateFinalSettlementProcessing = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_finalsettlement_processing.update({
       where: { id: parseInt(id) },
       data: {
@@ -171,7 +176,9 @@ const updateFinalSettlementProcessing = async (id, data) => {
 
 //  Delete
 const deleteFinalSettlementProcessing = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_finalsettlement_processing.delete({
       where: { id: parseInt(id) },
     });

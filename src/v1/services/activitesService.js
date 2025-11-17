@@ -1,4 +1,5 @@
 const activitesStatusesModel = require('../models/activitiesModal');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createActivitiesStatus = async (data) => {
     return await activitesStatusesModel.createActivities(data);

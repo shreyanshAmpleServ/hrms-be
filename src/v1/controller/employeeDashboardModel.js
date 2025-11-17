@@ -1,9 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const getEmployeeDashboardData = async (filterDays) => {
+  const prisma = getPrisma();
   try {
     const { startDate, endDate } = filterDays;
     const startMoment = moment(startDate);
@@ -114,6 +114,7 @@ const getEmployeeDashboardData = async (filterDays) => {
 };
 
 const getEmployeeLeavesData = async (employeeId) => {
+  const prisma = getPrisma();
   const [leaveApplications, leaveBalance, leaveEncashments] = await Promise.all(
     [
       prisma.hrms_d_leave_application.findMany({
@@ -151,6 +152,7 @@ const getEmployeeLeavesData = async (employeeId) => {
 };
 
 const getEmployeeAttendanceSummary = async (employeeId) => {
+  const prisma = getPrisma();
   const today = moment().startOf("day");
   const now = moment();
   const weekStart = moment().startOf("isoWeek");
@@ -241,6 +243,7 @@ const getEmployeeAttendanceSummary = async (employeeId) => {
 };
 
 const getEmployeeDetails = async (employeeId) => {
+  const prisma = getPrisma();
   return await prisma.hrms_d_employee.findUnique({
     where: { id: employeeId },
     select: {
@@ -270,6 +273,7 @@ const getEmployeeDetails = async (employeeId) => {
 };
 
 const getAllUpcomingBirthdays = async (page = 1, size = 10) => {
+  const prisma = getPrisma();
   const today = moment();
   const tomorrow = moment().add(1, "day");
 

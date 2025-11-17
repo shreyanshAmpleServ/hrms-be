@@ -1,6 +1,7 @@
 const loanMasterService = require("../services/loanMasterService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLoanMaster = async (req, res, next) => {
   try {

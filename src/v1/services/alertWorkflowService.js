@@ -85,10 +85,8 @@
 // const alertWorkflowModel = require("../models/alertWorkflowModel.js");
 // const { runWorkflow } = require("../../utils/alertWorkflowRunner.js");
 // const cron = require("node-cron");
-// const { PrismaClient } = require("@prisma/client");
-// const CustomError = require("../../utils/CustomError");
+// // const CustomError = require("../../utils/CustomError");
 
-// const prisma = new PrismaClient();
 // const jobs = {};
 
 // const safeJsonParse = (data) => {
@@ -306,10 +304,9 @@
 const alertWorkflowModel = require("../models/alertWorkflowModel.js");
 const { runWorkflow } = require("../../utils/alertWorkflowRunner.js");
 const cron = require("node-cron");
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
-const prisma = new PrismaClient();
 const jobs = {};
 
 const safeJsonParse = (data) => {
@@ -406,7 +403,26 @@ const runAlertWorkflow = async (workflowId) => {
 const init = async () => {
   try {
     console.log("[info] Initializing alert workflows...");
-    const result = await alertWorkflowModel.getAlertWorkflows();
+    // For background jobs, use default database from environment
+    // If no default DB is set, skip initialization (workflows will be initialized per-request)
+    const defaultDbName = process.env.DEFAULT_DB_NAME || process.env.DB_NAME;
+    if (!defaultDbName) {
+      console.log(
+        "[warn] No DEFAULT_DB_NAME or DB_NAME set. Skipping alert workflow initialization at startup."
+      );
+      console.log(
+        "[info] Alert workflows will be initialized per-request when tenantMiddleware is applied."
+      );
+      return;
+    }
+    const result = await alertWorkflowModel.getAlertWorkflows(
+      null,
+      null,
+      null,
+      null,
+      null,
+      defaultDbName
+    );
     const workflows = result.data || result;
 
     const activeWorkflows = workflows.filter(

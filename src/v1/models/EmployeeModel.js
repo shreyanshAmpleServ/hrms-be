@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 const moment = require("moment");
 const { se } = require("date-fns/locale");
 
@@ -16,6 +15,7 @@ const handleTransactionNotification = async (
   recordId
 ) => {
   try {
+    const prisma = getPrisma();
     await prisma.$queryRaw`
       EXEC sp_hrms_transaction_notification 
       @table_name = ${tableName},
@@ -206,6 +206,7 @@ const serializeLifeEvent = (data) => {
  */
 const createLifeEvents = async (employeeId, events, createdby) => {
   if (!Array.isArray(events) || events.length === 0) return;
+  const prisma = getPrisma();
 
   const lifeEvents = await Promise.all(
     events.map((event) => {
@@ -410,6 +411,7 @@ const createLifeEvents = async (employeeId, events, createdby) => {
 const createEmployee = async (data) => {
   const { empAddressData, life_events: lifeEvents, ...employeeData } = data;
   try {
+    const prisma = getPrisma();
     if (!data.phone_number) {
       throw new CustomError(`Phone Number is required`, 400);
     }
@@ -606,6 +608,7 @@ const createEmployee = async (data) => {
 
 const updateLifeEvents = async (employeeId, events, updatedby) => {
   if (!Array.isArray(events) || events.length === 0) return;
+  const prisma = getPrisma();
 
   // Separate new and existing events
   const newEvents = events.filter((event) => !event.id);
@@ -803,6 +806,7 @@ const updateLifeEvents = async (employeeId, events, updatedby) => {
 const updateEmployee = async (id, data) => {
   const { empAddressData, life_events: lifeEvents, ...employeeData } = data;
   try {
+    const prisma = getPrisma();
     const updatedData = {
       ...employeeData,
       updatedby: data.updatedby || 1,
@@ -965,6 +969,7 @@ const updateEmployee = async (id, data) => {
  */
 const findEmployeeById = async (id) => {
   try {
+    const prisma = getPrisma();
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -1056,6 +1061,7 @@ const getAllEmployee = async (
   status
 ) => {
   try {
+    const prisma = getPrisma();
     if (!page || page === 0) {
       page = 1;
     }
@@ -1171,6 +1177,7 @@ const getAllEmployee = async (
  */
 const employeeOptions = async () => {
   try {
+    const prisma = getPrisma();
     const employees = await prisma.hrms_d_employee.findMany({
       where: { status: "Active" },
       select: {
@@ -1250,6 +1257,7 @@ const employeeOptions = async () => {
 
 const deleteEmployee = async (id) => {
   try {
+    const prisma = getPrisma();
     const employeeId = parseInt(id);
 
     await prisma.$transaction(async (tx) => {

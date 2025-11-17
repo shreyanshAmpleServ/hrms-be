@@ -1,6 +1,7 @@
 const wpsFileLogService = require('../services/wpsFileLogService');
 const CustomError = require('../../utils/CustomError');
 const moment = require('moment');
+const { getPrisma } = require("../../config/prismaContext.js");
 const { uploadToBackblaze, deleteFromBackblaze } = require('../../utils/uploadBackblaze');
 
 const createWPSFile = async (req, res, next) => {

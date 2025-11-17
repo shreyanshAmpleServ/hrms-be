@@ -1,4 +1,5 @@
 const recognitionAwardModel = require("../models/recognitionAwardModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRecognitionAward = async (data) => {
   return await recognitionAwardModel.createRecognitionAward(data);

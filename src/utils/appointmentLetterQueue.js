@@ -292,7 +292,6 @@ const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
 const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
 const appointmentLatterModel = require("../v1/models/AppointmentLatterModel.js");
 const { generateAppraisalPDF } = require("../utils/appraisalPDF");
 

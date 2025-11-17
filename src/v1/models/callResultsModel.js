@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new call result
 const createCallResult = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callResult = await prisma.crms_m_callresult.create({
       data: {
         name: data.name,
@@ -22,7 +23,9 @@ const createCallResult = async (data) => {
 
 // Find a call result by ID
 const findCallResultById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callResult = await prisma.crms_m_callresult.findUnique({
       where: { id: parseInt(id) },
     });
@@ -40,7 +43,9 @@ const findCallResultById = async (id) => {
 
 // Update a call result
 const updateCallResult = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedCallResult = await prisma.crms_m_callresult.update({
       where: { id: parseInt(id) },
       data: {
@@ -56,7 +61,9 @@ const updateCallResult = async (id, data) => {
 
 // Delete a call result
 const deleteCallResult = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.crms_m_callresult.delete({
       where: { id: parseInt(id) },
     });
@@ -74,7 +81,9 @@ const deleteCallResult = async (id) => {
 
 // Get all call results
 const getAllCallResults = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const callStatuses = await prisma.crms_m_callresult.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

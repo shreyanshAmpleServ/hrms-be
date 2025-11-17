@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize loan cash payment data
 const serializeLoanCashPaymentData = (data) => ({
@@ -14,7 +13,9 @@ const serializeLoanCashPaymentData = (data) => ({
 
 // Create a new loan cash payment
 const createLoanCashPayement = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_loan_cash_payment.create({
       data: {
         ...serializeLoanCashPaymentData(data),
@@ -36,7 +37,9 @@ const createLoanCashPayement = async (data) => {
 
 // Find loan cash payment by ID
 const findLoanCashPayement = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_loan_cash_payment.findUnique({
       where: { id: parseInt(id) },
     });
@@ -54,7 +57,9 @@ const findLoanCashPayement = async (id) => {
 
 // Update loan cash payment
 const updateLoanCashPayement = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_loan_cash_payment.update({
       where: { id: parseInt(id) },
       data: {
@@ -77,7 +82,9 @@ const updateLoanCashPayement = async (id, data) => {
 
 // Delete loan cash payment
 const deleteLoanCashPayement = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_loan_cash_payment.delete({
       where: { id: parseInt(id) },
     });

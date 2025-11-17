@@ -6,8 +6,8 @@ const path = require("path");
 const fs = require("fs");
 const { v4: uuidv4 } = require("uuid");
 const offerLetterQueue = require("../../utils/offerLetterQueue");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
+
 const createOfferLetter = async (req, res, next) => {
   try {
     const data = {
@@ -277,6 +277,7 @@ const downloadOfferLetterPDF = async (req, res, next) => {
 // };
 
 const bulkDownloadOfferLetters = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const {
       candidate_id_from,

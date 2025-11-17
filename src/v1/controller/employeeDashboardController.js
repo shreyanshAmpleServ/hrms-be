@@ -1,5 +1,6 @@
 const employeeDashboardService = require("../services/employeeDashboardService.js");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { success } = require("zod/v4");
 
 const getEmployeeDashboardData = async (req, res, next) => {

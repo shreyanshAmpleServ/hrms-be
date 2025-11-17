@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize input data
 const serializeOvertimeSetupData = (data) => ({
@@ -17,7 +16,9 @@ const serializeOvertimeSetupData = (data) => ({
 });
 // CREATE
 const createOverTimeSetup = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_overtime_setup.create({
       data: {
         ...serializeOvertimeSetupData(data),
@@ -37,6 +38,7 @@ const createOverTimeSetup = async (data) => {
 
 // READ ALL with pagination + search
 const getAllOverTimeSetup = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -87,7 +89,9 @@ const getAllOverTimeSetup = async (search, page, size, startDate, endDate) => {
 
 // READ by ID
 const findOverTimeSetupById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_overtime_setup.findUnique({
       where: { id: parseInt(id) },
     });
@@ -103,7 +107,9 @@ const findOverTimeSetupById = async (id) => {
 
 // UPDATE
 const updateOverTimeSetup = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updated = await prisma.hrms_m_overtime_setup.update({
       where: { id: parseInt(id) },
       data: {
@@ -123,7 +129,9 @@ const updateOverTimeSetup = async (id, data) => {
 
 // DELETE
 const deleteOverTimeSetup = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_overtime_setup.delete({
       where: { id: parseInt(id) },
     });

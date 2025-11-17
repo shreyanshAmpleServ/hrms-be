@@ -1,16 +1,11 @@
+const { getPrisma } = require("../../config/prismaContext.js");
 const { registerUser, loginUser } = require("../services/authService");
 
 const register = async (req, res, next) => {
   try {
     const { email, password, full_name = null, role_id } = req.body;
 
-    const user = await registerUser(
-      req.prisma,
-      email,
-      password,
-      full_name,
-      role_id
-    );
+    const user = await registerUser(email, password, full_name, role_id);
     res.status(201).success("User registered successfully", user);
   } catch (error) {
     next(error);
@@ -21,7 +16,7 @@ const login = async (req, res, next) => {
   try {
     const { email, password } = req.body;
     console.log("Login", email, password);
-    const data = await loginUser(req.prisma, email, password);
+    const data = await loginUser(email, password);
 
     // Set token in HTTP-Only cookie
     res.cookie("authToken", data.token, {

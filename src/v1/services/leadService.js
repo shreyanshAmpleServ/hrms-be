@@ -1,4 +1,5 @@
 const leadsModel = require('../models/leadModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLead = async (data) => {
   return await leadsModel.createLead(data);

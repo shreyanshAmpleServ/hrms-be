@@ -3,6 +3,7 @@ const CustomError = require('../../utils/CustomError');
 const moment = require("moment");
 const { uploadToBackblaze, deleteFromBackblaze } = require('../../utils/uploadBackblaze');
 const productModel = require('../models/productModal');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createProduct = async (req, res, next) => {
     try {

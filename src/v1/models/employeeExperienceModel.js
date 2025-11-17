@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeEmployeeExperienceForUpdate = (data) => ({
   company_name: data.company_name || "",
@@ -21,6 +20,7 @@ const serializeEmployeeExperience = (data) => ({
 // Create a new employee experience
 const createEmployeeExperience = async (data) => {
   try {
+    const prisma = getPrisma();
     const created = await prisma.hrms_employee_d_experiences.create({
       data: {
         ...serializeEmployeeExperience(data),
@@ -46,6 +46,7 @@ const createEmployeeExperience = async (data) => {
 // Find an employee experience by ID
 const findEmployeeExperienceById = async (id) => {
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_employee_d_experiences.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -67,6 +68,7 @@ const findEmployeeExperienceById = async (id) => {
 // Update an employee experience
 const updateEmployeeExperience = async (employeeId, data) => {
   try {
+    const prisma = getPrisma();
     const inputExperiences = data.experiences || [];
 
     // Separate new and existing experiences
@@ -147,6 +149,7 @@ const updateEmployeeExperience = async (employeeId, data) => {
 // Delete an employee experience
 const deleteEmployeeExperience = async (id) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_employee_d_experiences.delete({
       where: { id: parseInt(id) },
     });
@@ -170,6 +173,7 @@ const getAllEmployeeExperience = async (
   endDate
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

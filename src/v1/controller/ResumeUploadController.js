@@ -1,6 +1,7 @@
 const ResumeUploadService = require("../services/ResumeUploadService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const {
   uploadToBackblaze,
   deleteFromBackblaze,

@@ -1,4 +1,5 @@
 const moduleModel = require("../models/ModuleModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createModuleRelatedTo = async (data) => {
   return await moduleModel.createModuleRelatedTo(data);

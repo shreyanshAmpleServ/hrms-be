@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
 
 const serializeData = (data) => {
   return {
@@ -15,7 +14,9 @@ const serializeData = (data) => {
 
 // Create a new event log
 const createEventLog = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     if (!data.event_type) {
       throw new CustomError(`Event type is required`, 400);
     }
@@ -58,7 +59,9 @@ const createEventLog = async (data) => {
 
 // Find a event log by ID
 const findEventLogById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_work_life_event.findUnique({
       where: { id: parseInt(id) },
     });
@@ -76,7 +79,9 @@ const findEventLogById = async (id) => {
 
 // Update a event log
 const updateEventLog = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     await errorNotExist(
       "hrms_m_work_life_event_type",
@@ -115,7 +120,9 @@ const updateEventLog = async (id, data) => {
 
 // Delete a event log
 const deleteEventLog = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_work_life_event.delete({
       where: { id: parseInt(id) },
     });
@@ -133,6 +140,7 @@ const deleteEventLog = async (id) => {
 
 // Get all event log
 const getAllEventLog = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

@@ -1,31 +1,34 @@
-const { getPrismaClient } = require("../../config/db.js");
+const { getPrismaClient, setPrisma } = require("../../config/prismaContext.js");
 const logger = require("../../Comman/logger");
 
+/**
+ * Dynamic Tenant Database Middleware
+ *
+ * Extracts database name from request headers and sets up Prisma client:
+ * - x-tenant-db (required): Database name
+ *
+ * The Prisma client is stored in async context and can be accessed
+ * globally using getPrisma() from prismaContext.js
+ */
 const tenantMiddleware = async (req, res, next) => {
   try {
-    console.log(" Tenant Middleware Triggered");
-    console.log(" Path:", req.path);
-    console.log(" URL:", req.url);
-    console.log(" Method:", req.method);
-    console.log(" Headers:", JSON.stringify(req.headers, null, 2));
-
+    // Extract database name from headers
     const dbName =
       req.headers["x-tenant-db"] ||
       req.headers["x-database-name"] ||
       req.body?.dbName ||
       req.query?.dbName;
 
-    console.log("Database Name Extracted:", dbName);
-
     if (!dbName) {
       logger.warn("Missing tenant database identifier in request");
       return res.status(400).json({
         success: false,
         message:
-          "Database name (tenant identifier) is required. Please provide 'x-tenant-db' header or 'dbName' parameter.",
+          "Database name (tenant identifier) is required. Please provide 'x-tenant-db' header.",
       });
     }
 
+    // Validate database name format
     if (!/^[a-zA-Z0-9_-]+$/.test(dbName)) {
       logger.warn(`Invalid database name format attempted: ${dbName}`);
       return res.status(400).json({
@@ -35,21 +38,29 @@ const tenantMiddleware = async (req, res, next) => {
       });
     }
 
-    console.log("Database name validated");
-
     try {
-      req.prisma = getPrismaClient(dbName);
+      // Get or create Prisma client for this database
+      const prisma = getPrismaClient(dbName);
+
+      // Set it in async context for global access
+      setPrisma(prisma);
+
+      // Also attach to request for backward compatibility
+      req.prisma = prisma;
       req.tenantDb = dbName;
-      console.log("Prisma client attached successfully");
-      console.log("req.prisma exists:", !!req.prisma);
+
+      logger.info(
+        `Tenant database accessed: ${dbName} | Endpoint: ${req.method} ${req.path}`
+      );
     } catch (dbError) {
       console.error("Error getting Prisma client:", dbError);
+      logger.error("Database connection error:", {
+        error: dbError.message,
+        dbName: dbName,
+        path: req.path,
+      });
       throw dbError;
     }
-
-    logger.info(
-      `Tenant database accessed: ${dbName} | Endpoint: ${req.method} ${req.path}`
-    );
 
     next();
   } catch (error) {

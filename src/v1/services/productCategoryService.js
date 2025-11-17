@@ -1,4 +1,5 @@
 const productCategoryModel = require('../models/ProductCategoryModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createProductCategory = async (data) => {
     return await productCategoryModel.createProductCategory(data);

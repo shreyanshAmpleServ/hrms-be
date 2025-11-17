@@ -2,6 +2,7 @@ const trainingSessionService = require("../services/trainingSessionService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
 const fs = require("fs");
+const { getPrisma } = require("../../config/prismaContext.js");
 const fsPromises = require("fs").promises;
 const { uploadToBackblaze } = require("../../utils/uploadBackblaze.js");
 const { log } = require("console");

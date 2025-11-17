@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeData = (data) => {
   return {
@@ -12,7 +11,9 @@ const serializeData = (data) => {
 
 // Create a new loan type
 const createLoanType = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_loan_type.create({
       data: {
         ...serializeData(data),
@@ -30,7 +31,9 @@ const createLoanType = async (data) => {
 
 // Find a loan type by ID
 const findLoanTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_loan_type.findUnique({
       where: { id: parseInt(id) },
     });
@@ -48,7 +51,9 @@ const findLoanTypeById = async (id) => {
 
 // Update a loan type
 const updateLoanType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedLoanType = await prisma.hrms_m_loan_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -65,7 +70,9 @@ const updateLoanType = async (id, data) => {
 
 // Delete a loan type
 const deleteLoanType = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_loan_type.delete({
       where: { id: parseInt(id) },
     });

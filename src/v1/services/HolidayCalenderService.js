@@ -1,4 +1,5 @@
 const HolidayCalenderModel = require("../models/HolidayCalenderModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createHoliday = async (data) => {
   return await HolidayCalenderModel.createHoliday(data);

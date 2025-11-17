@@ -1,4 +1,5 @@
 const wpsFileLogModel = require("../models/wpsFileLogModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createWPSFile = async (data) => {
     return await wpsFileLogModel.createWPSFile(data);

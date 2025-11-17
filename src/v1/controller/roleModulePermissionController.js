@@ -1,5 +1,6 @@
 const permisssionService = require('../services/roleModulePermissionService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 const { generateFullUrl } = require('../../utils/helper');
 
 const formatContact = {

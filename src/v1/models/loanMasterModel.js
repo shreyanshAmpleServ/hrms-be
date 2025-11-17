@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeLoanMasterData = (data) => ({
   loan_code: data.loan_code || null,
@@ -20,7 +19,9 @@ const serializeLoanMasterData = (data) => ({
 
 // Create
 const createLoanMaster = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_loan_master.create({
       data: {
         ...serializeLoanMasterData({
@@ -61,7 +62,9 @@ const createLoanMaster = async (data) => {
 
 // Get by ID
 const findLoanMasterById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_loan_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -77,7 +80,9 @@ const findLoanMasterById = async (id) => {
 
 // Update
 const updateLoanMaster = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updated = await prisma.hrms_m_loan_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -109,7 +114,9 @@ const updateLoanMaster = async (id, data) => {
 
 // Delete
 const deleteLoanMaster = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_loan_master.delete({
       where: { id: parseInt(id) },
     });
@@ -127,6 +134,7 @@ const deleteLoanMaster = async (id) => {
 
 // Get all with search + pagination
 const getAllLoanMaster = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

@@ -1,4 +1,5 @@
 const permissionsModel = require('../models/roleModulePermissionModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPermission = async (data) => {
   return await permissionsModel.createPermission(data);

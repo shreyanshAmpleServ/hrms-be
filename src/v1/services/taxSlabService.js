@@ -1,4 +1,5 @@
 const taxSlabModal = require("../models/taxSlabModal");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTaxSlab = async (data) => {
   return await taxSlabModal.createTaxSlab(data);

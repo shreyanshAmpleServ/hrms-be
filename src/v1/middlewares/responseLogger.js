@@ -1,3 +1,4 @@
+const { getPrisma } = require("../../config/prismaContext.js");
 // src/middleware/responseLogger.js
 const { logActivity } = require("../utils/ActivityLogger");
 

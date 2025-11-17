@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize timesheet task data
 const serializeTimesheetTaskData = (data) => ({
@@ -15,7 +14,9 @@ const serializeTimesheetTaskData = (data) => ({
 
 // Create a new timesheet task
 const createTimesheetTask = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_timesheet_task.create({
       data: {
         ...serializeTimesheetTaskData(data),
@@ -39,7 +40,9 @@ const createTimesheetTask = async (data) => {
 
 // Find timesheet task by ID
 const findTimesheetTaskById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_timesheet_task.findUnique({
       where: { id: parseInt(id) },
     });
@@ -57,7 +60,9 @@ const findTimesheetTaskById = async (id) => {
 
 // Update timesheet task
 const updateTimesheetTask = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_m_timesheet_task.update({
       where: { id: parseInt(id) },
       include: {
@@ -81,7 +86,9 @@ const updateTimesheetTask = async (id, data) => {
 
 // Delete timesheet task
 const deleteTimesheetTask = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_timesheet_task.delete({
       where: { id: parseInt(id) },
     });
@@ -99,6 +106,7 @@ const deleteTimesheetTask = async (id) => {
 
 // Get all timesheet tasks with pagination and search
 const getAllTimesheetTask = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

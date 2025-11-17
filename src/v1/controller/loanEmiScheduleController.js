@@ -1,6 +1,7 @@
 const loanEmiScheduleService = require("../services/loanEmiScheduleService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLoanEmiSchedule = async (req, res, next) => {
   try {

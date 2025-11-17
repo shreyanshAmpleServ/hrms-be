@@ -1,4 +1,5 @@
 const workEventTypeModel = require("../models/eventTypeModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createWorkEventType = async (data) => {
   return await workEventTypeModel.createWorkEventType(data);

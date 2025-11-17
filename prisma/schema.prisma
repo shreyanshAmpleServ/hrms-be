@@ -2471,7 +2471,7 @@ model hrms_m_projects {
   updatedby                           Int?
   log_inst                            Int?
   ValidFrom                           DateTime                                        @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_pr__Valid__670A40DB")
-  ValidTo                             DateTime                                        @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_pr__Valid__67FE6514")
+  ValidTo                             DateTime                                        @default(dbgenerated("CONVERT(DATETIME2, '9999-12-31 23:59:59.9999999', 120)"), map: "DF__hrms_m_pr__Valid__67FE6514")
   is_active                           String?                                         @default("Y", map: "DF__hrms_m_pr__is_ac__69E6AD86") @db.Char(1)
   pay_component_line_project          hrms_d_employee_pay_component_assignment_line[]
   employee_payroll_adjustment_project hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentProject")

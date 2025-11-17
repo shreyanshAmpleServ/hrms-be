@@ -1,4 +1,5 @@
 const applicationSourceModel = require("../models/applicationSourceModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createApplicationSource = async (data) => {
   return await applicationSourceModel.createApplicationSource(data);

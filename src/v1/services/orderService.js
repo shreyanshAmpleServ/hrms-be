@@ -1,4 +1,5 @@
 const orderModal = require('../models/orderModal');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createOrder = async (orderData,orderItemsData) => {
     return await orderModal.createOrder(orderData,orderItemsData);

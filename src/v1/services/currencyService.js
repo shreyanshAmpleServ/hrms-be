@@ -1,4 +1,5 @@
 const currencyModel = require("../models/currencyModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCurrencyService = async (data) => {
   return await currencyModel.createCurrency(data);

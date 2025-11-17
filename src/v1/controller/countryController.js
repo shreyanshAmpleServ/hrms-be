@@ -1,5 +1,6 @@
 const countryService = require("../services/countryService");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCountry = async (req, res, next) => {
   try {

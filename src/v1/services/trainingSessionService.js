@@ -1,4 +1,5 @@
 const trainingSessionModel = require("../models/trainingSessionModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Service to create a training session
 const createTrainingSession = async (data) => {

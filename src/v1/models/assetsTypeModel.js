@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAssetsType = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const finalData = await prisma.hrms_m_asset_type.create({
       data: {
         asset_type_name: data.asset_type_name || "",
@@ -25,7 +26,9 @@ const createAssetsType = async (data) => {
 };
 
 const findAssetsTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const data = await prisma.hrms_m_asset_type.findUnique({
       where: { id: parseInt(id) },
     });
@@ -43,7 +46,9 @@ const findAssetsTypeById = async (id) => {
 };
 
 const updateAssetsType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_asset_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -58,7 +63,9 @@ const updateAssetsType = async (id, data) => {
 };
 
 const deleteAssetsType = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_m_asset_type.delete({
       where: { id: parseInt(id) },
     });
@@ -83,6 +90,7 @@ const getAllAssetsType = async (
   is_active
 ) => {
   try {
+    const prisma = getPrisma();
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

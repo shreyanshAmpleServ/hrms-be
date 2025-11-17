@@ -1,4 +1,5 @@
 const surveyModel = require("../models/surveyModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createSurvey = async (data) => {
   return await surveyModel.createSurvey(data);

@@ -1,4 +1,5 @@
 const callResultsModel = require('../models/callResultsModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCallResult = async (data) => {
     return await callResultsModel.createCallResult(data);

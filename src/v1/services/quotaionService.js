@@ -1,4 +1,5 @@
 const quotationModal = require('../models/quotationModal');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createQuotation = async (orderData,orderItemsData) => {
     return await quotationModal.createQuotation(orderData,orderItemsData);

@@ -1,4 +1,5 @@
 const appraisalModel = require("../models/AppraisalModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAppraisalEntry = async (data) => {
   return await appraisalModel.createAppraisalEntry(data);

@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDisciplinaryPenalty = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_disciplinary_penalty.create({
       data: {
         penalty_type: data.penalty_type || "",
@@ -27,7 +28,9 @@ const createDisciplinaryPenalty = async (data) => {
 };
 
 const findDisciplinaryPenaltyById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_disciplinary_penalty.findUnique({
       where: { id: parseInt(id) },
     });
@@ -45,7 +48,9 @@ const findDisciplinaryPenaltyById = async (id) => {
 };
 
 const updateDisciplinaryPenalty = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_disciplinary_penalty.update({
       where: { id: parseInt(id) },
       data: {
@@ -63,7 +68,9 @@ const updateDisciplinaryPenalty = async (id, data) => {
 };
 
 const deleteDisciplinaryPenalty = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_disciplinary_penalty.delete({
       where: { id: parseInt(id) },
     });

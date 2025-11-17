@@ -1,4 +1,5 @@
 const finalSettlementProcessingModel = require("../models/finalSettlementProcessingModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createFinalSettlementProcessing = async (data) => {
   return await finalSettlementProcessingModel.createFinalSettlementProcessing(

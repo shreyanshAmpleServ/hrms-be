@@ -1,12 +1,13 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new Order
 const createOrder = async (orderData, orderItemsData) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     console.log("Modal of Create Order : ", orderData);
-    const result = await prisma.$transaction(async (prisma) => {
+    const result = await prisma.$transaction(async () => {
       // Step 1: Create the Order
       const createdOrder = await prisma.crms_d_orders.create({
         data: {
@@ -67,8 +68,10 @@ const createOrder = async (orderData, orderItemsData) => {
 };
 
 const updateOrder = async (orderId, orderData, orderItemsData) => {
+  const prisma = getPrisma();
   try {
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    const result = await prisma.$transaction(async () => {
       const updatedOrder = await prisma.crms_d_orders.update({
         where: { id: Number(orderId) },
         data: {
@@ -142,7 +145,9 @@ const updateOrder = async (orderId, orderData, orderItemsData) => {
 
 // Find a Order by ID
 const findOrderById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const users = await prisma.crms_d_orders.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -177,8 +182,10 @@ const findOrderById = async (id) => {
 
 // Delete a Order
 const deleteOrder = async (orderId) => {
+  const prisma = getPrisma();
   try {
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    const result = await prisma.$transaction(async () => {
       // Delete Order Items first
       await prisma.crms_d_order_items.deleteMany({
         where: { parent_id: Number(orderId) },
@@ -200,6 +207,7 @@ const deleteOrder = async (orderId) => {
 };
 
 const getAllOrder = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = page || 1;
     size = size || 10;
@@ -285,7 +293,9 @@ const getAllOrder = async (search, page, size, startDate, endDate) => {
 
 // Get Sales Type
 const getSalesType = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const notes = await prisma.crms_d_sales_types.findMany();
     return notes;
   } catch (error) {
@@ -294,7 +304,9 @@ const getSalesType = async () => {
 };
 // Generate Order Code
 const generateOrderCode = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const latestOrder = await prisma.crms_d_orders.findFirst({
       orderBy: { id: "desc" },
     });

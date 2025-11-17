@@ -76,9 +76,6 @@
 // module.exports = { generateEmailContent, formatRequestType, renderDetailsHtml };
 
 const { PrismaClient } = require("@prisma/client");
-
-const prisma = new PrismaClient();
-
 const formatRequestType = (type) =>
   type?.replace(/_/g, " ").replace(/\b\w/g, (c) => c.toUpperCase()) ?? "";
 

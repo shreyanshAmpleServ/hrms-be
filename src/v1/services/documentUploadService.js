@@ -1,4 +1,5 @@
 const documentUploadModel = require("../models/documentUploadModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDocument = async (data) => {
   return await documentUploadModel.createDocumentUpload(data);

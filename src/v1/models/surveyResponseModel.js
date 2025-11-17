@@ -3,10 +3,9 @@
  * @module surveyResponseModel
  */
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { z } = require("zod");
-const prisma = new PrismaClient();
 
 /**
  * Zod schema for validating survey response data
@@ -58,7 +57,9 @@ const serializeSurveyResponse = (data) => {
  * @throws {CustomError} If validation fails or database error occurs
  */
 const createSurveyResponse = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_survey_response.create({
       data: {
         ...serializeSurveyResponse(data),
@@ -92,7 +93,9 @@ const createSurveyResponse = async (data) => {
  * @throws {CustomError} If survey response not found or database error occurs
  */
 const findSurveyResponseById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_survey_response.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -122,7 +125,9 @@ const findSurveyResponseById = async (id) => {
  * @throws {CustomError} If validation fails or database error occurs
  */
 const updateSurveyResponse = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const payload = {
       ...serializeSurveyResponse(data),
       updatedby: Number(data.updatedby) || 1,
@@ -160,7 +165,9 @@ const updateSurveyResponse = async (id, data) => {
  * @throws {CustomError} If database error occurs
  */
 const deleteSurveyResponse = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_survey_response.delete({
       where: { id: parseInt(id) },
     });

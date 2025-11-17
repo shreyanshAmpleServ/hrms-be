@@ -3,6 +3,7 @@ const { generateContractPDF } = require("../../utils/contractUtils");
 const fs = require("fs");
 const path = require("path");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEmploymentContract = async (data) => {
   return await EmploymentContractModel.createEmploymentContract(data);

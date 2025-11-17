@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { includes } = require("zod/v4");
-const prisma = new PrismaClient();
 
 // Helper to serialize cost center data
 const serializeCostCenterData = (data) => ({
@@ -15,7 +14,9 @@ const serializeCostCenterData = (data) => ({
 
 // Create Cost Center
 const createCostCenter = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_costcenters.create({
       data: {
         ...serializeCostCenterData(data),
@@ -149,7 +150,9 @@ const getAllCostCenter = async (
 };
 
 const findCostCenterById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_costcenters.findUnique({
       where: { id: parseInt(id) },
     });
@@ -168,7 +171,9 @@ const findCostCenterById = async (id) => {
 };
 
 const updateCostCenter = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_costcenters.update({
       where: { id: parseInt(id) },
       data: {
@@ -185,7 +190,9 @@ const updateCostCenter = async (id, data) => {
 
 // Delete Cost Center
 const deleteCostCenter = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_costcenters.delete({
       where: { id: parseInt(id) },
     });

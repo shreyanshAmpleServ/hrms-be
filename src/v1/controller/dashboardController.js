@@ -1,5 +1,6 @@
 const dashboardService = require("../services/dashboardService");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { success } = require("zod/v4");
 
 const getDealById = async (req, res, next) => {

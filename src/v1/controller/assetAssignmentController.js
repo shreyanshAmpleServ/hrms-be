@@ -1,6 +1,7 @@
 const assetAssignmentService = require("../services/assetAssignmentService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAssetAssignment = async (req, res, next) => {
   try {

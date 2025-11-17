@@ -142,6 +142,7 @@ const {
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
 const fs = require("fs");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTravelExpense = async (req, res, next) => {
   try {

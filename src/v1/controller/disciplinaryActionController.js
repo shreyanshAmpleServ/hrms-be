@@ -1,6 +1,7 @@
 const disciplinaryActionService = require("../services/disciplinaryActionService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Controller on create a new disciplinary action
 const createDisciplinaryAction = async (req, res, next) => {

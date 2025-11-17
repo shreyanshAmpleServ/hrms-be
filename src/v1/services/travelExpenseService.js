@@ -1,4 +1,5 @@
 const travelExpenseModel = require("../models/travelExpenseModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 const createTravelExpense = async (data) => {
   return await travelExpenseModel.createTravelExpense(data);
 };

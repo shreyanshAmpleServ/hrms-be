@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize/parse logic for any complex fields (if needed in the future)
 const serializeData = (data) => {
@@ -14,7 +13,9 @@ const parseData = (company) => {
 };
 
 const createCompany = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const existingCompany = await prisma.Company.findFirst({
       where: {
         OR: [
@@ -38,6 +39,7 @@ const createCompany = async (data) => {
 };
 
 const findCompanyById = async (id) => {
+  const prisma = getPrisma();
   try {
     const company = await prisma.Company.findUnique({
       where: { id: parseInt(id) },
@@ -49,6 +51,7 @@ const findCompanyById = async (id) => {
 };
 
 const findCompanyByEmail = async (email) => {
+  const prisma = getPrisma();
   try {
     const company = await prisma.Company.findFirst({
       where: { email },
@@ -60,6 +63,7 @@ const findCompanyByEmail = async (email) => {
 };
 
 const updateCompany = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updatedData = {
       ...data,
@@ -77,6 +81,7 @@ const updateCompany = async (id, data) => {
 };
 
 const deleteCompany = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.Company.delete({
       where: { id: parseInt(id) },
@@ -94,7 +99,9 @@ const deleteCompany = async (id) => {
 };
 
 const getAllCompanies = async (page, size, search, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

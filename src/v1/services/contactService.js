@@ -1,4 +1,5 @@
 const contactModel = require('../models/contactModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createContact = async (data) => {
   return await contactModel.createContact(data);

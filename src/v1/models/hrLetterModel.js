@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize incoming data
 const serializeHRLetter = (data) => ({
@@ -17,7 +16,9 @@ const serializeHRLetter = (data) => ({
 
 //  Create HR Letter
 const createhrLetter = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_hr_letter.create({
       data: {
         ...serializeHRLetter(data),
@@ -47,7 +48,9 @@ const createhrLetter = async (data) => {
 
 // Get by ID
 const gethrLetterById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_hr_letter.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -73,7 +76,9 @@ const gethrLetterById = async (id) => {
 
 // Update HR letter
 const updatehrLetter = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_hr_letter.update({
       where: { id: parseInt(id) },
       data: {
@@ -103,7 +108,9 @@ const updatehrLetter = async (id, data) => {
 
 //  Delete HR Letter
 const deletehrLetter = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_hr_letter.delete({
       where: { id: parseInt(id) },
     });
@@ -199,6 +206,7 @@ const getAllhrLetter = async (
 };
 
 const updatehrLetterStatus = async () => {
+  const prisma = getPrisma();
   try {
     const hrLetterId = parseInt(id);
     console.log("Hr letter ID: ", hrLetterId);

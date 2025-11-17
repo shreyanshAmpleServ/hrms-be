@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 const sendEmail = require("../../utils/mailer.js");
 const emailTemplates = require("../../utils/emailTemplates.js");
 const getRequestDetailsByType = require("../../utils/getDetails.js");
@@ -160,6 +159,7 @@ const getWorkflowForRequest = async (
   requester_designation_id
 ) => {
   try {
+    const prisma = getPrisma();
     let workflowSteps;
     let workflowType = "NONE";
 
@@ -509,6 +509,7 @@ const getWorkflowForRequest = async (
 // };
 
 const createRequest = async (data) => {
+  const prisma = getPrisma();
   const { request_type, ...parentData } = data;
 
   try {
@@ -736,7 +737,9 @@ const createRequest = async (data) => {
 };
 
 const updateRequests = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const { children = [], ...parentData } = data;
 
     const existing = await prisma.hrms_d_requests.findUnique({
@@ -847,6 +850,7 @@ const updateRequests = async (id, data) => {
 };
 
 const deleteRequests = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.hrms_d_requests_approval.deleteMany({
       where: { request_id: parseInt(id) },
@@ -964,7 +968,9 @@ const getAllRequests = async (
 };
 
 const findRequests = async (request_id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_requests.findUnique({
       where: { request_id: parseInt(request_id) },
     });
@@ -978,7 +984,9 @@ const findRequests = async (request_id) => {
 };
 
 const findRequestByRequestTypeAndReferenceId = async (request) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_requests.findFirst({
       where: {
         request_type: request.request_type,
@@ -1006,6 +1014,7 @@ const findRequestByRequestUsers = async (
   endDate,
   overall_status
 ) => {
+  const prisma = getPrisma();
   page = !page || page == 0 ? 1 : page;
   size = size || 10;
   const skip = (page - 1) * size || 0;
@@ -1048,6 +1057,7 @@ const findRequestByRequestUsers = async (
   }
 
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_requests.findMany({
       where: filters,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
@@ -1579,6 +1589,7 @@ const findRequestByRequestUsers = async (
           // Parse the request_data to get kpi_id
           let kpiId = referenceId;
           try {
+            const prisma = getPrisma();
             const requestData = JSON.parse(request.request_data);
             kpiId = requestData.kpi_id || referenceId;
           } catch (e) {
@@ -1709,6 +1720,13 @@ const findRequestByRequestUsers = async (
       totalCount: filteredData.length,
     };
   } catch (error) {
+    // Handle specific Prisma table not found errors
+    if (error.message && error.message.includes("does not exist")) {
+      throw new CustomError(
+        `Database table not found. Please ensure the database schema is properly migrated. Error: ${error.message}`,
+        503
+      );
+    }
     throw new CustomError(`${error.message}`, 503);
   }
 };
@@ -1721,6 +1739,7 @@ const takeActionOnRequest = async ({
   remarks,
   stage_name,
 }) => {
+  const prisma = getPrisma();
   console.log(stage_name, "stage_name");
 
   try {
@@ -2123,7 +2142,6 @@ const takeActionOnRequest = async ({
             }
           }
 
-          const interviewStageRemarkModel = require("./interviewStageRemarkModel");
           await interviewStageRemarkModel.updateInterviewStageRemarkStatus(
             request.reference_id,
             {

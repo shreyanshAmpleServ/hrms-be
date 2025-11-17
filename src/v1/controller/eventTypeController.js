@@ -1,6 +1,7 @@
 const eventTypeService = require("../services/eventTypeService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createWorkEventType = async (req, res, next) => {
   try {

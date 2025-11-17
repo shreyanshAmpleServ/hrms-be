@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
-const prisma = new PrismaClient();
 
 // Serialize shift master data
 // const serializeShiftMasterData = (data) => ({
@@ -45,7 +44,9 @@ const serializeShiftMasterData = (data) => ({
 
 // Create a new shift master
 const createShift = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const reqData = await prisma.hrms_m_shift_master.create({
       data: {
         ...serializeShiftMasterData({
@@ -78,7 +79,9 @@ const createShift = async (data) => {
 
 // Find shift master by ID
 const findShiftById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const reqData = await prisma.hrms_m_shift_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -96,7 +99,9 @@ const findShiftById = async (id) => {
 
 // Update shift master
 const updateShift = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_m_shift_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -120,7 +125,9 @@ const updateShift = async (id, data) => {
 
 // Delete shift master
 const deleteShift = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_m_shift_master.delete({
       where: { id: parseInt(id) },
     });
@@ -187,6 +194,7 @@ const getAllShift = async (
     //     };
     //   }
     // }
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_shift_master.findMany({
       where: filters,
       skip: skip,

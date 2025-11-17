@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new Product
 const createProduct = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Create the Product
     const user = await prisma.crms_m_products.create({
       data: {
@@ -52,7 +53,9 @@ const createProduct = async (data) => {
 
 // Update a Product
 const updateProduct = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedProduct = await prisma.crms_m_products.update({
       where: { id: parseInt(id) },
       data: {
@@ -95,7 +98,9 @@ const updateProduct = async (id, data) => {
 
 // Find a user by ID and include role
 const findProductById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const users = await prisma.crms_m_products.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -129,7 +134,9 @@ const findProductById = async (id) => {
 
 // Delete a Product
 const deleteProduct = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.crms_m_products.delete({
       where: { id: parseInt(id) },
     });
@@ -180,6 +187,7 @@ const deleteProduct = async (id) => {
 //   }
 // };
 const getAllProduct = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = page || 1;
     size = size || 10;

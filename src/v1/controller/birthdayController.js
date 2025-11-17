@@ -1,10 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 const { generateEmailContent } = require("../../utils/emailTemplates");
 const sendEmail = require("../../utils/mailer");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const previewBirthdayEmail = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const { employeeId } = req.params;
     const employee = await prisma.hrms_d_employee.findUnique({
@@ -38,6 +38,7 @@ const previewBirthdayEmail = async (req, res, next) => {
 };
 
 const sendBirthdayEmail = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const { employeeId } = req.params;
     const employee = await prisma.hrms_d_employee.findUnique({

@@ -1,5 +1,6 @@
 const moduleService = require("../services/ModuleService");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createModuleRelatedTo = async (req, res, next) => {
   try {

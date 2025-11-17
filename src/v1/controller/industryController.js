@@ -1,5 +1,6 @@
 const industryService = require('../services/industryService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createIndustry = async (req, res, next) => {
     try {

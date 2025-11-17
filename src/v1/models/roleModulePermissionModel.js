@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize `permissions` before saving it
 const serializePermission = (data) => {
@@ -85,8 +84,10 @@ const parsePermissions = (data) => {
 //   }
 // };
 const createPermission = async (reqBody) => {
+  const prisma = getPrisma();
   const { role_id, permissions, ...data } = reqBody;
   try {
+    const prisma = getPrisma();
     // Validate permissions format
     if (
       !Array.isArray(permissions) ||
@@ -155,7 +156,9 @@ const createPermission = async (reqBody) => {
 };
 
 const findContactById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const contact = await prisma.hrms_d_role_permissions.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -186,7 +189,9 @@ const findContactById = async (id) => {
 };
 
 const updateContact = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Add a date field with the current timestamp
     const updatedData = {
       ...data,
@@ -223,6 +228,7 @@ const updateContact = async (id, data) => {
 };
 
 const deleteContact = async (id) => {
+  const prisma = getPrisma();
   try {
     // Delete dependent rows in crms_d_deal_contacts
     await prisma.dealContacts.deleteMany({
@@ -245,6 +251,7 @@ const deleteContact = async (id) => {
 };
 
 const getAllPermission = async (id) => {
+  const prisma = getPrisma();
   const role_id = Number(id);
 
   try {

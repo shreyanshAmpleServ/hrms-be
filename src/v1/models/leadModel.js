@@ -1,10 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Helper function to define fields returned for a lead
 
 const getLeadWithReferences = async (leadId) => {
+  const prisma = getPrisma();
   const lead = await prisma.crms_leads.findUnique({
     where: { id: parseInt(leadId) },
     select: {
@@ -93,7 +93,9 @@ const getLeadWithReferences = async (leadId) => {
 
 // Create a new lead
 const createLead = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Create the lead
     const lead = await prisma.crms_leads.create({
       data: {
@@ -160,7 +162,9 @@ const createLead = async (data) => {
 
 // Update a lead and its references
 const updateLead = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Update lead fields
     const updateData = data;
     if (data?.lead_status_update) {
@@ -232,6 +236,7 @@ const updateLead = async (id, data) => {
 
 // Find a lead by email and include references
 const findLeadByEmail = async (email) => {
+  const prisma = getPrisma();
   try {
     const lead = await prisma.crms_leads.findFirst({
       where: { email },
@@ -257,7 +262,9 @@ const findLeadById = async (id) => {
 
 // Delete a lead
 const deleteLead = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.crms_leads.delete({
       where: { id: parseInt(id) },
     });
@@ -275,8 +282,9 @@ const deleteLead = async (id) => {
 
 // Get all leads and include their references
 const getAllLeads = async (page, size, search, startDate, endDate, status) => {
+  const prisma = getPrisma();
   try {
-    page = page || page == 0 ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -388,6 +396,7 @@ const getAllLeads = async (page, size, search, startDate, endDate, status) => {
 // Get all leads grouped by lost reasons
 const getAllLeadsGroupedByLostReasons = async () => {
   try {
+    const prisma = getPrisma();
     const leads = await prisma.LostReasons.findMany({
       select: {
         id: true,

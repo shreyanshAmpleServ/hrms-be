@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTaxRelief = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_tax_relief.create({
       data: {
         relief_name: data.relief_name,
@@ -24,7 +25,9 @@ const createTaxRelief = async (data) => {
 };
 
 const findTaxReliefById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_tax_relief.findUnique({
       where: { id: parseInt(id) },
     });
@@ -42,7 +45,9 @@ const findTaxReliefById = async (id) => {
 };
 
 const updateTaxRelief = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_tax_relief.update({
       where: { id: parseInt(id) },
       data: {
@@ -57,7 +62,9 @@ const updateTaxRelief = async (id, data) => {
 };
 
 const deleteTaxRelief = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_tax_relief.delete({
       where: { id: parseInt(id) },
     });

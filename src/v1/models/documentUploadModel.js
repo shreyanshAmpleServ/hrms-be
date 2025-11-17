@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize document upload data
 
@@ -24,7 +23,9 @@ const serializeDocumentData = (data) => ({
 
 // Create a new document upload
 const createDocumentUpload = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_document_upload.create({
       data: {
         ...serializeDocumentData(data),
@@ -53,7 +54,9 @@ const createDocumentUpload = async (data) => {
 
 // Find document upload by ID
 const getDocumentById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_document_upload.findUnique({
       where: { id: parseInt(id) },
     });
@@ -71,7 +74,9 @@ const getDocumentById = async (id) => {
 
 // Update document upload
 const updateDocumentUpload = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedDocument = await prisma.hrms_d_document_upload.update({
       where: { id: parseInt(id) },
       include: {
@@ -100,7 +105,9 @@ const updateDocumentUpload = async (id, data) => {
 
 // Delete document upload
 const deleteDocumentUpload = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_document_upload.delete({
       where: { id: parseInt(id) },
     });

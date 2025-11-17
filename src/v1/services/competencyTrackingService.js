@@ -1,4 +1,5 @@
 const competencyTrackingModel = require('../models/competencyTrackingModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCompetencyTracking = async (data) => {
     return await competencyTrackingModel.createCompetencyTracking(data);

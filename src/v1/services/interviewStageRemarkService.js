@@ -1,4 +1,5 @@
 const interviewStageRemarkModel = require("../models/interviewStageRemarkModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createInterviewStageRemark = async (data) => {
   return await interviewStageRemarkModel.createInterviewStageRemark(data);

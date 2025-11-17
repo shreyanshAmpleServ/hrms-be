@@ -1,6 +1,7 @@
 const taxRegimService = require("../services/taxRegimService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTaxRegime = async (req, res, next) => {
   try {

@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeTaxRegime = (taxRegime) => {
   return {
@@ -12,7 +11,9 @@ const serializeTaxRegime = (taxRegime) => {
 };
 
 const createTaxRegime = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const taxRegime = await prisma.hrms_m_tax_regime.create({
       data: {
         ...serializeTaxRegime(data),
@@ -40,7 +41,9 @@ const createTaxRegime = async (data) => {
 };
 
 const findTaxRegimeById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const taxRegime = await prisma.hrms_m_tax_regime.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -66,7 +69,9 @@ const findTaxRegimeById = async (id) => {
 };
 
 const updateTaxRegime = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedTaxRegime = await prisma.hrms_m_tax_regime.update({
       where: { id: parseInt(id) },
       data: {
@@ -90,7 +95,9 @@ const updateTaxRegime = async (id, data) => {
 };
 
 const deleteTaxRegime = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_tax_regime.delete({
       where: { id: parseInt(id) },
     });

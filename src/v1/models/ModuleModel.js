@@ -1,9 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new Module Related To
 const createModuleRelatedTo = async (data) => {
+  const prisma = getPrisma();
   try {
     const calls = await prisma.hrms_m_module.create({
       data: {
@@ -24,6 +24,7 @@ const createModuleRelatedTo = async (data) => {
 
 // Update a Module Related To
 const updateModuleRelatedTo = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updatedCalls = await prisma.hrms_m_module.update({
       where: { id: parseInt(id) },
@@ -43,6 +44,7 @@ const updateModuleRelatedTo = async (id, data) => {
 
 // Delete a Module Related To
 const deleteModuleRelatedTo = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.hrms_m_module.delete({
       where: { id: parseInt(id) },
@@ -61,6 +63,7 @@ const deleteModuleRelatedTo = async (id) => {
 
 // Get related To Data
 const getModuleRelatedTos = async (search, page, size, is_active) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new state
 const createState = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const state = await prisma.crms_m_states.create({
       data: {
         ...data,
@@ -31,7 +32,9 @@ const createState = async (data) => {
 
 // Find a state by ID
 const findStateById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const state = await prisma.crms_m_states.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -55,7 +58,9 @@ const findStateById = async (id) => {
 
 // Update a state
 const updateState = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedState = await prisma.crms_m_states.update({
       where: { id: parseInt(id) },
       include: {
@@ -81,7 +86,9 @@ const updateState = async (id, data) => {
 
 // Delete a state
 const deleteState = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.crms_m_states.delete({
       where: { id: parseInt(id) },
     });
@@ -99,6 +106,7 @@ const deleteState = async (id) => {
 
 // Get all states
 const getAllStates = async (search, page, size, country_id, is_active) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

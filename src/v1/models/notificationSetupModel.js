@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeNotificationSetupData = (data) => ({
   title: data.title || "",
@@ -16,8 +15,10 @@ const serializeNotificationSetupData = (data) => ({
   channel_sms: data.channel_sms || false,
 });
 const createNotificationSetup = async (data) => {
+  const prisma = getPrisma();
   const assignedUsers = data.assigned_users || [];
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_notification_setup.create({
       data: {
         ...serializeNotificationSetupData(data),
@@ -48,7 +49,9 @@ const createNotificationSetup = async (data) => {
 };
 
 const findNotificationSetupById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_notification_setup.findUnique({
       where: {
         id: parseInt(id),
@@ -85,7 +88,9 @@ const findNotificationSetupById = async (id) => {
 };
 
 const updateNotificationSetup = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const assignedUsers = data.assigned_users || [];
 
     const updatedEntry = await prisma.hrms_d_notification_setup.update({
@@ -121,7 +126,9 @@ const updateNotificationSetup = async (id, data) => {
 };
 
 const deleteNotificationSetup = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_notification_setup.delete({
       where: { id: parseInt(id) },
     });

@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const e = require("express");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize education data
 const serializeEducationData = (data) => ({
@@ -16,6 +15,7 @@ const serializeEducationData = (data) => ({
 // Create a new education record
 const createEmployeeEducation = async (data) => {
   try {
+      const prisma = getPrisma();
     const reqData = await prisma.hrms_employee_d_educations.create({
       data: {
         ...serializeEducationData(data),
@@ -36,6 +36,7 @@ const createEmployeeEducation = async (data) => {
 // Find education by ID
 const findEmployeeEducationById = async (id) => {
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_employee_d_educations.findUnique({
       where: { id: parseInt(id) },
     });
@@ -54,6 +55,7 @@ const findEmployeeEducationById = async (id) => {
 // Update education record
 const updateEmployeeEducation = async (employeeId, data) => {
   try {
+    const prisma = getPrisma();
     const inputEducations = data.educations || [];
 
     const newEducations = inputEducations.filter((edu) => !edu.id);
@@ -133,6 +135,7 @@ const updateEmployeeEducation = async (employeeId, data) => {
 // Delete education record
 const deleteEmployeeEducation = async (id) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_employee_d_educations.delete({
       where: { id: parseInt(id) },
     });
@@ -157,6 +160,7 @@ const getAllEmployeeEducation = async (
   endDate
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

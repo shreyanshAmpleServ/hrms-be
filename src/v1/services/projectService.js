@@ -1,4 +1,5 @@
 const projectModel = require("../models/projectModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createProject = async (data) => {
   return await projectModel.createProject(data);

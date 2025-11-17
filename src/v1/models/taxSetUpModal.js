@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new tax
 const createTaxSetup = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     console.log("Create Tax setUp : ", data);
     // Create the tax
     const tax = await prisma.crms_m_tax_setup.create({
@@ -37,7 +38,9 @@ const createTaxSetup = async (data) => {
 
 // Update a tax
 const updateTaxSetup = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedTax = await prisma.crms_m_tax_setup.update({
       where: { id: parseInt(id) },
       data: {
@@ -67,7 +70,9 @@ const updateTaxSetup = async (id, data) => {
 
 // Find a tax by ID and include role
 const findTaxSetupById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const tax = await prisma.crms_m_tax_setup.findUnique({
       where: { id: parseInt(id) },
       // include:{
@@ -90,7 +95,9 @@ const findTaxSetupById = async (id) => {
 
 // Delete a tax
 const deleteSetup = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.crms_m_tax_setup.delete({
       where: { id: parseInt(id) },
     });
@@ -108,7 +115,9 @@ const deleteSetup = async (id) => {
 
 // Get all taxs and include their roles
 const getAllTaxSetup = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const taxs = await prisma.crms_m_tax_setup.findMany({
       // include:{
       //   Account:{

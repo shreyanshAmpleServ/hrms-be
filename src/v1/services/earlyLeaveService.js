@@ -1,4 +1,5 @@
 const earlyLeaveModel = require("../models/earlyLeaveModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEarlyLeave = async (data) => {
   return await earlyLeaveModel.createEarlyLeave(data);

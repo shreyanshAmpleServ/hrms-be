@@ -2,6 +2,7 @@ const loanCashPayementService = require("../services/loanCashPayementService.js"
 const CustomError = require("../../utils/CustomError");
 const { logActivity } = require("../../utils/activityLogger");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLoanCashPayement = async (req, res, next) => {
   try {

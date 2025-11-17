@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new lost reason
 const createLostReason = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const lostReason = await prisma.LostReasons.create({
       data: {
         name: data.name,
@@ -24,7 +25,9 @@ const createLostReason = async (data) => {
 
 // Find a lost reason by ID
 const findLostReasonById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const lostReason = await prisma.LostReasons.findUnique({
       where: { id: parseInt(id) },
     });
@@ -42,7 +45,9 @@ const findLostReasonById = async (id) => {
 
 // Update a lost reason
 const updateLostReason = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedLostReason = await prisma.LostReasons.update({
       where: { id: parseInt(id) },
       data: {
@@ -58,7 +63,9 @@ const updateLostReason = async (id, data) => {
 
 // Delete a lost reason
 const deleteLostReason = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.LostReasons.delete({
       where: { id: parseInt(id) },
     });
@@ -76,7 +83,9 @@ const deleteLostReason = async (id) => {
 
 // Get all lost reasons
 const getAllLostReasons = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const lostReasons = await prisma.LostReasons.findMany({
       orderBy: [
         { order: "asc" },

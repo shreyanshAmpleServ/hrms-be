@@ -3,9 +3,9 @@ const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const { generateEmailContent } = require("../../utils/emailTemplates");
 const sendEmail = require("../../utils/mailer");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { templateKeyMap } = require("../../utils/templateKeyMap");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+
 // const createNotificationSetup = async (req, res, next) => {
 //   try {
 //     const {
@@ -68,6 +68,7 @@ const prisma = new PrismaClient();
 // };
 
 const createNotificationSetup = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const {
       title,
@@ -133,6 +134,8 @@ const sendNotificationSetupEmails = async ({
   assigned_users,
   template_id,
 }) => {
+  const prisma = getPrisma();
+
   try {
     const company = await prisma.hrms_d_default_configurations.findFirst({
       select: { company_name: true },
@@ -330,6 +333,7 @@ const getAllNotificationSetup = async (req, res, next) => {
   }
 };
 const getAvailableUsers = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const users = await prisma.hrms_d_employee.findMany({
       select: {

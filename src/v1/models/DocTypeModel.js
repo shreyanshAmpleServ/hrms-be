@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const generateDocumentCode = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const prefix = "DOC-";
     const paddingLength = 5;
 
@@ -61,7 +62,9 @@ const generateDocumentCode = async () => {
 };
 
 const createDocType = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_document_type.create({
       data: {
         name: data.name || "",
@@ -88,7 +91,9 @@ const createDocType = async (data) => {
 };
 
 const findDocTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_document_type.findUnique({
       where: { id: parseInt(id) },
     });
@@ -106,7 +111,9 @@ const findDocTypeById = async (id) => {
 };
 
 const updateDocType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_document_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -124,7 +131,9 @@ const updateDocType = async (id, data) => {
 };
 
 const deleteDocType = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_document_type.delete({
       where: { id: parseInt(id) },
     });

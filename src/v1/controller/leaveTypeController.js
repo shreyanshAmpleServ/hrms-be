@@ -1,6 +1,7 @@
 const leaveTypeService = require("../services/leaveTypeService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLeaveType = async (req, res, next) => {
   try {

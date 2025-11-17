@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializePaymentRecoveryData = (data) => ({
   employee_id: data.employee_id ? Number(data.employee_id) : null,
@@ -38,7 +37,9 @@ const serializePaymentRecoveryUpdateData = (data) => {
 };
 
 const createPaymentRecovery = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_payment_recovery.create({
       data: {
         ...serializePaymentRecoveryData(data),
@@ -71,7 +72,9 @@ const createPaymentRecovery = async (data) => {
 };
 
 const findPaymentRecoveryById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_payment_recovery.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -110,7 +113,9 @@ const findPaymentRecoveryById = async (id) => {
 };
 
 const updatePaymentRecovery = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_payment_recovery.update({
       where: { id: parseInt(id) },
       include: {
@@ -143,7 +148,9 @@ const updatePaymentRecovery = async (id, data) => {
 };
 
 const deletePaymentRecovery = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_payment_recovery.delete({
       where: { id: parseInt(id) },
     });
@@ -243,7 +250,9 @@ const getAllPaymentRecovery = async (
 };
 
 const getPaymentRecoveryStats = async () => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const [totalRecoveries, pendingAmount, completedAmount] = await Promise.all(
       [
         prisma.hrms_d_payment_recovery.count(),
@@ -272,6 +281,7 @@ const getPaymentRecoveryStats = async () => {
 };
 
 const updatePaymentRecoveryStatus = async (id, data) => {
+  const prisma = getPrisma();
   return prisma.hrms_d_payment_recovery.update({
     where: { id: parseInt(id) },
     data,

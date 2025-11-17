@@ -1,6 +1,7 @@
 const advancePaymentService = require("../services/advancePaymentService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAdvancePayment = async (req, res, next) => {
   try {

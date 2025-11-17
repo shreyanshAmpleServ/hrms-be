@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new lead
 const createLead = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const lead = await prisma.crms_leads.create({
       data: {
         ...data,
@@ -22,7 +23,9 @@ const createLead = async (data) => {
 
 // Find a lead by ID
 const findLeadById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const lead = await prisma.crms_leads.findUnique({
       where: { id: parseInt(id) },
     });
@@ -37,7 +40,9 @@ const findLeadById = async (id) => {
 
 // Update a lead
 const updateLead = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedLead = await prisma.crms_leads.update({
       where: { id: parseInt(id) },
       data: {
@@ -54,7 +59,9 @@ const updateLead = async (id, data) => {
 
 // Delete a lead
 const deleteLead = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.crms_leads.delete({
       where: { id: parseInt(id) },
     });
@@ -72,7 +79,9 @@ const deleteLead = async (id) => {
 
 // Get all leads
 const getAllLeads = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const leads = await prisma.crms_leads.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

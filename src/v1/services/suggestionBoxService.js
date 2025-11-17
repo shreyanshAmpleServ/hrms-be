@@ -1,4 +1,5 @@
 const suggestionBoxModel = require("../models/suggestionBoxModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createSuggestionBox = async (data) => {
   return await suggestionBoxModel.createSuggestionBox(data);

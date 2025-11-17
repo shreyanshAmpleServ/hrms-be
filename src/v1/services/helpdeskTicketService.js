@@ -1,4 +1,5 @@
 const helpdeskTicketModel = require("../models/helpdeskTicketModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createHelpdeskTicket = async (data) => {
   return await helpdeskTicketModel.createHelpdeskTicket(data);

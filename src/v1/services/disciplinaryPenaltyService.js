@@ -1,4 +1,5 @@
 const disciplinaryPenaltyModel = require("../models/disciplinaryPenaltyModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDisciplinaryPenalty = async (data) => {
   return await disciplinaryPenaltyModel.createDisciplinaryPenalty(data);

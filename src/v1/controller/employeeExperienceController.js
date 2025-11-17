@@ -1,6 +1,7 @@
 const employeeExperienceService = require("../services/employeeExperienceService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEmployeeExperience = async (req, res, next) => {
   try {

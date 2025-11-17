@@ -1,4 +1,5 @@
 const loanTypeModel = require("../models/loanTypeModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLoanType = async (data) => {
   return await loanTypeModel.createLoanType(data);

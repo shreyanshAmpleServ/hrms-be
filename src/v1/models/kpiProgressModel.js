@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize KPI progress entry data
 const serializeKpiProgressEntryData = (data) => {
@@ -19,7 +18,9 @@ const serializeKpiProgressEntryData = (data) => {
 
 // Create a new KPI progress entry
 const createKpiProgress = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_kpi_progress_entry.create({
       data: {
         ...serializeKpiProgressEntryData(data),
@@ -56,7 +57,9 @@ const createKpiProgress = async (data) => {
 
 // Find KPI progress entry by ID
 const findKpiProgressById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_kpi_progress_entry.findUnique({
       where: { id: parseInt(id) },
     });
@@ -74,7 +77,9 @@ const findKpiProgressById = async (id) => {
 
 // Update KPI progress entry
 const updateKpiProgress = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_kpi_progress_entry.update({
       where: { id: parseInt(id) },
       include: {
@@ -112,7 +117,9 @@ const updateKpiProgress = async (id, data) => {
 
 // Delete KPI progress entry
 const deleteKpiProgress = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_kpi_progress_entry.delete({
       where: { id: parseInt(id) },
     });
@@ -130,6 +137,7 @@ const deleteKpiProgress = async (id) => {
 
 // Get all KPI progress entries with pagination and search
 const getAllKpiProgress = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

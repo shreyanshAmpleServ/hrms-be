@@ -1,6 +1,4 @@
-// const { PrismaClient } = require("@prisma/client");
-// const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+// // const CustomError = require("../../utils/CustomError");
 // const employeeModel = require("./EmployeeModel");
 
 // const serializeCandidateMasterData = (data) => ({
@@ -760,10 +758,9 @@
 //   createEmployeeFromCandidate,
 // };
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 const employeeModel = require("./EmployeeModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeCandidateMasterData = (data) => ({
   candidate_code: data.candidate_code ?? undefined,
@@ -902,7 +899,9 @@ const snapshotHiringStagesForCandidate = async (
 };
 
 const getCandidateHiringStages = async (candidateId) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const stages = await prisma.hrms_d_candidate_hiring_stage.findMany({
       where: { candidate_id: parseInt(candidateId) },
       include: {
@@ -943,7 +942,9 @@ const getCandidateHiringStages = async (candidateId) => {
 };
 
 const getCandidateDocumentTypes = async (candidateId) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const candidate = await prisma.hrms_d_candidate_master.findUnique({
       where: { id: parseInt(candidateId) },
       select: {
@@ -1012,6 +1013,7 @@ const getCandidateDocumentTypes = async (candidateId) => {
 };
 
 const getHiringStagesForJobPosting = async (jobPostingId) => {
+  const prisma = getPrisma();
   if (!jobPostingId) {
     console.log(" No job posting ID provided");
     return [];
@@ -1057,6 +1059,7 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
 
         if (stage.stage_id) {
           try {
+            const prisma = getPrisma();
             stageValue = await prisma.hrms_d_hiring_stage_value.findUnique({
               where: { id: stage.stage_id },
               select: {
@@ -1288,6 +1291,7 @@ const createRequiredDocumentsForCandidate = async (
 // };
 
 const createCandidateMaster = async (data) => {
+  const prisma = getPrisma();
   try {
     const fullName = data.full_name?.trim();
 
@@ -1406,7 +1410,9 @@ const createCandidateMaster = async (data) => {
 };
 
 const findCandidateMasterById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_candidate_master.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -1526,6 +1532,7 @@ const findCandidateMasterById = async (id) => {
 // };
 
 const updateCandidateMaster = async (id, data) => {
+  const prisma = getPrisma();
   try {
     // Fetch the current candidate data to check if job_posting has changed
     const existingCandidate = await prisma.hrms_d_candidate_master.findUnique({
@@ -1646,6 +1653,7 @@ const updateCandidateMaster = async (id, data) => {
 
 const deleteCandidateMaster = async (id) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_candidate_master.delete({
       where: { id: parseInt(id) },
     });
@@ -1670,6 +1678,7 @@ const getAllCandidateMaster = async (
   is_active = "false"
 ) => {
   try {
+    const prisma = getPrisma();
     if (is_active === "true") {
       const filters = {};
 
@@ -1851,6 +1860,7 @@ const getAllCandidateMaster = async (
 };
 
 const updateCandidateMasterStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const candidateMasterId = parseInt(id);
 
@@ -1922,6 +1932,7 @@ const updateCandidateStageStatus = async (
   updatedBy
 ) => {
   try {
+    const prisma = getPrisma();
     console.log(
       ` Updating stage ${stageId} for candidate ${candidateId} to ${status}`
     );
@@ -1996,6 +2007,7 @@ const createEmployeeFromCandidate = async (
   logInst
 ) => {
   try {
+    const prisma = getPrisma();
     const candidate = await prisma.hrms_d_candidate_master.findUnique({
       where: { id: parseInt(candidateId) },
       include: {
@@ -2087,6 +2099,7 @@ const createEmployeeFromCandidate = async (
 };
 
 const generateEmployeeCode = async (fullName) => {
+  const prisma = getPrisma();
   const nameParts = fullName.split(" ");
   const firstName = nameParts[0] || "";
   const lastName = nameParts[1] || "";

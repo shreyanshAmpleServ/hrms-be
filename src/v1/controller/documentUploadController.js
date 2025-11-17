@@ -5,6 +5,7 @@ const {
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDocument = async (req, res, next) => {
   try {

@@ -1,6 +1,7 @@
 const relievingLetterService = require("../services/relievingLetterService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRelievingLetter = async (req, res, next) => {
   try {

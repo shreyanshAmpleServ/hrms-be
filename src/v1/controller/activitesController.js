@@ -1,4 +1,5 @@
 const activitiesService = require("../services/activitesService");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createActivitiesStatus = async (req, res, next) => {
   try {

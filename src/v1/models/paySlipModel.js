@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize payslip data
 const serializePayslipData = (data) => ({
@@ -26,7 +25,9 @@ const serializePayslipData = (data) => ({
 
 // Create a new payslip
 const createPaySlip = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_payslip.create({
       data: {
         ...serializePayslipData(data),
@@ -52,7 +53,9 @@ const createPaySlip = async (data) => {
 
 // Find payslip by ID
 const findPaySlipById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_payslip.findUnique({
       where: { id: parseInt(id) },
     });
@@ -67,7 +70,9 @@ const findPaySlipById = async (id) => {
 
 // Update payslip
 const updatePaySlip = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_payslip.update({
       where: { id: parseInt(id) },
       data: {
@@ -92,7 +97,9 @@ const updatePaySlip = async (id, data) => {
 
 // Delete payslip
 const deletePaySlip = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_payslip.delete({
       where: { id: parseInt(id) },
     });

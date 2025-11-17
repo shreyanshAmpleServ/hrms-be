@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize recognition award data
 const serializeRecognitionAward = (data) => ({
@@ -13,6 +12,7 @@ const serializeRecognitionAward = (data) => ({
 
 // Create a new recognition award
 const createRecognitionAward = async (data) => {
+  const prisma = getPrisma();
   try {
     const created = await prisma.hrms_d_recognition_award.create({
       data: {
@@ -40,7 +40,9 @@ const createRecognitionAward = async (data) => {
 
 // Find a recognition award by ID
 const findRecognitionAwardById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_recognition_award.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -62,6 +64,7 @@ const findRecognitionAwardById = async (id) => {
 
 // Update a recognition award
 const updateRecognitionAward = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updated = await prisma.hrms_d_recognition_award.update({
       where: { id: parseInt(id) },
@@ -88,7 +91,9 @@ const updateRecognitionAward = async (id, data) => {
 
 // Delete a recognition award
 const deleteRecognitionAward = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_recognition_award.delete({
       where: { id: parseInt(id) },
     });

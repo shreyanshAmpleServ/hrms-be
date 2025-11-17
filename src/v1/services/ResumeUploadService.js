@@ -1,4 +1,5 @@
 const resumeUploadModel = require("../models/resumeUploadModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createResumeUpload = async (data) => {
   return await resumeUploadModel.createResumeUpload(data);

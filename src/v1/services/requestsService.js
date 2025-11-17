@@ -1,5 +1,6 @@
 const requestsModel = require("../models/requestsModel.js");
 const logger = require("../../Comman/logger/index.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 const createRequest = async (data) => {
   return await requestsModel.createRequest(data);
 };

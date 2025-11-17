@@ -1,4 +1,5 @@
 const KPIModel = require("../models/KPIModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createKPI = async (data) => {
   return await KPIModel.createKPI(data);

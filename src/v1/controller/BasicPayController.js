@@ -2,8 +2,8 @@ const BasicPayService = require("../services/BasicPayService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const XLSX = require("xlsx");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
+
 const createBasicPay = async (req, res, next) => {
   try {
     let reqData = {

@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createSalaryStructure = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const salaryStructure = await prisma.hrms_m_salary_structure.create({
       data: {
         structure_name: data.structure_name,
@@ -26,7 +27,9 @@ const createSalaryStructure = async (data) => {
 };
 
 const findSalaryStructureById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const salaryStructure = await prisma.hrms_m_salary_structure.findUnique({
       where: { id: parseInt(id) },
     });
@@ -44,7 +47,9 @@ const findSalaryStructureById = async (id) => {
 };
 
 const updateSalaryStructure = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedSalaryStructure = await prisma.hrms_m_salary_structure.update({
       where: { id: parseInt(id) },
       data: {
@@ -62,7 +67,9 @@ const updateSalaryStructure = async (id, data) => {
 };
 
 const deleteSalaryStructure = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_salary_structure.delete({
       where: { id: parseInt(id) },
     });

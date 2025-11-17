@@ -1,9 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { toLowerCase, int } = require("zod/v4");
 const { parse } = require("dotenv");
 const { updateLeaveApplication } = require("./LeaveApplyModel");
-const prisma = new PrismaClient();
 
 // Serialize travel expense data
 const serializeTravelExpenseData = (data) => ({
@@ -27,8 +26,10 @@ const serializeTravelExpenseData = (data) => ({
 
 // Create a new travel expense
 const createTravelExpense = async (data) => {
+  const prisma = getPrisma();
   console.log(data);
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_travel_expense.create({
       data: {
         ...serializeTravelExpenseData(data),
@@ -68,7 +69,9 @@ const createTravelExpense = async (data) => {
 
 // Find travel expense by ID
 const findTravelExpenseById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_travel_expense.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -100,7 +103,9 @@ const findTravelExpenseById = async (id) => {
 
 // Update travel expense
 const updateTravelExpense = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_travel_expense.update({
       where: { id: parseInt(id) },
       data: {
@@ -135,7 +140,9 @@ const updateTravelExpense = async (id, data) => {
 
 // Delete travel expense
 const deleteTravelExpense = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_travel_expense.delete({
       where: { id: parseInt(id) },
     });
@@ -153,6 +160,7 @@ const deleteTravelExpense = async (id) => {
 
 // Get all travel expenses with pagination and search
 const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -229,6 +237,7 @@ const getAllTravelExpense = async (search, page, size, startDate, endDate) => {
 };
 
 const updateTravelExpenseStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const travelExpenseId = parseInt(id);
     if (isNaN(travelExpenseId)) {

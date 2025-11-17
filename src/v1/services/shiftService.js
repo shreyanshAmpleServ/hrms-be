@@ -1,4 +1,5 @@
 const shiftModel = require("../models/shiftModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createShift = async (data) => {
   return await shiftModel.createShift(data);

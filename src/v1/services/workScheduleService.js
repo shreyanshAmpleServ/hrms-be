@@ -1,4 +1,5 @@
 const workScheduleModel = require("../models/workScheduleModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createWorkSchedule = async (data) => {
   return await workScheduleModel.createWorkSchedule(data);

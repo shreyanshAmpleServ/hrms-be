@@ -7,6 +7,7 @@ const {
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
 const e = require("express");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 //Create
 const createCandidateMaster = async (req, res, next) => {

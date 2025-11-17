@@ -1,4 +1,5 @@
 const loanMasterModel = require("../models/loanMasterModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLoanMaster = async (data) => {
   return await loanMasterModel.createLoanMaster(data);

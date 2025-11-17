@@ -1,4 +1,5 @@
 const designationModel = require("../models/designationModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDesignation = async (data) => {
   return await designationModel.createDesignation(data);

@@ -1,4 +1,5 @@
 const advancePaymentModel = require("../models/advancePaymentModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAdvancePayment = async (data) => {
   return await advancePaymentModel.createAdvancePayment(data);

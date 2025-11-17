@@ -1,4 +1,5 @@
 const employeeModel = require("../models/EmployeeModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEmployee = async (data) => {
   return await employeeModel.createEmployee(data);

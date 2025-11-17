@@ -1,6 +1,7 @@
 const alertWorkflowService = require("../services/alertWorkflowService");
 const moment = require("moment");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAlertWorkflow = async (req, res, next) => {
   try {

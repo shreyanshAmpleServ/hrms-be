@@ -1,4 +1,5 @@
 const purchaseInvoiceModal = require('../models/purchaseInvoiceModal');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPurchaseInvoice = async (orderData,orderItemsData) => {
     return await purchaseInvoiceModal.createPurchaseInvoice(orderData,orderItemsData);

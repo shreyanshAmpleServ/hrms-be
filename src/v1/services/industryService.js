@@ -1,4 +1,5 @@
 const industryModel = require('../models/industryModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createIndustry = async (data) => {
     return await industryModel.createIndustry(data);

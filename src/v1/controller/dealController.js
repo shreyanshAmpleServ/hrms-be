@@ -1,6 +1,7 @@
 const dealService = require('../services/dealService');
 const CustomError = require('../../utils/CustomError');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDeal = async (req, res, next) => {
   try {

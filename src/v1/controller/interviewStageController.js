@@ -1,6 +1,7 @@
 const interviewStageService = require("../services/interviewStageService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createInterviewStage = async (req, res, next) => {
   try {

@@ -1,4 +1,5 @@
 const pipelineModel = require('../models/pipelineModal');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPipeline = async (data) => {
   return await pipelineModel.createPipeline(data);

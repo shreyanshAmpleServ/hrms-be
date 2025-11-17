@@ -1,5 +1,4 @@
-// const { PrismaClient } = require("@prisma/client");
-// const CustomError = require("../../utils/CustomError");
+// // const CustomError = require("../../utils/CustomError");
 
 // // Configure PrismaClient with optimized settings
 // // Note: Connection pool settings should be in DATABASE_URL:
@@ -265,35 +264,8 @@
 //   getAlertWorkflows,
 // };
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-
-let prisma;
-
-const getPrismaClient = () => {
-  if (!prisma) {
-    prisma = new PrismaClient({
-      log:
-        process.env.NODE_ENV === "development" ? ["error", "warn"] : ["error"],
-      datasources: {
-        db: {
-          url: process.env.DATABASE_URL,
-        },
-      },
-    });
-
-    const cleanup = async () => {
-      await prisma.$disconnect();
-    };
-
-    process.on("beforeExit", cleanup);
-    process.on("SIGINT", cleanup);
-    process.on("SIGTERM", cleanup);
-  }
-  return prisma;
-};
-
-prisma = getPrismaClient();
+const { getPrisma, getPrismaClient } = require("../../config/prismaContext.js");
 
 const withRetry = async (operation, retries = 3, baseDelay = 1000) => {
   let lastError;
@@ -362,6 +334,7 @@ const serializeWorkflowData = (data) => ({
 });
 
 const createAlertWorkflow = async (data) => {
+  const prisma = getPrisma();
   return withRetry(async () => {
     const reqData = await prisma.hrms_d_alert_workflow.create({
       data: {
@@ -378,6 +351,7 @@ const createAlertWorkflow = async (data) => {
 };
 
 const getAlertWorkflowById = async (id) => {
+  const prisma = getPrisma();
   return withRetry(async () => {
     const workflow = await prisma.hrms_d_alert_workflow.findUnique({
       where: { id: parseInt(id) },
@@ -394,6 +368,7 @@ const getAlertWorkflowById = async (id) => {
 };
 
 const updateAlertWorkflow = async (id, data) => {
+  const prisma = getPrisma();
   const requestId = `update_${id}_${Date.now()}`;
   console.log(`Starting update request: ${requestId}`);
   console.log(`Input data:`, JSON.stringify(data, null, 2));
@@ -472,6 +447,7 @@ const updateAlertWorkflow = async (id, data) => {
 };
 
 const deleteAlertWorkflow = async (id) => {
+  const prisma = getPrisma();
   return withRetry(async () => {
     const deleted = await prisma.hrms_d_alert_workflow.delete({
       where: { id: parseInt(id) },
@@ -480,7 +456,36 @@ const deleteAlertWorkflow = async (id) => {
   });
 };
 
-const getAlertWorkflows = async (search, page, size, startDate, endDate) => {
+const getAlertWorkflows = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  dbName = null
+) => {
+  // For background jobs (no request context), use dbName to get Prisma client directly
+  // For API requests, use getPrisma() from async context
+  let prisma;
+  try {
+    if (dbName) {
+      prisma = getPrismaClient(dbName);
+    } else {
+      prisma = getPrisma();
+    }
+  } catch (error) {
+    // If no context and no dbName, try to use default database from env
+    // This handles background jobs that don't have a request context
+    const defaultDbName = process.env.DEFAULT_DB_NAME || process.env.DB_NAME;
+    if (defaultDbName) {
+      prisma = getPrismaClient(defaultDbName);
+    } else {
+      throw new Error(
+        "Prisma client not found. Either provide dbName parameter or ensure tenantMiddleware is applied to your route."
+      );
+    }
+  }
+
   return withRetry(async () => {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

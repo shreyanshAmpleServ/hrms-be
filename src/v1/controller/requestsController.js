@@ -2,6 +2,7 @@ const requestsService = require("../services/requestsService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
 const logger = require("../../Comman/logger/index.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createRequest = async (req, res, next) => {
   try {

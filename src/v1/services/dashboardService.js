@@ -1,4 +1,5 @@
 const dashboardModel = require("../models/dashboardModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const findDealById = async (id) => {
   return await dashboardModel.findDealById(id);

@@ -1,5 +1,6 @@
 const contactStageService = require('../services/contactStageService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createContactStage = async (req, res, next) => {
     try {

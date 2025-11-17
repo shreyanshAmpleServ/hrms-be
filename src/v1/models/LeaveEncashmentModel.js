@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { parse } = require("dotenv");
 const { createRequest } = require("./requestsModel");
-const prisma = new PrismaClient();
 
 // Serialize leave encashment data
 const serializeLeaveEncashmentData = (data) => ({
@@ -26,7 +25,9 @@ const serializeLeaveEncashmentData = (data) => ({
 });
 
 const createLeaveEncashment = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const serializedData = serializeLeaveEncashmentData(data);
     const employeeId = serializedData.employee_id;
     const encashmentDate = serializedData.encashment_date;
@@ -140,7 +141,9 @@ const createLeaveEncashment = async (data) => {
 
 // Find leave encashment by ID
 const findLeaveEncashmentById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_leave_encashment.findUnique({
       where: { id: parseInt(id) },
     });
@@ -158,7 +161,9 @@ const findLeaveEncashmentById = async (id) => {
 
 // Update leave encashment
 const updateLeaveEncashment = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_leave_encashment.update({
       where: { id: parseInt(id) },
       data: {
@@ -193,7 +198,9 @@ const updateLeaveEncashment = async (id, data) => {
 
 // Delete leave encashment
 const deleteLeaveEncashment = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_leave_encashment.delete({
       where: { id: parseInt(id) },
     });
@@ -284,6 +291,7 @@ const getAllLeaveEncashment = async (
 };
 
 const updateLeaveEnchashmentStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const leaveEnchashmentId = parseInt(id);
     if (isNaN(leaveEnchashmentId)) {

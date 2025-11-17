@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
 
 const serializeJobData = (data) => {
   return {
@@ -13,7 +12,9 @@ const serializeJobData = (data) => {
 
 // Create a new resume
 const createResumeUpload = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await errorNotExist(
       "hrms_d_candidate_master",
       data.candidate_id,
@@ -43,7 +44,9 @@ const createResumeUpload = async (data) => {
 
 // Find a resume by ID
 const findResumeUploadById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_resume.findUnique({
       where: { id: parseInt(id) },
     });
@@ -58,7 +61,9 @@ const findResumeUploadById = async (id) => {
 
 // Update a resume
 const updateResumeUpload = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await errorNotExist(
       "hrms_d_candidate_master",
       data.candidate_id,
@@ -90,7 +95,9 @@ const updateResumeUpload = async (id, data) => {
 
 // Delete a resume
 const deleteResumeUpload = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_resume.delete({
       where: { id: parseInt(id) },
     });

@@ -1,4 +1,5 @@
 const grievanceModel = require("../models/grievanceModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createGrievanceSubmission = async (data) => {
   return await grievanceModel.createGrievanceSubmission(data);

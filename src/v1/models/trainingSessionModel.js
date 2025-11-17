@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize training session data
 const serializeTrainingSessionData = (data) => ({
@@ -31,7 +30,9 @@ const serializeTrainingSessionData = (data) => ({
 
 // Create a new training session
 const createTrainingSession = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_training_session.create({
       data: {
         ...serializeTrainingSessionData(data),
@@ -65,7 +66,9 @@ const createTrainingSession = async (data) => {
 
 // Find training session by ID
 const findTrainingSessionById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_training_session.findUnique({
       where: { id: parseInt(id) },
     });
@@ -83,7 +86,9 @@ const findTrainingSessionById = async (id) => {
 
 // Update training session
 const updateTrainingSession = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedSession = await prisma.hrms_d_training_session.update({
       where: { id: parseInt(id) },
       include: {
@@ -117,7 +122,9 @@ const updateTrainingSession = async (id, data) => {
 
 // Delete training session
 const deleteTrainingSession = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_training_session.delete({
       where: { id: parseInt(id) },
     });
@@ -222,6 +229,7 @@ const getAllTrainingSessions = async (
 };
 
 const updateTrainingSessionStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const trainingSessionId = parseInt(id);
     if (isNaN(trainingSessionId)) {

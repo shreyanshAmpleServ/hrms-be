@@ -1,6 +1,7 @@
 const paySlipService = require("../services/paySlipService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const {
   uploadToBackblaze,
   deleteFromBackblaze,

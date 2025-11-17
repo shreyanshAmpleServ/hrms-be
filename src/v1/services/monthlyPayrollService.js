@@ -5,6 +5,7 @@ const fs = require("fs");
 const path = require("path");
 
 const ExcelJS = require("exceljs");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createMonthlyPayroll = async (data) => {
   return await monthlyPayrollModel.createMonthlyPayroll(data);

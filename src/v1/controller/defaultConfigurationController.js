@@ -2,6 +2,7 @@ const defaultConfigurationService = require("../services/defaultConfigurationSer
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const fs = require("fs");
+const { getPrisma } = require("../../config/prismaContext.js");
 const {
   uploadToBackblaze,
   deleteFromBackblaze,

@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createGoalCategory = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_goal_category.create({
       data: {
         category_name: data.category_name,
@@ -27,7 +28,9 @@ const createGoalCategory = async (data) => {
 };
 
 const findGoalCategoryById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_goal_category.findUnique({
       where: { id: parseInt(id) },
     });
@@ -45,7 +48,9 @@ const findGoalCategoryById = async (id) => {
 };
 
 const updateGoalCategory = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_goal_category.update({
       where: { id: parseInt(id) },
       data: {
@@ -63,7 +68,9 @@ const updateGoalCategory = async (id, data) => {
 };
 
 const deleteGoalCategory = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_goal_category.delete({
       where: { id: parseInt(id) },
     });

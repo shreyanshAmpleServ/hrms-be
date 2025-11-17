@@ -1,4 +1,5 @@
 const priceBookModal = require('../models/priceBookModal');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createPriceBook = async (orderData,orderItemsData) => {
     return await priceBookModal.createPriceBook(orderData,orderItemsData);

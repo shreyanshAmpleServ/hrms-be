@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
-const prisma = new PrismaClient();
 
 // Serialize pay component data
 const serializePayComponentData = (data) => ({
@@ -65,7 +64,7 @@ const serializePayComponentData = (data) => ({
 //         400
 //       );
 //     }
-//     const result = await prisma.$transaction(async (prisma) => {
+//     const result = await prisma.$transaction(async () => {
 //       const reqData = await prisma.hrms_m_pay_component.create({
 //         data: {
 //           ...serializePayComponentData(data),
@@ -166,6 +165,7 @@ const serializePayComponentData = (data) => ({
 // };
 
 const createPayComponent = async (data) => {
+  const prisma = getPrisma();
   try {
     data.component_name = data.component_name.trim();
     data.component_code = data.component_code.trim();
@@ -212,7 +212,7 @@ const createPayComponent = async (data) => {
 
     // Create pay component with shorter transaction
     const result = await prisma.$transaction(
-      async (prisma) => {
+      async () => {
         const reqData = await prisma.hrms_m_pay_component.create({
           data: {
             ...serializePayComponentData(data),
@@ -287,7 +287,9 @@ const createPayComponent = async (data) => {
 
 // Find pay component by ID
 const findPayComponentById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_m_pay_component.findUnique({
       where: { id: parseInt(id) },
     });
@@ -305,6 +307,7 @@ const findPayComponentById = async (id) => {
 
 // Update pay component
 const updatePayComponent = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const totalCount = await prisma.hrms_m_pay_component.count({
       where: {
@@ -579,7 +582,9 @@ const updatePayComponent = async (id, data) => {
 
 // Delete pay component
 const deletePayComponent = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_pay_component.delete({
       where: { id: parseInt(id) },
     });
@@ -732,7 +737,9 @@ const getAllPayComponent = async (
 };
 
 const getPayComponentOptions = async (isAdvance, isOvertimeRelated) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const whereClause = {};
 
     if (isAdvance === "true") {

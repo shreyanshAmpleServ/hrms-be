@@ -1,6 +1,7 @@
 const kpiProgressService = require("../services/kpiProgressService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createKpiProgress = async (req, res, next) => {
   try {

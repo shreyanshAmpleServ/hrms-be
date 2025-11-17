@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new industry
 const createIndustry = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const industry = await prisma.Industries.create({
       data: {
         name: data.name,
@@ -22,7 +23,9 @@ const createIndustry = async (data) => {
 
 // Find an industry by ID
 const findIndustryById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const industry = await prisma.Industries.findUnique({
       where: { id: parseInt(id) },
     });
@@ -40,7 +43,9 @@ const findIndustryById = async (id) => {
 
 // Update an industry
 const updateIndustry = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedIndustry = await prisma.Industries.update({
       where: { id: parseInt(id) },
       data: {
@@ -56,7 +61,9 @@ const updateIndustry = async (id, data) => {
 
 // Delete an industry
 const deleteIndustry = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.Industries.delete({
       where: { id: parseInt(id) },
     });
@@ -74,7 +81,9 @@ const deleteIndustry = async (id) => {
 
 // Get all industries
 const getAllIndustries = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const industries = await prisma.Industries.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

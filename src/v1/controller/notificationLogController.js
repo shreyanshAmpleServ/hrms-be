@@ -1,6 +1,7 @@
 const notificationLogService = require("../services/notificationLogService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createNotificationLog = async (req, res, next) => {
   try {

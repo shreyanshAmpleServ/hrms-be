@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
 
 const serializeData = (data) => {
   return {
@@ -14,7 +13,9 @@ const serializeData = (data) => {
 
 // Create a new competency tracking
 const createCompetencyTracking = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     const reqData = await prisma.hrms_d_competency.create({
       data: {
@@ -43,7 +44,9 @@ const createCompetencyTracking = async (data) => {
 
 // Find a competency tracking by ID
 const findCompetencyTrackingById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const reqData = await prisma.hrms_d_competency.findUnique({
       where: { id: parseInt(id) },
     });
@@ -61,7 +64,9 @@ const findCompetencyTrackingById = async (id) => {
 
 // Update a competency tracking
 const updateCompetencyTracking = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
 
     const updatedCompetencyTracking = await prisma.hrms_d_competency.update({
@@ -91,7 +96,9 @@ const updateCompetencyTracking = async (id, data) => {
 
 // Delete a competency tracking
 const deleteCompetencyTracking = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.hrms_d_competency.delete({
       where: { id: parseInt(id) },
     });
@@ -116,6 +123,7 @@ const getAllCompetencyTracking = async (
   endDate
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

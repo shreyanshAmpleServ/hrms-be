@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { id } = require("zod/v4/locales");
-const prisma = new PrismaClient();
 const { DateTime } = require("luxon");
 
 const parseTags = (deal) => {
@@ -13,6 +12,7 @@ const parseTags = (deal) => {
 };
 
 const findDealById = async (id) => {
+  const prisma = getPrisma();
   try {
     const deal = await prisma.Deal.findUnique({
       where: { id: parseInt(id) },
@@ -32,6 +32,7 @@ const findDealById = async (id) => {
 };
 
 const getDashboardData = async (filterDays) => {
+  const prisma = getPrisma();
   try {
     const { startDate, endDate } = filterDays;
     const startMoment = moment(startDate);
@@ -259,6 +260,7 @@ const getDashboardData = async (filterDays) => {
 // };
 
 const getAllEmployeeAttendance = async (dateString, managerId) => {
+  const prisma = getPrisma();
   const zone = "Asia/Kolkata";
   const today = dateString
     ? DateTime.fromISO(dateString, { zone }).startOf("day")
@@ -341,6 +343,7 @@ const getAllEmployeeAttendance = async (dateString, managerId) => {
 };
 
 const getUpcomingBirthdays = async (page = 1, size = 10) => {
+  const prisma = getPrisma();
   const today = moment();
   const next30Days = moment().add(30, "days");
 
@@ -428,6 +431,7 @@ const getUpcomingBirthdays = async (page = 1, size = 10) => {
 };
 
 const getAllUpcomingBirthdays = async () => {
+  const prisma = getPrisma();
   const today = moment().startOf("day");
   const oneYearLater = moment(today).add(1, "year").endOf("day");
 
@@ -480,6 +484,7 @@ const getAllUpcomingBirthdays = async () => {
 };
 
 const getDesignations = async () => {
+  const prisma = getPrisma();
   const employees = await prisma.hrms_d_employee.findMany({
     where: {
       designation_id: { not: null },
@@ -528,6 +533,7 @@ const getDesignations = async () => {
 };
 
 const getDepartment = async () => {
+  const prisma = getPrisma();
   const departments = await prisma.hrms_d_employee.groupBy({
     by: ["department_id"],
     where: {
@@ -569,6 +575,7 @@ const getDepartment = async () => {
 };
 
 const getStatus = async () => {
+  const prisma = getPrisma();
   const statusData = await prisma.hrms_d_employee.groupBy({
     by: ["status"],
     _count: {
@@ -615,6 +622,7 @@ const getStatus = async () => {
 };
 
 const workAnniversary = async (page = 1, size = 10) => {
+  const prisma = getPrisma();
   const today = moment();
   const next30Days = moment().add(30, "days");
 
@@ -705,6 +713,7 @@ const workAnniversary = async (page = 1, size = 10) => {
 };
 
 const attendanceOverview = async (dateString) => {
+  const prisma = getPrisma();
   try {
     let today;
 
@@ -818,6 +827,7 @@ const attendanceOverview = async (dateString) => {
 };
 
 const getEmployeeActivity = async () => {
+  const prisma = getPrisma();
   try {
     const logs = await prisma.hrms_d_activity_log.findMany({
       orderBy: { created_at: "desc" },

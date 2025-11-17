@@ -1,4 +1,5 @@
 const casesModel = require('../models/casesModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCases = async (data) => {
   return await casesModel.createCases(data);

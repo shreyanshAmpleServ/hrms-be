@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize input data
 const serializeApplicationSource = (data) => ({
@@ -9,7 +8,9 @@ const serializeApplicationSource = (data) => ({
 
 // Create application source
 const createApplicationSource = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_application_source.create({
       data: {
         ...serializeApplicationSource(data),
@@ -29,7 +30,9 @@ const createApplicationSource = async (data) => {
 
 // Find application source by ID
 const findApplicationSourceById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const source = await prisma.hrms_m_application_source.findUnique({
       where: { id: parseInt(id) },
     });
@@ -47,7 +50,9 @@ const findApplicationSourceById = async (id) => {
 
 // Update application source
 const updateApplicationSource = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updated = await prisma.hrms_m_application_source.update({
       where: { id: parseInt(id) },
       data: {
@@ -67,7 +72,9 @@ const updateApplicationSource = async (id, data) => {
 
 // Delete application source
 const deleteApplicationSource = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_application_source.delete({
       where: { id: parseInt(id) },
     });
@@ -85,6 +92,7 @@ const deleteApplicationSource = async (id) => {
 
 // Get all application sources (with pagination + optional search)
 const getAllApplicationSource = async (search, page, size) => {
+  const prisma = getPrisma();
   try {
     page = page && page > 0 ? page : 1;
     size = size || 10;

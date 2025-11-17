@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const combineDateAndTime = (date, time) => {
   const dateObj = new Date(date); // Convert due_date (ISO format) to Date object
@@ -18,6 +17,7 @@ const combineDateAndTime = (date, time) => {
 
 // get Activity Type
 const getActivityType = async () => {
+  const prisma = getPrisma();
   try {
     const activityTypes = await prisma.Activitytypes.findMany({
       where: {
@@ -33,6 +33,7 @@ const getActivityType = async () => {
 
 // Create a new Activities
 const createActivities = async (data) => {
+  const prisma = getPrisma();
   try {
     const activitiesStatus = await prisma.crms_d_activities.create({
       data: {
@@ -98,6 +99,7 @@ const createActivities = async (data) => {
 };
 //Updatae Activities
 const updateActivities = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updatedData = {
       ...data,
@@ -153,6 +155,7 @@ const updateActivities = async (id, data) => {
 
 // Get all Activities statuses
 const getAllActivities = async (reqBody) => {
+  const prisma = getPrisma();
   try {
     page = !reqBody?.page || reqBody?.page == 0 ? 1 : reqBody?.page;
     size = reqBody?.size || 10;
@@ -294,6 +297,7 @@ const getAllActivities = async (reqBody) => {
 };
 // Get all Activities statuses
 const getGroupActivities = async (reqBody) => {
+  const prisma = getPrisma();
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
@@ -398,6 +402,7 @@ const getGroupActivities = async (reqBody) => {
 };
 
 const deleteActivities = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.crms_d_activities.delete({
       where: { id: parseInt(id) },

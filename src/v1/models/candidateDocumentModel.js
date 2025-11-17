@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeCandidateDocument = (data) => ({
   candidate_id: Number(data.candidate_id),
@@ -14,7 +13,9 @@ const serializeCandidateDocument = (data) => ({
 });
 
 const createCandidateDocument = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const payload = {
       ...serializeCandidateDocument(data),
       createdby: Number(data.createdby) || 1,
@@ -44,6 +45,7 @@ const createCandidateDocument = async (data) => {
 
 // Create multiple candidate documents (for bulk upload)
 const createMultipleCandidateDocuments = async (dataArray) => {
+  const prisma = getPrisma();
   try {
     const createdRecords = [];
 
@@ -81,7 +83,9 @@ const createMultipleCandidateDocuments = async (dataArray) => {
 };
 
 const findCandidateDocument = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_candidate_documents.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -107,7 +111,9 @@ const findCandidateDocument = async (id) => {
 };
 
 const findCandidateDocumentsByCandidate = async (candidateId) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_candidate_documents.findMany({
       where: { candidate_id: parseInt(candidateId) },
       include: {
@@ -131,7 +137,9 @@ const findCandidateDocumentsByCandidate = async (candidateId) => {
 };
 
 const updateCandidateDocument = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const payload = {
       ...serializeCandidateDocument(data),
       updatedby: Number(data.updatedby) || 1,
@@ -161,7 +169,9 @@ const updateCandidateDocument = async (id, data) => {
 };
 
 const deleteCandidateDocument = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const deletedDoc = await prisma.hrms_d_candidate_documents.delete({
       where: { id: parseInt(id) },
     });
@@ -180,7 +190,9 @@ const deleteCandidateDocument = async (id) => {
 };
 
 const deleteMultipleCandidateDocuments = async (documentIds) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_d_candidate_documents.deleteMany({
       where: {
         id: { in: documentIds.map((id) => parseInt(id)) },

@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAwardType = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_award_type.create({
       data: {
         award_name: data.award_name || "",
@@ -25,7 +26,9 @@ const createAwardType = async (data) => {
 };
 
 const findAwardTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_award_type.findUnique({
       where: { id: parseInt(id) },
     });
@@ -43,7 +46,9 @@ const findAwardTypeById = async (id) => {
 };
 
 const updateAwardType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_award_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -58,7 +63,9 @@ const updateAwardType = async (id, data) => {
 };
 
 const deleteAwardType = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_award_type.delete({
       where: { id: parseInt(id) },
     });

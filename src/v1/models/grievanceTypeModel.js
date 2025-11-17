@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createGrievanceType = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_grievance_type.create({
       data: {
         grievance_type_name: data.grievance_type_name || "",
@@ -25,7 +26,9 @@ const createGrievanceType = async (data) => {
 };
 
 const findGrievanceTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_grievance_type.findUnique({
       where: { id: parseInt(id) },
     });
@@ -43,7 +46,9 @@ const findGrievanceTypeById = async (id) => {
 };
 
 const updateGrievanceType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_grievance_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -61,7 +66,9 @@ const updateGrievanceType = async (id, data) => {
 };
 
 const deleteGrievanceType = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_grievance_type.delete({
       where: { id: parseInt(id) },
     });
@@ -79,6 +86,7 @@ const deleteGrievanceType = async (id) => {
 
 // Get all grievance type
 const getAllGrievanceType = async (page, size, search) => {
+  const prisma = getPrisma();
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;

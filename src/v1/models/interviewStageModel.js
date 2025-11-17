@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serializer
 const serializeInterviewStage = (data) => ({
@@ -12,7 +11,9 @@ const serializeInterviewStage = (data) => ({
 
 // Create
 const createInterviewStage = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const result = await prisma.hrms_m_interview_stage.create({
       data: {
         ...serializeInterviewStage(data),
@@ -32,7 +33,9 @@ const createInterviewStage = async (data) => {
 
 // Read by ID
 const findInterviewStageById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const stage = await prisma.hrms_m_interview_stage.findUnique({
       where: { id: parseInt(id) },
     });
@@ -50,7 +53,9 @@ const findInterviewStageById = async (id) => {
 
 // Update
 const updateInterviewStage = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updated = await prisma.hrms_m_interview_stage.update({
       where: { id: parseInt(id) },
       data: {
@@ -70,7 +75,9 @@ const updateInterviewStage = async (id, data) => {
 
 // Delete
 const deleteInterviewStage = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const stageId = parseInt(id);
     if (isNaN(stageId)) {
       throw new CustomError("Invalid interview stage ID", 400);
@@ -114,6 +121,7 @@ const deleteInterviewStage = async (id) => {
 
 // List all with search & pagination
 const getAllInterviewStage = async (search, page, size) => {
+  const prisma = getPrisma();
   try {
     page = page && page > 0 ? page : 1;
     size = size || 10;

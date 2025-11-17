@@ -1,4 +1,5 @@
 const DocTypeModel = require("../models/DocTypeModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createDocType = async (data) => {
   return await DocTypeModel.createDocType(data);

@@ -1,6 +1,7 @@
 const trainingFeedbackService = require('../services/trainingFeedbackService');
 const CustomError = require('../../utils/CustomError');
 const moment = require('moment');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTrainingFeedback = async (req, res, next) => {
     try {

@@ -1,4 +1,5 @@
 const assetsTypeModel = require("../models/assetsTypeModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAssetsType = async (data) => {
   return await assetsTypeModel.createAssetsType(data);

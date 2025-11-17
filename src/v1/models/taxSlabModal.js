@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { connect } = require("puppeteer");
 const { id } = require("zod/v4/locales");
-const prisma = new PrismaClient();
 
 const serializeTaxData = (data) => ({
   pay_component_id: parseInt(data.pay_component_id) || null,
@@ -18,6 +17,7 @@ const serializeTaxData = (data) => ({
 });
 
 const createTaxSlab = async (data) => {
+  const prisma = getPrisma();
   try {
     if (!/^\d+$/.test(data.code)) {
       throw new CustomError("Code must be numeric.", 400);
@@ -120,6 +120,7 @@ const createTaxSlab = async (data) => {
 };
 
 const updateTaxSlab = async (id, data) => {
+  const prisma = getPrisma();
   try {
     console.log("Updating parent tax slab with id:", id, "and data:", data);
 
@@ -206,7 +207,9 @@ const updateTaxSlab = async (id, data) => {
 };
 
 const findTaxSlabById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const tax = await prisma.hrms_m_tax_slab_rule.findUnique({
       where: { id: parseInt(id) },
     });
@@ -219,6 +222,7 @@ const findTaxSlabById = async (id) => {
 
 // Delete a taxs
 const deleteTaxSlab = async (id) => {
+  const prisma = getPrisma();
   try {
     await prisma.hrms_m_tax_slab_rule1.deleteMany({
       where: { parent_id: parseInt(id) },

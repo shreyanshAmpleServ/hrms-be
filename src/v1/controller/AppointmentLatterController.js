@@ -4,9 +4,9 @@ const moment = require("moment");
 const fs = require("fs");
 const appointmentLetterQueue = require("../../utils/appointmentLetterQueue.js");
 const path = require("path");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { v4: uuidv4 } = require("uuid");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+
 const {
   generateAppointmentLetterPDF,
 } = require("../../utils/appointmentLetterPDF.js");
@@ -126,6 +126,7 @@ const downloadAppointmentLetterPDF = async (req, res, next) => {
 };
 
 const bulkDownloadAppointmentLetters = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const {
       candidate_id_from,

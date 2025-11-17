@@ -1,6 +1,6 @@
 const paymentRecoveryModel = require("../models/paymentRecoveryModel.js");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
+
 
 const createPaymentRecovery = async (data) => {
   return await paymentRecoveryModel.createPaymentRecovery(data);
@@ -41,6 +41,7 @@ const getPaymentRecoveryStats = async () => {
 };
 
 const updatePaymentRecoveryStatus = async (recoveryId, status, updatedBy) => {
+  const prisma = getPrisma();
   try {
     const validStatuses = ["P", "A", "R"];
 

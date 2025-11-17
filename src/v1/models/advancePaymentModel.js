@@ -3,9 +3,8 @@
  * @module advancePaymentModel
  */
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 const { createRequest } = require("./requestsModel.js");
 
 /**
@@ -15,7 +14,9 @@ const { createRequest } = require("./requestsModel.js");
  * @throws {CustomError} If database error occurs
  */
 const createAdvancePayment = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_advance_payment_entry.create({
       data: {
         employee_id: data.employee_id,
@@ -66,7 +67,9 @@ const createAdvancePayment = async (data) => {
  * @throws {CustomError} If advance payment not found or database error occurs
  */
 const findAdvancePaymentById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_advance_payment_entry.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -98,7 +101,9 @@ const findAdvancePaymentById = async (id) => {
  * @throws {CustomError} If database error occurs
  */
 const updateAdvancePayment = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const payload = {
       employee_id: data.employee_id,
       request_date: data.request_date,
@@ -141,7 +146,9 @@ const updateAdvancePayment = async (id, data) => {
  * @throws {CustomError} If database error occurs
  */
 const deleteAdvancePayment = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_advance_payment_entry.delete({
       where: { id: parseInt(id) },
     });
@@ -243,6 +250,7 @@ const getAllAdvancePayments = async (
 };
 
 const updateAdvancePaymentStatus = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const advancePayment = parseInt(id);
     if (isNaN(advancePayment)) {

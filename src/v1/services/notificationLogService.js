@@ -1,4 +1,5 @@
 const notificationLogModel = require("../models/notificationLogModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createNotificationLog = async (data, user) => {
   return await notificationLogModel.createNotificationLog(data, user);

@@ -1,4 +1,5 @@
 const salaryStructureModel = require("../models/salaryStructureModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createSalaryStructure = async (data) => {
   return await salaryStructureModel.createSalaryStructure(data);

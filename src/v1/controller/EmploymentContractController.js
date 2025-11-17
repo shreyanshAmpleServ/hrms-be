@@ -11,9 +11,9 @@ const {
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+
 const sendEmail = require("../../utils/mailer");
+const { getPrisma } = require("../../config/prismaContext.js");
 const {
   generateContractHTML,
   generateContractPDF,
@@ -210,6 +210,7 @@ const downloadContractPDF = async (req, res, next) => {
 };
 
 const sendContractToCandidate = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const contractId = req.params.id;
     const { log_inst } = req.body;
@@ -1013,6 +1014,7 @@ const sendContractToCandidate = async (req, res, next) => {
 // };
 
 const showEmploymentContractForCandidate = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const { id } = req.params;
     const { token } = req.query;
@@ -2010,6 +2012,7 @@ const showEmploymentContractForCandidate = async (req, res, next) => {
 // };
 
 const signEmploymentContractByCandidate = async (req, res, next) => {
+  const prisma = getPrisma();
   try {
     const { id } = req.params;
     const { token } = req.query;

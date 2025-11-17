@@ -1,8 +1,8 @@
 const { file } = require("pdfkit");
 const BasicPayModel = require("../models/BasicPayModel");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+
 const XLSX = require("xlsx");
+const { getPrisma } = require("../../config/prismaContext.js");
 const createBasicPay = async (data) => {
   return await BasicPayModel.createBasicPay(data);
 };

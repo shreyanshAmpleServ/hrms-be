@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new meeting type
 const createMeetingType = async (data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const meetingType = await prisma.crms_m_meetingtype.create({
       data: {
         name: data.name,
@@ -22,7 +23,9 @@ const createMeetingType = async (data) => {
 
 // Find a meeting type by ID
 const findMeetingTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const meetingType = await prisma.crms_m_meetingtype.findUnique({
       where: { id: parseInt(id) },
     });
@@ -40,7 +43,9 @@ const findMeetingTypeById = async (id) => {
 
 // Update a meeting type
 const updateMeetingType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const updatedMeetingType = await prisma.crms_m_meetingtype.update({
       where: { id: parseInt(id) },
       data: {
@@ -56,7 +61,9 @@ const updateMeetingType = async (id, data) => {
 
 // Delete a meeting type
 const deleteMeetingType = async (id) => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     await prisma.crms_m_meetingtype.delete({
       where: { id: parseInt(id) },
     });
@@ -74,7 +81,9 @@ const deleteMeetingType = async (id) => {
 
 // Get all meeting types
 const getAllMeetingTypes = async () => {
+  const prisma = getPrisma();
   try {
+      const prisma = getPrisma();
     const meetingTypes = await prisma.crms_m_meetingtype.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });

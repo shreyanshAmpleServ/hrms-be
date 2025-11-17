@@ -1,4 +1,5 @@
 const LeaveApplyModel = require("../models/LeaveApplyModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLeaveApplication = async (data) => {
   return await LeaveApplyModel.createLeaveApplication(data);

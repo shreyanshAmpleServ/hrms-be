@@ -1,6 +1,7 @@
 const exitClearanceService = require("../services/exitClearanceService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createExitClearance = async (req, res, next) => {
   try {

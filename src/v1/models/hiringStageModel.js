@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const serializeHiringStageData = (data) => ({
   code: data.code || "",
@@ -14,6 +13,7 @@ const serializeHiringStageData = (data) => ({
 });
 
 const createHiringStage = async (data) => {
+  const prisma = getPrisma();
   try {
     const existing = await prisma.hrms_d_hiring_stage.findFirst({
       where: { code: data.code },
@@ -50,7 +50,9 @@ const createHiringStage = async (data) => {
 };
 
 const getHiringStageById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const stage = await prisma.hrms_d_hiring_stage.findFirst({
       where: { id: parseInt(id) },
     });
@@ -66,7 +68,9 @@ const getHiringStageById = async (id) => {
   }
 };
 const updateHiringStage = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     if (data.code) {
       const existing = await prisma.hrms_d_hiring_stage.findFirst({
         where: {
@@ -107,7 +111,9 @@ const updateHiringStage = async (id, data) => {
 };
 
 const deleteHiringStage = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_hiring_stage.delete({
       where: { id: parseInt(id) },
     });
@@ -132,6 +138,7 @@ const getAllHiringStages = async (
   status
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : parseInt(page);
     size = size ? parseInt(size) : 10;
     const skip = (page - 1) * size;

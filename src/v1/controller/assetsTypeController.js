@@ -1,6 +1,7 @@
 const assetsTypeService = require("../services/assetsTypeService");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createAssetsType = async (req, res, next) => {
   try {

@@ -2,6 +2,7 @@ const AttachmentService = require('../services/FileAttachmentService');
 const CustomError = require('../../utils/CustomError');
 const { generateFullUrl } = require('../../utils/helper');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { uploadToBackblaze } = require('../../utils/uploadBackblaze');
 const { findAttachmentById } = require('../models/FileAttachmentModel');
 

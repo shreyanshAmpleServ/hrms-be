@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createHoliday = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_holiday_calendar.create({
       data: {
         holiday_name: data.holiday_name,
@@ -27,7 +28,9 @@ const createHoliday = async (data) => {
 };
 
 const findHolidayById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_holiday_calendar.findUnique({
       where: { id: parseInt(id) },
     });
@@ -44,7 +47,9 @@ const findHolidayById = async (id) => {
 };
 
 const updateHoliday = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_holiday_calendar.update({
       where: { id: parseInt(id) },
       data: {
@@ -62,7 +67,9 @@ const updateHoliday = async (id, data) => {
 };
 
 const deleteHoliday = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_holiday_calendar.delete({
       where: { id: parseInt(id) },
     });

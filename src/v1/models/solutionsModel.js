@@ -1,10 +1,11 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new solution
 const createSolutions = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Create the solution
     const solutions = await prisma.crms_d_solution.create({
       data: {
@@ -37,7 +38,9 @@ const createSolutions = async (data) => {
 
 // Update a Solution
 const updateSolutions = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedSolution = await prisma.crms_d_solution.update({
       where: { id: parseInt(id) },
       data: {
@@ -77,7 +80,9 @@ const updateSolutions = async (id, data) => {
 
 // Find a case by ID
 const findSolutionById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const solutionData = await prisma.crms_d_solution.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -103,7 +108,9 @@ const findSolutionById = async (id) => {
 
 // Delete a solution
 const deleteSolution = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.crms_d_solution.delete({
       where: { id: parseInt(id) },
     });
@@ -121,6 +128,7 @@ const deleteSolution = async (id) => {
 
 // Get all solutions
 const getAllSolution = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = page || 1;
     size = size || 10;

@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { createRequest } = require("./requestsModel");
 const { request } = require("express");
-const prisma = new PrismaClient();
 
 // Serialize probation review data
 const serializeProbationReviewData = (data) => ({
@@ -35,7 +34,9 @@ const serializeProbationReviewData = (data) => ({
 
 // Create a new probation review
 const createProbationReview = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_probation_review.create({
       data: {
         ...serializeProbationReviewData(data),
@@ -82,7 +83,9 @@ const createProbationReview = async (data) => {
 
 // Find probation review by ID
 const findProbationReviewById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_probation_review.findUnique({
       where: { id: parseInt(id) },
     });
@@ -100,7 +103,9 @@ const findProbationReviewById = async (id) => {
 
 // Update probation review
 const updateProbationReview = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEntry = await prisma.hrms_d_probation_review.update({
       where: { id: parseInt(id) },
       include: {
@@ -137,7 +142,9 @@ const updateProbationReview = async (id, data) => {
 
 // Delete probation review
 const deleteProbationReview = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_probation_review.delete({
       where: { id: parseInt(id) },
     });

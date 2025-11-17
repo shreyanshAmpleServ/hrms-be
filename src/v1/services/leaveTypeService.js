@@ -1,4 +1,5 @@
 const leaveTypeModel = require("../models/leaveTypeModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLeaveType = async (data) => {
   return await leaveTypeModel.createLeaveType(data);

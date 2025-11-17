@@ -2,6 +2,7 @@ const departmentService = require("../services/departmentService");
 const CustomError = require("../../utils/CustomError");
 const { generateFullUrl } = require("../../utils/helper");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 // const sanitizedepartmentData = (data) => {
 //     return {
 //         title: data.title ? String(data.title).trim() : null,

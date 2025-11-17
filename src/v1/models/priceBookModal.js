@@ -1,17 +1,18 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Create a new price book
-const createPriceBook = async (orderData,orderItemsData) => {
+const createPriceBook = async (orderData, orderItemsData) => {
+  const prisma = getPrisma();
   try {
-    console.log("Modal of Create price book : ", orderData)
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    console.log("Modal of Create price book : ", orderData);
+    const result = await prisma.$transaction(async () => {
       // Step 1: Create the Order
       const createdPriceBook = await prisma.crms_m_pricebook.create({
         data: {
           ...orderData,
-          is_active:"Y",
+          is_active: "Y",
           createdate: new Date(),
           updatedate: new Date(),
           updatedby: orderData.createdby || 1,
@@ -20,21 +21,21 @@ const createPriceBook = async (orderData,orderItemsData) => {
       });
       // Step 2: Create OrderItems using the created order's ID
       const orderItems = await prisma.crms_m_pricebook_details.createMany({
-        data: orderItemsData.map(item => ({
+        data: orderItemsData.map((item) => ({
           ...item,
           parent_id: Number(createdPriceBook.id),
         })),
       });
 
-     // Fetch the newly created order with associated data
-     const priceBookWithDetails = await prisma.crms_m_pricebook.findUnique({
-      where: { id: createdPriceBook.id },
-      include: {
-        price_book_details: true,
-      },
-    });
+      // Fetch the newly created order with associated data
+      const priceBookWithDetails = await prisma.crms_m_pricebook.findUnique({
+        where: { id: createdPriceBook.id },
+        include: {
+          price_book_details: true,
+        },
+      });
 
-    return priceBookWithDetails;
+      return priceBookWithDetails;
     });
 
     return result;
@@ -46,14 +47,16 @@ const createPriceBook = async (orderData,orderItemsData) => {
 
 // Update a quotation
 const updatePriceBook = async (orderId, orderData, orderItemsData) => {
+  const prisma = getPrisma();
   try {
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    const result = await prisma.$transaction(async () => {
       // Step 1: Update the Order
       const updatedOrder = await prisma.crms_m_pricebook.update({
         where: { id: Number(orderId) },
         data: {
           ...orderData,
-          is_active:"Y",
+          is_active: "Y",
           updatedate: new Date(),
           updatedby: orderData?.updatedby || 1,
         },
@@ -71,18 +74,15 @@ const updatePriceBook = async (orderId, orderData, orderItemsData) => {
           parent_id: Number(orderId),
         })),
       });
-      
+      // Fetch the newly created order with associated data
+      const orderWithDetails = await prisma.crms_m_pricebook.findUnique({
+        where: { id: updatedOrder.id },
+        include: {
+          price_book_details: true,
+        },
+      });
 
-     // Fetch the newly created order with associated data
-     const orderWithDetails = await prisma.crms_m_pricebook.findUnique({
-      where: { id: updatedOrder.id },
-      include: {
-        price_book_details: true,
-      },
-    });
-
-    return orderWithDetails;
-
+      return orderWithDetails;
     });
 
     return result;
@@ -92,45 +92,48 @@ const updatePriceBook = async (orderId, orderData, orderItemsData) => {
   }
 };
 
-// Find a quotation by ID 
+// Find a quotation by ID
 const findPriceBookById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const users = await prisma.crms_m_products.findUnique({
-      where:{ id: parseInt(id)},
-      include:{
-        vendor:{
-          select:{
-            name:true,
-            id:true
-          }
+      where: { id: parseInt(id) },
+      include: {
+        vendor: {
+          select: {
+            name: true,
+            id: true,
+          },
         },
-        manufacturer:{
-          select:{
-            name:true,
-            id:true
-          }
+        manufacturer: {
+          select: {
+            name: true,
+            id: true,
+          },
         },
-        Currency:{
-          select:{
-            name:true,
-            code:true,
-            id:true
-          }
+        Currency: {
+          select: {
+            name: true,
+            code: true,
+            id: true,
+          },
         },
       },
-     
     });
     return users;
   } catch (error) {
-    console.log("Error in Details of Product ", error)
+    console.log("Error in Details of Product ", error);
     throw new CustomError(`Error finding user by ID: ${error.message}`, 503);
   }
 };
 
 // Delete a Order
 const deletePriceBook = async (orderId) => {
+  const prisma = getPrisma();
   try {
-    const result = await prisma.$transaction(async (prisma) => {
+    const prisma = getPrisma();
+    const result = await prisma.$transaction(async () => {
       // Delete Order Items first
       await prisma.crms_m_pricebook_details.deleteMany({
         where: { parent_id: Number(orderId) },
@@ -149,11 +152,10 @@ const deletePriceBook = async (orderId) => {
     throw new Error("Failed to delete price book");
   }
 };
-
-
-const getAllPriceBook = async (search ,page , size ,startDate, endDate) => {
+const getAllPriceBook = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
-    page = page || 1 ;
+    page = page || 1;
     size = size || 10;
     const skip = (page - 1) * size;
 
@@ -161,9 +163,7 @@ const getAllPriceBook = async (search ,page , size ,startDate, endDate) => {
 
     // Handle search
     if (search) {
-      filters.OR = [
-        { name: { contains: search.toLowerCase() }} 
-      ];
+      filters.OR = [{ name: { contains: search.toLowerCase() } }];
     }
 
     // Handle date filtering
@@ -185,7 +185,6 @@ const getAllPriceBook = async (search ,page , size ,startDate, endDate) => {
       take: size,
       include: {
         price_book_details: true, // Include the related order items
-       
       },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
@@ -197,10 +196,10 @@ const getAllPriceBook = async (search ,page , size ,startDate, endDate) => {
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
-      totalCount : totalCount  ,
+      totalCount: totalCount,
     };
   } catch (error) {
-    console.log("Error price books Modal : ", error)
+    console.log("Error price books Modal : ", error);
     throw new CustomError("Error retrieving price books", 503);
   }
 };

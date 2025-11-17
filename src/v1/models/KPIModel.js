@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createKPI = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const finalData = await prisma.hrms_m_kpi_master.create({
       data: {
         kpi_name: data.kpi_name,
@@ -25,7 +26,9 @@ const createKPI = async (data) => {
 };
 
 const findKPIById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const data = await prisma.hrms_m_kpi_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -40,7 +43,9 @@ const findKPIById = async (id) => {
 };
 
 const updateKPI = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedData = await prisma.hrms_m_kpi_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -55,7 +60,9 @@ const updateKPI = async (id, data) => {
 };
 
 const deleteKPI = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_kpi_master.delete({
       where: { id: parseInt(id) },
     });
@@ -72,6 +79,7 @@ const deleteKPI = async (id) => {
 };
 
 const getAllKPI = async (page, size, search, startDate, endDate, is_active) => {
+  const prisma = getPrisma();
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;

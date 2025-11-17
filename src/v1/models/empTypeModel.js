@@ -1,9 +1,10 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createEmpType = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const empType = await prisma.hrms_m_employment_type.create({
       data: {
         type_name: data.type_name,
@@ -26,7 +27,9 @@ const createEmpType = async (data) => {
 };
 
 const findEmpTypeById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const empType = await prisma.hrms_m_employment_type.findUnique({
       where: { id: parseInt(id) },
     });
@@ -44,7 +47,9 @@ const findEmpTypeById = async (id) => {
 };
 
 const updateEmpType = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updatedEmpType = await prisma.hrms_m_employment_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -62,7 +67,9 @@ const updateEmpType = async (id, data) => {
 };
 
 const deleteEmpType = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_employment_type.delete({
       where: { id: parseInt(id) },
     });

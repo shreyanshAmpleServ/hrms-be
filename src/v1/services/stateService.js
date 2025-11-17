@@ -1,4 +1,5 @@
 const statesModel = require("../models/stateModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createState = async (data) => {
   return await statesModel.createState(data);

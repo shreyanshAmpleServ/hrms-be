@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { createRequest } = require("./requestsModel");
-const prisma = new PrismaClient();
 
 // Serialize asset assignment data
 const serializeAssetAssignment = (data) => ({
@@ -16,6 +15,7 @@ const serializeAssetAssignment = (data) => ({
 
 // Create a new asset assignment
 const createAssetAssignment = async (data) => {
+  const prisma = getPrisma();
   try {
     const created = await prisma.hrms_d_asset_assignment.create({
       data: {
@@ -59,7 +59,9 @@ const createAssetAssignment = async (data) => {
 
 // Find an asset assignment by ID
 const findAssetAssignmentById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_asset_assignment.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -87,6 +89,7 @@ const findAssetAssignmentById = async (id) => {
 
 // Update an asset assignment
 const updateAssetAssignment = async (id, data) => {
+  const prisma = getPrisma();
   try {
     const updated = await prisma.hrms_d_asset_assignment.update({
       where: { id: parseInt(id) },
@@ -119,7 +122,9 @@ const updateAssetAssignment = async (id, data) => {
 
 // Delete an asset assignment
 const deleteAssetAssignment = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_asset_assignment.delete({
       where: { id: parseInt(id) },
     });
@@ -144,6 +149,7 @@ const getAllAssetAssignments = async (
   endDate
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size;

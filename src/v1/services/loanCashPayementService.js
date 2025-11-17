@@ -1,4 +1,5 @@
 const loanCashPayementModel = require("../models/loanCashPayementModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createLoanCashPayement = async (data) => {
   return await loanCashPayementModel.createLoanCashPayement(data);

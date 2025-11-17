@@ -3,9 +3,8 @@
  * @module helpdeskTicketModel
  */
 
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 /**
  * Creates a new helpdesk ticket
@@ -14,7 +13,9 @@ const prisma = new PrismaClient();
  * @throws {CustomError} If database error occurs
  */
 const createHelpdeskTicket = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_helpdesk_ticket.create({
       data: {
         employee_id: data.employee_id,
@@ -59,7 +60,9 @@ const createHelpdeskTicket = async (data) => {
  * @throws {CustomError} If helpdesk ticket not found or database error occurs
  */
 const findHelpdeskTicketById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_helpdesk_ticket.findUnique({
       where: { id: parseInt(id) },
     });
@@ -83,7 +86,9 @@ const findHelpdeskTicketById = async (id) => {
  * @throws {CustomError} If database error occurs
  */
 const updateHelpdeskTicket = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const payload = {
       employee_id: data.employee_id,
       ticket_subject: data.ticket_subject,
@@ -130,7 +135,9 @@ const updateHelpdeskTicket = async (id, data) => {
  * @throws {CustomError} If database error occurs
  */
 const deleteHelpdeskTicket = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_helpdesk_ticket.delete({
       where: { id: parseInt(id) },
     });

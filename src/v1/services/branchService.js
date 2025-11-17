@@ -1,4 +1,5 @@
 const branchModel = require("../models/branchModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createBranch = async (data) => {
   return await branchModel.createBranch(data);

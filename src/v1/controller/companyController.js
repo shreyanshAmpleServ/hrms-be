@@ -2,6 +2,7 @@ const companyService = require('../services/companyService');
 const CustomError = require('../../utils/CustomError');
 const { generateFullUrl } = require('../../utils/helper');
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const { uploadToBackblaze, deleteFromBackblaze } = require('../../utils/uploadBackblaze');
 const { findCompanyById } = require('../models/companyModel');
 

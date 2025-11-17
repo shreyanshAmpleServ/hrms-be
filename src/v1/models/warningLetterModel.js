@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Serialize warning letter data
 const serializeWarningLetterData = (data) => ({
@@ -16,7 +15,9 @@ const serializeWarningLetterData = (data) => ({
 
 // Create a new warning letter
 const createWarningLetter = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_warning_letters.create({
       data: {
         ...serializeWarningLetterData(data),
@@ -60,7 +61,9 @@ const createWarningLetter = async (data) => {
 
 // Find warning letter by ID
 const findWarningLetterById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const reqData = await prisma.hrms_d_warning_letters.findUnique({
       where: { id: parseInt(id) },
     });
@@ -78,7 +81,9 @@ const findWarningLetterById = async (id) => {
 
 // Update warning letter
 const updateWarningLetter = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const updateData = {
       reason: data.reason?.trim().toLowerCase() || "",
       issued_date: data.issued_date ? new Date(data.issued_date) : new Date(),
@@ -140,7 +145,9 @@ const updateWarningLetter = async (id, data) => {
 
 // Delete warning letter
 const deleteWarningLetter = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_warning_letters.delete({
       where: { id: parseInt(id) },
     });
@@ -158,6 +165,7 @@ const deleteWarningLetter = async (id) => {
 
 // Get all warning letters with pagination and search
 const getAllWarningLetter = async (search, page, size, startDate, endDate) => {
+  const prisma = getPrisma();
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;

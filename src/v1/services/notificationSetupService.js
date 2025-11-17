@@ -1,4 +1,5 @@
 const notificationSetupModel = require("../models/notificationSetupModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createNotificationSetup = async (data) => {
   return await notificationSetupModel.createNotificationSetup(data);

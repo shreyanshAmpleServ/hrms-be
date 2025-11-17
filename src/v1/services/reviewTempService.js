@@ -1,4 +1,5 @@
 const reviewTempModel = require("../models/reviewTempModel");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createReviewTemp = async (data) => {
   return await reviewTempModel.createReviewTemp(data);

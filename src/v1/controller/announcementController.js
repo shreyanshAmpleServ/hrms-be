@@ -1,6 +1,7 @@
 const announcementService = require("../services/announcementService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
+const { getPrisma } = require("../../config/prismaContext.js");
 const {
   uploadToBackblaze,
   deleteFromBackblaze,
@@ -226,7 +227,13 @@ const processAnnouncementNow = async (req, res, next) => {
 
 const getMyAnnouncement = async (req, res, next) => {
   try {
-    const employeeId = req.user.employee_id;
+    const employeeId = req.user?.employee_id;
+    if (!employeeId) {
+      return res.status(400).json({
+        success: false,
+        message: "Employee ID not found in user data",
+      });
+    }
     const result = await announcementService.getEmployeeAnnouncement(
       employeeId
     );

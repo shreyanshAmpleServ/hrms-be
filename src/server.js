@@ -22,7 +22,7 @@ const app = require("./app");
 const logger = require("./Comman/logger");
 const { initializeCronJobs } = require("./cronjobs");
 const { startScheduler } = require("./v1/services/alertWorkflowService.js");
-const { disconnectAll } = require("./config/db.js");
+const { disconnectAll } = require("./config/prisma.config.js");
 
 const PORT = process.env.PORT || 5000;
 

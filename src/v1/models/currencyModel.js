@@ -1,9 +1,9 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createCurrency = async (data) => {
   try {
+    const prisma = getPrisma();
     const existingName = await prisma.hrms_m_currency_master.findFirst({
       where: {
         currency_name: { equals: data.currency_name },
@@ -44,6 +44,7 @@ const createCurrency = async (data) => {
 
 const findCurrencyById = async (id) => {
   try {
+    const prisma = getPrisma();
     const currency = await prisma.hrms_m_currency_master.findUnique({
       where: { id: parseInt(id) },
     });
@@ -61,6 +62,7 @@ const findCurrencyById = async (id) => {
 
 const updateCurrency = async (id, data) => {
   try {
+    const prisma = getPrisma();
     const numericId = parseInt(id);
 
     if (data.currency_name) {
@@ -105,6 +107,7 @@ const updateCurrency = async (id, data) => {
 
 const deleteCurrency = async (id) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_m_currency_master.delete({
       where: { id: parseInt(id) },
     });
@@ -129,6 +132,7 @@ const getAllCurrency = async (
   is_active
 ) => {
   try {
+    const prisma = getPrisma();
     page = page && page !== 0 ? parseInt(page) : 1;
     size = size || 10;
     const skip = (page - 1) * size || 0;

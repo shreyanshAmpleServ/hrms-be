@@ -1,4 +1,5 @@
 const TimeSheetModel = require('../models/TimeSheetModel');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createTimeSheet = async (data) => {
     return await TimeSheetModel.createTimeSheet(data);

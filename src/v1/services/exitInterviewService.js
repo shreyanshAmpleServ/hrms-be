@@ -1,4 +1,5 @@
 const exitInterviewModel = require("../models/exitInterviewModel.js");
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createExitInterview = async (data) => {
   return await exitInterviewModel.createExitInterview(data);

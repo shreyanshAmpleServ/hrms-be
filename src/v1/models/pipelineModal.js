@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Utility Method: Formats pipeline data consistently
 const formatPipelineData = (pipeline, isArray) => {
@@ -79,7 +78,9 @@ const formatPipelineData = (pipeline, isArray) => {
 
 // Create a new pipeline with or without stages
 const createPipelineWithStages = async (data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const pipeline = await prisma.pipeline.create({
       data: {
         name: data.name,
@@ -103,7 +104,9 @@ const createPipelineWithStages = async (data) => {
 
 // Find a pipeline by ID
 const findPipelineById = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     const pipeline = await prisma.pipeline.findUnique({
       where: { id: parseInt(id) },
       include: {
@@ -129,7 +132,9 @@ const findPipelineById = async (id) => {
 
 // Update an existing pipeline
 const updatePipeline = async (id, data) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Fetch existing pipeline and its stages
     const existingPipeline = await prisma.pipeline.findUnique({
       where: { id: parseInt(id) },
@@ -160,7 +165,7 @@ const updatePipeline = async (id, data) => {
 
     // Perform updates within a transaction
     const updatedPipeline = await prisma.$transaction(
-      async (prisma) => {
+      async () => {
         // Delete stages that are no longer present in the input
         if (stageIdsToDelete.length > 0) {
           await prisma.stage.deleteMany({
@@ -221,7 +226,9 @@ const updatePipeline = async (id, data) => {
 
 // Delete a pipeline along with its stages and deals
 const deletePipeline = async (id) => {
+  const prisma = getPrisma();
   try {
+    const prisma = getPrisma();
     // Delete DealContacts first (child table)
     await prisma.dealContacts.deleteMany({ where: { dealId: parseInt(id) } });
     await prisma.stage.deleteMany({ where: { pipelineId: parseInt(id) } });
@@ -250,6 +257,7 @@ const getAllPipelines = async (
   status
 ) => {
   try {
+    const prisma = getPrisma();
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -332,6 +340,7 @@ const getAllPipelines = async (
 
 // Retrieve pipeline data with deals
 const getPipelineDataWithDeals = async (pipelineId) => {
+  const prisma = getPrisma();
   try {
     const pipeline = await prisma.pipeline.findUnique({
       where: { id: parseInt(pipelineId) },
@@ -444,6 +453,7 @@ const getPipelineDataWithDeals = async (pipelineId) => {
 };
 
 const updateDealStage = async (dealId, data) => {
+  const prisma = getPrisma();
   try {
     // Update the deal's stage
     await prisma.deal.update({

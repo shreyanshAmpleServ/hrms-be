@@ -1,8 +1,7 @@
 const announcementModel = require("../models/announcementModel.js");
-const { PrismaClient } = require("@prisma/client");
 const cron = require("node-cron");
 const { deleteFromBackblaze } = require("../../utils/uploadBackblaze.js");
-const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const jobs = {};
 const oneTimeJobs = new Map();
@@ -249,7 +248,7 @@ const getScheduledJobsStatus = () => {
 const initializeScheduledAnnouncements = async () => {
   try {
     console.log(" Initializing scheduled announcements...");
-
+    const prisma = getPrisma();
     const scheduledAnnouncements = await prisma.hrms_d_announcement.findMany({
       where: {
         scheduled_at: {
@@ -367,10 +366,13 @@ const initializeScheduledAnnouncements = async () => {
 
 const getEmployeeAnnouncement = async (employeeId) => {
   try {
+    if (!employeeId) {
+      throw new Error("Employee ID is required");
+    }
     // console.log(
     //   ` Getting TODAY's announcements for employee ID: ${employeeId}`
     // );
-
+    const prisma = getPrisma();
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(employeeId) },
       include: {
@@ -501,6 +503,7 @@ const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
       999
     );
 
+    const prisma = getPrisma();
     const allTodayAnnouncements = await prisma.hrms_d_announcement.findMany({
       where: {
         is_active: "Y",
@@ -580,6 +583,7 @@ const getEmployeeAnnouncementsByDate = async (
   size = 10
 ) => {
   try {
+    const prisma = getPrisma();
     // console.log(
     //   `🗓️ Getting announcements for employee ${employeeId} on date: ${targetDate}`
     // );

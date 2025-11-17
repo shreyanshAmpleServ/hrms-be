@@ -1,5 +1,6 @@
 const meetingTypeService = require('../services/meetingTypeService');
 const CustomError = require('../../utils/CustomError');
+const { getPrisma } = require("../../config/prismaContext.js");
 
 const createMeetingType = async (req, res, next) => {
     try {

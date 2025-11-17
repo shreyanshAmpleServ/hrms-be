@@ -1,6 +1,5 @@
-// const { PrismaClient } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+const { getPrisma } = require("../../config/prismaContext.js");
 
 // Helper function to define fields returned for a user
 const getUserFields = (is_password = false) => ({
@@ -18,8 +17,9 @@ const getUserFields = (is_password = false) => ({
   updatedate: true,
 });
 
-const getRolePermission = async (prisma, role_id) => {
+const getRolePermission = async (role_id) => {
   if (!role_id) return null;
+  const prisma = getPrisma();
   const role = await prisma.hrms_d_role_permissions.findFirst({
     where: { role_id },
     select: { permissions: true },
@@ -27,9 +27,13 @@ const getRolePermission = async (prisma, role_id) => {
   return role ? JSON.parse(role.permissions) : null;
 };
 // Common method to fetch a user with role name
-const getUserWithRole = async (prisma, userId, is_password = false) => {
+const getUserWithRole = async (userId, is_password = false) => {
+  if (!userId || isNaN(userId)) {
+    throw new CustomError("Valid user ID is required", 400);
+  }
+  const prisma = getPrisma();
   const user = await prisma.hrms_m_user.findUnique({
-    where: { id: userId },
+    where: { id: parseInt(userId) },
     select: {
       ...getUserFields(is_password),
       hrms_d_user_role: {
@@ -55,7 +59,7 @@ const getUserWithRole = async (prisma, userId, is_password = false) => {
   if (!user) throw new CustomError("User not found", 404);
 
   const roleId = user?.hrms_d_user_role?.[0]?.hrms_m_role?.id || null;
-  const permission = roleId ? await getRolePermission(prisma, roleId) : null;
+  const permission = roleId ? await getRolePermission(roleId) : null;
   // console.log("Fetching permissions" ,roleId,JSON.parse(permission?.permissions))
 
   return {
@@ -67,8 +71,9 @@ const getUserWithRole = async (prisma, userId, is_password = false) => {
   };
 };
 
-const createUser = async (prisma, data) => {
+const createUser = async (data) => {
   try {
+    const prisma = getPrisma();
     if (data.employee_id) {
       const existingUser = await prisma.hrms_m_user.findFirst({
         where: { employee_id: Number(data.employee_id) },
@@ -181,8 +186,9 @@ const createUser = async (prisma, data) => {
 };
 
 // Update a user and their role
-const updateUser = async (prisma, id, data) => {
+const updateUser = async (id, data) => {
   try {
+    const prisma = getPrisma();
     if (data.employee_id) {
       const employee = await prisma.hrms_d_employee.findUnique({
         where: { id: Number(data.employee_id) },
@@ -249,7 +255,7 @@ const updateUser = async (prisma, id, data) => {
     }
 
     // Step 5: Return full user details
-    return await getUserWithRole(prisma, updatedUser.id);
+    return await getUserWithRole(updatedUser.id);
   } catch (error) {
     console.log(error);
     throw new CustomError(`Error updating user: ${error.message}`, 500);
@@ -257,15 +263,16 @@ const updateUser = async (prisma, id, data) => {
 };
 
 // Find a user by email and include role
-const findUserByEmail = async (prisma, email) => {
+const findUserByEmail = async (email) => {
   try {
+    const prisma = getPrisma();
     const user = await prisma.hrms_m_user.findFirst({
       where: { email },
     });
 
     if (!user) throw new CustomError("User not found", 404);
     console.log("User found", user);
-    return await getUserWithRole(prisma, user.id, true);
+    return await getUserWithRole(user.id, true);
   } catch (error) {
     console.log(error);
     throw new CustomError(`Error finding user by email: ${error.message}`, 503);
@@ -273,17 +280,25 @@ const findUserByEmail = async (prisma, email) => {
 };
 
 // Find a user by ID and include role
-const findUserById = async (prisma, id) => {
+const findUserById = async (id) => {
   try {
-    return await getUserWithRole(prisma, parseInt(id));
+    if (!id) {
+      throw new CustomError("User ID is required", 400);
+    }
+    const parsedId = parseInt(id);
+    if (isNaN(parsedId)) {
+      throw new CustomError("Invalid user ID format", 400);
+    }
+    return await getUserWithRole(parsedId);
   } catch (error) {
     throw new CustomError(`Error finding user by ID: ${error.message}`, 503);
   }
 };
 
 // Delete a user
-const deleteUser = async (prisma, id) => {
+const deleteUser = async (id) => {
   try {
+    const prisma = getPrisma();
     await prisma.hrms_d_user_role.deleteMany({
       where: { user_id: parseInt(id) },
     });
@@ -379,7 +394,6 @@ const deleteUser = async (prisma, id) => {
 // };
 
 const getAllUsers = async (
-  prisma,
   search,
   page,
   size,
@@ -425,6 +439,7 @@ const getAllUsers = async (
       }
     }
 
+    const prisma = getPrisma();
     const usersList = await prisma.hrms_m_user.findMany({
       where: filters,
       skip,
