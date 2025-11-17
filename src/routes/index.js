@@ -14,6 +14,7 @@ const industryRoutes = require("../v1/routes/industryRoute");
 const lostReasonRoutes = require("../v1/routes/lostReasonRoute");
 const projectRoutes = require("../v1/routes/projectRoutes");
 const userRoutes = require("../v1/routes/userRoutes");
+
 const roleRoutes = require("../v1/routes/roleRoute");
 const leadRoutes = require("../v1/routes/leadRoutes");
 const countryRoutes = require("../v1/routes/countryRoutes");
