@@ -66,7 +66,7 @@ const authenticateToken = (req, res, next) => {
     req.user = decoded;
     req.tenantDb = tenantDb;
 
-    console.log(`Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
+    console.log(` Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
 
     withTenantContext(tenantDb, () => {
       next();
