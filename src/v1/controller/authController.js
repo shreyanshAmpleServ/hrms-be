@@ -91,9 +91,10 @@ const login = async (req, res, next) => {
 
     res.cookie("authToken", data.token, {
       httpOnly: true,
-      secure: false,
-      sameSite: "Strict",
+      secure: true, // Changed from false - REQUIRED for HTTPS
+      sameSite: "Lax", // Changed from "Strict" - better cross-domain compatibility
       maxAge: 30 * 24 * 60 * 60 * 1000,
+      // Don't set domain - let it default to the exact domain
     });
 
     res.status(200).success("Login successful", data.user);
