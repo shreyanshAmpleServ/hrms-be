@@ -20,6 +20,7 @@ const serializePayrollData = (data) => ({
 });
 
 const createMonthlyPayroll = async (data) => {
+  console.log("Data received:", data);
   try {
     const serializedData = serializePayrollData(data);
     const { employee_id, payroll_month } = serializedData;
@@ -308,7 +309,8 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
     return isNaN(d) ? "NULL" : `'${d.toISOString()}'`;
   };
 
-  const safeString = (val) => (val ? `'${val.replace(/'/g, "''")}'` : "NULL");
+  const safeString = (val) =>
+    val ? `'${String(val).replace(/'/g, "''")}'` : "NULL";
 
   const safeNumber = (val, def = 0) => {
     const num = Number(val);
@@ -340,7 +342,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         payroll_start_date: safeDate(row.payroll_start_date),
         payroll_end_date: safeDate(row.payroll_end_date),
         payroll_paid_days: safeNumber(row.payroll_paid_days),
-        pay_currency: row.Currency,
+        pay_currency: safeString(row.Currency),
         total_earnings: safeDecimal(row.total_earnings),
         taxable_earnings: safeDecimal(row.TaxableIncome),
         tax_amount: safeDecimal(row.TaxPayee),
@@ -362,10 +364,10 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         approver1_id: safeNumber(row.approver1_id),
         employee_email: safeString(row.employee_email),
         remarks: safeString(row.remarks),
-        log_inst: safeString(user.log_inst),
-        createdby: user.id,
+        log_inst: safeString(user?.log_inst),
+        createdby: safeNumber(user?.id),
         createdate: "GETDATE()",
-        updatedby: user.id,
+        updatedby: safeNumber(user?.id),
         updatedate: "GETDATE()",
       };
 
@@ -378,8 +380,30 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
 
       const allCols = {};
       Object.entries({ ...staticCols, ...componentCols }).forEach(([k, v]) => {
-        allCols[`[${k}]`] = v;
+        // Ensure all values are properly formatted
+        let formattedValue = v;
+        if (v === undefined || v === null) {
+          formattedValue = "NULL";
+        } else if (typeof v === "number") {
+          formattedValue = v;
+        } else if (v === "GETDATE()") {
+          formattedValue = "GETDATE()";
+        } else if (typeof v === "string") {
+          // Already formatted by safeString or safeDate
+          formattedValue = v;
+        } else {
+          formattedValue = String(v);
+        }
+        // Only add non-empty keys
+        if (k) {
+          allCols[`[${k}]`] = formattedValue;
+        }
       });
+
+      // Validate that we have at least some columns
+      if (Object.keys(allCols).length === 0) {
+        throw new Error("No valid columns to insert/update");
+      }
 
       const exists = await prisma.$queryRawUnsafe(`
         SELECT id FROM hrms_d_monthly_payroll_processing
@@ -391,62 +415,37 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
       let sql;
       let action;
       if (exists.length > 0) {
-        // const setClause = Object.entries(allCols)
-        //   .map(([key, val]) => `${key} = ${val}`)
-        //   .join(", ");
-        // sql = `
-        //   UPDATE hrms_d_monthly_payroll_processing
-        //   SET ${setClause}
-        //   WHERE employee_id = ${employee_id}
-        //     AND payroll_month = ${payroll_month}
-        //     AND payroll_year = ${payroll_year}
-        // `;
-        // action = "updated";
         const setClause = Object.entries(allCols)
           .map(([key, val]) => {
-            if (val === "GETDATE()") return `${key} = GETDATE()`;
-            if (val === null || val === "NULL") return `${key} = NULL`;
-            if (typeof val === "number") return `${key} = ${val}`;
-            if (/^\d+(\.\d+)?$/.test(val)) return `${key} = ${val}`;
-            return `${key} = '${val}'`;
+            if (val === "GETDATE()") {
+              return `${key} = ${val}`;
+            } else if (val === "NULL") {
+              return `${key} = NULL`;
+            } else {
+              return `${key} = ${val}`;
+            }
           })
           .join(", ");
-
         sql = `
-  UPDATE hrms_d_monthly_payroll_processing
-  SET ${setClause}
-  WHERE employee_id = ${employee_id}
-    AND payroll_month = ${payroll_month}
-    AND payroll_year = ${payroll_year}
-`;
+          UPDATE hrms_d_monthly_payroll_processing
+          SET ${setClause}
+          WHERE employee_id = ${employee_id}
+            AND payroll_month = ${payroll_month}
+            AND payroll_year = ${payroll_year}
+        `;
         action = "updated";
       } else {
-        // const columns = Object.keys(allCols).join(", ");
-
-        // const values = Object.values(allCols)
-        //   .map((v) => (v === "GETDATE()" ? v : v))
-        //   .join(", ");
-        // sql = `
-        //   INSERT INTO hrms_d_monthly_payroll_processing (${columns})
-        //   VALUES (${values})
-        // `;
-
-        const valueList = Object.values(allCols)
-          .map((v) => {
-            if (v === "GETDATE()") return v;
-            if (v === null || v === "NULL") return "NULL";
-            if (typeof v === "number") return v;
-            if (/^\d+(\.\d+)?$/.test(v)) return v;
-            return `'${v}'`;
-          })
-          .join(", ");
-
+        const columns = Object.keys(allCols).join(", ");
+        const values = Object.values(allCols).join(", ");
         sql = `
-  INSERT INTO hrms_d_monthly_payroll_processing (${columns})
-  VALUES (${valueList});
-`;
+          INSERT INTO hrms_d_monthly_payroll_processing (${columns})
+          VALUES (${values})
+        `;
         action = "inserted";
       }
+
+      // Log SQL for debugging (remove in production if sensitive)
+      console.log("Generated SQL:", sql.substring(0, 500) + "...");
 
       await prisma.$executeRawUnsafe(sql);
 
@@ -469,6 +468,10 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
     return processed;
   } catch (error) {
     console.error("Raw payroll error:", error);
+    console.error("Error details:", {
+      message: error.message,
+      stack: error.stack,
+    });
     throw new Error(
       `Failed to process payroll bulk operation: ${error.message}`
     );
