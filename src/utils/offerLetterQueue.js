@@ -2,8 +2,8 @@
 // const path = require("path");
 // const fs = require("fs");
 // const archiver = require("archiver");
-// const { PrismaClient } = require("@prisma/client");
-// const prisma = new PrismaClient();
+// const { prisma } = require("../../utils/prismaProxy.js");
+//
 // const offerLatterModel = require("../v1/models/offerLatterModel.js");
 // const { generateOfferLetterPDF } = require("../utils/offerLetterPDF");
 
@@ -181,8 +181,8 @@ const Queue = require("bull");
 const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../utils/prismaProxy.js");
+
 const offerLatterModel = require("../v1/models/offerLatterModel.js");
 const { generateOfferLetterPDF } = require("../utils/offerLetterPDF");
 

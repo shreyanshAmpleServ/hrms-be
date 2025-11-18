@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("./requestsModel");
 const { request } = require("express");
-const prisma = new PrismaClient();
 
 // Serialize probation review data
 const serializeProbationReviewData = (data) => ({

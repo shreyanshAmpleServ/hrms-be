@@ -1,6 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+
 const sendEmail = require("../../utils/mailer.js");
 const emailTemplates = require("../../utils/emailTemplates.js");
 const getRequestDetailsByType = require("../../utils/getDetails.js");

@@ -2,8 +2,8 @@
 // const path = require("path");
 // const fs = require("fs");
 // const archiver = require("archiver");
-// const { PrismaClient } = require("@prisma/client");
-// const prisma = new PrismaClient();
+// const { prisma } = require("../../utils/prismaProxy.js");
+//
 // const appraisalModel = require("../v1/models/AppraisalModel");
 // const { generateAppraisalPDF } = require("../utils/appraisalPDF.js");
 // const logger = require("../Comman/logger");
@@ -290,8 +290,8 @@ const Queue = require("bull");
 const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../utils/prismaProxy.js");
+
 const appraisalModel = require("../v1/models/AppraisalModel.js");
 const { generateAppraisalPDF } = require("../utils/appraisalPDF");
 const logger = require("../Comman/logger");

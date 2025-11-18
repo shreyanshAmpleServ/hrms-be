@@ -1,5 +1,5 @@
-// // const { PrismaClient } = require("@prisma/client");
-// // const prisma = new PrismaClient();
+// // const { prisma } = require("../../utils/prismaProxy.js");
+// //
 
 // // /**
 // //  * @param {Object} options
@@ -36,8 +36,8 @@
 
 // // module.exports = { logActivity };
 
-// const { PrismaClient } = require("@prisma/client");
-// const prisma = new PrismaClient();
+// const { prisma } = require("../../utils/prismaProxy.js");
+//
 
 // /**
 //  * @param {Object} options
@@ -78,8 +78,7 @@
 // };
 
 // module.exports = { logActivity };
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../utils/prismaProxy.js");
 
 const logActivity = async ({
   employee_id,

@@ -1,7 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const prisma = new PrismaClient();
+
 const { Prisma } = require("@prisma/client");
 const { createRequest } = require("./requestsModel");
 

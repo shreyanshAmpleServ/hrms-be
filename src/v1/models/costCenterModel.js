@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { includes } = require("zod/v4");
-const prisma = new PrismaClient();
 
 // Helper to serialize cost center data
 const serializeCostCenterData = (data) => ({

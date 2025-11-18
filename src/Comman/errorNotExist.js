@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../utils/prismaProxy.js");
 const CustomError = require("../utils/CustomError"); // make sure path is correct
-const prisma = new PrismaClient();
 
 const errorNotExist = async (modelName, id, name) => {
   // Validate ID

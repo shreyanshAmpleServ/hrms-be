@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 // Create a new lost reason
 const createLostReason = async (data) => {

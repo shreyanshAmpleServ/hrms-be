@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 // Serialize KPI progress entry data
 const serializeKpiProgressEntryData = (data) => {

@@ -1,8 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const { id } = require("zod/v4/locales");
-const prisma = new PrismaClient();
+
 const { DateTime } = require("luxon");
 
 const parseTags = (deal) => {

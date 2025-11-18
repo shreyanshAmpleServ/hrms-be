@@ -1,6 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
+//
+const { prisma } = require("../../utils/prismaProxy.js");
 const moment = require("moment");
 const { se } = require("date-fns/locale");
 

@@ -1,6 +1,6 @@
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+//
 
 // const serializeApprovalWorkFlowData = (data) => ({
 //   request_type: data.request_type || "",
@@ -583,9 +583,8 @@
 //   getDepartmentsWithWorkflows,
 // };
 
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 const serializeApprovalWorkFlowData = (data) => ({
   request_type: data.request_type || "",

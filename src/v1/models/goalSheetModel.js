@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { parse } = require("dotenv");
-const prisma = new PrismaClient();
 
 // Serialize goal sheet assignment data
 const serializeGoalSheetAssignmentData = (data) => {

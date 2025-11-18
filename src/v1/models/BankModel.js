@@ -1,6 +1,6 @@
-// const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-// const prisma = new PrismaClient();
+//
 
 // Create a new bank
 const createBank = async (prisma, data) => {
@@ -144,6 +144,7 @@ const getAllBank = async (search, page, size, is_active) => {
       totalCount: totalCount,
     };
   } catch (error) {
+    console.log(error);
     throw new CustomError("Error retrieving banks", 503);
   }
 };

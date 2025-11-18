@@ -4,8 +4,8 @@ const moment = require("moment");
 const { generateEmailContent } = require("../../utils/emailTemplates");
 const sendEmail = require("../../utils/mailer");
 const { templateKeyMap } = require("../../utils/templateKeyMap");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../../utils/prismaProxy.js");
+
 // const createNotificationSetup = async (req, res, next) => {
 //   try {
 //     const {

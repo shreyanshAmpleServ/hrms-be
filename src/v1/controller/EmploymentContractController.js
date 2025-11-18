@@ -11,8 +11,8 @@ const {
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-const { PrismaClient } = require("@prisma/client");
-const prisma = new PrismaClient();
+const { prisma } = require("../../utils/prismaProxy.js");
+
 const sendEmail = require("../../utils/mailer");
 const {
   generateContractHTML,

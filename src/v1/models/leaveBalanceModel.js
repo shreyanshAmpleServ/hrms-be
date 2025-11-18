@@ -3,9 +3,8 @@
  * @module leaveBalanceModel
  */
 
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 /**
  * Normalizes leave balance detail entries by ensuring default values.

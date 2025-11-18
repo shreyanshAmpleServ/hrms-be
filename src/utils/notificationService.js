@@ -1,7 +1,6 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const { generateEmailContent } = require("./emailTemplates");
 const sendEmail = require("./mailer");
-const prisma = new PrismaClient();
 
 class NotificationService {
   static async sendNotifications({

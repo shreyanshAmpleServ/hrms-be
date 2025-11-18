@@ -1,8 +1,8 @@
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
 
-// const prisma = new PrismaClient();
+//
 
 // const processedRequests = new Set();
 
@@ -642,11 +642,11 @@
 // module.exports = { setupNotificationMiddleware };
 
 // II without channel
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
 
-// const prisma = new PrismaClient();
+//
 
 // const templateKeyMap = {
 //   notificationSetupCreated: "notification_setup_created",
@@ -905,11 +905,11 @@
 // module.exports = { setupNotificationMiddleware };
 
 //III.1-with diff template(Old)
-// const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy.js");
 // const sendEmail = require("../../utils/mailer.js");
 // const { generateEmailContent } = require("../../utils/emailTemplates.js");
 
-// const prisma = new PrismaClient();
+//
 
 // const templateKeyMap = {
 //   notificationSetupCreated: "notification_setup_created",
@@ -1466,11 +1466,10 @@
 // module.exports = { setupNotificationMiddleware };
 
 //III.2-with diff template(New)
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy");
+
 const sendEmail = require("../../utils/mailer.js");
 const { generateEmailContent } = require("../../utils/emailTemplates.js");
-
-const prisma = new PrismaClient();
 
 const templateKeyMap = {
   email: {

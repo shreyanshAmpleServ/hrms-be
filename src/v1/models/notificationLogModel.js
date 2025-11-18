@@ -1,6 +1,5 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-const prisma = new PrismaClient();
 
 // Serialize notification log data
 const serializeNotificationLog = (data) => ({
@@ -147,15 +146,14 @@ const getAllNotificationLog = async (
 
     const filters =
       filterConditions.length > 0 ? { AND: filterConditions } : {};
+    const adminRoles = [1, 8];
 
     const datas = await prisma.hrms_d_notification_log.findMany({
       where: filters,
       skip,
-      take: user?.role?.toLowerCase()?.includes("admin")
-        ? size
-        : user?.role?.toLowerCase()?.includes("hr")
-        ? size
-        : 0,
+
+      take: adminRoles.includes(user.role_id) ? size : 0,
+
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
       include: {
         notification_log_employee: { select: { id: true, full_name: true } },

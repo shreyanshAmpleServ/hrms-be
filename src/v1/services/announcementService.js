@@ -1,8 +1,9 @@
 const announcementModel = require("../models/announcementModel.js");
-const { PrismaClient } = require("@prisma/client");
+// const { prisma } = require("../../utils/prismaProxy.js");
 const cron = require("node-cron");
 const { deleteFromBackblaze } = require("../../utils/uploadBackblaze.js");
-const prisma = new PrismaClient();
+//
+const { prisma } = require("../../utils/prismaProxy.js");
 
 const jobs = {};
 const oneTimeJobs = new Map();
@@ -371,6 +372,12 @@ const getEmployeeAnnouncement = async (employeeId) => {
     //   ` Getting TODAY's announcements for employee ID: ${employeeId}`
     // );
 
+    if (!employeeId || isNaN(parseInt(employeeId))) {
+      return {
+        data: [],
+        error: "Invalid employee ID",
+      };
+    }
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: parseInt(employeeId) },
       include: {
@@ -477,12 +484,117 @@ const getEmployeeAnnouncement = async (employeeId) => {
   }
 };
 
+// const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
+//   try {
+//     // console.log(
+//     //   `Getting paginated TODAY's announcements for employee ${employeeId}`
+//     // );
+
+//     const skip = (page - 1) * size;
+
+//     const today = new Date();
+//     const startOfToday = new Date(
+//       today.getFullYear(),
+//       today.getMonth(),
+//       today.getDate()
+//     );
+//     const endOfToday = new Date(
+//       today.getFullYear(),
+//       today.getMonth(),
+//       today.getDate(),
+//       23,
+//       59,
+//       59,
+//       999
+//     );
+
+//     const allTodayAnnouncements = await prisma.hrms_d_announcement.findMany({
+//       where: {
+//         is_active: "Y",
+//         OR: [
+//           {
+//             scheduled_at: null,
+//             createdate: {
+//               gte: startOfToday,
+//               lte: endOfToday,
+//             },
+//           },
+//           {
+//             scheduled_at: {
+//               gte: startOfToday,
+//               lte: endOfToday,
+//             },
+//           },
+//         ],
+//       },
+//       orderBy: [{ scheduled_at: "desc" }, { createdate: "desc" }],
+//     });
+
+//     //  console.log(
+//     //   ` Found ${allTodayAnnouncements.length} total announcements for today`
+//     // );
+
+//     const targetedAnnouncements = [];
+
+//     for (const announcement of allTodayAnnouncements) {
+//       const targetEmployees = await getTargetEmployees(
+//         announcement.target_type,
+//         JSON.parse(announcement.target_values || "[]")
+//       );
+
+//       const isTargeted = targetEmployees.some(
+//         (emp) => emp.id === parseInt(employeeId)
+//       );
+
+//       if (isTargeted) {
+//         targetedAnnouncements.push({
+//           ...announcement,
+//           target_values: JSON.parse(announcement.target_values || "[]"),
+//           isToday: true,
+//         });
+//       }
+//     }
+
+//     // console.log(
+//     //   ` Found ${targetedAnnouncements.length} targeted TODAY's announcements for employee ${employeeId}`
+//     // );
+
+//     const paginatedAnnouncements = targetedAnnouncements.slice(
+//       skip,
+//       skip + size
+//     );
+
+//     return {
+//       data: paginatedAnnouncements,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(targetedAnnouncements.length / size),
+//       totalCount: targetedAnnouncements.length,
+//       filterInfo: {
+//         date: today.toISOString().split("T")[0],
+//         description: "Showing only today's announcements",
+//       },
+//     };
+//   } catch (error) {
+//     throw new Error(`Error fetching employee announcements: ${error.message}`);
+//   }
+// };
+
 const getEmployeeAnnouncements = async (employeeId, page = 1, size = 10) => {
   try {
     // console.log(
     //   `Getting paginated TODAY's announcements for employee ${employeeId}`
     // );
-
+    if (!employeeId || isNaN(parseInt(employeeId))) {
+      return {
+        data: [],
+        currentPage: page,
+        size,
+        totalPages: 0,
+        totalCount: 0,
+        error: "Invalid employee ID",
+      };
+    }
     const skip = (page - 1) * size;
 
     const today = new Date();
@@ -580,9 +692,9 @@ const getEmployeeAnnouncementsByDate = async (
   size = 10
 ) => {
   try {
-    // console.log(
-    //   `🗓️ Getting announcements for employee ${employeeId} on date: ${targetDate}`
-    // );
+    console.log(
+      ` Getting announcements for employee ${employeeId} on date: ${targetDate}`
+    );
 
     const skip = (page - 1) * size;
     const date = new Date(targetDate);

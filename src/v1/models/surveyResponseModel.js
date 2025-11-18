@@ -3,10 +3,9 @@
  * @module surveyResponseModel
  */
 
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { z } = require("zod");
-const prisma = new PrismaClient();
 
 /**
  * Zod schema for validating survey response data

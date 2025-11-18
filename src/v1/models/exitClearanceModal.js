@@ -1,8 +1,7 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { number } = require("zod/v4");
 const { id } = require("date-fns/locale");
-const prisma = new PrismaClient();
 
 // Serialize exit clearance data
 const serializeExitClearance = (data) => ({

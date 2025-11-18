@@ -1,9 +1,8 @@
-const { PrismaClient } = require("@prisma/client");
+const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { toLowerCase, int } = require("zod/v4");
 const { parse } = require("dotenv");
 const { updateLeaveApplication } = require("./LeaveApplyModel");
-const prisma = new PrismaClient();
 
 // Serialize travel expense data
 const serializeTravelExpenseData = (data) => ({
