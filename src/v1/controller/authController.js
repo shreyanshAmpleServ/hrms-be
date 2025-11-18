@@ -105,8 +105,8 @@ const logout = (req, res, next) => {
   try {
     res.clearCookie("authToken", {
       httpOnly: true,
-      secure: false,
-      sameSite: "Strict",
+      secure: true,
+      sameSite: "None",
     });
 
     res.status(200).success("Logout successful", null);
