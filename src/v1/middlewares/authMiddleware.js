@@ -132,7 +132,12 @@ const authenticateToken = async (req, res, next) => {
       }
       // Call next() within the tenant context
       // The asyncLocalStorage context will be maintained for all subsequent operations
-      return next();
+      // Handle both sync and async next() calls
+      const result = next();
+      if (result instanceof Promise) {
+        return await result;
+      }
+      return result;
     });
   } catch (error) {
     return res.status(403).json({

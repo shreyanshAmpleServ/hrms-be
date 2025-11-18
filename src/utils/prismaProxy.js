@@ -7,7 +7,7 @@ const createPrismaProxy = () => {
   return new Proxy(
     {},
     {
-      get(target, prop) {
+      get(_target, prop) {
         const store = asyncLocalStorage.getStore();
 
         if (!store || !store.tenantDb) {

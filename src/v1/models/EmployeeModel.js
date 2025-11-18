@@ -960,13 +960,36 @@ const updateEmployee = async (id, data) => {
 
     return parseData(updatedEmp);
   } catch (error) {
-    console.log("Updating error in employee", error);
+    console.error(`Error updating employee ${id}:`, error);
+
+    // If it's already a CustomError, re-throw it
     if (error instanceof CustomError) {
       throw error;
     }
 
+    // Handle tenant context errors
+    if (error.message && error.message.includes("No tenant database context")) {
+      throw new CustomError(
+        "Database context error. Please ensure you are authenticated.",
+        500
+      );
+    }
+
+    // Handle specific Prisma errors
+    if (error.code === "P2001") {
+      throw new CustomError(`Employee with ID ${id} not found`, 404);
+    }
+
+    if (error.code === "P2002") {
+      throw new CustomError(
+        `A unique constraint would be violated. An employee with the same unique fields already exists.`,
+        400
+      );
+    }
+
+    // Generic error
     throw new CustomError(
-      `Error updating employee: ${error.message}`,
+      `Error updating employee: ${error.message || "Unknown error"}`,
       error.status || 500
     );
   }
@@ -1061,8 +1084,6 @@ const findEmployeeById = async (id) => {
 
     return parseData(employee);
   } catch (error) {
-    console.error(`Error finding employee by ID ${id}:`, error);
-
     // If it's already a CustomError, re-throw it
     if (error instanceof CustomError) {
       throw error;
