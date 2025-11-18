@@ -84,7 +84,7 @@ const logger = require("../../Comman/logger");
 
 let schedulerInitialized = false;
 
-const authenticateToken = (req, res, next) => {
+const authenticateToken = async (req, res, next) => {
   const token =
     req.cookies.authToken || req.headers.authorization?.split(" ")[1];
 
@@ -111,7 +111,10 @@ const authenticateToken = (req, res, next) => {
 
     console.log(`Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
 
-    withTenantContext(tenantDb, async () => {
+    // Use withTenantContext to wrap the entire request handling
+    // The context will be maintained for all async operations in the request chain
+    // asyncLocalStorage maintains context across async boundaries automatically
+    return withTenantContext(tenantDb, async () => {
       if (!schedulerInitialized) {
         try {
           logger.info(
@@ -127,7 +130,9 @@ const authenticateToken = (req, res, next) => {
           );
         }
       }
-      next();
+      // Call next() within the tenant context
+      // The asyncLocalStorage context will be maintained for all subsequent operations
+      return next();
     });
   } catch (error) {
     return res.status(403).json({
