@@ -176,9 +176,23 @@ const serializeAddress = (data) => {
  * @returns {Object} The parsed employee data.
  */
 const parseData = (data) => {
-  if (data && data.social_medias) {
-    data.social_medias = JSON.parse(data.social_medias);
+  if (!data) {
+    return data;
   }
+
+  if (data.social_medias) {
+    try {
+      // Handle both string and already parsed JSON
+      if (typeof data.social_medias === "string") {
+        data.social_medias = JSON.parse(data.social_medias);
+      }
+    } catch (error) {
+      console.error("Error parsing social_medias:", error);
+      // Set to empty array if parsing fails
+      data.social_medias = [];
+    }
+  }
+
   return data;
 };
 
@@ -966,8 +980,18 @@ const updateEmployee = async (id, data) => {
  */
 const findEmployeeById = async (id) => {
   try {
+    // Validate input
+    if (!id) {
+      throw new CustomError("Employee ID is required", 400);
+    }
+
+    const employeeId = parseInt(id);
+    if (isNaN(employeeId)) {
+      throw new CustomError(`Invalid employee ID: ${id}`, 400);
+    }
+
     const employee = await prisma.hrms_d_employee.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: employeeId },
       include: {
         employee_currency: {
           select: {
@@ -1030,9 +1054,38 @@ const findEmployeeById = async (id) => {
         eduction_of_employee: true,
       },
     });
+
+    if (!employee) {
+      throw new CustomError(`Employee with ID ${employeeId} not found`, 404);
+    }
+
     return parseData(employee);
   } catch (error) {
-    throw new CustomError("Error finding employee by ID", error.status || 503);
+    console.error(`Error finding employee by ID ${id}:`, error);
+
+    // If it's already a CustomError, re-throw it
+    if (error instanceof CustomError) {
+      throw error;
+    }
+
+    // Handle specific Prisma errors
+    if (error.code === "P2001") {
+      throw new CustomError(`Employee with ID ${id} not found`, 404);
+    }
+
+    // Handle tenant context errors
+    if (error.message && error.message.includes("No tenant database context")) {
+      throw new CustomError(
+        "Database context error. Please ensure you are authenticated.",
+        500
+      );
+    }
+
+    // Generic error
+    throw new CustomError(
+      `Error finding employee by ID: ${error.message || "Unknown error"}`,
+      error.status || 500
+    );
   }
 };
 
