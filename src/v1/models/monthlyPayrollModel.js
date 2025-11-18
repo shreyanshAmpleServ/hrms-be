@@ -419,6 +419,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
     AND payroll_month = ${payroll_month}
     AND payroll_year = ${payroll_year}
 `;
+        action = "updated";
       } else {
         // const columns = Object.keys(allCols).join(", ");
 
