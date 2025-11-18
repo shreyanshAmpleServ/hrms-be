@@ -250,7 +250,21 @@ const findEmployeeById = async (req, res, next) => {
 
 const updateEmployee = async (req, res, next) => {
   try {
-    const existingData = await EmployeeService.findEmployeeById(req.params.id);
+    // Ensure tenant context is maintained
+    const { ensureTenantContext } = require("../../utils/prismaProxy");
+    const tenantDb = req.tenantDb;
+
+    if (!tenantDb) {
+      return res.status(401).json({
+        success: false,
+        message: "Tenant database not found in request",
+        status: 401,
+      });
+    }
+
+    const existingData = await ensureTenantContext(tenantDb, () =>
+      EmployeeService.findEmployeeById(req.params.id)
+    );
 
     if (!existingData) throw new CustomError("Employee not found", 404);
 
@@ -328,9 +342,8 @@ const updateEmployee = async (req, res, next) => {
       }
     }
 
-    const updatedEmployee = await EmployeeService.updateEmployee(
-      req.params.id,
-      data
+    const updatedEmployee = await ensureTenantContext(tenantDb, () =>
+      EmployeeService.updateEmployee(req.params.id, data)
     );
 
     res.status(200).json({
