@@ -415,6 +415,17 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
       let sql;
       let action;
       if (exists.length > 0) {
+        // const setClause = Object.entries(allCols)
+        //   .map(([key, val]) => `${key} = ${val}`)
+        //   .join(", ");
+        // sql = `
+        //   UPDATE hrms_d_monthly_payroll_processing
+        //   SET ${setClause}
+        //   WHERE employee_id = ${employee_id}
+        //     AND payroll_month = ${payroll_month}
+        //     AND payroll_year = ${payroll_year}
+        // `;
+        // action = "updated";
         const setClause = Object.entries(allCols)
           .map(([key, val]) => {
             if (val === "GETDATE()") {
@@ -426,21 +437,22 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
             }
           })
           .join(", ");
+
         sql = `
-          UPDATE hrms_d_monthly_payroll_processing
-          SET ${setClause}
-          WHERE employee_id = ${employee_id}
-            AND payroll_month = ${payroll_month}
-            AND payroll_year = ${payroll_year}
-        `;
+  UPDATE hrms_d_monthly_payroll_processing
+  SET ${setClause}
+  WHERE employee_id = ${employee_id}
+    AND payroll_month = ${payroll_month}
+    AND payroll_year = ${payroll_year}
+`;
         action = "updated";
       } else {
         const columns = Object.keys(allCols).join(", ");
         const values = Object.values(allCols).join(", ");
         sql = `
-          INSERT INTO hrms_d_monthly_payroll_processing (${columns})
-          VALUES (${values})
-        `;
+  INSERT INTO hrms_d_monthly_payroll_processing (${columns})
+  VALUES (${valueList});
+`;
         action = "inserted";
       }
 

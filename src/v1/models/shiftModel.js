@@ -31,7 +31,6 @@ const serializeShiftMasterData = (data) => ({
   daily_working_hours: data.daily_working_hours
     ? Number(data.daily_working_hours)
     : null,
-  department_id: data.department_id ? Number(data.department_id) : null,
   number_of_working_days: data.number_of_working_days
     ? Number(data.number_of_working_days)
     : null,
@@ -42,30 +41,22 @@ const serializeShiftMasterData = (data) => ({
   is_active: data.is_active || "Y",
 });
 
-// Create a new shift master
 const createShift = async (data) => {
   try {
     const reqData = await prisma.hrms_m_shift_master.create({
       data: {
-        ...serializeShiftMasterData({
-          ...data,
-          department_id: undefined, // Don't pass this directly
-        }),
+        ...serializeShiftMasterData(data),
+
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
+
         shift_department_id: data.department_id
-          ? {
-              connect: { id: Number(data.department_id) },
-            }
+          ? { connect: { id: Number(data.department_id) } }
           : undefined,
       },
       include: {
-        shift_department_id: {
-          select: {
-            id: true,
-          },
-        },
+        shift_department_id: { select: { id: true } },
       },
     });
 
