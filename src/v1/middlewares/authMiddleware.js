@@ -132,7 +132,17 @@ const authenticateToken = async (req, res, next) => {
       }
       // Call next() within the tenant context
       // The asyncLocalStorage context will be maintained for all subsequent operations
-      return next();
+      // Ensure we properly await async route handlers to maintain context
+      try {
+        const result = next();
+        if (result && typeof result.then === "function") {
+          return await result;
+        }
+        return result;
+      } catch (error) {
+        // If next() throws synchronously, re-throw it
+        throw error;
+      }
     });
   } catch (error) {
     return res.status(403).json({

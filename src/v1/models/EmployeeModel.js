@@ -176,9 +176,23 @@ const serializeAddress = (data) => {
  * @returns {Object} The parsed employee data.
  */
 const parseData = (data) => {
-  if (data && data.social_medias) {
-    data.social_medias = JSON.parse(data.social_medias);
+  if (!data) {
+    return data;
   }
+
+  if (data.social_medias) {
+    try {
+      // Handle both string and already parsed JSON
+      if (typeof data.social_medias === "string") {
+        data.social_medias = JSON.parse(data.social_medias);
+      }
+    } catch (error) {
+      console.error("Error parsing social_medias:", error);
+      // Set to empty array if parsing fails
+      data.social_medias = [];
+    }
+  }
+
   return data;
 };
 
@@ -946,13 +960,36 @@ const updateEmployee = async (id, data) => {
 
     return parseData(updatedEmp);
   } catch (error) {
-    console.log("Updating error in employee", error);
+    console.error(`Error updating employee ${id}:`, error);
+
+    // If it's already a CustomError, re-throw it
     if (error instanceof CustomError) {
       throw error;
     }
 
+    // Handle tenant context errors
+    if (error.message && error.message.includes("No tenant database context")) {
+      throw new CustomError(
+        "Database context error. Please ensure you are authenticated.",
+        500
+      );
+    }
+
+    // Handle specific Prisma errors
+    if (error.code === "P2001") {
+      throw new CustomError(`Employee with ID ${id} not found`, 404);
+    }
+
+    if (error.code === "P2002") {
+      throw new CustomError(
+        `A unique constraint would be violated. An employee with the same unique fields already exists.`,
+        400
+      );
+    }
+
+    // Generic error
     throw new CustomError(
-      `Error updating employee: ${error.message}`,
+      `Error updating employee: ${error.message || "Unknown error"}`,
       error.status || 500
     );
   }
@@ -966,8 +1003,18 @@ const updateEmployee = async (id, data) => {
  */
 const findEmployeeById = async (id) => {
   try {
+    // Validate input
+    if (!id) {
+      throw new CustomError("Employee ID is required", 400);
+    }
+
+    const employeeId = parseInt(id);
+    if (isNaN(employeeId)) {
+      throw new CustomError(`Invalid employee ID: ${id}`, 400);
+    }
+
     const employee = await prisma.hrms_d_employee.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: employeeId },
       include: {
         employee_currency: {
           select: {
@@ -1030,9 +1077,36 @@ const findEmployeeById = async (id) => {
         eduction_of_employee: true,
       },
     });
+
+    if (!employee) {
+      throw new CustomError(`Employee with ID ${employeeId} not found`, 404);
+    }
+
     return parseData(employee);
   } catch (error) {
-    throw new CustomError("Error finding employee by ID", error.status || 503);
+    // If it's already a CustomError, re-throw it
+    if (error instanceof CustomError) {
+      throw error;
+    }
+
+    // Handle specific Prisma errors
+    if (error.code === "P2001") {
+      throw new CustomError(`Employee with ID ${id} not found`, 404);
+    }
+
+    // Handle tenant context errors
+    if (error.message && error.message.includes("No tenant database context")) {
+      throw new CustomError(
+        "Database context error. Please ensure you are authenticated.",
+        500
+      );
+    }
+
+    // Generic error
+    throw new CustomError(
+      `Error finding employee by ID: ${error.message || "Unknown error"}`,
+      error.status || 500
+    );
   }
 };
 
