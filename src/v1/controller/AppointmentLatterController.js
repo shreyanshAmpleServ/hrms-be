@@ -245,6 +245,7 @@ const bulkDownloadAppointmentLetters = async (req, res, next) => {
 
     const job = await appointmentLetterQueue.add({
       userId: req.user.id,
+      tenantDb: req.tenantDb,
       filters: filters,
       advancedFilters: advancedFilters,
       jobId: jobId,

@@ -206,12 +206,15 @@ const bulkDownloadAppraisals = async (req, res, next) => {
 
     const job = await appraisalQueue.add({
       userId: req.user.id,
+      tenantDb: req.tenantDb,
       filters: filters,
       advancedFilters: advancedFilters,
       jobId: jobId,
     });
 
-    console.log(`Bulk appraisal download job created: ${job.id}`);
+    console.log(
+      `Bulk appraisal download job created: ${job.id} for tenant: ${req.tenantDb}`
+    );
 
     res
       .status(202)

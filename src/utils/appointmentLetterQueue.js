@@ -2,10 +2,12 @@ const Queue = require("bull");
 const path = require("path");
 const fs = require("fs");
 const archiver = require("archiver");
-const { prisma } = require("../utils/prismaProxy.js");
+const { getPrismaClient } = require("../config/db.js");
 
 const appointmentLatterModel = require("../v1/models/AppointmentLatterModel.js");
-const { generateAppraisalPDF } = require("../utils/appraisalPDF");
+const {
+  generateAppointmentLetterPDF,
+} = require("../utils/appointmentLetterPDF");
 
 const appointmentLetterQueue = new Queue("appointment-letter-bulk-download", {
   redis: {
@@ -17,9 +19,11 @@ const appointmentLetterQueue = new Queue("appointment-letter-bulk-download", {
 const cancelledJobs = new Set();
 
 appointmentLetterQueue.process(async (job) => {
-  const { userId, filters, jobId } = job.data;
+  const { userId, filters, advancedFilters, jobId, tenantDb } = job.data;
 
-  console.log(`[Job ${jobId}] Starting bulk appointment letter download...`);
+  console.log(
+    `[Job ${jobId}] Starting bulk appointment letter download for tenant: ${tenantDb}`
+  );
 
   try {
     if (cancelledJobs.has(job.id.toString())) {
@@ -28,22 +32,21 @@ appointmentLetterQueue.process(async (job) => {
       throw new Error("Job was cancelled");
     }
 
+    if (!tenantDb) {
+      throw new Error("No tenant database provided in job data");
+    }
+
+    const prisma = getPrismaClient(tenantDb);
+    console.log(`[Job ${jobId}] Using database: ${tenantDb}`);
+
     await job.progress(10);
 
-    const appointmentLetters = await prisma.hrms_d_appointment_letter.findMany({
-      where: filters || {},
-      select: {
-        id: true,
-        designation_id: true,
-        candidate_id: true,
-        appointment_candidate: {
-          select: {
-            id: true,
-            full_name: true,
-          },
-        },
-      },
-    });
+    const appointmentLetters =
+      await appointmentLatterModel.getAllAppointmentLettersForBulkDownload(
+        filters || {},
+        advancedFilters || {},
+        tenantDb
+      );
 
     console.log(
       `[Job ${jobId}] Found ${appointmentLetters.length} appointment letters to process`
@@ -83,7 +86,8 @@ appointmentLetterQueue.process(async (job) => {
         );
 
         const pdfData = await appointmentLatterModel.getAppointmentLetterForPDF(
-          appointmentLetter.id
+          appointmentLetter.id,
+          tenantDb
         );
 
         const sanitizedName = (
@@ -94,7 +98,7 @@ appointmentLetterQueue.process(async (job) => {
         const fileName = `appointment_letter_${appointmentLetter.id}_${sanitizedName}.pdf`;
         const filePath = path.join(tempDir, fileName);
 
-        await generateAppraisalPDF(pdfData, filePath);
+        await generateAppointmentLetterPDF(pdfData, filePath);
         pdfPaths.push({ path: filePath, name: fileName });
 
         const progress = 20 + Math.floor(((i + 1) / totalLetters) * 60);
