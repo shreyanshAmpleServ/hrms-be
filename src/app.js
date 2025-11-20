@@ -87,6 +87,8 @@ app.use(
   cors({
     origin: [
       "https://hrms.dcctz.com",
+      "https://demo.dcchrms.com",
+      "https://hesu.dcchrms.com",
       "http://localhost:3000",
       "http://localhost:3001",
       "http://192.168.29.90:3000",

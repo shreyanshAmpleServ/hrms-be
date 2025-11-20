@@ -250,7 +250,6 @@ const findEmployeeById = async (req, res, next) => {
 
 const updateEmployee = async (req, res, next) => {
   try {
-    // Ensure tenant context is maintained
     const { ensureTenantContext } = require("../../utils/prismaProxy");
     const tenantDb = req.tenantDb;
 
