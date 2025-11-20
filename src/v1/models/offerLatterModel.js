@@ -2,6 +2,7 @@ const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
+const { getPrismaClient } = require("../../config/db.js");
 
 const serializeJobData = (data) => {
   return {
@@ -281,13 +282,37 @@ const updateOfferLetterStatus = async (id, data) => {
 
 const fetch = require("node-fetch");
 
-const getOfferLetterForPDF = async (id) => {
+const getOfferLetterForPDF = async (id, tenantDb = null) => {
   try {
     if (!id) {
       throw new CustomError("Offer letter ID is required", 400);
     }
 
-    const offerLetter = await prisma.hrms_d_offer_letter.findUnique({
+    console.log(
+      ` Getting PDF data for offer letter ${id}, tenantDb: ${
+        tenantDb || "from context"
+      }`
+    );
+
+    let dbClient;
+
+    if (tenantDb) {
+      console.log(` Using explicit tenantDb: ${tenantDb}`);
+      dbClient = getPrismaClient(tenantDb);
+    } else {
+      const store = asyncLocalStorage.getStore();
+      if (store && store.tenantDb) {
+        console.log(` Using context tenantDb: ${store.tenantDb}`);
+        dbClient = prisma;
+      } else {
+        throw new CustomError(
+          "No tenant database context available. Please ensure authentication.",
+          503
+        );
+      }
+    }
+
+    const offerLetter = await dbClient.hrms_d_offer_letter.findUnique({
       where: { id: Number(id) },
       include: {
         offered_candidate: {
@@ -316,19 +341,20 @@ const getOfferLetterForPDF = async (id) => {
       throw new CustomError("Offer letter not found", 404);
     }
 
-    const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
-      select: {
-        company_logo: true,
-        company_name: true,
-        company_signature: true,
-        street_address: true,
-        city: true,
-        state: true,
-        country: true,
-        phone_number: true,
-        website: true,
-      },
-    });
+    const defaultConfig =
+      await dbClient.hrms_d_default_configurations.findFirst({
+        select: {
+          company_logo: true,
+          company_name: true,
+          company_signature: true,
+          street_address: true,
+          city: true,
+          state: true,
+          country: true,
+          phone_number: true,
+          website: true,
+        },
+      });
 
     console.log("Company Logo:", defaultConfig?.company_logo);
     console.log("Company Signature:", defaultConfig?.company_signature);
@@ -345,9 +371,9 @@ const getOfferLetterForPDF = async (id) => {
         const logoMimeType =
           logoResponse.headers.get("content-type") || "image/png";
         companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
-        console.log("✓ Logo converted to base64");
+        console.log(" Logo converted to base64");
       } catch (err) {
-        console.error("✗ Error fetching logo:", err.message);
+        console.error(" Error fetching logo:", err.message);
         companyLogoBase64 = defaultConfig.company_logo;
       }
     }
@@ -360,9 +386,9 @@ const getOfferLetterForPDF = async (id) => {
         const signatureMimeType =
           signatureResponse.headers.get("content-type") || "image/png";
         companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
-        console.log("✓ Signature converted to base64");
+        console.log(" Signature converted to base64");
       } catch (err) {
-        console.error("✗ Error fetching signature:", err.message);
+        console.error(" Error fetching signature:", err.message);
         companySignatureBase64 = defaultConfig.company_signature;
       }
     }
@@ -378,7 +404,7 @@ const getOfferLetterForPDF = async (id) => {
 
     try {
       const employmentContract =
-        await prisma.hrms_d_employment_contract.findFirst({
+        await dbClient.hrms_d_employment_contract.findFirst({
           where: { candidate_id: Number(offerLetter.candidate_id) },
           select: { id: true },
           orderBy: { createdate: "desc" },
@@ -386,7 +412,7 @@ const getOfferLetterForPDF = async (id) => {
 
       if (employmentContract) {
         const contractPayComponents =
-          await prisma.hrms_d_pay_component_contract.findMany({
+          await dbClient.hrms_d_pay_component_contract.findMany({
             where: { contract_id: Number(employmentContract.id) },
             include: {
               pay_component_for_contract: {
@@ -404,10 +430,12 @@ const getOfferLetterForPDF = async (id) => {
           let currencies = {};
 
           if (currencyIds.length > 0) {
-            const currencyData = await prisma.hrms_m_currency_master.findMany({
-              where: { id: { in: currencyIds } },
-              select: { id: true, currency_code: true },
-            });
+            const currencyData = await dbClient.hrms_m_currency_master.findMany(
+              {
+                where: { id: { in: currencyIds } },
+                select: { id: true, currency_code: true },
+              }
+            );
             currencies = currencyData.reduce((acc, curr) => {
               acc[curr.id] = curr.currency_code;
               return acc;
@@ -464,12 +492,9 @@ const getOfferLetterForPDF = async (id) => {
       currencyName: offerLetter.offer_letter_currencyId?.currency_name || "",
     };
 
-    console.log("✓ PDF data prepared successfully");
-    console.log("✓ Logo included:", pdfData.companyLogo ? "YES" : "NO");
-    console.log(
-      "✓ Signature included:",
-      pdfData.companySignature ? "YES" : "NO"
-    );
+    console.log(" PDF data prepared successfully");
+    console.log("Logo included:", pdfData.companyLogo ? "YES" : "NO");
+    console.log("Signature included:", pdfData.companySignature ? "YES" : "NO");
 
     return pdfData;
   } catch (error) {
@@ -480,7 +505,6 @@ const getOfferLetterForPDF = async (id) => {
     );
   }
 };
-
 const getAllOfferLettersForBulkDownload = async (
   filters = {},
   advancedFilters = {}
