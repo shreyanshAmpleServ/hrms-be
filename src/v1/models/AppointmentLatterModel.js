@@ -2,6 +2,7 @@ const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
+const { getPrismaClient } = require("../../config/db.js");
 
 const serializeJobData = (data) => {
   return {
@@ -218,14 +219,38 @@ const getAllAppointmentLatter = async (
   }
 };
 
-const getAppointmentLetterForPDF = async (id) => {
+const getAppointmentLetterForPDF = async (id, tenantDb = null) => {
   try {
     if (!id) {
       throw new CustomError("Appointment letter ID is required", 400);
     }
 
-    const appointmentLetter = await prisma.hrms_d_appointment_letter.findUnique(
-      {
+    console.log(
+      ` Getting PDF data for appointment letter ${id}, tenantDb: ${
+        tenantDb || "from context"
+      }`
+    );
+
+    let dbClient;
+
+    if (tenantDb) {
+      console.log(` Using explicit tenantDb: ${tenantDb}`);
+      dbClient = getPrismaClient(tenantDb);
+    } else {
+      const store = asyncLocalStorage.getStore();
+      if (store && store.tenantDb) {
+        console.log(` Using context tenantDb: ${store.tenantDb}`);
+        dbClient = prisma;
+      } else {
+        throw new CustomError(
+          "No tenant database context available. Please ensure authentication.",
+          503
+        );
+      }
+    }
+
+    const appointmentLetter =
+      await dbClient.hrms_d_appointment_letter.findUnique({
         where: { id: parseInt(id) },
         include: {
           appointment_candidate: {
@@ -242,7 +267,6 @@ const getAppointmentLetterForPDF = async (id) => {
               nationality: true,
               resume_path: true,
               status: true,
-
               candidate_department: {
                 select: {
                   id: true,
@@ -258,30 +282,31 @@ const getAppointmentLetterForPDF = async (id) => {
             },
           },
         },
-      }
-    );
+      });
 
     if (!appointmentLetter) {
       throw new CustomError("Appointment letter not found", 404);
     }
 
-    const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
-      select: {
-        company_logo: true,
-        company_name: true,
-        company_signature: true,
-        street_address: true,
-        city: true,
-        state: true,
-        country: true,
-        phone_number: true,
-        website: true,
-      },
-    });
+    const defaultConfig =
+      await dbClient.hrms_d_default_configurations.findFirst({
+        select: {
+          company_logo: true,
+          company_name: true,
+          company_signature: true,
+          street_address: true,
+          city: true,
+          state: true,
+          country: true,
+          phone_number: true,
+          website: true,
+        },
+      });
 
     console.log("Company Logo:", defaultConfig?.company_logo);
     console.log("Company Signature:", defaultConfig?.company_signature);
 
+    // ✅ ADD THIS SECTION - Logo and signature fetching
     let companyLogoBase64 = "";
     let companySignatureBase64 = "";
 
@@ -294,7 +319,7 @@ const getAppointmentLetterForPDF = async (id) => {
         const logoMimeType =
           logoResponse.headers.get("content-type") || "image/png";
         companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
-        console.log("Logo converted to base64");
+        console.log(" Logo converted to base64");
       } catch (err) {
         console.error(" Error fetching logo:", err.message);
         companyLogoBase64 = defaultConfig.company_logo;
@@ -310,9 +335,9 @@ const getAppointmentLetterForPDF = async (id) => {
         const signatureMimeType =
           signatureResponse.headers.get("content-type") || "image/png";
         companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
-        console.log(" Signature converted to base64");
+        console.log("Signature converted to base64");
       } catch (err) {
-        console.error(" Error fetching signature:", err.message);
+        console.error("Error fetching signature:", err.message);
         companySignatureBase64 = defaultConfig.company_signature;
       }
     }
@@ -377,12 +402,24 @@ const getAppointmentLetterForPDF = async (id) => {
 
 const getAllAppointmentLettersForBulkDownload = async (
   filters = {},
-  advancedFilters = {}
+  advancedFilters = {},
+  tenantDb = null
 ) => {
   try {
-    const whereClause = {
-      ...filters,
-    };
+    let dbClient;
+
+    if (tenantDb) {
+      dbClient = getPrismaClient(tenantDb);
+    } else {
+      const store = asyncLocalStorage.getStore();
+      if (store && store.tenantDb) {
+        dbClient = prisma;
+      } else {
+        throw new CustomError("No tenant database context available.", 503);
+      }
+    }
+
+    const whereClause = { ...filters };
 
     if (Object.keys(advancedFilters).length > 0) {
       whereClause.appointment_candidate = advancedFilters;
@@ -390,46 +427,46 @@ const getAllAppointmentLettersForBulkDownload = async (
 
     console.log("Final where clause:", JSON.stringify(whereClause, null, 2));
 
-    const appointmentLetters = await prisma.hrms_d_appointment_letter.findMany({
-      where: whereClause,
-      select: {
-        id: true,
-        designation_id: true,
-        candidate_id: true,
-        appointment_candidate: {
-          select: {
-            id: true,
-            full_name: true,
-            email: true,
-            phone: true,
-            candidate_code: true,
-            expected_joining_date: true,
-            actual_joining_date: true,
-            date_of_birth: true,
-            gender: true,
-            nationality: true,
-            resume_path: true,
-            status: true,
-
-            candidate_department: {
-              select: {
-                id: true,
-                department_name: true,
+    const appointmentLetters =
+      await dbClient.hrms_d_appointment_letter.findMany({
+        where: whereClause,
+        select: {
+          id: true,
+          designation_id: true,
+          candidate_id: true,
+          appointment_candidate: {
+            select: {
+              id: true,
+              full_name: true,
+              email: true,
+              phone: true,
+              candidate_code: true,
+              expected_joining_date: true,
+              actual_joining_date: true,
+              date_of_birth: true,
+              gender: true,
+              nationality: true,
+              resume_path: true,
+              status: true,
+              candidate_department: {
+                select: {
+                  id: true,
+                  department_name: true,
+                },
               },
             },
           },
-        },
-        appointment_designation: {
-          select: {
-            id: true,
-            designation_name: true,
+          appointment_designation: {
+            select: {
+              id: true,
+              designation_name: true,
+            },
           },
         },
-      },
-      orderBy: {
-        createdate: "desc",
-      },
-    });
+        orderBy: {
+          createdate: "desc",
+        },
+      });
 
     console.log(
       `Found ${appointmentLetters.length} appointment letters matching filters`
