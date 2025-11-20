@@ -397,6 +397,7 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
     const job = await offerLetterQueue.add({
       userId: req.user.id,
       filters: filters,
+      tenantDb: req.tenantDb,
       advancedFilters: advancedFilters,
       jobId: jobId,
     });
@@ -430,6 +431,8 @@ const bulkDownloadOfferLetters = async (req, res, next) => {
         },
       });
   } catch (error) {
+    console.log("Error in downloading", error);
+
     next(error);
   }
 };

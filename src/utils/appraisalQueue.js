@@ -185,7 +185,7 @@
 //         await generateAppraisalPDF(completePdfData, filePath);
 //         pdfPaths.push({ path: filePath, name: fileName });
 
-//         console.log(`[Job ${jobId}] ✓ Generated: ${fileName}`);
+//         console.log(`[Job ${jobId}]  Generated: ${fileName}`);
 
 //         const progress = 20 + Math.floor(((i + 1) / totalAppraisals) * 60);
 //         await job.progress(progress);
@@ -484,7 +484,7 @@ appraisalQueue.removeJob = async (jobId) => {
       const tempDir = path.join(process.cwd(), "temp", jobId);
       if (fs.existsSync(tempDir)) {
         fs.rmSync(tempDir, { recursive: true, force: true });
-        console.log(`[Job ${jobId}] ✓ Temp directory cleaned`);
+        console.log(`[Job ${jobId}]  Temp directory cleaned`);
       }
 
       try {
@@ -522,7 +522,7 @@ appraisalQueue.removeJob = async (jobId) => {
 
       try {
         await job.remove();
-        console.log(`[Job ${jobId}] ✓ Removed successfully`);
+        console.log(`[Job ${jobId}]  Removed successfully`);
       } catch (err) {
         console.log(`[Job ${jobId}] Removal attempted: ${err.message}`);
       }
@@ -530,7 +530,7 @@ appraisalQueue.removeJob = async (jobId) => {
       const tempDir = path.join(process.cwd(), "temp", jobId);
       if (fs.existsSync(tempDir)) {
         fs.rmSync(tempDir, { recursive: true, force: true });
-        console.log(`[Job ${jobId}] ✓ Temp directory cleaned`);
+        console.log(`[Job ${jobId}]  Temp directory cleaned`);
       }
 
       return true;
