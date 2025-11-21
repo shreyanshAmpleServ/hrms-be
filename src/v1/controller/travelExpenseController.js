@@ -160,6 +160,7 @@ const createTravelExpense = async (req, res, next) => {
       ...req.body,
       attachment_path: fileUrl,
       createdby: req.user.employee_id,
+      tenantDb: req.tenantDb,
     };
 
     const reqData = await travelExpenseService.createTravelExpense(travelData);
@@ -172,7 +173,8 @@ const createTravelExpense = async (req, res, next) => {
 const findTravelExpense = async (req, res, next) => {
   try {
     const reqData = await travelExpenseService.findTravelExpenseById(
-      req.params.id
+      req.params.id,
+      req.tenantDb
     );
     if (!reqData) throw new CustomError("Travel expense not found", 404);
     res.status(200).success(null, reqData);
@@ -184,7 +186,10 @@ const findTravelExpense = async (req, res, next) => {
 const updateTravelExpense = async (req, res, next) => {
   try {
     const existingTravelExpense =
-      await travelExpenseService.findTravelExpenseById(req.params.id);
+      await travelExpenseService.findTravelExpenseById(
+        req.params.id,
+        req.tenantDb
+      );
     if (!existingTravelExpense) {
       throw new CustomError("Travel expense not found", 404);
     }
@@ -233,6 +238,7 @@ const updateTravelExpense = async (req, res, next) => {
       ...req.body,
       attachment_path: fileUrl,
       updatedby: req.user.id,
+      tenantDb: req.tenantDb,
     };
 
     const result = await travelExpenseService.updateTravelExpense(
@@ -248,9 +254,12 @@ const updateTravelExpense = async (req, res, next) => {
 const deleteTravelExpense = async (req, res, next) => {
   try {
     const existingTravelExpense =
-      await travelExpenseService.findTravelExpenseById(req.params.id);
+      await travelExpenseService.findTravelExpenseById(
+        req.params.id,
+        req.tenantDb
+      );
 
-    await travelExpenseService.deleteTravelExpense(req.params.id);
+    await travelExpenseService.deleteTravelExpense(req.params.id, req.tenantDb);
 
     if (existingTravelExpense && existingTravelExpense.attachment_path) {
       try {
@@ -275,7 +284,8 @@ const getAllTravelExpenses = async (req, res, next) => {
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
+      req.tenantDb
     );
     res.status(200).success(null, data);
   } catch (error) {
@@ -296,6 +306,7 @@ const updateTravelExpenseStatus = async (req, res, next) => {
       updatedby: req.user.employee_id,
       approved_by: req.user.employee_id,
       updatedate: new Date(),
+      tenantDb: req.tenantDb,
     };
 
     const reqData = await travelExpenseService.updateTravelExpenseStatus(
