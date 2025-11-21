@@ -2,6 +2,7 @@ const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
+const { getPrismaClient } = require("../../config/db.js");
 
 const serializeData = (data) => {
   return {
@@ -196,13 +197,37 @@ const getAllAppraisalEntry = async (search, page, size, startDate, endDate) => {
   }
 };
 
-const getAppraisalForPDF = async (id) => {
+const getAppraisalForPDF = async (id, tenantDb = null) => {
   try {
     if (!id) {
       throw new CustomError("Appraisal ID is required", 400);
     }
 
-    const appraisal = await prisma.hrms_d_appraisal.findUnique({
+    console.log(
+      ` Getting PDF data for appraisal ${id}, tenantDb: ${
+        tenantDb || "from context"
+      }`
+    );
+
+    let dbClient;
+
+    if (tenantDb) {
+      console.log(` Using explicit tenantDb: ${tenantDb}`);
+      dbClient = getPrismaClient(tenantDb);
+    } else {
+      const store = asyncLocalStorage.getStore();
+      if (store && store.tenantDb) {
+        console.log(` Using context tenantDb: ${store.tenantDb}`);
+        dbClient = prisma;
+      } else {
+        throw new CustomError(
+          "No tenant database context available. Please ensure authentication.",
+          503
+        );
+      }
+    }
+
+    const appraisal = await dbClient.hrms_d_appraisal.findUnique({
       where: { id: parseInt(id) },
       include: {
         appraisal_employee: {
@@ -232,19 +257,20 @@ const getAppraisalForPDF = async (id) => {
       throw new CustomError("Appraisal not found", 404);
     }
 
-    const defaultConfig = await prisma.hrms_d_default_configurations.findFirst({
-      select: {
-        company_logo: true,
-        company_name: true,
-        company_signature: true,
-        street_address: true,
-        city: true,
-        state: true,
-        country: true,
-        phone_number: true,
-        website: true,
-      },
-    });
+    const defaultConfig =
+      await dbClient.hrms_d_default_configurations.findFirst({
+        select: {
+          company_logo: true,
+          company_name: true,
+          company_signature: true,
+          street_address: true,
+          city: true,
+          state: true,
+          country: true,
+          phone_number: true,
+          website: true,
+        },
+      });
 
     console.log("Company Logo:", defaultConfig?.company_logo);
     console.log("Company Signature:", defaultConfig?.company_signature);
@@ -261,9 +287,9 @@ const getAppraisalForPDF = async (id) => {
         const logoMimeType =
           logoResponse.headers.get("content-type") || "image/png";
         companyLogoBase64 = `data:${logoMimeType};base64,${logoBase64}`;
-        console.log("✓ Logo converted to base64");
+        console.log("Logo converted to base64");
       } catch (err) {
-        console.error("✗ Error fetching logo:", err.message);
+        console.error(" Error fetching logo:", err.message);
         companyLogoBase64 = defaultConfig.company_logo;
       }
     }
@@ -277,9 +303,9 @@ const getAppraisalForPDF = async (id) => {
         const signatureMimeType =
           signatureResponse.headers.get("content-type") || "image/png";
         companySignatureBase64 = `data:${signatureMimeType};base64,${signatureBase64}`;
-        console.log("✓ Signature converted to base64");
+        console.log("Signature converted to base64");
       } catch (err) {
-        console.error("✗ Error fetching signature:", err.message);
+        console.error("Error fetching signature:", err.message);
         companySignatureBase64 = defaultConfig.company_signature;
       }
     }
@@ -343,12 +369,24 @@ const getAppraisalForPDF = async (id) => {
 
 const getAllAppraisalsForBulkDownload = async (
   filters = {},
-  advancedFilters = {}
+  advancedFilters = {},
+  tenantDb = null
 ) => {
   try {
-    const whereClause = {
-      ...filters,
-    };
+    let dbClient;
+
+    if (tenantDb) {
+      dbClient = getPrismaClient(tenantDb);
+    } else {
+      const store = asyncLocalStorage.getStore();
+      if (store && store.tenantDb) {
+        dbClient = prisma;
+      } else {
+        throw new CustomError("No tenant database context available.", 503);
+      }
+    }
+
+    const whereClause = { ...filters };
 
     if (Object.keys(advancedFilters).length > 0) {
       whereClause.appraisal_employee = advancedFilters;
@@ -356,7 +394,7 @@ const getAllAppraisalsForBulkDownload = async (
 
     console.log("Final where clause:", JSON.stringify(whereClause, null, 2));
 
-    const appraisals = await prisma.hrms_d_appraisal.findMany({
+    const appraisals = await dbClient.hrms_d_appraisal.findMany({
       where: whereClause,
       select: {
         id: true,

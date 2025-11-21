@@ -1,8 +1,28 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
+const checkDuplicateCountry = async (name, code, id = null) => {
+  const conditions = [];
+
+  if (name) conditions.push({ name });
+  if (code) conditions.push({ code });
+
+  const duplicate = await prisma.hrms_m_country_master.findFirst({
+    where: {
+      OR: conditions,
+      ...(id && { id: { not: parseInt(id) } }),
+    },
+  });
+
+  return duplicate;
+};
+
 const createCountry = async (data) => {
   try {
+    const duplicate = await checkDuplicateCountry(data.name, data.code);
+    if (duplicate) {
+      throw new CustomError("Country already exists", 400);
+    }
     const country = await prisma.hrms_m_country_master.create({
       data: {
         ...data,
@@ -18,7 +38,7 @@ const createCountry = async (data) => {
     return country;
   } catch (error) {
     console.log("Create Country ", error);
-    throw new CustomError(`Error creating country: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -33,12 +53,17 @@ const findCountryById = async (id) => {
     return country;
   } catch (error) {
     console.log("Country By Id  ", error);
-    throw new CustomError(`Error finding country by ID: ${error.message}`, 503);
+    throw new CustomError(`${error.message}`, 503);
   }
 };
 
 const updateCountry = async (id, data) => {
   try {
+    const duplicate = await checkDuplicateCountry(data.name, data.code, id);
+    if (duplicate) {
+      throw new CustomError("Country name or code already exists", 400);
+    }
+
     const updatedCountry = await prisma.hrms_m_country_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -46,9 +71,10 @@ const updateCountry = async (id, data) => {
         updatedate: new Date(),
       },
     });
+
     return updatedCountry;
   } catch (error) {
-    throw new CustomError(`Error updating country: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -88,7 +114,7 @@ const getAllCountries = async (is_active) => {
     return countries;
   } catch (error) {
     console.error("Country error: ", error);
-    throw new CustomError("Error retrieving countries", 503);
+    throw new CustomError(`${error.message}`, 503);
   }
 };
 
