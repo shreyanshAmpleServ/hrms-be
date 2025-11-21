@@ -1,0 +1,16 @@
+{
+  "workspace": {
+    "id": "632873f6-78d8-43b5-a322-81431e89f7ee"
+  },
+  "entities": {
+    "collections": [
+      "..\\postman\\collections\\DCC SalesForce.postman_collection.json"
+    ],
+    "environments": [
+      "..\\postman\\environments\\URL.postman_environment.json"
+    ],
+    "specs": [],
+    "flows": [],
+    "globals": []
+  }
+}
