@@ -1,8 +1,37 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
+const checkDuplicateCountry = async (name, code, id = null) => {
+  const conditions = [];
+
+  if (name) {
+    conditions.push({
+      name: name,
+    });
+  }
+
+  if (code) {
+    conditions.push({
+      code: code,
+    });
+  }
+
+  const duplicate = await prisma.hrms_m_country_master.findFirst({
+    where: {
+      OR: conditions,
+      ...(id && { id: { not: id } }),
+    },
+  });
+
+  return duplicate;
+};
+
 const createCountry = async (data) => {
   try {
+    const duplicate = await checkDuplicateCountry(data.name, data.code);
+    if (duplicate) {
+      throw new CustomError("Country already exists", 400);
+    }
     const country = await prisma.hrms_m_country_master.create({
       data: {
         ...data,
@@ -39,6 +68,10 @@ const findCountryById = async (id) => {
 
 const updateCountry = async (id, data) => {
   try {
+    const duplicate = await checkDuplicateCountry(data.name, data.code, id);
+    if (duplicate) {
+      throw new CustomError("Country already exists", 400);
+    }
     const updatedCountry = await prisma.hrms_m_country_master.update({
       where: { id: parseInt(id) },
       data: {
