@@ -47,7 +47,7 @@ const createCountry = async (data) => {
     return country;
   } catch (error) {
     console.log("Create Country ", error);
-    throw new CustomError(`Error creating country: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -62,7 +62,7 @@ const findCountryById = async (id) => {
     return country;
   } catch (error) {
     console.log("Country By Id  ", error);
-    throw new CustomError(`Error finding country by ID: ${error.message}`, 503);
+    throw new CustomError(`${error.message}`, 503);
   }
 };
 
@@ -81,7 +81,7 @@ const updateCountry = async (id, data) => {
     });
     return updatedCountry;
   } catch (error) {
-    throw new CustomError(`Error updating country: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -121,7 +121,7 @@ const getAllCountries = async (is_active) => {
     return countries;
   } catch (error) {
     console.error("Country error: ", error);
-    throw new CustomError("Error retrieving countries", 503);
+    throw new CustomError(`${error.message}`, 503);
   }
 };
 
