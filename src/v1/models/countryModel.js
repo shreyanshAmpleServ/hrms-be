@@ -74,7 +74,7 @@ const updateCountry = async (id, data) => {
 
     return updatedCountry;
   } catch (error) {
-    throw new CustomError(`Error updating country: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
