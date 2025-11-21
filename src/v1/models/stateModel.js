@@ -1,9 +1,31 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
-// Create a new state
+const checkDuplicateStates = async (name, code, id = null) => {
+  const conditions = [];
+
+  if (name) {
+    conditions.push({
+      name: name,
+    });
+  }
+
+  const duplicate = await prisma.crms_m_states.findFirst({
+    where: {
+      OR: conditions,
+      ...(id && { id: { not: id } }),
+    },
+  });
+
+  return duplicate;
+};
+
 const createState = async (data) => {
   try {
+    const duplicate = await checkDuplicateStates(data.name, data.code);
+    if (duplicate) {
+      throw new CustomError("State already exists", 400);
+    }
     const state = await prisma.crms_m_states.create({
       data: {
         ...data,
@@ -24,7 +46,7 @@ const createState = async (data) => {
     });
     return state;
   } catch (error) {
-    throw new CustomError(`Error creating state: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -48,13 +70,17 @@ const findStateById = async (id) => {
     }
     return state;
   } catch (error) {
-    throw new CustomError(`Error finding state by ID: ${error.message}`, 503);
+    throw new CustomError(`${error.message}`, 503);
   }
 };
 
 // Update a state
 const updateState = async (id, data) => {
   try {
+    const duplicate = await checkDuplicateStates(data.name, data.code, id);
+    if (duplicate) {
+      throw new CustomError("State already exists", 400);
+    }
     const updatedState = await prisma.crms_m_states.update({
       where: { id: parseInt(id) },
       include: {
@@ -74,7 +100,7 @@ const updateState = async (id, data) => {
     });
     return updatedState;
   } catch (error) {
-    throw new CustomError(`Error updating state: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -135,11 +161,7 @@ const getAllStates = async (search, page, size, country_id, is_active) => {
           },
         },
       },
-      orderBy: [
-        { name: "asc" },
-        // { updatedate: 'desc' },
-        // { createdate: 'desc' },
-      ],
+      orderBy: [{ name: "asc" }],
     });
     const totalCount = await prisma.crms_m_states.count({
       where: filters,
