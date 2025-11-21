@@ -14,15 +14,11 @@ router.get(
 router.put(
   "/countries/:id",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Countries", "update"),
   countryController.updateCountry
 );
 router.delete(
   "/countries/:id",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Countries", "delete"),
   countryController.deleteCountry
 );
 router.get("/countries", authenticateToken, countryController.getAllCountries);
