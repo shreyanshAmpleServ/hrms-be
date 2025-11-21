@@ -70,7 +70,7 @@ const updateCountry = async (id, data) => {
   try {
     const duplicate = await checkDuplicateCountry(data.name, data.code, id);
     if (duplicate) {
-      throw new CustomError("Country already exists", 400);
+      throw new CustomError("Country name or code already exists", 400);
     }
     const updatedCountry = await prisma.hrms_m_country_master.update({
       where: { id: parseInt(id) },
