@@ -32,7 +32,10 @@ const authenticateToken = async (req, res, next) => {
 
     console.log(`Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
 
-    return withTenantContext(tenantDb, async () => {
+    // Use withTenantContext to wrap the entire request handling
+    // The context will be maintained for all async operations in the request chain
+    // asyncLocalStorage maintains context across async boundaries automatically
+    return await withTenantContext(tenantDb, async () => {
       if (!schedulerInitialized) {
         try {
           logger.info(
@@ -48,12 +51,15 @@ const authenticateToken = async (req, res, next) => {
           );
         }
       }
+      // Call next() within the tenant context
+      // The asyncLocalStorage context will be maintained for all subsequent operations
+      // Express middleware next() can return a promise for async handlers
       try {
         const result = next();
+        // If next() returns a promise (which it does for async handlers), await it
         if (result && typeof result.then === "function") {
-          return await result;
+          await result;
         }
-        return result;
       } catch (error) {
         throw error;
       }
