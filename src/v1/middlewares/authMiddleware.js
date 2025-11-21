@@ -32,37 +32,49 @@ const authenticateToken = async (req, res, next) => {
 
     console.log(`Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
 
+    // Initialize scheduler if needed (outside tenant context to avoid blocking)
+    if (!schedulerInitialized) {
+      try {
+        logger.info(
+          " Starting alert workflow scheduler (first authenticated request)..."
+        );
+        await startScheduler();
+        schedulerInitialized = true;
+        logger.info(" Alert workflow scheduler started successfully");
+      } catch (error) {
+        logger.error(
+          "Failed to start alert workflow scheduler:",
+          error.message
+        );
+      }
+    }
+
     // Use withTenantContext to wrap the entire request handling
     // The context will be maintained for all async operations in the request chain
     // asyncLocalStorage maintains context across async boundaries automatically
-    return await withTenantContext(tenantDb, async () => {
-      if (!schedulerInitialized) {
-        try {
-          logger.info(
-            " Starting alert workflow scheduler (first authenticated request)..."
-          );
-          await startScheduler();
-          schedulerInitialized = true;
-          logger.info(" Alert workflow scheduler started successfully");
-        } catch (error) {
-          logger.error(
-            "Failed to start alert workflow scheduler:",
-            error.message
-          );
-        }
-      }
+    // We wrap the entire middleware chain execution to ensure context is maintained
+    return withTenantContext(tenantDb, async () => {
       // Call next() within the tenant context
-      // The asyncLocalStorage context will be maintained for all subsequent operations
-      // Express middleware next() can return a promise for async handlers
-      try {
-        const result = next();
-        // If next() returns a promise (which it does for async handlers), await it
-        if (result && typeof result.then === "function") {
-          await result;
+      // The asyncLocalStorage context will be maintained for all subsequent async operations
+      // including route handlers, controllers, services, and models
+      // AsyncLocalStorage automatically propagates context through async/await chains
+
+      // Handle async route handlers by wrapping next() in a promise
+      return new Promise((resolve, reject) => {
+        try {
+          const result = next();
+          // If next() returns a promise (for async route handlers), await it
+          if (result && typeof result.then === "function") {
+            result.then(resolve).catch(reject);
+          } else {
+            // For sync handlers, resolve immediately
+            resolve(result);
+          }
+        } catch (error) {
+          // If next() throws synchronously, reject the promise
+          reject(error);
         }
-      } catch (error) {
-        throw error;
-      }
+      });
     });
   } catch (error) {
     return res.status(403).json({
