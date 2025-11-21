@@ -4,22 +4,13 @@ const CustomError = require("../../utils/CustomError");
 const checkDuplicateCountry = async (name, code, id = null) => {
   const conditions = [];
 
-  if (name) {
-    conditions.push({
-      name: name,
-    });
-  }
-
-  if (code) {
-    conditions.push({
-      code: code,
-    });
-  }
+  if (name) conditions.push({ name });
+  if (code) conditions.push({ code });
 
   const duplicate = await prisma.hrms_m_country_master.findFirst({
     where: {
       OR: conditions,
-      ...(id && { id: { not: id } }),
+      ...(id && { id: { not: parseInt(id) } }),
     },
   });
 
@@ -72,6 +63,7 @@ const updateCountry = async (id, data) => {
     if (duplicate) {
       throw new CustomError("Country name or code already exists", 400);
     }
+
     const updatedCountry = await prisma.hrms_m_country_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -79,9 +71,10 @@ const updateCountry = async (id, data) => {
         updatedate: new Date(),
       },
     });
+
     return updatedCountry;
   } catch (error) {
-    throw new CustomError(`${error.message}`, 500);
+    throw new CustomError(`Error updating country: ${error.message}`, 500);
   }
 };
 

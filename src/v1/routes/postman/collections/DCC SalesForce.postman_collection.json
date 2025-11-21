@@ -2,9 +2,7 @@
   "info": {
     "_postman_id": "d42651af-1eca-46d2-84c9-e38bed2dc9d6",
     "name": "DCC SalesForce",
-    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json",
-    "_exporter_id": "29978094",
-    "_collection_link": "https://hrmsbackend-1188.postman.co/workspace/632873f6-78d8-43b5-a322-81431e89f7ee/collection/29978094-d42651af-1eca-46d2-84c9-e38bed2dc9d6?action=share&source=collection_link&creator=29978094"
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
   },
   "item": [
     {
@@ -15,7 +13,6 @@
           "id": "da42fc91-7268-4e55-bf23-033949513c02",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"username\": \"admin\",\r\n  \"email\": \"admin@gmail.com\",\r\n  \"password\": \"123456\",\r\n  \"name\": \"Admin\",\r\n  \"role_id\": 4\r\n//   \"parent_id\": 2\r\n}",
@@ -35,15 +32,13 @@
                 "register"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Login User",
           "id": "73e717a7-9249-4031-ba7d-04e94999e45e",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -69,15 +64,13 @@
                 "login"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Logout",
           "id": "02c02bdb-2e3b-4f30-ace1-0c8c5f617793",
           "request": {
             "method": "POST",
-            "header": [],
             "url": {
               "raw": "{{url}}/auth/logout",
               "host": [
@@ -88,8 +81,7 @@
                 "logout"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "beb700c4-fa43-4570-a91d-f32faea94613"
@@ -102,7 +94,6 @@
           "id": "89f0a9e1-0d73-4208-925e-a84ab60f243d",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -178,15 +169,13 @@
                 "users"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Users",
           "id": "363ffb1b-b5eb-48e7-ba55-e223aa034704",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/users",
               "host": [
@@ -203,15 +192,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Users",
           "id": "a808e8a7-f7db-4758-886c-823d5b7e0c12",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -288,15 +275,13 @@
                 "30"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get User By ID",
           "id": "c68cc6e9-3454-485c-b532-03c792d72551",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/users/27",
               "host": [
@@ -307,15 +292,13 @@
                 "27"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Users",
           "id": "575325d7-166c-462d-9a5c-ad747630e393",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/users/1",
               "host": [
@@ -326,15 +309,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Personal Details",
           "id": "c8d55846-b920-4b28-93b1-592dd8fdf2ed",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/users/me",
               "host": [
@@ -345,15 +326,13 @@
                 "me"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update User Profile",
           "id": "fd210a61-73c7-466d-9a01-a85d1d3c9506",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -379,8 +358,7 @@
                 "me"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "d6300510-5fdb-4437-93f9-1aeb58c1888c"
@@ -393,7 +371,6 @@
           "id": "fd06cae7-f0c0-440f-a9d9-ad382cb07fe6",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Saleperson\",\r\n  \"description\": \"Administrator role with all permissions\",\r\n  \"is_active\": \"Y\"\r\n//   \"permissions\": [1] \r\n}\r\n",
@@ -412,15 +389,13 @@
                 "roles"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Role",
           "id": "449b3236-2ab0-4a65-a58a-38c36f02cbd8",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/roles",
               "host": [
@@ -430,15 +405,13 @@
                 "roles"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Role By ID",
           "id": "767f6cb5-d444-4e72-8be7-baa6a255f44c",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/roles/4",
               "host": [
@@ -449,15 +422,13 @@
                 "4"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Roles",
           "id": "429c99d3-395a-4bcb-bd10-a6309e54a949",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/roles/4",
               "host": [
@@ -468,8 +439,7 @@
                 "4"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "a9b77064-148a-4369-ba20-a580ee47927e"
@@ -482,7 +452,6 @@
           "id": "7f564ae3-1681-42b0-a3cd-891428bdc97b",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"role_id\": 2,\r\n  \"permission_id\": 618,\r\n  \"is_active\": \"Y\"\r\n}",
@@ -501,15 +470,13 @@
                 "role-permissions"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Role Permissions",
           "id": "629131e5-17aa-4793-b928-47274a74465a",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"role_id\": 1,\r\n  \"permission_id\": 1,\r\n  \"is_active\": \"N\"\r\n}",
@@ -529,15 +496,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "GetRole Permissions By Id",
           "id": "2fe265f7-8c31-4e87-9e60-79846f5477b6",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/role-permissions/1",
               "host": [
@@ -548,15 +513,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Role Permissions",
           "id": "78bf4e4a-c99f-45d7-8aad-0c242981bbc7",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/all/role-permissions",
               "host": [
@@ -567,15 +530,13 @@
                 "role-permissions"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Role Permissions",
           "id": "c3c8a563-e44e-4944-9d8f-ca0cceb661d3",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/role-permissions/1",
               "host": [
@@ -586,8 +547,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "d481ea52-d556-4279-926d-00766efacdba"
@@ -600,7 +560,6 @@
           "id": "cb4ec5cd-0f12-4052-acc1-965310b66fd4",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -696,15 +655,13 @@
                 "company"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Company",
           "id": "4fc7396e-fd8e-45f9-b69e-247af4d91adc",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -781,15 +738,13 @@
                 "7"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Company By ID",
           "id": "d47a6a0b-170f-42d5-a7e3-c24e08ac945c",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/company/14",
               "host": [
@@ -800,15 +755,13 @@
                 "14"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Company",
           "id": "957e2710-f414-40f2-99e4-1bce96a1500e",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/company",
               "host": [
@@ -818,15 +771,13 @@
                 "company"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Company",
           "id": "8f6fdb12-a93e-4d4e-a119-b5a12cb10396",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/company/2",
               "host": [
@@ -837,8 +788,7 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "0894aa7a-8c8d-49d1-a908-f306dfffa5d0"
@@ -851,7 +801,6 @@
           "id": "50ac2eb3-02e1-4b07-a0a6-cb1a793be988",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"parent_id\": 2,\r\n  \"name\": \"Mid Depot\",\r\n  \"code\": \"CD001\",\r\n  \"address\": \"123 Main Street\",\r\n  \"city\": \"New York\",\r\n  \"state\": \"NY\",\r\n  \"zipcode\": \"10001\",\r\n  \"phone_number\": \"123-456-7890\",\r\n  \"email\": \"centraldepot@example.com\",\r\n  \"manager_id\": 2,\r\n  \"supervisor_id\": 2,\r\n  \"coordinator_id\": 2,\r\n  \"latitude\": 40.712776,\r\n  \"longitude\": -74.005974,\r\n  \"is_active\": \"Y\"\r\n  \r\n}\r\n",
@@ -870,15 +819,13 @@
                 "depots"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Depots",
           "id": "6da83dc3-cdcd-4ef0-9867-25e56921d45b",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/depots",
               "host": [
@@ -888,15 +835,13 @@
                 "depots"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Depots By ID",
           "id": "772118c1-3e94-4f86-8c39-49ef8c80a49c",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/depots/15",
               "host": [
@@ -907,15 +852,13 @@
                 "15"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Depots",
           "id": "52a7343d-4d69-45c2-b3fe-6d1e88b2ffab",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/depots/5",
               "host": [
@@ -926,8 +869,7 @@
                 "5"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "8f5f0096-dfb9-47b1-9fe0-cfd6d0aef0c9"
@@ -940,7 +882,6 @@
           "id": "17d89e44-2d66-430c-ab40-0799824f917b",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"parent_id\": 0,\r\n  \"depot_id\": 5,\r\n  \"name\": \"Daletral Zone\",\r\n//   \"code\": \"NZ-001\",\r\n  \"description\": \"This zone covers the northern region of the city\",\r\n  \"supervisor_id\": 12,\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -959,15 +900,13 @@
                 "zones"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Zones",
           "id": "ea297797-7a12-41eb-a84e-4fa6546e482d",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/zones",
               "host": [
@@ -977,15 +916,13 @@
                 "zones"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Zones By ID",
           "id": "bd04d519-3fad-45ef-a442-be2765bbde58",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/zones/13",
               "host": [
@@ -996,15 +933,13 @@
                 "13"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Zones",
           "id": "15f2ed5e-8a75-4642-947a-93c333345322",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"parent_id\": 0,\r\n  \"depot_id\": 15,\r\n  \"name\": \"Cilateral Zone\",\r\n  \"code\": \"NZ-001\",\r\n  \"description\": \"This zone covers the northern region of the city\",\r\n  \"supervisor_id\": 12,\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -1024,15 +959,13 @@
                 "13"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Zones",
           "id": "b3ab7de6-016f-4d06-9cd7-a0b453104682",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/zones/12",
               "host": [
@@ -1043,8 +976,7 @@
                 "12"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "5d095d03-8b95-4149-8a4a-2c5ee4b45f78"
@@ -1057,7 +989,6 @@
           "id": "c265de87-c51c-41f5-bfc6-2c0e5e8c73c9",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/import-export/tables",
               "host": [
@@ -1068,15 +999,13 @@
                 "tables"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Table Templates",
           "id": "be651553-e2e4-4b05-8cc6-cb6873d52f7e",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/import-export/promotion_products/template",
               "host": [
@@ -1088,8 +1017,7 @@
                 "template"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Import Excel Data",
@@ -1132,15 +1060,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Export Excel",
           "id": "f179ce64-3c37-4103-96e5-dad37a60b83d",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/import-export/promotion_products/export/excel",
               "host": [
@@ -1153,15 +1079,13 @@
                 "excel"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Export PDF",
           "id": "e6a99caf-758f-4f9b-b9ff-a129c05b16a5",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/import-export/customers/export/pdf",
               "host": [
@@ -1174,8 +1098,7 @@
                 "pdf"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "79215731-5b8a-4124-91cb-b559963f3488"
@@ -1188,7 +1111,6 @@
           "id": "6505af64-a6d9-4ed7-acff-862f8a61525a",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "\r\n{\r\n  \"parent_id\": 1,\r\n  \"depot_id\": 5,\r\n  \"name\": \"North Delivery Route\",\r\n//   \"code\": \"NR-001\",\r\n  \"description\": \"Covers all deliveries in the northern region\",\r\n  \"salesperson_id\": 2,\r\n  \"start_location\": \"Depot A\",\r\n  \"end_location\": \"Depot B\",\r\n  \"estimated_distance\": 120.50,\r\n  \"estimated_time\": 180,\r\n  \"is_active\": \"Y\",\r\n  \r\n  \"routes\": [\r\n    {\r\n      \"name\": \"Downtown Route\",\r\n      \"parent_id\": 34,\r\n      \"depot_id\": 1,\r\n      \"route_type_id\": 1,\r\n      \"route_type\": \"Daily\",\r\n      \"outlet_group\": \"Group A\",\r\n      \"salesperson_id\": 20,\r\n      \"start_location\": \"Depot A\",\r\n      \"end_location\": \"Depot A\",\r\n      \"estimated_distance\": \"25.50\",\r\n      \"estimated_time\": 120,\r\n      \"description\": \"Main downtown delivery route\",\r\n      \"is_active\": \"Y\"\r\n    },\r\n    {\r\n      \"name\": \"Uptown Route\",\r\n      \"parent_id\": 34,\r\n      \"depot_id\": 1,\r\n      \"route_type_id\": 2,\r\n      \"salesperson_id\": 20,\r\n      \"estimated_distance\": \"15.00\",\r\n      \"is_active\": \"Y\"\r\n    }\r\n  ]\r\n}\r\n\r\n",
@@ -1207,15 +1129,13 @@
                 "routes"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Routes",
           "id": "26d71063-a978-4fa6-a6c3-ac1d55b70d0b",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/routes",
               "host": [
@@ -1225,15 +1145,13 @@
                 "routes"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Routes By Id",
           "id": "fdfeb919-571d-4fa3-ad18-1a493ae7505a",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/routes/9",
               "host": [
@@ -1244,15 +1162,13 @@
                 "9"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Routes",
           "id": "93349dfc-65eb-4014-9681-c702c783870a",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "\r\n{\r\n  \"parent_id\": 13,\r\n  \"depot_id\": 15,\r\n  \"name\": \"North Delivery Routes\",\r\n//   \"code\": \"NR-001\",\r\n  \"description\": \"Covers all deliveries in the northern region\",\r\n  \"salesperson_id\": 31,\r\n  \"start_location\": \"Depot A\",\r\n  \"end_location\": \"Depot B\",\r\n  \"estimated_distance\": 120.50,\r\n  \"estimated_time\": 180,\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -1272,15 +1188,13 @@
                 "9"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Routes",
           "id": "edc50a6b-887f-4160-a43b-494dbbd3b991",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "\r\n{\r\n  \"parent_id\": 11,\r\n  \"depot_id\": 15,\r\n  \"name\": \"North Delivery Routes\",\r\n  \"code\": \"NR-001\",\r\n  \"description\": \"Covers all deliveries in the northern region\",\r\n//   \"salesperson_id\": 5,\r\n  \"start_location\": \"Depot A\",\r\n  \"end_location\": \"Depot B\",\r\n  \"estimated_distance\": 120.50,\r\n  \"estimated_time\": 180,\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -1295,8 +1209,7 @@
                 "7"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "df9a83eb-0687-4265-84da-1e95f5a214da"
@@ -1309,7 +1222,6 @@
           "id": "961173bb-ec9c-419b-8b30-466f9ef497b6",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "// {\r\n//   \"customer_id\": 304201,\r\n//   \"sales_person_id\": 23,\r\n//   \"route_id\": 22,\r\n//   \"zones_id\": 44,\r\n//   \"visit_date\": \"2025-10-03T08:30:00.000Z\",\r\n//   \"visit_time\": \"08:30\",\r\n//   \"purpose\": \"Follow-up meeting\",\r\n//   \"status\": \"planned\",\r\n//   \"start_time\": \"2025-10-03T08:35:00.000Z\",\r\n//   \"end_time\": \"2025-10-03T09:15:00.000Z\",\r\n//   \"duration\": 40,\r\n//   \"start_latitude\": \"25.276987\",\r\n//   \"start_longitude\": \"55.296249\",\r\n//   \"end_latitude\": \"25.277500\",\r\n//   \"end_longitude\": \"55.297000\",\r\n//   \"check_in_time\": \"2025-10-03T08:40:00.000Z\",\r\n//   \"check_out_time\": \"2025-10-03T09:10:00.000Z\",\r\n//   \"orders_created\": 2,\r\n//   \"amount_collected\": \"2500.00\",\r\n//   \"visit_notes\": \"Discussed product updates and new offers\",\r\n//   \"customer_feedback\": \"Customer is interested in a demo next week\",\r\n//   \"next_visit_date\": \"2025-10-10T08:30:00.000Z\",\r\n//   \"is_active\": \"Y\"\r\n// }\r\n{\r\n    \"visit\": {\r\n        \"customer_id\": 305429,\r\n        \"sales_person_id\": 2,\r\n        \"route_id\": 22,\r\n        \"zones_id\": 44,\r\n        \"visit_date\": \"2024-01-15T10:30:00Z\",\r\n        \"visit_time\": \"10:30:00\",\r\n        \"purpose\": \"Comprehensive Visit\",\r\n        \"status\": \"completed\",\r\n        \"start_time\": \"2024-01-15T10:30:00Z\",\r\n        \"end_time\": \"2024-01-15T12:00:00Z\",\r\n        \"duration\": 90,\r\n        \"start_latitude\": \"23.8103\",\r\n        \"start_longitude\": \"90.4125\",\r\n        \"end_latitude\": \"23.8103\",\r\n        \"end_longitude\": \"90.4125\",\r\n        \"check_in_time\": \"2024-01-15T10:30:00Z\",\r\n        \"check_out_time\": \"2024-01-15T12:00:00Z\",\r\n        \"orders_created\": 1,\r\n        \"amount_collected\": \"15000.00\",\r\n        \"visit_notes\": \"Complete visit with all activities\",\r\n        \"customer_feedback\": \"Excellent service\",\r\n        \"next_visit_date\": \"2024-01-22\",\r\n        \"is_active\": \"Y\",\r\n        \"createdby\": 2\r\n    },\r\n        \"orders\": [\r\n            {\r\n                \"order_number\": \"ORD-20240115-0012\",\r\n                \"order_type\": \"regular\",\r\n                \"order_date\": \"2024-01-15T10:30:00Z\",\r\n                \"delivery_date\": \"2024-01-20T10:00:00Z\",\r\n                \"status\": \"pending\",\r\n                \"priority\": \"medium\",\r\n                \"payment_method\": \"cash\",\r\n                \"payment_terms\": \"Net 30\",\r\n                \"subtotal\": 5000,\r\n                \"discount_amount\": 0,\r\n                \"tax_amount\": 0,\r\n                \"shipping_amount\": 0,\r\n                \"total_amount\": 5000,\r\n                \"notes\": \"Order created during visit\",\r\n                \"approval_status\": \"pending\",\r\n                \"is_active\": \"Y\",\r\n                \"items\": [\r\n                    {\r\n                        \"product_id\": 85,\r\n                        \"product_name\": \"Product A\",\r\n                        \"unit\": \"pcs\",\r\n                        \"quantity\": 50,\r\n                        \"unit_price\": 80,\r\n                        \"discount_amount\": 0,\r\n                        \"tax_amount\": 0,\r\n                        \"total_amount\": 4000,\r\n                        \"notes\": \"Item 1\"\r\n                    },\r\n                    {\r\n                        \"product_id\": 85,\r\n                        \"product_name\": \"Product B\",\r\n                        \"unit\": \"pcs\",\r\n                        \"quantity\": 20,\r\n                        \"unit_price\": 50,\r\n                        \"discount_amount\": 0,\r\n                        \"tax_amount\": 0,\r\n                        \"total_amount\": 1000,\r\n                        \"notes\": \"Item 2\"\r\n                    }\r\n                ]\r\n            }\r\n        ],\r\n        \"payments\": [\r\n            {\r\n                \"payment_number\": \"PAY-20240115-0012111\",\r\n                \"customer_id\": 305429,\r\n                \"payment_date\": \"2024-01-15T10:30:00Z\",\r\n                \"collected_by\": 2,\r\n                \"method\": \"cash\",\r\n                \"reference_number\": \"REF-20240115-00121\",\r\n                \"total_amount\": 15000,\r\n                \"notes\": \"Full payment received\",\r\n                \"is_active\": \"Y\",\r\n                \"currency_id\": 33\r\n            }\r\n        ],\r\n        \"cooler_inspections\": [\r\n            {\r\n                \"inspected_by\": 2,\r\n                \"inspection_date\": \"2024-01-15T10:30:00Z\",\r\n                \"temperature\": 4.5,\r\n                \"is_working\": \"Y\",\r\n                \"issues\": \"None\",\r\n                \"images\": null,\r\n                \"latitude\": 23.8103,\r\n                \"longitude\": 90.4125,\r\n                \"action_required\": \"N\",\r\n                \"action_taken\": null,\r\n                \"next_inspection_due\": \"2024-02-15\",\r\n                \"cooler\": {\r\n                    \"code\": \"COOL-1234564\",\r\n                    \"brand\": \"Samsung\",\r\n                    \"model\": \"RSA1ZTMG1\",\r\n                    \"serial_number\": \"SN-2024-001\",\r\n                    \"customer_id\": 305429,\r\n                    \"capacity\": 300,\r\n                    \"install_date\": \"2023-06-15\",\r\n                    \"last_service_date\": null,\r\n                    \"next_service_due\": null,\r\n                    \"status\": \"working\",\r\n                    \"temperature\": null,\r\n                    \"energy_rating\": \"A++\",\r\n                    \"warranty_expiry\": \"2025-06-15\",\r\n                    \"maintenance_contract\": null,\r\n                    \"technician_id\": null,\r\n                    \"last_scanned_date\": null,\r\n                    \"is_active\": \"Y\"\r\n                }\r\n            }\r\n        ],\r\n        \"survey\": {\r\n            \"survey_response\": {\r\n                \"parent_id\": 15,\r\n                \"customer_id\": 305429,\r\n                \"submitted_by\": 2,\r\n                \"submitted_at\": \"2024-01-15T10:30:00Z\",\r\n                \"location\": \"Dhaka, Bangladesh\",\r\n                \"photo_url\": null,\r\n                \"is_active\": \"Y\",\r\n                \"survey_answers\": [\r\n                    {\r\n                        \"field_id\": 15,\r\n                        \"answer\": \"Very Satisfied - Rating: 5\"\r\n                    },\r\n                    {\r\n                        \"field_id\": 16,\r\n                        \"answer\": \"Excellent service quality\"\r\n                    }\r\n                ]\r\n            }\r\n        }\r\n     }",
@@ -1329,15 +1241,13 @@
                 "visits"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Visits",
           "id": "7c9c4014-d0c7-471e-956c-4f3fbe7a7300",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/reports/visits?startDate=2025-11-11",
               "host": [
@@ -1354,15 +1264,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Visits By ID",
           "id": "f07dc8aa-b7a5-43c3-9c2d-43a8f07f2a54",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/visits/6",
               "host": [
@@ -1373,15 +1281,13 @@
                 "6"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Visits",
           "id": "6cacaaed-81bd-403e-9dc7-5458936e1229",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"customer_id\": 10,\r\n  \"sales_person_id\": 31,\r\n  \"route_id\": 9,\r\n  \"zones_id\": 13,\r\n  \"visit_date\": \"2025-10-03T08:30:00.000Z\",\r\n  \"visit_time\": \"08:30\",\r\n  \"purpose\": \"Follow-up meeting\",\r\n  \"status\": \"planned\",\r\n  \"start_time\": \"2025-10-03T08:35:00.000Z\",\r\n  \"end_time\": \"2025-10-03T09:15:00.000Z\",\r\n  \"duration\": 40,\r\n  \"start_latitude\": \"25.276987\",\r\n  \"start_longitude\": \"55.296249\",\r\n  \"end_latitude\": \"25.277500\",\r\n  \"end_longitude\": \"55.297000\",\r\n  \"check_in_time\": \"2025-10-03T08:40:00.000Z\",\r\n  \"check_out_time\": \"2025-10-03T09:10:00.000Z\",\r\n  \"orders_created\": 2,\r\n  \"amount_collected\": \"2500.00\",\r\n  \"visit_notes\": \"Discussed product updates and new offers\",\r\n  \"customer_feedback\": \"Customer is interested in a demo next weeks\",\r\n  \"next_visit_date\": \"2025-10-10T08:30:00.000Z\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -1401,15 +1307,13 @@
                 "6"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Visits",
           "id": "b005b662-19b0-4b10-bf62-2b7643e30345",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"customer_id\": 10,\r\n  \"sales_person_id\": 31,\r\n  \"route_id\": 9,\r\n  \"zones_id\": 13,\r\n  \"visit_date\": \"2025-10-03T08:30:00.000Z\",\r\n  \"visit_time\": \"08:30\",\r\n  \"purpose\": \"Follow-up meeting\",\r\n  \"status\": \"planned\",\r\n  \"start_time\": \"2025-10-03T08:35:00.000Z\",\r\n  \"end_time\": \"2025-10-03T09:15:00.000Z\",\r\n  \"duration\": 40,\r\n  \"start_latitude\": \"25.276987\",\r\n  \"start_longitude\": \"55.296249\",\r\n  \"end_latitude\": \"25.277500\",\r\n  \"end_longitude\": \"55.297000\",\r\n  \"check_in_time\": \"2025-10-03T08:40:00.000Z\",\r\n  \"check_out_time\": \"2025-10-03T09:10:00.000Z\",\r\n  \"orders_created\": 2,\r\n  \"amount_collected\": \"2500.00\",\r\n  \"visit_notes\": \"Discussed product updates and new offers\",\r\n  \"customer_feedback\": \"Customer is interested in a demo next weeks\",\r\n  \"next_visit_date\": \"2025-10-10T08:30:00.000Z\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n"
@@ -1424,8 +1328,7 @@
                 "7"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "662fcb2b-7ced-4774-bbca-8d405c2586d7"
@@ -1438,7 +1341,6 @@
           "id": "540966e6-d86e-421d-a00a-cf2552ed437c",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n\"name\": \"Collectors\",\r\n\"zones_id\": 1,\r\n\"type\": \"Retail\",\r\n\"contact_person\": \"Rahul Sharma\",\r\n\"phone_number\": \"9876543210\",\r\n\"email\": \"abc.traders@example.com\",\r\n\"address\": \"123 Market Street\",\r\n\"city\": \"Delhi\",\r\n\"state\": \"Delhi\",\r\n\"zipcode\": \"110001\",\r\n\"latitude\": \"28.6139\",\r\n\"longitude\": \"77.2090\",\r\n\"credit_limit\": \"500000\",\r\n\"outstanding_amount\": \"25000\",\r\n\"route_id\": 4,\r\n\"salesperson_id\": 2,\r\n\"last_visit_date\": \"2025-09-30T10:30:00.000Z\",\r\n\"is_active\": \"Y\"\r\n}\r\n",
@@ -1457,15 +1359,13 @@
                 "customers"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Customers",
           "id": "a6b15d02-1b7c-47cd-83e1-3eed55874d01",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n\"name\": \"Traders\",\r\n\"zones_id\": 13,\r\n\"type\": \"Retail\",\r\n\"contact_person\": \"Rahul Sharma\",\r\n\"phone_number\": \"9876543210\",\r\n\"email\": \"abc.traders@example.com\",\r\n\"address\": \"123 Market Street\",\r\n\"city\": \"Delhi\",\r\n\"state\": \"Delhi\",\r\n\"zipcode\": \"110001\",\r\n\"latitude\": \"28.6139\",\r\n\"longitude\": \"77.2090\",\r\n\"credit_limit\": \"500000\",\r\n\"outstanding_amount\": \"25000\",\r\n\"route_id\": 9,\r\n\"salesperson_id\": 39,\r\n\"last_visit_date\": \"2025-09-30T10:30:00.000Z\",\r\n\"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -1485,15 +1385,13 @@
                 "10"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Customers",
           "id": "e00141cf-4fac-4592-95c8-2e10a863facb",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/customers",
               "host": [
@@ -1510,15 +1408,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Customers By ID",
           "id": "5fdb475f-39e1-4433-9aeb-654c4477e35e",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/customers/10",
               "host": [
@@ -1529,15 +1425,13 @@
                 "10"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Customers",
           "id": "3ab9c396-b421-4056-a72b-d3262f0a39f4",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/customers/5",
               "host": [
@@ -1548,32 +1442,28 @@
                 "5"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Bulk Upsert",
           "id": "ad8d310f-2e53-4524-8220-c2781a7f6567",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
                 {
                   "key": "customers",
-                  "value": "{\n\"customers\": [\n{\n\"name\": \"ABC Store\",\n\"type\": \"Retailer\",\n\"contact_person\": \"John Doe\",\n\"phone_number\": \"9876543210\",\n\"email\": \"abc@store.com\",\n\"address\": \"123 Main Street\",\n\"city\": \"Mumbai\",\n\"state\": \"Maharashtra\",\n\"zipcode\": \"400001\",\n\"latitude\": \"19.0760\",\n\"longitude\": \"72.8777\",\n\"credit_limit\": \"50000.00\",\n\"outstanding_amount\": \"5000.00\",\n\"zones_id\": 1,\n\"route_id\": 5,\n\"salesperson_id\": 10,\n\"is_active\": \"Y\"\n},{\n\"name\": \"XYZ Wholesale\",\n\"type\": \"Wholesaler\",\n\"contact_person\": \"Jane Smith\",\n\"phone_number\": \"9123456789\",\n\"email\": \"xyz@wholesale.com\",\n\"address\": \"456 Market Road\",\n\"city\": \"Delhi\",\n\"state\": \"Delhi\",\n\"zipcode\": \"110001\",\n\"credit_limit\": \"100000.00\",\n\"zones_id\": 2,\n\"is_active\": \"Y\"\n},\n{\n\"name\": \"PQR Distributors\",\n\"type\": \"Distributor\",\n\"phone_number\": \"9988776655\",\n\"city\": \"Bangalore\",\n\"is_active\": \"Y\"\n}\n  ]\n}",
+                  "value": "[{\n\"customers\": [\n{\n\"name\": \"ABC Store\",\n\"type\": \"Retailer\",\n\"contact_person\": \"John Doe\",\n\"phone_number\": \"9876543210\",\n\"email\": \"abc@store.com\",\n\"address\": \"123 Main Street\",\n\"city\": \"Mumbai\",\n\"state\": \"Maharashtra\",\n\"zipcode\": \"400001\",\n\"latitude\": \"19.0760\",\n\"longitude\": \"72.8777\",\n\"credit_limit\": \"50000.00\",\n\"outstanding_amount\": \"5000.00\",\n\"zones_id\": 1,\n\"route_id\": 5,\n\"salesperson_id\": 10,\n\"is_active\": \"Y\"\n},{\n\"name\": \"XYZ Wholesale\",\n\"type\": \"Wholesaler\",\n\"contact_person\": \"Jane Smith\",\n\"phone_number\": \"9123456789\",\n\"email\": \"xyz@wholesale.com\",\n\"address\": \"456 Market Road\",\n\"city\": \"Delhi\",\n\"state\": \"Delhi\",\n\"zipcode\": \"110001\",\n\"credit_limit\": \"100000.00\",\n\"zones_id\": 2,\n\"is_active\": \"Y\"\n},\n{\n\"name\": \"PQR Distributors\",\n\"type\": \"Distributor\",\n\"phone_number\": \"9988776655\",\n\"city\": \"Bangalore\",\n\"is_active\": \"Y\"\n}\n  ]\n}]",
                   "type": "text"
                 },
                 {
                   "key": "profile_pics",
-                  "type": "file",
-                  "src": "postman-cloud:///1f023653-1c68-4c10-8ad6-8791144e000c"
+                  "type": "file"
                 },
                 {
                   "key": "customer_images",
-                  "type": "file",
-                  "src": "postman-cloud:///1eff0e00-466a-40f0-81ad-b34b9867613c"
+                  "type": "file"
                 }
               ]
             },
@@ -1587,8 +1477,7 @@
                 "bulk-upsert"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "66871bdf-09e1-4db5-a26b-5fab51fd3452"
@@ -1601,7 +1490,6 @@
           "id": "35c5cb2c-7334-45f1-bbad-dbb1da316acc",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "    {\r\n    // \"order_number\": \"ORD-00001\",\r\n    \"parent_id\": 305429,\r\n    \"salesperson_id\": 23, \r\n    \"order_date\": \"2025-10-06\",\r\n    \"delivery_date\": \"2025-10-15\",\r\n    \"status\": \"draft\",\r\n    \"priority\": \"high\",\r\n    \"order_type\": \"regular\",\r\n    \"payment_method\": \"credit\",\r\n    \"payment_terms\": \"Net 30\",\r\n    \"subtotal\": 500.00,\r\n    \"discount_amount\": 50.00,\r\n    \"tax_amount\": 90.00,\r\n    \"shipping_amount\": 20.00,\r\n    \"total_amount\": 560.00,\r\n    \"notes\": \"Urgent delivery requested.\",\r\n    \"shipping_address\": \"123 Test Street, Cityville, USA\",\r\n    \"approval_status\": \"pending\",\r\n    \"is_active\": \"Y\",\r\n    \"currency_id\": 33,\r\n    \"orderItems\": [\r\n        {\r\n        \"product_id\": 85,\r\n        \"quantity\": 2,\r\n        \"price\": 20090.00\r\n        },\r\n        {\r\n        \"product_id\": 84,\r\n        \"quantity\": 1,\r\n        \"price\": 10900.00\r\n        }\r\n    ]\r\n    }\r\n\r\n",
@@ -1620,15 +1508,13 @@
                 "orders"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Orders",
           "id": "c085a52f-284b-4dd2-8a64-ddf836f9ccf8",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"order_number\": \"ORD-1001\",\r\n  \"parent_id\": 10,\r\n  \"salesperson_id\": 36,\r\n  \"order_date\": \"2025-10-06T10:30:00.000Z\",\r\n  \"delivery_date\": \"2025-10-15T10:30:00.000Z\",\r\n  \"status\": \"draft\",\r\n  \"priority\": \"high\",\r\n  \"order_type\": \"regular\",\r\n  \"payment_method\": \"credits\",\r\n  \"payment_terms\": \"Net 30\",\r\n  \"subtotal\": 500.00,\r\n  \"discount_amount\": 50.00,\r\n  \"tax_amount\": 90.00,\r\n  \"shipping_amount\": 20.00,\r\n  \"total_amount\": 560.00,\r\n  \"notes\": \"Urgent delivery requested.\",\r\n  \"shipping_address\": \"123 Test Street, Cityville, USA\",\r\n  \"approval_status\": \"pending\",\r\n  \"is_active\": \"Y\",\r\n  \"currency_id\": 2\r\n//   \"order_items\": [\r\n//     {\r\n//       \"product_id\": 10,\r\n//       \"quantity\": 2,\r\n//       \"price\": 200.00\r\n//     },\r\n//     {\r\n//       \"product_id\": 12,\r\n//       \"quantity\": 1,\r\n//       \"price\": 100.00\r\n//     }\r\n//   ]\r\n}\r\n\r\n",
@@ -1648,18 +1534,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Orders",
           "id": "1d1f2aa0-f142-4e44-bb21-c7eed10c9639",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"order_number\": \"ORD-1001\",\r\n  \"parent_id\": 10,\r\n  \"salesperson_id\": 36,\r\n  \"order_date\": \"2025-10-06T10:30:00.000Z\",\r\n  \"delivery_date\": \"2025-10-15T10:30:00.000Z\",\r\n  \"status\": \"draft\",\r\n  \"priority\": \"high\",\r\n  \"order_type\": \"regular\",\r\n  \"payment_method\": \"credits\",\r\n  \"payment_terms\": \"Net 30\",\r\n  \"subtotal\": 500.00,\r\n  \"discount_amount\": 50.00,\r\n  \"tax_amount\": 90.00,\r\n  \"shipping_amount\": 20.00,\r\n  \"total_amount\": 560.00,\r\n  \"notes\": \"Urgent delivery requested.\",\r\n  \"shipping_address\": \"123 Test Street, Cityville, USA\",\r\n  \"approval_status\": \"pending\",\r\n  \"is_active\": \"Y\",\r\n  \"currency_id\": 2\r\n//   \"order_items\": [\r\n//     {\r\n//       \"product_id\": 10,\r\n//       \"quantity\": 2,\r\n//       \"price\": 200.00\r\n//     },\r\n//     {\r\n//       \"product_id\": 12,\r\n//       \"quantity\": 1,\r\n//       \"price\": 100.00\r\n//     }\r\n//   ]\r\n}\r\n\r\n"
@@ -1690,15 +1571,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Orders By ID",
           "id": "e559bda9-c94c-4c3c-8a19-fac4261e25bf",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/orders/1",
               "host": [
@@ -1709,15 +1588,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Orders",
           "id": "fc6bdc2e-d288-4cc8-bdf6-7a89c0554ad1",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/orders/6",
               "host": [
@@ -1728,15 +1605,13 @@
                 "6"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Order Items By Order ID",
           "id": "714a93ab-5e6e-4cbf-bac6-b8d5069db303",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/orders/order-items/38",
               "host": [
@@ -1748,8 +1623,7 @@
                 "38"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "a3d86990-3f3c-422e-82a9-e9986c0c7d15"
@@ -1762,7 +1636,6 @@
           "id": "4f84d3e2-e9ec-4479-929d-8a7b49390c8a",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Uganada Dollar\",\r\n  \"code\": \"UGD\",\r\n  \"symbol\": \"Doolar\",\r\n  \"exchange_rate_to_base\": 1.0,\r\n  \"is_base\": \"Y\",\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -1781,15 +1654,13 @@
                 "currencies"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get  All Currencies",
           "id": "d0cce8b4-271c-4751-a635-0ee86f8f8d26",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/currencies",
               "host": [
@@ -1806,15 +1677,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Currencies By ID",
           "id": "94e537d8-edb8-4825-88a4-09d9dde4a646",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/currencies/1",
               "host": [
@@ -1825,15 +1694,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Currencies",
           "id": "fe4521b6-149e-4acc-b814-4b0dfdc3e57e",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/currencies/1",
               "host": [
@@ -1844,15 +1711,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Currencies",
           "id": "28217fb8-1c93-41ef-aa33-8d112dc5e9f8",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Indian Rupees\",\r\n  \"symbol\": \"Rupeess\",\r\n  \"exchange_rate_to_base\": 1.0,\r\n  \"is_base\": \"Y\",\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -1879,8 +1744,7 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "1ab76e74-9ca4-4211-b422-d599850324c2"
@@ -1893,7 +1757,6 @@
           "id": "517eb736-1a02-49a5-9b5b-3128a2fd5e70",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"product_id\": 85,\r\n  \"location_id\": 33,\r\n  \"location_type\": \"warehouse\",\r\n  \"current_stock\": 100,\r\n  \"reserved_stock\": 20,\r\n  \"available_stock\": 80,\r\n  \"minimum_stock\": 10,\r\n  \"maximum_stock\": 200,\r\n  \"reorder_level\": 30,\r\n  \"reorder_quantity\": 50,\r\n  \"average_daily_sales\": 15.5,\r\n  \"lead_time\": 7,\r\n  \"safety_stock\": 20,\r\n  \"stock_value\": 5000.00,\r\n  \"last_stock_update\": \"2025-10-06T00:00:00Z\",\r\n  \"stock_status\": \"adequate\",\r\n  \"turnover_rate\": 3.5,\r\n  \"days_of_stock\": 20,\r\n  \"last_count_date\": \"2025-10-01T00:00:00Z\",\r\n  \"next_count_due\": \"2025-11-01T00:00:00Z\",\r\n  \"variance\": 0,\r\n  \"variance_percentage\": 0,\r\n  \"cost_price\": 50.00,\r\n  \"selling_price\": 60.00,\r\n  \"margin\": 20.00\r\n}\r\n",
@@ -1912,15 +1775,13 @@
                 "inventory-stock"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Inventory Stock",
           "id": "d87fccb3-2672-4396-b4fd-9f4c40a6bcc5",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"product_id\": 2,\r\n  \"location_id\": 15,\r\n  \"location_type\": \"warehouses\",\r\n  \"current_stock\": 100,\r\n  \"reserved_stock\": 20,\r\n  \"available_stock\": 80,\r\n  \"minimum_stock\": 10,\r\n  \"maximum_stock\": 200,\r\n  \"reorder_level\": 30,\r\n  \"reorder_quantity\": 50,\r\n  \"average_daily_sales\": 15.5,\r\n  \"lead_time\": 7,\r\n  \"safety_stock\": 20,\r\n  \"stock_value\": 5000.00,\r\n  \"last_stock_update\": \"2025-10-06T00:00:00Z\",\r\n  \"stock_status\": \"adequate\",\r\n  \"turnover_rate\": 3.5,\r\n  \"days_of_stock\": 20,\r\n  \"last_count_date\": \"2025-10-01T00:00:00Z\",\r\n  \"next_count_due\": \"2025-11-01T00:00:00Z\",\r\n  \"variance\": 0,\r\n  \"variance_percentage\": 0,\r\n  \"cost_price\": 50.00,\r\n  \"selling_price\": 60.00,\r\n  \"margin\": 20.00\r\n}\r\n",
@@ -1940,15 +1801,13 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Inventory Stock By ID",
           "id": "b5aea7a2-a895-4abd-a9f1-d35decf648d1",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/inventory-stock/3",
               "host": [
@@ -1959,15 +1818,13 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Inventory Stock",
           "id": "5d058d88-de14-4316-9640-0a575bd6847d",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/inventory-stock",
               "host": [
@@ -1977,15 +1834,13 @@
                 "inventory-stock"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Inventory Stock",
           "id": "391962b4-f8ca-4e7b-b2f5-40ca0f3311b7",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/inventory-stock/3",
               "host": [
@@ -1996,8 +1851,7 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "24f0a376-d7f9-4694-a04b-0b5bc829908a"
@@ -2010,7 +1864,6 @@
           "id": "08119a18-c1a9-421d-b410-2c3436b85a09",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Coca Cola 500ml\",\r\n  \"description\": \"Packaged soft drink bottle 500ml\",\r\n  \"category_id\": 12,\r\n  \"sub_category_id\": 12,\r\n  \"brand_id\": 10,\r\n  \"unit_of_measurement\": 12,\r\n  \"base_price\": 40.00,\r\n  \"tax_rate\": 18.00,\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -2029,15 +1882,13 @@
                 "products"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Products",
           "id": "852ba8e4-d918-43c1-b3c2-24e94821fc05",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Coca Cola 5000ml\",\r\n//   \"code\": \"PRD-COCA500\",\r\n  \"description\": \"Packaged soft drink bottle 500ml\",\r\n  \"category\": \"Beverages\",\r\n  \"brand\": \"Coca Cola\",\r\n  \"unit_of_measure\": \"Bottle\",\r\n  \"base_price\": 40.00,\r\n  \"tax_rate\": 18.00,\r\n  \"is_active\": \"Y\"\r\n \r\n}\r\n",
@@ -2057,15 +1908,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Products By ID",
           "id": "b2b43053-9fd3-4f77-bcd8-06e36a36d78c",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/products/1",
               "host": [
@@ -2076,15 +1925,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Products",
           "id": "71881c20-6b42-4ae5-a03b-cf5d7a447515",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/products",
               "host": [
@@ -2101,15 +1948,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Products",
           "id": "6aa60dc5-fc14-436e-9761-f85f2f4d0ec0",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/products/1",
               "host": [
@@ -2120,8 +1965,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "b71a4f4a-613a-4333-bdc9-503c2e9ca72b"
@@ -2134,7 +1978,6 @@
           "id": "17aac088-db8d-4a0f-8092-d2a16123b9de",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Birental Customers\",\r\n  \"description\": \"Group for wholesale buyers with special discounts\",\r\n  \"discount_percentage\": 10.5,\r\n  \"credit_terms\": 45,\r\n  \"payment_terms\": \"Net 45\",\r\n  \"price_group\": \"Wholesale\",\r\n  \"is_active\": \"Y\",\r\n  \"customerGroups\": [\r\n    { \"customer_id\": 15 },\r\n    { \"customer_id\": 12 }\r\n  ]\r\n}\r\n",
@@ -2153,15 +1996,13 @@
                 "customer-groups"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Customer Groups",
           "id": "70899d35-5eeb-49d5-bce1-896c97f2dbfc",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "\r\n{\r\n  \"name\": \"Birental Customers\",\r\n  \"description\": \"Group for wholesale buyers with special discountssss\",\r\n  \"discount_percentage\": 10.5,\r\n  \"credit_terms\": 45,\r\n  \"payment_terms\": \"Net 45\",\r\n  \"price_group\": \"Wholesale\",\r\n  \"is_active\": \"Y\"\r\n}\r\n\r\n",
@@ -2181,15 +2022,13 @@
                 "6"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Customer Groups",
           "id": "f9089a55-3de6-47ef-b485-9964720f9044",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/customer-groups?status=active",
               "host": [
@@ -2205,18 +2044,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Customer Groups By ID",
           "id": "62aa728d-4e62-4595-a499-63a3d0cae838",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "\r\n{\r\n  \"name\": \"Birental Customers\",\r\n//   \"code\": \"WH001\",\r\n  \"description\": \"Group for wholesale buyers with special discountssss\",\r\n  \"discount_percentage\": 10.5,\r\n  \"credit_terms\": 45,\r\n  \"payment_terms\": \"Net 45\",\r\n  \"price_group\": \"Wholesale\",\r\n  \"is_active\": \"Y\"\r\n}\r\n\r\n"
@@ -2231,15 +2065,13 @@
                 "5"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Customer Groups",
           "id": "8717a207-99ea-400b-8934-05d2ac1d0c79",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "\r\n{\r\n  \"name\": \"Birental Customers\",\r\n//   \"code\": \"WH001\",\r\n  \"description\": \"Group for wholesale buyers with special discountssss\",\r\n  \"discount_percentage\": 10.5,\r\n  \"credit_terms\": 45,\r\n  \"payment_terms\": \"Net 45\",\r\n  \"price_group\": \"Wholesale\",\r\n  \"is_active\": \"Y\"\r\n}\r\n\r\n"
@@ -2254,8 +2086,7 @@
                 "5"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "3aa16ecc-511f-40cd-b6bf-b1513ba4634c"
@@ -2268,7 +2099,6 @@
           "id": "533d4c3f-5444-45f8-a607-f8a4e1f756fb",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"customer_group_id\": 6,\r\n  \"customer_id\": 18,\r\n  \"is_active\": \"Y\"\r\n \r\n}\r\n",
@@ -2287,15 +2117,13 @@
                 "customer-group-member"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All",
           "id": "7a706426-d305-4f94-b0a0-9a15bb9393a2",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/customer-group-member",
               "host": [
@@ -2305,15 +2133,13 @@
                 "customer-group-member"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get By ID",
           "id": "4bcec13b-f34d-4c4b-9a5b-d0e61954a9b6",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/customer-group-member/1",
               "host": [
@@ -2324,15 +2150,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update",
           "id": "dcffb6b1-f1cb-4386-b0f7-5cf9e2faffd9",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"customer_group_id\": 6,\r\n  \"customer_id\": 18,\r\n  \"is_active\": \"Y\"\r\n \r\n}\r\n",
@@ -2352,15 +2176,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete",
           "id": "02f5d9ab-266b-4db1-a4d9-071dc27087f5",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"customer_group_id\": 6,\r\n  \"customer_id\": 18,\r\n  \"is_active\": \"Y\"\r\n \r\n}\r\n"
@@ -2375,8 +2197,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "108b765c-ff22-4c17-8cc9-5a46ea7214e5"
@@ -2389,7 +2210,6 @@
           "id": "cc8ec27e-9e85-4978-a2a2-f19f487a12a4",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2444,15 +2264,13 @@
                 "customer-documents"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Customer Documents",
           "id": "bd7fe91c-ce69-4a2b-a573-bdc748810ddb",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2510,18 +2328,13 @@
                 "5"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Customer Documents By ID",
           "id": "91a342db-6254-4945-a433-c53555474165",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2579,18 +2392,13 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Customers Documents",
           "id": "0c1811b3-a34e-4af1-a1d2-fb03ec970939",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2647,15 +2455,13 @@
                 "customer-documents"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Customers",
           "id": "03019ffd-fd0b-4580-94e1-2e06c86d1c97",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2713,8 +2519,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "90254705-3c01-4271-b896-6de15af6408b"
@@ -2727,7 +2532,6 @@
           "id": "af875380-699a-4da8-abf8-07722b17f75a",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2797,15 +2601,13 @@
                 "asset-master"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Assets Master",
           "id": "c955db77-628d-4805-9903-52740eb4510c",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"serial_number\": \"SN-1001\",\r\n  \"purchase_date\": \"2025-10-01\",\r\n  \"warranty_expiry\": \"2030-10-01\",\r\n  \"current_location\": \"Warehouse 1\",\r\n  \"current_status\": \"Availables\",\r\n  \"assigned_to\": \"John Doe\",\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -2825,18 +2627,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Asset Master By ID",
           "id": "e7a6e591-8931-400d-a57a-9cd036efdc84",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"serial_number\": \"SN-1001\",\r\n  \"purchase_date\": \"2025-10-01\",\r\n  \"warranty_expiry\": \"2030-10-01\",\r\n  \"current_location\": \"Warehouse 1\",\r\n  \"current_status\": \"Availables\",\r\n  \"assigned_to\": \"John Doe\",\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -2851,18 +2648,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Asset Master",
           "id": "a67e8791-8c80-4b3f-865c-e40193eb6880",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"serial_number\": \"SN-1001\",\r\n  \"purchase_date\": \"2025-10-01\",\r\n  \"warranty_expiry\": \"2030-10-01\",\r\n  \"current_location\": \"Warehouse 1\",\r\n  \"current_status\": \"Availables\",\r\n  \"assigned_to\": \"John Doe\",\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -2876,8 +2668,7 @@
                 "asset-master"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "b9b68736-9888-489d-bd51-a24fdcc1a068"
@@ -2890,7 +2681,6 @@
           "id": "e29157bc-2b0d-4e8d-bc64-4148aefc5637",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2925,15 +2715,13 @@
                 "asset-images"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Assets Images",
           "id": "286e36f3-dbf4-434b-88d0-fd12e6d20058",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -2969,18 +2757,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Asset Images",
           "id": "cb1b6578-3607-428e-9dcc-0bf06ed1197f",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -3015,18 +2798,13 @@
                 "asset-images"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Asset Images By ID",
           "id": "ff24e2a2-0aae-4271-9d19-af2415a60c17",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -3062,15 +2840,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Asset Images",
           "id": "edda1fa8-322f-4165-bb7a-76e5e1d2c7bd",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -3106,8 +2882,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "c99a1577-16f2-44f3-b81b-4060d6fcce73"
@@ -3120,7 +2895,6 @@
           "id": "836323e5-6e76-489b-aab2-fcd695b72462",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "// {\r\n//   \"name\": \"Standard Price List\",\r\n//   \"description\": \"Default price list\",\r\n//   \"currency_code\": \"INR\",\r\n//   \"valid_from\": \"2025-10-01T00:00:00.000Z\",\r\n//   \"valid_to\": \"2026-09-30T23:59:59.999Z\",\r\n//   \"is_active\": \"Y\"\r\n\r\n// }\r\n\r\n\r\n\r\n{\r\n  \"name\": \"Standard Price List\",\r\n  \"description\": \"Default price list\",\r\n  \"currency_code\": \"INR\",\r\n  \"valid_from\": \"2025-10-01T00:00:00.000Z\",\r\n  \"valid_to\": \"2026-09-30T23:59:59.999Z\",\r\n  \"is_active\": \"Y\",\r\n  \"priceListItems\": [\r\n    {\r\n      \"product_id\": 6,\r\n      \"unit_price\": 150.0,\r\n      \"uom\": \"pcs\",\r\n      \"discount_percent\": 5,\r\n      \"effective_from\": \"2025-10-01\",\r\n      \"effective_to\": \"2026-03-31\"\r\n    },\r\n    {\r\n      \"product_id\": 6,\r\n      \"unit_price\": 250.0,\r\n      \"uom\": \"pcs\",\r\n      \"discount_percent\": 10,\r\n      \"effective_from\": \"2025-10-01\",\r\n      \"effective_to\": \"2026-09-30\"\r\n    }\r\n  ]\r\n}\r\n",
@@ -3139,15 +2913,13 @@
                 "price-lists"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Price List",
           "id": "a6313b31-4463-435f-9c4b-8ead4f40e53f",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n\"id\": 11,\r\n  \"name\": \"Standard Price List\",\r\n  \"description\": \"Default price lists\",\r\n  \"currency_code\": \"INR\",\r\n  \"valid_from\": \"2025-10-01T00:00:00.000Z\",\r\n  \"valid_to\": \"2026-09-30T23:59:59.999Z\",\r\n  \"is_active\": \"Y\",\r\n  \"pricelist_item\": [\r\n    {\r\n      \"id\": 9,\r\n      \"pricelist_id\": 7,\r\n      \"product_id\": 6,\r\n      \"unit_price\": \"150\",\r\n      \"uom\": \"pcss\",\r\n      \"discount_percent\": \"51\",\r\n      \"effective_from\": \"2025-10-01T00:00:00.000Z\",\r\n      \"effective_to\": \"2026-03-31T00:00:00.000Z\",\r\n      \"is_active\": \"Y\",\r\n      \"createdate\": \"2025-10-09T05:36:18.150Z\",\r\n      \"createdby\": 31,\r\n      \"updatedate\": null,\r\n      \"updatedby\": null,\r\n      \"log_inst\": 1\r\n    },\r\n    {\r\n        \"id\":13,\r\n      \"pricelist_id\": 7,\r\n      \"product_id\": 6,\r\n      \"unit_price\": \"2500\",\r\n      \"uom\": \"pcs\",\r\n      \"discount_percent\": \"10\",\r\n      \"effective_from\": \"2025-10-01T00:00:00.000Z\",\r\n      \"effective_to\": \"2026-09-30T00:00:00.000Z\",\r\n      \"is_active\": \"Y\",\r\n      \"createdate\": \"2025-10-09T05:36:18.150Z\",\r\n      \"createdby\": 31,\r\n      \"updatedate\": null,\r\n      \"updatedby\": null,\r\n      \"log_inst\": 1\r\n    }\r\n  ]\r\n}",
@@ -3166,15 +2938,13 @@
                 "pricelists"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Price List By ID",
           "id": "c597ee6f-c524-4ae2-87a2-5df774634f30",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/price-lists/1",
               "host": [
@@ -3185,15 +2955,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Price List",
           "id": "8a6bff0a-fea3-444d-91d0-956acdec3724",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/price-lists",
               "host": [
@@ -3203,15 +2971,13 @@
                 "price-lists"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Price List",
           "id": "e6d32d74-0fb1-49f3-a366-8a13eca5fe98",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/price-lists/1",
               "host": [
@@ -3222,8 +2988,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "a8c5d69f-fa2b-4128-8ef3-c71979ec800d"
@@ -3236,7 +3001,6 @@
           "id": "0e8b49aa-89c3-4d10-b5ab-aac034f32800",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"pricelist_id\": 2,\r\n  \"product_id\": 6,\r\n  \"unit_price\": 499.99,\r\n  \"uom\": \"PCS\",\r\n  \"discount_percent\": 10.50,\r\n  \"effective_from\": \"2025-10-01\",\r\n  \"effective_to\": \"2026-09-30\",\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -3255,15 +3019,13 @@
                 "price-list-items"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Price List Items",
           "id": "8b506a94-7ab9-43ee-877e-1432e3c868b8",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"pricelist_id\": 2,\r\n  \"product_id\": 6,\r\n  \"unit_price\": 500.99,\r\n  \"uom\": \"PCS\",\r\n  \"discount_percent\": 10.50,\r\n  \"effective_from\": \"2025-10-01\",\r\n  \"effective_to\": \"2026-09-30\",\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -3283,18 +3045,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Price List Items",
           "id": "321a14c0-78b5-41a7-9c31-14a0dd2681d5",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"pricelist_id\": 2,\r\n  \"product_id\": 6,\r\n  \"unit_price\": 500.99,\r\n  \"uom\": \"PCS\",\r\n  \"discount_percent\": 10.50,\r\n  \"effective_from\": \"2025-10-01\",\r\n  \"effective_to\": \"2026-09-30\",\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -3308,18 +3065,13 @@
                 "price-list-items"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Price List Items By ID",
           "id": "f53262e7-44b0-4b42-bc2e-7cdfc1f5a543",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"pricelist_id\": 2,\r\n  \"product_id\": 6,\r\n  \"unit_price\": 500.99,\r\n  \"uom\": \"PCS\",\r\n  \"discount_percent\": 10.50,\r\n  \"effective_from\": \"2025-10-01\",\r\n  \"effective_to\": \"2026-09-30\",\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -3334,15 +3086,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Price List Items",
           "id": "3e85394f-11f1-49a5-b45a-021606564838",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"pricelist_id\": 2,\r\n  \"product_id\": 6,\r\n  \"unit_price\": 500.99,\r\n  \"uom\": \"PCS\",\r\n  \"discount_percent\": 10.50,\r\n  \"effective_from\": \"2025-10-01\",\r\n  \"effective_to\": \"2026-09-30\",\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -3357,8 +3107,7 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "f41eb11d-7e45-490c-9e70-0866dd02118f"
@@ -3371,7 +3120,6 @@
           "id": "34220825-c76e-4d77-a135-5381ea21a4af",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n    \"id\": 13,\r\n  \"group_name\": \"North Region Sales Teamssss\",\r\n  \"description\": \"Handles sales for all northern region zones\",\r\n  \"is_active\": \"Y\",\r\n  \"salesTargetMember\": [\r\n    {\r\n       \"id\":7,\r\n      \"sales_person_id\": 1\r\n    }\r\n     \r\n  ]\r\n}",
@@ -3390,15 +3138,13 @@
                 "sales-target-groups"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Sales Target Groups",
           "id": "18b09472-68d2-4e3a-b51e-f13f2ff75e73",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/sales-target-groups",
               "host": [
@@ -3408,15 +3154,13 @@
                 "sales-target-groups"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Sales Target Group By ID",
           "id": "275713f0-a8f3-435d-a49f-4906391b2c02",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/sales-target-groups/1",
               "host": [
@@ -3427,15 +3171,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Sales Target Groups",
           "id": "cd167e54-24c5-4675-9352-047c4e38c873",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n            \"id\": 1,\r\n            \"group_name\": \"North Region Sales Teamss\",\r\n            \"description\": \"Handles sales for all northern region zones\",\r\n            \"is_active\": \"Y\"\r\n}\r\n       ",
@@ -3455,15 +3197,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Sales Target Groups",
           "id": "7b3a03cf-eff6-4002-86fb-4401ce7c020e",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n            \"id\": 1,\r\n            \"group_name\": \"North Region Sales Teamss\",\r\n            \"description\": \"Handles sales for all northern region zones\",\r\n            \"is_active\": \"Y\"\r\n}\r\n       "
@@ -3478,8 +3218,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "de702f69-d36d-4f40-a5ef-13924b36553e"
@@ -3497,7 +3236,6 @@
           "id": "5de6d978-b9c7-4437-843d-437048381715",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"sub_category_name\": \"Energy Drinks\",\r\n  \"product_category_id\": 12,\r\n  \"description\": \"Includes Red Bull, Monster, and other energy beverages\"\r\n}\r\n",
@@ -3516,15 +3254,13 @@
                 "product-sub-categories"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Product Sub Categories",
           "id": "381e9325-b73b-4b03-871e-e84a91308f22",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"sub_category_name\": \"Energy Drinkss\",\r\n  \"product_category_id\": 1,\r\n  \"description\": \"Includes Red Bull, Monster, and other energy beverages\"\r\n}\r\n",
@@ -3544,18 +3280,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Product Categories By ID",
           "id": "e813e486-87cf-42f1-81e5-f1b513d4d531",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"sub_category_name\": \"Energy Drinkss\",\r\n  \"product_category_id\": 1,\r\n  \"description\": \"Includes Red Bull, Monster, and other energy beverages\"\r\n}\r\n"
@@ -3570,18 +3301,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All  Product Categories",
           "id": "1d8889e0-62ac-4f9c-a6ac-b2d8dce54db7",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"sub_category_name\": \"Energy Drinkss\",\r\n  \"product_category_id\": 1,\r\n  \"description\": \"Includes Red Bull, Monster, and other energy beverages\"\r\n}\r\n"
@@ -3595,15 +3321,13 @@
                 "product-sub-categories"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Product Categories",
           "id": "bf74a2fe-2c0c-40a9-b8ec-339609669264",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"sub_category_name\": \"Energy Drinkss\",\r\n  \"product_category_id\": 1,\r\n  \"description\": \"Includes Red Bull, Monster, and other energy beverages\"\r\n}\r\n"
@@ -3618,8 +3342,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "9c2a6870-8537-45a2-af20-ba8344900efe"
@@ -3632,7 +3355,6 @@
           "id": "0000329f-c6b9-4e9a-91a0-d346e4ee7ab9",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"category_name\": \"Beverages\",\r\n  \"description\": \"All types of drinkable liquid products including soft drinks, water, and energy drinks.\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -3651,15 +3373,13 @@
                 "product-categories"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Product Categories",
           "id": "94f8fe15-0644-4813-9746-f47ea43d9796",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"category_name\": \"Beverages\",\r\n  \"description\": \"All types of drinkable liquid products including soft drinks, water, and energy drinkss.\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -3679,18 +3399,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Product Categories By ID",
           "id": "08403aae-40f9-4086-b097-69cb795d7bec",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"category_name\": \"Beverages\",\r\n  \"description\": \"All types of drinkable liquid products including soft drinks, water, and energy drinkss.\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n"
@@ -3705,15 +3420,13 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Product Categories",
           "id": "9f7fb923-e360-48d9-aa02-e8424999f270",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/product-categories",
               "host": [
@@ -3730,15 +3443,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Product Categories",
           "id": "b34f057c-84d2-46c0-8769-1fc3175c20df",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"category_name\": \"Beverages\",\r\n  \"description\": \"All types of drinkable liquid products including soft drinks, water, and energy drinkss.\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n"
@@ -3753,8 +3464,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "cbbdc312-d970-4c47-a23a-61f35e282c04"
@@ -3767,7 +3477,6 @@
           "id": "46e11ee1-e858-457a-bca2-57ea3d475586",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -3807,15 +3516,13 @@
                 "brands"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Brands",
           "id": "fb01471d-b187-4274-a914-be9aa8e1a5f8",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -3856,15 +3563,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Brands By Id",
           "id": "3be394d4-a70b-4f6b-ab4d-222962e93837",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/brands/2",
               "host": [
@@ -3875,15 +3580,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Brands",
           "id": "f33b9fb1-237f-400d-a651-e19938fd8aaf",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/brands",
               "host": [
@@ -3893,15 +3596,13 @@
                 "brands"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Brands",
           "id": "abd7a488-8c94-4f17-83e6-ec153bda40de",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/brands",
               "host": [
@@ -3911,8 +3612,7 @@
                 "brands"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "62504c53-7938-4577-ade3-fcbc177b4757"
@@ -3925,7 +3625,6 @@
           "id": "c9bdb107-48ee-48ed-ac3c-4884063d4e0d",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Kilogram\",\r\n  \"description\": \"Standard unit of mass\",\r\n  \"category\": \"Weight\",\r\n  \"symbol\": \"kg\",\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -3944,15 +3643,13 @@
                 "unit-measurement"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Unit Measurement",
           "id": "ceb87f3b-ff61-4854-9ebd-7f3911eb2e6d",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Kilogram\",\r\n  \"description\": \"Standard unit of masses\",\r\n  \"category\": \"Weight\",\r\n  \"symbol\": \"kg\",\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -3972,18 +3669,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Unit Measurement By ID",
           "id": "e934c968-9bdd-47d6-a00c-33751b0eb933",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Kilogram\",\r\n  \"description\": \"Standard unit of masses\",\r\n  \"category\": \"Weight\",\r\n  \"symbol\": \"kg\",\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -3998,18 +3690,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Unit Measurement",
           "id": "dfa1c67a-09fc-498b-aa3f-6e8295b5dac3",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Kilogram\",\r\n  \"description\": \"Standard unit of masses\",\r\n  \"category\": \"Weight\",\r\n  \"symbol\": \"kg\",\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -4023,15 +3710,13 @@
                 "unit-measurement"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Unit Measurement",
           "id": "f9a37c1c-d857-4635-9756-60c4a65c7d6a",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Kilogram\",\r\n  \"description\": \"Standard unit of masses\",\r\n  \"category\": \"Weight\",\r\n  \"symbol\": \"kg\",\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -4046,8 +3731,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "237a345a-184c-44b4-82a8-a4ca10344750"
@@ -4060,7 +3744,6 @@
           "id": "175f8ebd-3d2d-43af-a536-ea56db7a4fdf",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -4150,15 +3833,13 @@
                 "delivery-schedules"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Delievery Schdules",
           "id": "d69c6cc4-373d-492b-9fb0-6cd4360b157f",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -4249,18 +3930,13 @@
                 "4"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Delievery Schedules By ID",
           "id": "401887bf-f27e-4464-bf16-48df7ddb70f8",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -4351,18 +4027,13 @@
                 "4"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Delievery Schedules",
           "id": "7dafa506-f0b6-4bea-b9f2-a612f49f2ffe",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -4452,15 +4123,13 @@
                 "delivery-schedules"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Delievery Schedules",
           "id": "353dd5db-5b6d-4768-bae3-f0dd4480e2b5",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -4551,8 +4220,7 @@
                 "4"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "d6dff333-1280-49d6-94d7-bc6520510ac2"
@@ -4565,7 +4233,6 @@
           "id": "ae67015b-d98f-4535-8f99-16a77292025c",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/sales-target-",
               "host": [
@@ -4575,8 +4242,7 @@
                 "sales-target-"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "04a55b92-0d4b-46fc-96d4-2f0379b2ce5b"
@@ -4589,7 +4255,6 @@
           "id": "e201bb24-01ab-465c-8252-ef568382cda5",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n    \"id\": 10,\r\n//   \"credit_note_number\": \"CN-2025-0002\",\r\n  \"parent_id\": 34,\r\n  \"products_id\": 85,\r\n  \"customer_id\": 304205,\r\n  \"credit_note_date\": \"2025-10-15\",\r\n  \"due_date\": \"2025-10-30\",\r\n  \"status\": \"draft\",\r\n  \"reason\": \"Returned damaged goods\",\r\n  \"payment_method\": \"credit\",\r\n  \"subtotal\": 5000.00,\r\n  \"discount_amount\": 250.00,\r\n  \"tax_amount\": 475.00,\r\n  \"shipping_amount\": 100.00,\r\n  \"total_amount\": 5325.00,\r\n  \"amount_applied\": 0.00,\r\n  \"balance_due\": 5325.00,\r\n  \"notes\": \"Customer returned 5 damaged units\",\r\n  \"billing_address\": \"12A Industrial Area, Delhi, India\",\r\n  \"currency_id\": 32,\r\n  \"is_active\": \"Y\",\r\n  \"creditNoteItems\": [\r\n    {\r\n        \"id\": 14,\r\n      \"product_id\": 85,\r\n      \"product_name\": \"Product A\",\r\n      \"unit\": \"PCS\",\r\n      \"quantity\": 2,\r\n      \"unit_price\": 1000.00,\r\n      \"discount_amount\": 50.00,\r\n      \"tax_amount\": 95.00,\r\n      \"total_amount\": 2045.00,\r\n      \"notes\": \"Damaged items\"\r\n    },\r\n     {\r\n        \"id\": 15,\r\n      \"product_id\": 85,\r\n      \"product_name\": \"Product A\",\r\n      \"unit\": \"PCS\",\r\n      \"quantity\": 2,\r\n      \"unit_price\": 200000.00,\r\n      \"discount_amount\": 50.00,\r\n      \"tax_amount\": 95.00,\r\n      \"total_amount\": 2045.00,\r\n      \"notes\": \"Damaged items\"\r\n    }\r\n  ]\r\n}",
@@ -4609,15 +4274,13 @@
                 "credit-notes"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Credit Notes",
           "id": "a13b6fb2-a099-4866-ad7f-eb425fc8c057",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/transaction/credit-notes",
               "host": [
@@ -4628,15 +4291,13 @@
                 "credit-notes"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Credit Notes By ID",
           "id": "33ab6db2-d28f-43ca-a31f-37eee465bda2",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/transaction/credit-notes/10",
               "host": [
@@ -4648,15 +4309,13 @@
                 "10"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Credit Notes",
           "id": "1143e8f5-0a36-43e7-ac7a-ea1dd5200e32",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/transaction/credit-notes/1",
               "host": [
@@ -4668,8 +4327,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "a84bd5e0-7794-4e3c-aecf-f158fe34426b"
@@ -4682,22 +4340,19 @@
           "id": "6523f153-c67b-4903-85c3-697c912fee38",
           "request": {
             "method": "POST",
-            "header": [],
             "url": {
               "raw": "{{url}}",
               "host": [
                 "{{url}}"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Credit Note Items",
           "id": "cec14969-d873-4e26-8cd2-0521c20d37e5",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/transaction/credit-note-items",
               "host": [
@@ -4708,15 +4363,13 @@
                 "credit-note-items"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Credit Note Items By ID",
           "id": "1699ccbc-86ee-4ddf-8098-aebb837c4e1d",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/transaction/credit-note-items/3",
               "host": [
@@ -4728,8 +4381,7 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "03c8c237-0574-45e0-9af8-f6c3220a925f"
@@ -4742,7 +4394,6 @@
           "id": "44e10b61-6c15-4c46-b75b-9b78860c1212",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"from_location\": \"Head Office Warehouse\",\r\n  \"to_location\": \"Regional Service Center\",\r\n  \"movement_type\": \"Transfer\",\r\n  \"movement_date\": \"2025-10-1\",\r\n  \"performed_by\": 23,\r\n  \"notes\": \"Asset moved for calibration and quality check\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -4761,15 +4412,13 @@
                 "asset-movement"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Asset Movement",
           "id": "7a2397da-bdac-41b4-a522-f5ff510fc12d",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"from_location\": \"Head Office Warehouse\",\r\n  \"to_location\": \"Regional Service Center\",\r\n  \"movement_type\": \"Transfer\",\r\n  \"movement_date\": \"2025-10-15\",\r\n  \"performed_by\": 23,\r\n  \"notes\": \"Asset moved for calibration and quality checksss\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -4789,18 +4438,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Asset Movement By ID",
           "id": "611432ee-9a31-4520-af86-7bc11cc3c24d",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"from_location\": \"Head Office Warehouse\",\r\n  \"to_location\": \"Regional Service Center\",\r\n  \"movement_type\": \"Transfer\",\r\n  \"movement_date\": \"2025-10-15\",\r\n  \"performed_by\": 23,\r\n  \"notes\": \"Asset moved for calibration and quality checksss\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n"
@@ -4815,18 +4459,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Asset Movements",
           "id": "2410f2c8-a28f-451c-bb81-1859c5adac7f",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"from_location\": \"Head Office Warehouse\",\r\n  \"to_location\": \"Regional Service Center\",\r\n  \"movement_type\": \"Transfer\",\r\n  \"movement_date\": \"2025-10-15\",\r\n  \"performed_by\": 23,\r\n  \"notes\": \"Asset moved for calibration and quality checksss\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n"
@@ -4840,15 +4479,13 @@
                 "asset-movement"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Asset Movements",
           "id": "67c47dc1-b730-4d06-9ef8-1b300bef8ba6",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/asset-movement/9",
               "host": [
@@ -4859,8 +4496,7 @@
                 "9"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "14792412-b1bb-44b9-8e5b-b39dc9952eba"
@@ -4873,7 +4509,6 @@
           "id": "e4c93c25-5b66-420d-ac3d-d575c80d30da",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"technician_id\": 23,\r\n  \"maintenance_date\": \"2025-12-15\",\r\n  \"issue_reported\": \"Hard disk making unusual noisess\",\r\n  \"action_taken\": \"Replaced hard disk with new one\",\r\n  \"cost\": 5000.50,\r\n  \"remarks\": \"Warranty claim approved, parts replaced under warranty\"\r\n}",
@@ -4892,15 +4527,13 @@
                 "asset-maintenance"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Asset Maintainence",
           "id": "3749f58b-210b-4839-8fe6-7e9d5df37ace",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/asset-maintenance",
               "host": [
@@ -4910,15 +4543,13 @@
                 "asset-maintenance"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Assets Maintainence By ID",
           "id": "74b65e37-91ea-42ad-819a-f8d36793c6b4",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/asset-maintenance/1",
               "host": [
@@ -4929,15 +4560,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Asset Maintainence",
           "id": "ab056c30-af77-44e2-8511-348a65c78a2b",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"technician_id\": 23,\r\n  \"maintenance_date\": \"2025-12-15\",\r\n  \"issue_reported\": \"Hard disk making unusual noisess\",\r\n  \"action_taken\": \"Replaced hard disk with new one\",\r\n  \"cost\": 500003.50,\r\n  \"remarks\": \"Warranty claim approved, parts replaced under warranty\"\r\n}",
@@ -4957,15 +4586,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Asset maintainence",
           "id": "b1ad2051-4d86-42da-b898-5d07d8ca25e8",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"technician_id\": 23,\r\n  \"maintenance_date\": \"2025-12-15\",\r\n  \"issue_reported\": \"Hard disk making unusual noisess\",\r\n  \"action_taken\": \"Replaced hard disk with new one\",\r\n  \"cost\": 500003.50,\r\n  \"remarks\": \"Warranty claim approved, parts replaced under warranty\"\r\n}"
@@ -4980,8 +4607,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "8b949b0c-7986-4df3-a170-06e630b35005"
@@ -4994,7 +4620,6 @@
           "id": "462715d6-0dd3-4afc-963f-5653e125e51f",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"claim_date\": \"2025-10-15\",\r\n  \"issue_description\": \"Display screen stopped working after power surge\",\r\n  \"claim_status\": \"Pending\",\r\n  \"resolved_date\": \"2025-10-15\",\r\n  \"notes\": \"Customer reported issue within warranty period. Sent for vendor inspection.\",\r\n  \"is_active\": \"Y\"\r\n  \r\n}\r\n",
@@ -5013,15 +4638,13 @@
                 "asset-warranty-claims"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Asset Warranty Claims",
           "id": "6e20e549-e9a8-419e-8f5f-11b4b666c930",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"claim_date\": \"2025-10-15\",\r\n  \"issue_description\": \"Display screen stopped working after power surge\",\r\n  \"claim_status\": \"Pending\",\r\n  \"resolved_date\": \"2027-10-15\",\r\n  \"notes\": \"Customer reported issue within warranty period. Sent for vendor inspection.\",\r\n  \"is_active\": \"Y\"\r\n  \r\n}\r\n",
@@ -5041,18 +4664,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Asset warranty Claims By ID",
           "id": "4322901d-b4e3-40b8-842d-a6b9657b0e94",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"claim_date\": \"2025-10-15\",\r\n  \"issue_description\": \"Display screen stopped working after power surge\",\r\n  \"claim_status\": \"Pending\",\r\n  \"resolved_date\": \"2027-10-15\",\r\n  \"notes\": \"Customer reported issue within warranty period. Sent for vendor inspection.\",\r\n  \"is_active\": \"Y\"\r\n  \r\n}\r\n"
@@ -5067,18 +4685,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Asset Warranty Claims",
           "id": "76804d17-c7c7-4be8-b055-65c33802148b",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"claim_date\": \"2025-10-15\",\r\n  \"issue_description\": \"Display screen stopped working after power surge\",\r\n  \"claim_status\": \"Pending\",\r\n  \"resolved_date\": \"2027-10-15\",\r\n  \"notes\": \"Customer reported issue within warranty period. Sent for vendor inspection.\",\r\n  \"is_active\": \"Y\"\r\n  \r\n}\r\n"
@@ -5092,15 +4705,13 @@
                 "asset-warranty-claims"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Warranty Claims",
           "id": "b2a59306-c3f7-49e0-a459-1d19a4cb642d",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"asset_id\": 33,\r\n  \"claim_date\": \"2025-10-15\",\r\n  \"issue_description\": \"Display screen stopped working after power surge\",\r\n  \"claim_status\": \"Pending\",\r\n  \"resolved_date\": \"2027-10-15\",\r\n  \"notes\": \"Customer reported issue within warranty period. Sent for vendor inspection.\",\r\n  \"is_active\": \"Y\"\r\n  \r\n}\r\n"
@@ -5115,8 +4726,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "729134cd-578a-4a62-9070-ccbeb6eb5847"
@@ -5129,7 +4739,6 @@
           "id": "833214ba-31de-478a-9941-7596a93f6b8f",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "// {\r\n//   \"user_id\": 2,\r\n//   \"vehicle_id\": 33,\r\n//   \"status\": \"A\",\r\n//   \"loading_type\": \"L\",\r\n//   \"is_active\": \"Y\",\r\n//   \"location_type\": \"vsan\",\r\n//   \"van_inventory_items\": [\r\n//     {\r\n//       \"product_id\": 85,\r\n//       \"product_name\": \"Cooler Fsan\",\r\n//       \"batch_no\": \"BCH2025A\",\r\n//       \"uom\": \"pcs\",\r\n//       \"unit_price\": 20,\r\n//       \"quantity\": 10,\r\n//       \"remarks\": \"Good condition\"\r\n//     },\r\n//     {\r\n//       \"product_id\": 84,\r\n//       \"product_name\": \"LEDs Bulb\",\r\n//       \"batch_no\": \"BCH2025B\",\r\n//       \"uom\": \"pcs\",\r\n//       \"quantity\": 20,\r\n//     \"unit_price\": 20,\r\n//       \"remarks\": \"Fragile items\"\r\n//     }\r\n//   ]\r\n// }\r\n{\r\n    \"user_id\": 1,\r\n    \"loading_type\": \"L\",\r\n    \"status\": \"A\",\r\n    \"document_date\": \"2025-11-18\",\r\n    \"vehicle_id\": 23,\r\n    \"location_type\": \"van\",\r\n    \"location_id\": 33,\r\n    \"is_active\": \"Y\",\r\n    \"van_inventory_items\": [\r\n        {\r\n            \"product_id\": 85,\r\n            \"product_name\": \"Programming Book\",\r\n            \"unit\": null,\r\n            \"quantity\": 12,\r\n            \"unit_price\": 100,\r\n            \"discount_amount\": 10,\r\n            \"tax_amount\": 5,\r\n            \"total_amount\": 1195,\r\n            \"notes\": \"expring soon\"\r\n        },\r\n        {\r\n            \"product_id\": 71,\r\n            \"product_name\": \"Women's Dress\",\r\n            \"unit\": null,\r\n            \"quantity\": 100,\r\n            \"unit_price\": 12,\r\n            \"discount_amount\": 1,\r\n            \"tax_amount\": 1,\r\n            \"total_amount\": 1200,\r\n            \"notes\": null\r\n        }\r\n    ]\r\n}",
@@ -5148,15 +4757,13 @@
                 "van-inventory"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Van Inventory",
           "id": "e50cb130-78ef-4a30-b37d-6cc73a4ce90b",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"user_id\": 23,\r\n  \"product_id\": 85,\r\n//   \"batch_id\": 7,\r\n//   \"serial_no_id\": 2,\r\n  \"quantity\": 100,\r\n  \"reserved_quantity\": 20,\r\n  \"available_quantity\": 800,\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -5176,15 +4783,13 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get  Van Inventory By ID",
           "id": "f79b6c86-e919-45c9-8ecf-a87475d55588",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/van-inventory/3",
               "host": [
@@ -5195,15 +4800,13 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Van Inventory",
           "id": "2611c897-89c1-4304-b675-82e6f840876d",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/van-inventory?user_id=23",
               "host": [
@@ -5219,15 +4822,13 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Van Inventory",
           "id": "3db8480b-f08a-45a3-9d6b-19d61a178581",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/van-inventory/3",
               "host": [
@@ -5238,8 +4839,7 @@
                 "3"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "359fd444-dc76-4a03-a7bf-b0d5f0f36935"
@@ -5252,7 +4852,6 @@
           "id": "b368b5cb-2b29-4519-8dfc-c855210f64a6",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n    \"id\": 2,\r\n  \"source_type\": \"warehouse\",\r\n  \"source_id\": 33,\r\n  \"destination_type\": \"store\",\r\n  \"destination_id\": 33,\r\n  \"requested_by\": 23,\r\n  \"status\": \"pending\",\r\n  \"is_active\": \"Y\",\r\n   \"stock_transfer_lines\": [\r\n    {\r\n        \"id\":2,\r\n      \"product_id\": 85,\r\n    //   \"batch_id\": 2,\r\n      \"quantity\": 100\r\n    }\r\n  \r\n  ]\r\n}",
@@ -5271,18 +4870,13 @@
                 "stock-transfer-requests"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Stock Transfer Requests",
           "id": "1254fc1e-4628-4f57-a8e4-575dfb7f077c",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n    \"id\": 2,\r\n  \"source_type\": \"warehouse\",\r\n  \"source_id\": 33,\r\n  \"destination_type\": \"store\",\r\n  \"destination_id\": 33,\r\n  \"requested_by\": 23,\r\n  \"status\": \"pending\",\r\n  \"is_active\": \"Y\",\r\n   \"stock_transfer_lines\": [\r\n    {\r\n        \"id\":2,\r\n      \"product_id\": 85,\r\n    //   \"batch_id\": 2,\r\n      \"quantity\": 100\r\n    }\r\n  \r\n  ]\r\n}"
@@ -5296,18 +4890,13 @@
                 "stock-transfer-requests"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Stock Transfer Requests By ID",
           "id": "e04b229d-f9a2-4cf7-9ff7-7c184dded8fc",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n    \"id\": 2,\r\n  \"source_type\": \"warehouse\",\r\n  \"source_id\": 33,\r\n  \"destination_type\": \"store\",\r\n  \"destination_id\": 33,\r\n  \"requested_by\": 23,\r\n  \"status\": \"pending\",\r\n  \"is_active\": \"Y\",\r\n   \"stock_transfer_lines\": [\r\n    {\r\n        \"id\":2,\r\n      \"product_id\": 85,\r\n    //   \"batch_id\": 2,\r\n      \"quantity\": 100\r\n    }\r\n  \r\n  ]\r\n}"
@@ -5322,15 +4911,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Stock Transfer Requests",
           "id": "f44dc839-ce06-40c6-aa70-feaa1c024a12",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/stock-transfer-requests/2",
               "host": [
@@ -5341,8 +4928,7 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "39dcc9cc-2f47-4059-a7fd-0b21bad08cb8"
@@ -5355,7 +4941,6 @@
           "id": "6986d84e-8247-4263-8a36-e30cadc140ce",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/stock-transfer-lines",
               "host": [
@@ -5365,15 +4950,13 @@
                 "stock-transfer-lines"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Stock Tranfer Lines By ID",
           "id": "5a687073-f564-47e8-9ad5-ddc676be3ae9",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/stock-transfer-lines/2",
               "host": [
@@ -5384,15 +4967,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Stock Tranfer Lines",
           "id": "43fceb8f-0571-4226-9127-b30b135d9c08",
           "request": {
             "method": "DELETE",
-            "header": [],
             "url": {
               "raw": "{{url}}/stock-transfer-lines/2",
               "host": [
@@ -5403,8 +4984,7 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "3d2dd90d-7055-40d0-8039-15370ca51236"
@@ -5417,7 +4997,6 @@
           "id": "0a9b4ba3-b53d-4bfb-9505-6810949a7f5c",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"product_id\": 85,\r\n//   \"batch_id\": 5,\r\n//   \"serial_id\": null,\r\n  \"movement_type\": \"Transfer\",\r\n  \"reference_type\": \"SalesOrder\",\r\n  \"reference_id\": 1001,\r\n  \"from_location_id\": 33,\r\n  \"to_location_id\": 31,\r\n  \"quantity\": 50,\r\n  \"remarks\": \"Transferred 50 units to warehouse 3\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n",
@@ -5436,15 +5015,13 @@
                 "stock-movements"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Stock Movements",
           "id": "4ed0ca9d-73dd-44ff-8122-72e8c208a919",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"product_id\": 85,\r\n//   \"batch_id\": 5,\r\n//   \"serial_id\": null,\r\n  \"movement_type\": \"Transfer\",\r\n  \"reference_type\": \"SalesOrder\",\r\n  \"reference_id\": 1001,\r\n  \"from_location_id\": 33,\r\n  \"to_location_id\": 31,\r\n  \"quantity\": 50,\r\n  \"remarks\": \"Transferred 50 unitsss to warehouse 3\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n",
@@ -5464,18 +5041,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Stock Movements By ID",
           "id": "2a55dfcf-6b28-4667-9a2c-11cb807e78a8",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"product_id\": 85,\r\n//   \"batch_id\": 5,\r\n//   \"serial_id\": null,\r\n  \"movement_type\": \"Transfer\",\r\n  \"reference_type\": \"SalesOrder\",\r\n  \"reference_id\": 1001,\r\n  \"from_location_id\": 33,\r\n  \"to_location_id\": 31,\r\n  \"quantity\": 50,\r\n  \"remarks\": \"Transferred 50 unitsss to warehouse 3\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n"
@@ -5490,18 +5062,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Stock Movements",
           "id": "8c944d8c-05c7-4656-87bc-ca2350afb6f9",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"product_id\": 85,\r\n//   \"batch_id\": 5,\r\n//   \"serial_id\": null,\r\n  \"movement_type\": \"Transfer\",\r\n  \"reference_type\": \"SalesOrder\",\r\n  \"reference_id\": 1001,\r\n  \"from_location_id\": 33,\r\n  \"to_location_id\": 31,\r\n  \"quantity\": 50,\r\n  \"remarks\": \"Transferred 50 unitsss to warehouse 3\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n"
@@ -5515,15 +5082,13 @@
                 "stock-movements"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Deleet Stock Movements",
           "id": "6dae6c79-c6a2-42b1-bcd0-011806bffb48",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"product_id\": 85,\r\n//   \"batch_id\": 5,\r\n//   \"serial_id\": null,\r\n  \"movement_type\": \"Transfer\",\r\n  \"reference_type\": \"SalesOrder\",\r\n  \"reference_id\": 1001,\r\n  \"from_location_id\": 33,\r\n  \"to_location_id\": 31,\r\n  \"quantity\": 50,\r\n  \"remarks\": \"Transferred 50 unitsss to warehouse 3\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n"
@@ -5538,8 +5103,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "f3a417b1-7be8-44b3-81fd-d0f39a7e515a"
@@ -5552,7 +5116,6 @@
           "id": "1d61b004-ac91-4562-b26f-e19c424f2692",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"sales_person_id\": 23,\r\n  \"product_category_id\": 34,\r\n  \"target_quantity\": 800,\r\n  \"target_amount\": 250000.00,\r\n  \"start_date\": \"2025-11-01\",\r\n  \"end_date\": \"2026-01-31\",\r\n  \"is_active\": \"Y\",\r\n  \"createdby\": 1,\r\n  \"updatedby\": null,\r\n  \"log_inst\": 1\r\n}\r\n",
@@ -5571,15 +5134,13 @@
                 "sales-target-overrides"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Sales Target Overrides",
           "id": "c32fcaea-ef79-45f8-b6a9-f95e9106700d",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"sales_person_id\": 23,\r\n  \"product_category_id\": 34,\r\n  \"target_quantity\": 8000,\r\n  \"target_amount\": 250000.00,\r\n  \"start_date\": \"2025-11-01\",\r\n  \"end_date\": \"2026-01-31\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -5599,15 +5160,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Sales Target Overrides",
           "id": "831be5b3-f3f3-498d-ae9a-5c51eb24d4c5",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/sales-target-overrides",
               "host": [
@@ -5617,15 +5176,13 @@
                 "sales-target-overrides"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get  Sales Target Overrides By ID",
           "id": "ce656d44-2d76-4ddf-b4cd-70c6f8ac52d5",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/sales-target-overrides/2",
               "host": [
@@ -5636,17 +5193,17 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Sales Target Overrides",
           "id": "1b112a39-394d-4cea-96a1-22ab6fb5d86e",
           "request": {
             "method": "DELETE",
-            "header": []
-          },
-          "response": []
+            "url": {
+              "raw": ""
+            }
+          }
         }
       ],
       "id": "510445ce-bf0d-49cd-ad28-16d1c1318e69"
@@ -5659,7 +5216,6 @@
           "id": "8bbbbf90-a1dd-44ff-87da-9de4223422cb",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"customer_id\": 304558,\r\n  \"asset_type_id\": 35,\r\n  \"brand_id\": 33,\r\n  \"model\": \"Model-X100\",\r\n  \"serial_number\": \"SN-2025-ABC\",\r\n  \"capacity\": 250,\r\n  \"install_date\": \"2025-10-15\",\r\n  \"status\": \"working\",\r\n  \"last_scanned_date\": \"2025-10-20\",\r\n  \"remarks\": \"Installed successfully and inspected.\",\r\n  \"technician_id\": 12,\r\n  \"warranty_expiry\": \"2026-10-15\",\r\n  \"maintenance_contract\": \"AMC-2025\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -5678,8 +5234,7 @@
                 "customer-assets"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "4f040b72-61ad-4010-af47-81c0811b6822"
@@ -5692,7 +5247,6 @@
           "id": "f6a7a07d-c1a7-4ebb-b3a9-027344c836de",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"visit_id\": 16,\r\n  \"task_type\": \"Product Demo\",\r\n  \"description\": \"Demonstrate new product features to the customer\",\r\n  \"assigned_to\": 23,\r\n  \"due_date\": \"2025-11-05T17:00:00.000Z\",\r\n  \"completed_date\": null,\r\n  \"status\": \"pending\",\r\n  \"priority\": \"high\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n",
@@ -5712,15 +5266,13 @@
                 "visit-tasks"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Visits",
           "id": "69a3a0fd-78a3-400b-84e6-7df72b67d35e",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"visit_id\": 16,\r\n  \"task_type\": \"Product Demos\",\r\n  \"description\": \"Demonstrate new product features to the customer\",\r\n  \"assigned_to\": 23,\r\n  \"due_date\": \"2025-11-05T17:00:00.000Z\",\r\n  \"completed_date\": null,\r\n  \"status\": \"pending\",\r\n  \"priority\": \"high\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n",
@@ -5741,18 +5293,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get  Visists By ID",
           "id": "f898e614-f8ea-4ea1-bc3c-31bef1f2d326",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"visit_id\": 16,\r\n  \"task_type\": \"Product Demos\",\r\n  \"description\": \"Demonstrate new product features to the customer\",\r\n  \"assigned_to\": 23,\r\n  \"due_date\": \"2025-11-05T17:00:00.000Z\",\r\n  \"completed_date\": null,\r\n  \"status\": \"pending\",\r\n  \"priority\": \"high\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n"
@@ -5768,18 +5315,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Visits",
           "id": "4d1347b1-d9fe-4533-a81b-b4a98f1eac0c",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"visit_id\": 16,\r\n  \"task_type\": \"Product Demos\",\r\n  \"description\": \"Demonstrate new product features to the customer\",\r\n  \"assigned_to\": 23,\r\n  \"due_date\": \"2025-11-05T17:00:00.000Z\",\r\n  \"completed_date\": null,\r\n  \"status\": \"pending\",\r\n  \"priority\": \"high\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n"
@@ -5794,15 +5336,13 @@
                 "visit-tasks"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Visits",
           "id": "cac891d8-3a44-4171-add0-41c5cfb50de8",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"visit_id\": 16,\r\n  \"task_type\": \"Product Demos\",\r\n  \"description\": \"Demonstrate new product features to the customer\",\r\n  \"assigned_to\": 23,\r\n  \"due_date\": \"2025-11-05T17:00:00.000Z\",\r\n  \"completed_date\": null,\r\n  \"status\": \"pending\",\r\n  \"priority\": \"high\",\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n"
@@ -5818,8 +5358,7 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "d123ec66-8d1c-496c-a25d-2a826527b26d"
@@ -5832,7 +5371,6 @@
           "id": "7824dffe-bbf9-453f-b334-f98a872d5a76",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Diwali Special Offer\",\r\n//   \"code\": \"DIWALI2025\",\r\n  \"type\": \"Discount\",\r\n  \"description\": \"Flat 20% discount on selected products for Diwali festival\",\r\n  \"start_date\": \"2025-10-25\",\r\n  \"end_date\": \"2025-11-05\",\r\n  \"depot_id\": 33,\r\n  \"zone_id\": 44,\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n",
@@ -5851,15 +5389,13 @@
                 "promotions"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update",
           "id": "3e02ab28-5e8a-4772-b13a-c482a49fcda1",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"name\": \"Diwali Special Offesr\",\r\n//   \"code\": \"DIWALI2025\",\r\n  \"type\": \"Discount\",\r\n  \"description\": \"Flat 20% discount on selected products for Diwali festival\",\r\n  \"start_date\": \"2025-10-25\",\r\n  \"end_date\": \"2025-11-05\",\r\n  \"depot_id\": 33,\r\n  \"zone_id\": 44,\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n",
@@ -5879,15 +5415,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "By Id",
           "id": "60bef46c-6f28-43e2-9d17-d7ec3769fe3f",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/promotions/2",
               "host": [
@@ -5898,15 +5432,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All",
           "id": "911b8598-4a3e-4153-8a6b-275dc757aab5",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/promotions",
               "host": [
@@ -5916,17 +5448,17 @@
                 "promotions"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete",
           "id": "9a0a1171-d4ff-462f-b1cb-db8af3f7f6d5",
           "request": {
             "method": "DELETE",
-            "header": []
-          },
-          "response": []
+            "url": {
+              "raw": ""
+            }
+          }
         }
       ],
       "id": "1a4b719d-90ab-410b-8188-1b94d438b391"
@@ -5939,7 +5471,6 @@
           "id": "bde16715-7b62-4dce-bb6d-ba323d8f0c24",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"promotion_id\": 2,\r\n  \"product_id\": 85,\r\n  \"is_active\": \"Y\"\r\n}\r\n",
@@ -5958,15 +5489,13 @@
                 "promotion-products"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update",
           "id": "8bc431e4-dd76-4ec7-9dbf-0243937eeb6b",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"promotion_id\": 5,\r\n  \"product_id\": 12,\r\n  \"is_active\": \"Y\",\r\n  \"log_inst\": 1\r\n}\r\n",
@@ -5986,15 +5515,13 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All",
           "id": "8facf8b4-0960-4533-b38c-806fd11a4aa3",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/promotion-products",
               "host": [
@@ -6004,18 +5531,13 @@
                 "promotion-products"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "By Id",
           "id": "3a48629d-3c27-4471-879e-6b10d7ce7894",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"promotion_id\": 2,\r\n  \"product_id\": 12,\r\n  \"is_active\": \"Y\"\r\n}\r\n"
@@ -6030,8 +5552,7 @@
                 "2"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "5311a445-597a-45de-a379-6311a23182d1"
@@ -6044,7 +5565,6 @@
           "id": "b736154c-4e24-4a26-99d4-e108b2d5ca2d",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"promotion_id\": 2,\r\n  \"param_name\": \"Discount Percentage\",\r\n  \"param_type\": \"number\",\r\n  \"param_value\": \"15\",\r\n  \"param_category\": \"discount\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -6063,15 +5583,13 @@
                 "promotion-parameters"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update",
           "id": "2705aceb-d7cc-413d-8258-6be42f7961fa",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"promotion_id\": 2,\r\n  \"param_name\": \"Discount Percentages\",\r\n  \"param_type\": \"number\",\r\n  \"param_value\": \"15\",\r\n  \"param_category\": \"discount\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n",
@@ -6091,18 +5609,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get By Id",
           "id": "538717cf-1e39-4f33-ad9b-635706e84110",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"promotion_id\": 2,\r\n  \"param_name\": \"Discount Percentages\",\r\n  \"param_type\": \"number\",\r\n  \"param_value\": \"15\",\r\n  \"param_category\": \"discount\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n"
@@ -6117,18 +5630,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All",
           "id": "c6e099f5-bc15-4f7c-85ab-13c1ef2b5a34",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"promotion_id\": 2,\r\n  \"param_name\": \"Discount Percentages\",\r\n  \"param_type\": \"number\",\r\n  \"param_value\": \"15\",\r\n  \"param_category\": \"discount\",\r\n  \"is_active\": \"Y\"\r\n\r\n}\r\n"
@@ -6142,8 +5650,7 @@
                 "promotion-parameters"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "f1c8f19e-6c98-4a43-9151-7054663a8e05"
@@ -6156,7 +5663,6 @@
           "id": "977106a2-f03d-4a11-ac7a-c8406aa9522b",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{ \r\n  \"action_type\":\"punch_in\",\r\n  \"latitude\": 28.6139,\r\n  \"longitude\": 77.2090,\r\n  \"address\": \"New Delhi, India\",\r\n  \"workType\": \"office\",\r\n  \"deviceInfo\": {\r\n    \"deviceId\": \"abc123xyz\",\r\n    \"deviceName\": \"iPhone 14 Pro\",\r\n    \"deviceModel\": \"iPhone14,3\",\r\n    \"osName\": \"iOS\",\r\n    \"osVersion\": \"16.5\",\r\n    \"appVersion\": \"1.0.0\",\r\n    \"manufacturer\": \"Apple\",\r\n    \"brand\": \"Apple\",\r\n    \"isPhysicalDevice\": true,\r\n    \"locationAccuracy\": 5.0,\r\n    \"networkType\": \"wifi\",\r\n    \"isConnected\": true,\r\n    \"batteryLevel\": 85,\r\n    \"isCharging\": false,\r\n    \"timestamp\": \"2024-01-15T09:00:00.000Z\",\r\n    \"timezone\": \"Asia/Kolkata\",\r\n    \"locale\": \"en_IN\"\r\n  }\r\n}",
@@ -6176,15 +5682,13 @@
                 "punch"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Todays Attendance",
           "id": "50a5c37c-15d4-487d-9214-e963f10d0a9a",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/attendance/today",
               "host": [
@@ -6195,15 +5699,13 @@
                 "today"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Punch Out",
           "id": "7babc2ce-e65f-4f30-808c-e67d9160d75b",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"latitude\": 28.6145,\r\n  \"longitude\": 77.2095,\r\n  \"address\": \"New Delhi, India - Office\",\r\n  \"remarks\": \"Completed daily tasks\",\r\n  \"deviceInfo\": {\r\n    \"deviceId\": \"abc123xyz\",\r\n    \"deviceName\": \"iPhone 14 Pro\",\r\n    \"deviceModel\": \"iPhone14,3\",\r\n    \"osName\": \"iOS\",\r\n    \"osVersion\": \"16.5\",\r\n    \"appVersion\": \"1.0.0\",\r\n    \"manufacturer\": \"Apple\",\r\n    \"brand\": \"Apple\",\r\n    \"isPhysicalDevice\": true,\r\n    \"batteryLevel\": 65,\r\n    \"isCharging\": false,\r\n    \"timestamp\": \"2024-01-15T18:00:00.000Z\",\r\n    \"timezone\": \"Asia/Kolkata\",\r\n    \"locale\": \"en_IN\"\r\n  }\r\n}",
@@ -6223,15 +5725,13 @@
                 "punch-out"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Attendance Records",
           "id": "37a3956f-4e9d-4dda-9e3e-84eba7a47c05",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/attendance/history",
               "host": [
@@ -6242,15 +5742,13 @@
                 "history"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Attendance By Id",
           "id": "25205026-8197-4bba-b828-7c32e9750c10",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/attendance/1",
               "host": [
@@ -6261,8 +5759,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "8cafb648-ab19-4de4-a977-341bd67fe8f1"
@@ -6275,7 +5772,6 @@
           "id": "c9c2aa50-288c-4934-91c6-26d9df96bc7e",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "[\r\n  {\r\n    \"request_type\": \"ORDER_APPROVAL\",\r\n    \"sequence\": 1,\r\n    \"approver_id\": 27,\r\n    \"zone_id\": null,\r\n    \"depot_id\": null,\r\n    \"header_approval_type\": \"MANAGER\",\r\n    \"header_role_id\": null,\r\n    \"remarks\": \"First level approval\",\r\n    \"is_active\": \"Y\"\r\n  },\r\n  {\r\n    \"request_type\": \"ORDER_APPROVAL\",\r\n    \"sequence\": 2,\r\n    \"approver_id\": 28,\r\n    \"zone_id\": null,\r\n    \"depot_id\": null,\r\n    \"header_approval_type\": \"DIRECTOR\",\r\n    \"header_role_id\": null,\r\n    \"remarks\": \"Final approval\",\r\n    \"is_active\": \"Y\"\r\n  }\r\n]\r\n",
@@ -6294,8 +5790,7 @@
                 "approval-workflow-setup"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "19b5c9d9-2c05-4bec-b528-9c52b9925cf0"
@@ -6308,7 +5803,6 @@
           "id": "6a6d160b-9a8f-4903-83ee-b12bcac0778b",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"request_id\": 25,\r\n  \"approval_id\": 47,\r\n  \"action\": \"A\",\r\n  \"remarks\": \"Order amount too high, please revise\"\r\n}\r\n",
@@ -6328,15 +5822,13 @@
                 "action"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Requests",
           "id": "244eb75c-a71f-4a9f-be52-4324fea5a42c",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/requests",
               "host": [
@@ -6346,15 +5838,13 @@
                 "requests"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Requests By ID",
           "id": "7f47c2a5-ee96-42e9-a8bc-dc7eb9bfe711",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/requests/1",
               "host": [
@@ -6365,15 +5855,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Requests By User",
           "id": "778862be-6176-4283-8674-4fb46789ecfd",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/requests-by-users",
               "host": [
@@ -6383,8 +5871,7 @@
                 "requests-by-users"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "96baa3f2-3b35-4742-baf0-2d3ee07e0c7a"
@@ -6397,7 +5884,6 @@
           "id": "89b9ac8c-3156-402d-9b27-ded35e46d7fd",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": ""
@@ -6411,18 +5897,13 @@
                 "survey-responses"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Survey Responses",
           "id": "e7acfdf0-7676-451f-987e-585ed9cc58c2",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"parent_id\": 1,\r\n  \"submitted_by\": 26,\r\n  \"submitted_at\": \"2024-01-15T10:30:00Z\",\r\n  \"photo_url\": \"https://example.com/survey-photo.jpg\",\r\n  \"location\": \"Delhi\",\r\n  \"is_active\": \"Y\",\r\n  \"answers\": [\r\n    {\r\n      \"field_id\": 1,\r\n      \"answer\": \"Very satisfied\"\r\n    },\r\n    {\r\n      \"field_id\": 2,\r\n      \"answer\": \"5\"\r\n    }\r\n  ]\r\n}"
@@ -6436,18 +5917,13 @@
                 "survey-responses"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Survey Responses By ID",
           "id": "f4fcbfe8-6961-45dd-a97f-3694f90871d0",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"parent_id\": 1,\r\n  \"submitted_by\": 26,\r\n  \"submitted_at\": \"2024-01-15T10:30:00Z\",\r\n  \"photo_url\": \"https://example.com/survey-photo.jpg\",\r\n  \"location\": \"Delhi\",\r\n  \"is_active\": \"Y\",\r\n  \"answers\": [\r\n    {\r\n      \"field_id\": 1,\r\n      \"answer\": \"Very satisfied\"\r\n    },\r\n    {\r\n      \"field_id\": 2,\r\n      \"answer\": \"5\"\r\n    }\r\n  ]\r\n}"
@@ -6462,15 +5938,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Delete Survey Responses",
           "id": "e5ebd1d8-6d35-4826-9916-b7da0eedcf7c",
           "request": {
             "method": "DELETE",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"parent_id\": 1,\r\n  \"submitted_by\": 26,\r\n  \"submitted_at\": \"2024-01-15T10:30:00Z\",\r\n  \"photo_url\": \"https://example.com/survey-photo.jpg\",\r\n  \"location\": \"Delhi\",\r\n  \"is_active\": \"Y\",\r\n  \"answers\": [\r\n    {\r\n      \"field_id\": 1,\r\n      \"answer\": \"Very satisfied\"\r\n    },\r\n    {\r\n      \"field_id\": 2,\r\n      \"answer\": \"5\"\r\n    }\r\n  ]\r\n}"
@@ -6485,15 +5959,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Cresates",
           "id": "3dfff445-a84c-4686-b309-06044c0eb1b9",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n    \"responses\": [\r\n        {\r\n            \"parent_id\": 15,\r\n            \"submitted_by\": 26,\r\n            \"submitted_at\": \"2024-01-15T10:30:00Z\",\r\n            \"location\": \"Delhi\",\r\n            \"is_active\": \"Y\",\r\n            \"answers\": [\r\n                {\r\n                    \"field_id\": 19,\r\n                    \"answer\": \"Very satisfied\"\r\n                },\r\n                {\r\n                    \"field_id\": 20,\r\n                    \"answer\": \"5\"\r\n                }\r\n            ]\r\n        },\r\n        {\r\n            \"parent_id\": 15,\r\n            \"submitted_by\": 26,\r\n            \"submitted_at\": \"2024-01-15T10:30:00Z\",\r\n            \"location\": \"Delhi\",\r\n            \"is_active\": \"Y\",\r\n            \"answers\": [\r\n                {\r\n                    \"field_id\": 19,\r\n                    \"answer\": \"Very satisfied\"\r\n                },\r\n                {\r\n                    \"field_id\": 20,\r\n                    \"answer\": \"5\"\r\n                }\r\n            ]\r\n        }\r\n    ]\r\n}",
@@ -6512,8 +5984,7 @@
                 "survey-responses"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "a40a2b4f-dd05-498b-896a-702b9bb3752a"
@@ -6526,7 +5997,6 @@
           "id": "a30c96a4-a4af-4c60-a6d7-711521104bc3",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"title\": \"Customer Satisfaction Survey 2024\",\r\n  \"description\": \"Annual customer satisfaction survey to measure service quality\",\r\n  \"category\": \"customer_feedback\",\r\n  \"target_roles\": 2,\r\n  \"is_published\": false,\r\n  \"expires_at\": \"2024-12-31T23:59:59Z\",\r\n  \"fields\": [\r\n    {\r\n       \"label\": \"How satisfied are you with our service?\",\r\n      \"field_type\": \"radio\",\r\n      \"options\": \"Very Satisfied,Satisfied,Neutral,Dissatisfied,Very Dissatisfied\",\r\n      \"is_required\": true,\r\n      \"sort_order\": 1\r\n    },\r\n    {\r\n      \"label\": \"Rate your overall experiences (1s-10)\",\r\n      \"field_type\": \"number\",\r\n      \"options\": null,\r\n      \"is_required\": true,\r\n      \"sort_order\": 2\r\n    },\r\n    {\r\n      \"label\": \"What did you like most?\",\r\n      \"field_type\": \"textarea\",\r\n      \"options\": null,\r\n      \"is_required\": false,\r\n      \"sort_order\": 3\r\n    },\r\n    {\r\n      \"label\": \"Would you recommend us?\",\r\n      \"field_type\": \"checkbox\",\r\n      \"options\": \"Yes,No,Maybe\",\r\n      \"is_required\": true,\r\n      \"sort_order\": 4\r\n    }\r\n  ]\r\n}",
@@ -6545,18 +6015,13 @@
                 "surveys"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Surveys",
           "id": "a765ce27-0c1a-43e5-a8d4-8f355c7deec8",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "{\r\n  \"title\": \"Customer Satisfaction Survey 2024\",\r\n  \"description\": \"Annual customer satisfaction survey to measure service quality\",\r\n  \"category\": \"customer_feedback\",\r\n  \"target_roles\": \"customer,guest,member\",\r\n  \"is_published\": false,\r\n  \"expires_at\": \"2024-12-31T23:59:59Z\",\r\n  \"fields\": [\r\n    {\r\n      \"label\": \"How satisfied are you with our service?\",\r\n      \"field_type\": \"radio\",\r\n      \"options\": \"Very Satisfied,Satisfied,Neutral,Dissatisfied,Very Dissatisfied\",\r\n      \"is_required\": true,\r\n      \"sort_order\": 1\r\n    },\r\n    {\r\n      \"label\": \"Rate your overall experience (1-10)\",\r\n      \"field_type\": \"number\",\r\n      \"options\": null,\r\n      \"is_required\": true,\r\n      \"sort_order\": 2\r\n    },\r\n    {\r\n      \"label\": \"What did you like most?\",\r\n      \"field_type\": \"textarea\",\r\n      \"options\": null,\r\n      \"is_required\": false,\r\n      \"sort_order\": 3\r\n    },\r\n    {\r\n      \"label\": \"Would you recommend us?\",\r\n      \"field_type\": \"checkbox\",\r\n      \"options\": \"Yes,No,Maybe\",\r\n      \"is_required\": true,\r\n      \"sort_order\": 4\r\n    }\r\n  ]\r\n}"
@@ -6570,8 +6035,7 @@
                 "surveys"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "42a2d91e-32cb-4dae-a95b-83bc31570ec8"
@@ -6584,7 +6048,6 @@
           "id": "47a169d0-6c3c-4196-97da-c26ab745f4d7",
           "request": {
             "method": "POST",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "[\r\n    {\r\n        \"id\": 5,\r\n        \"customer_id\": 305429,\r\n        \"complaint_title\": \"Customers Complaint.\",\r\n        \"complaint_description\": \"Customers reported late deliverysss.\",\r\n        \"submitted_by\": 29,\r\n        \"status\": \"P\"\r\n    },\r\n    {\r\n        \"id\": 6,\r\n        \"customer_id\": 305429,\r\n        \"complaint_title\": \"Customers Complaints.\",\r\n        \"complaint_description\": \"Customers reported late  and deliverysss.\",\r\n        \"submitted_by\": 29,\r\n        \"status\": \"P\"\r\n    }\r\n]",
@@ -6603,18 +6066,13 @@
                 "customer-complaints"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get All Customer Complaints",
           "id": "65539da5-1db3-4b25-9a4f-6f2c7b590811",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "[\r\n    {\r\n        \"id\": 3,\r\n        \"customer_id\": 305429,\r\n        \"complaint_description\": \"Customers reported late deliverysss.\",\r\n        \"submitted_by\": 29,\r\n        \"status\": \"P\"\r\n    },\r\n    {\r\n        \"id\": 4,\r\n        \"customer_id\": 305429,\r\n        \"complaint_description\": \"Customers reported late  and deliverysss.\",\r\n        \"submitted_by\": 29,\r\n        \"status\": \"P\"\r\n    }\r\n]"
@@ -6628,18 +6086,13 @@
                 "customer-complaints"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Customer Complaints By ID",
           "id": "cd0d09be-430d-4ee8-9879-4f0126490004",
-          "protocolProfileBehavior": {
-            "disableBodyPruning": true
-          },
           "request": {
             "method": "GET",
-            "header": [],
             "body": {
               "mode": "raw",
               "raw": "[\r\n    {\r\n        \"id\": 3,\r\n        \"customer_id\": 305429,\r\n        \"complaint_description\": \"Customers reported late deliverysss.\",\r\n        \"submitted_by\": 29,\r\n        \"status\": \"P\"\r\n    },\r\n    {\r\n        \"id\": 4,\r\n        \"customer_id\": 305429,\r\n        \"complaint_description\": \"Customers reported late  and deliverysss.\",\r\n        \"submitted_by\": 29,\r\n        \"status\": \"P\"\r\n    }\r\n]"
@@ -6654,8 +6107,7 @@
                 "4"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "2109cf56-6570-46a0-ae58-8c770278aca0"
@@ -6668,7 +6120,6 @@
           "id": "95ecd53d-4d18-4e14-b60c-2cdb5817e9d4",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/cooler-inspections?user_id=30",
               "host": [
@@ -6684,8 +6135,7 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "1a8f29fe-e5fc-4beb-80f8-57a53ccbe0b8"
@@ -6698,7 +6148,6 @@
           "id": "545b6366-8ef8-4ac0-9016-6124e10cd660",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/cooler-installations?user_id=1",
               "host": [
@@ -6714,8 +6163,7 @@
                 }
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "691604c6-1306-4993-84c7-24b2c460aa40"
@@ -6728,7 +6176,6 @@
           "id": "29ddf1fc-1476-4058-bc29-2f8841fa6529",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/settings",
               "host": [
@@ -6738,15 +6185,13 @@
                 "settings"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Get Company Setting By ID",
           "id": "9c42e5e8-391c-4cf3-921e-040ab10c22e2",
           "request": {
             "method": "GET",
-            "header": [],
             "url": {
               "raw": "{{url}}/settings/1",
               "host": [
@@ -6757,15 +6202,13 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         },
         {
           "name": "Update Company Settings",
           "id": "cda1ea19-6e72-4fc9-bf42-94077e0b46e9",
           "request": {
             "method": "PUT",
-            "header": [],
             "body": {
               "mode": "formdata",
               "formdata": [
@@ -6862,8 +6305,7 @@
                 "1"
               ]
             }
-          },
-          "response": []
+          }
         }
       ],
       "id": "1f75de62-081c-4cfe-bd8d-ab32c5ca02ee"
@@ -6879,35 +6321,9 @@
       }
     ]
   },
-  "event": [
-    {
-      "listen": "prerequest",
-      "script": {
-        "id": "72858a88-d14d-438c-9b06-cb41e41edc87",
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
-    },
-    {
-      "listen": "test",
-      "script": {
-        "id": "a5cd626a-228d-48da-a2f7-d6049d7524ae",
-        "type": "text/javascript",
-        "packages": {},
-        "requests": {},
-        "exec": [
-          ""
-        ]
-      }
-    }
-  ],
   "variable": [
     {
-      "id": "7102df33-faab-43de-b0f0-535980201add",
+      "id": "7667a634-d231-41e4-abe3-688588824723",
       "key": "url",
       "value": ""
     }

@@ -1,19 +1,14 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
-const checkDuplicateStates = async (name, code, id = null) => {
-  const conditions = [];
-
-  if (name) {
-    conditions.push({
-      name: name,
-    });
-  }
+const checkDuplicateStates = async (name, country_code, id = null) => {
+  if (!name || !country_code) return null;
 
   const duplicate = await prisma.crms_m_states.findFirst({
     where: {
-      OR: conditions,
-      ...(id && { id: { not: id } }),
+      name: name,
+      country_code: Number(country_code),
+      ...(id && { id: { not: parseInt(id) } }),
     },
   });
 
@@ -22,9 +17,9 @@ const checkDuplicateStates = async (name, code, id = null) => {
 
 const createState = async (data) => {
   try {
-    const duplicate = await checkDuplicateStates(data.name, data.code);
+    const duplicate = await checkDuplicateStates(data.name, data.country_code);
     if (duplicate) {
-      throw new CustomError("State already exists", 400);
+      throw new CustomError("State name already exists", 400);
     }
     const state = await prisma.crms_m_states.create({
       data: {
@@ -50,7 +45,6 @@ const createState = async (data) => {
   }
 };
 
-// Find a state by ID
 const findStateById = async (id) => {
   try {
     const state = await prisma.crms_m_states.findUnique({
@@ -74,37 +68,38 @@ const findStateById = async (id) => {
   }
 };
 
-// Update a state
 const updateState = async (id, data) => {
   try {
-    const duplicate = await checkDuplicateStates(data.name, data.code, id);
+    const duplicate = await checkDuplicateStates(
+      data.name,
+      data.country_code,
+      id
+    );
+
     if (duplicate) {
-      throw new CustomError("State already exists", 400);
+      throw new CustomError("State already exists for this country", 400);
     }
+
     const updatedState = await prisma.crms_m_states.update({
       where: { id: parseInt(id) },
-      include: {
-        country_details: {
-          select: {
-            id: true,
-            name: true,
-            code: true,
-          },
-        },
-      },
       data: {
         ...data,
-        country_code: Number(data.country_code) || null,
+        country_code: Number(data.country_code),
         updatedate: new Date(),
       },
+      include: {
+        country_details: {
+          select: { id: true, name: true, code: true },
+        },
+      },
     });
+
     return updatedState;
   } catch (error) {
-    throw new CustomError(`${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 
-// Delete a state
 const deleteState = async (id) => {
   try {
     await prisma.crms_m_states.delete({
@@ -122,7 +117,6 @@ const deleteState = async (id) => {
   }
 };
 
-// Get all states
 const getAllStates = async (search, page, size, country_id, is_active) => {
   try {
     page = !page || page == 0 ? 1 : page;
