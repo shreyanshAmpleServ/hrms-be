@@ -132,21 +132,17 @@ const authenticateToken = async (req, res, next) => {
       }
       // Call next() within the tenant context
       // The asyncLocalStorage context will be maintained for all subsequent operations
-      // Ensure we properly await async route handlers to maintain context
-      return new Promise((resolve, reject) => {
-        try {
-          const result = next();
-          // If next() returns a promise (which it does for async handlers), await it
-          if (result && typeof result.then === "function") {
-            result.then(resolve).catch(reject);
-          } else {
-            resolve(result);
-          }
-        } catch (error) {
-          // If next() throws synchronously, reject the promise
-          reject(error);
+      // Express middleware next() can return a promise for async handlers
+      try {
+        const result = next();
+        // If next() returns a promise (which it does for async handlers), await it
+        if (result && typeof result.then === "function") {
+          await result;
         }
-      });
+      } catch (error) {
+        // If next() throws synchronously, re-throw it
+        throw error;
+      }
     });
   } catch (error) {
     return res.status(403).json({
