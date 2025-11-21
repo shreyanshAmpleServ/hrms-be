@@ -161,11 +161,7 @@ const getAllStates = async (search, page, size, country_id, is_active) => {
           },
         },
       },
-      orderBy: [
-        { name: "asc" },
-        // { updatedate: 'desc' },
-        // { createdate: 'desc' },
-      ],
+      orderBy: [{ name: "asc" }],
     });
     const totalCount = await prisma.crms_m_states.count({
       where: filters,
