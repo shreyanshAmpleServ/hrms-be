@@ -114,7 +114,7 @@ const authenticateToken = async (req, res, next) => {
     // Use withTenantContext to wrap the entire request handling
     // The context will be maintained for all async operations in the request chain
     // asyncLocalStorage maintains context across async boundaries automatically
-    return withTenantContext(tenantDb, async () => {
+    return await withTenantContext(tenantDb, async () => {
       if (!schedulerInitialized) {
         try {
           logger.info(
@@ -133,16 +133,20 @@ const authenticateToken = async (req, res, next) => {
       // Call next() within the tenant context
       // The asyncLocalStorage context will be maintained for all subsequent operations
       // Ensure we properly await async route handlers to maintain context
-      try {
-        const result = next();
-        if (result && typeof result.then === "function") {
-          return await result;
+      return new Promise((resolve, reject) => {
+        try {
+          const result = next();
+          // If next() returns a promise (which it does for async handlers), await it
+          if (result && typeof result.then === "function") {
+            result.then(resolve).catch(reject);
+          } else {
+            resolve(result);
+          }
+        } catch (error) {
+          // If next() throws synchronously, reject the promise
+          reject(error);
         }
-        return result;
-      } catch (error) {
-        // If next() throws synchronously, re-throw it
-        throw error;
-      }
+      });
     });
   } catch (error) {
     return res.status(403).json({
