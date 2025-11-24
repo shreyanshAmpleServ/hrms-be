@@ -1,90 +1,154 @@
+// const multer = require("multer");
+// const path = require("path");
+// const fs = require("fs");
+// const { asyncLocalStorage } = require("../../utils/prismaProxy");
+
+// const ensureDir = (dir) => {
+//   if (!fs.existsSync(dir)) {
+//     fs.mkdirSync(dir, { recursive: true });
+//   }
+// };
+
+// // Use MEMORY storage instead of disk storage to avoid context loss
+// const storage = multer.memoryStorage();
+
+// const allowedTypes = [
+//   "image/jpeg",
+//   "image/png",
+//   "image/gif",
+//   "image/avif",
+//   "application/pdf",
+//   "application/msword",
+//   "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+// ];
+
+// const fileFilter = (req, file, cb) => {
+//   if (allowedTypes.includes(file.mimetype)) {
+//     cb(null, true);
+//   } else {
+//     cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", "Invalid file type."));
+//   }
+// };
+
+// const multerUpload = multer({
+//   storage,
+//   fileFilter,
+//   limits: { fileSize: 1024 * 1024 * 3 }, // 3MB
+// });
+
+// // Context-preserving wrapper
+// const withContext = (middleware) => (req, res, next) => {
+//   const store = asyncLocalStorage.getStore();
+
+//   if (!store || !store.tenantDb) {
+//     console.error("⚠️ Upload: No context before multer");
+//     return middleware(req, res, next);
+//   }
+
+//   console.log(`✅ Upload: Starting with tenant ${store.tenantDb}`);
+
+//   // Execute multer and restore context after
+//   middleware(req, res, (err) => {
+//     if (err) {
+//       console.error("❌ Upload error:", err);
+//       return next(err);
+//     }
+
+//     // Restore context after multer
+//     const currentStore = asyncLocalStorage.getStore();
+//     if (!currentStore || !currentStore.tenantDb) {
+//       console.log("⚠️ Context lost after multer, restoring...");
+//       asyncLocalStorage.run(store, () => {
+//         console.log(`✅ Context restored: ${store.tenantDb}`);
+//         next();
+//       });
+//     } else {
+//       console.log(`✅ Context maintained: ${currentStore.tenantDb}`);
+//       next();
+//     }
+//   });
+// };
+
+// module.exports = {
+//   single: (field) => withContext(multerUpload.single(field)),
+//   array: (field, max) => withContext(multerUpload.array(field, max)),
+//   fields: (fields) => withContext(multerUpload.fields(fields)),
+//   none: () => withContext(multerUpload.none()),
+// };
 const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
+const { asyncLocalStorage } = require("../../utils/prismaProxy");
 
-// Helper function to ensure directory exists
 const ensureDir = (dir) => {
   if (!fs.existsSync(dir)) {
     fs.mkdirSync(dir, { recursive: true });
   }
 };
 
-// Multer storage configuration
-const storage = multer.diskStorage({
-  destination: (req, file, cb) => {
-    // Determine folder dynamically
-    const entityType =
-      req.query.entityType || req.headers["x-entity-type"] || "general"; // Use `entityType` field or default to 'general'
-    const uploadDir = `uploads/${entityType}`;
-    ensureDir(uploadDir); // Ensure the directory exists
-    cb(null, uploadDir);
-  },
-  filename: (req, file, cb) => {
-    const timestamp = Date.now();
-    const extension = path.extname(file.originalname);
-    cb(null, `${timestamp}-${file.fieldname}${extension}`); // Format: <timestamp>-<fieldname>.<ext>
-  },
-});
+// Use MEMORY storage instead of disk storage to avoid context loss
+const storage = multer.memoryStorage();
 
-// File filter to allow only images
 const allowedTypes = [
   "image/jpeg",
   "image/png",
   "image/gif",
   "image/avif",
-  "application/pdf", // PDF
+  "application/pdf",
   "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
 ];
+
 const fileFilter = (req, file, cb) => {
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(
-      new multer.MulterError(
-        "LIMIT_UNEXPECTED_FILE",
-        "Invalid file type. Only JPEG, PNG, AVIF, and GIF are allowed."
-      )
-    );
+    cb(new multer.MulterError("LIMIT_UNEXPECTED_FILE", "Invalid file type."));
   }
 };
 
-// Middleware
-const upload = multer({
+const multerUpload = multer({
   storage,
-  // storage: multer.memoryStorage(),
   fileFilter,
-  limits: { fileSize: 1024 * 1024 * 3 }, // Limit file size to 5MB
+  limits: { fileSize: 1024 * 1024 * 3 }, // 3MB
 });
 
-module.exports = upload;
+// Context-preserving wrapper
+const withContext = (middleware) => (req, res, next) => {
+  const store = asyncLocalStorage.getStore();
 
-// const multer = require("multer");
+  if (!store || !store.tenantDb) {
+    console.error("⚠️ Upload: No context before multer");
+    return middleware(req, res, next);
+  }
 
-// const fileFilter = (req, file, cb) => {
-//   const allowedTypes = [
-//     "image/jpeg",
-//     "image/png",
-//     "image/gif",
-//     "image/avif",
-//     "application/pdf",
-//     "application/msword",
-//   ];
-//   if (allowedTypes.includes(file.mimetype)) {
-//     cb(null, true);
-//   } else {
-//     cb(
-//       new multer.MulterError(
-//         "LIMIT_UNEXPECTED_FILE",
-//         "Invalid file type. Only JPEG, PNG, AVIF, and GIF are allowed."
-//       )
-//     );
-//   }
-// };
+  console.log(`✅ Upload: Starting with tenant ${store.tenantDb}`);
 
-// const upload = multer({
-//   storage: multer.memoryStorage(), //  Use memory storage for buffer access
-//   fileFilter,
-//   limits: { fileSize: 1024 * 1024 * 3 },
-// });
+  // Execute multer and restore context after
+  middleware(req, res, (err) => {
+    if (err) {
+      console.error("❌ Upload error:", err);
+      return next(err);
+    }
 
-// module.exports = upload;
+    // Restore context after multer
+    const currentStore = asyncLocalStorage.getStore();
+    if (!currentStore || !currentStore.tenantDb) {
+      console.log("⚠️ Context lost after multer, restoring...");
+      asyncLocalStorage.run(store, () => {
+        console.log(`✅ Context restored: ${store.tenantDb}`);
+        next();
+      });
+    } else {
+      console.log(`✅ Context maintained: ${currentStore.tenantDb}`);
+      next();
+    }
+  });
+};
+
+module.exports = {
+  single: (field) => withContext(multerUpload.single(field)),
+  array: (field, max) => withContext(multerUpload.array(field, max)),
+  fields: (fields) => withContext(multerUpload.fields(fields)),
+  none: () => withContext(multerUpload.none()),
+};

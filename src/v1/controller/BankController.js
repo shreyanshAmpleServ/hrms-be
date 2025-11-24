@@ -22,13 +22,26 @@ const findBankById = async (req, res, next) => {
 
 const updateBank = async (req, res, next) => {
   try {
-    const bank = await bankService.updateBank(
-      req.prisma,
-      req.params.id,
-      req.body
-    );
-    res.status(200).success("bank updated successfully", bank);
+    const { id } = req.params; // Get ID from URL params
+
+    const data = {
+      bank_name: req.body.bank_name,
+      is_active: req.body.is_active,
+      updatedby: req.user?.userId || req.user?.id || 1,
+    };
+
+    console.log("Update Bank - ID:", id);
+    console.log("Update Bank - Data:", data);
+
+    const result = await bankService.updateBank(id, data); // Correct order
+
+    res.status(200).json({
+      success: true,
+      message: "Bank updated successfully",
+      data: result,
+    });
   } catch (error) {
+    console.error("Controller Error:", error);
     next(error);
   }
 };

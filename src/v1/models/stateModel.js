@@ -93,7 +93,6 @@ const updateState = async (id, data) => {
         },
       },
     });
-
     return updatedState;
   } catch (error) {
     throw new CustomError(error.message, 500);
