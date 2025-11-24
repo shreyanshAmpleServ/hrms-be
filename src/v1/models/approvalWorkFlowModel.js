@@ -724,20 +724,20 @@ const createApprovalWorkFlow = async (dataArray) => {
         );
       }
 
-      if (
-        data.department_id &&
-        approver.department_id !== Number(data.department_id)
-      ) {
-        const department = await prisma.hrms_m_department_master.findUnique({
-          where: { id: Number(data.department_id) },
-          select: { department_name: true },
-        });
+      // if (
+      //   data.department_id &&
+      //   approver.department_id !== Number(data.department_id)
+      // ) {
+      //   const department = await prisma.hrms_m_department_master.findUnique({
+      //     where: { id: Number(data.department_id) },
+      //     select: { department_name: true },
+      //   });
 
-        throw new CustomError(
-          `Approver ${approver.full_name} (${approver.hrms_employee_department?.department_name}) does not belong to ${department?.department_name} department`,
-          400
-        );
-      }
+      //   throw new CustomError(
+      //     `Approver ${approver.full_name} (${approver.hrms_employee_department?.department_name}) does not belong to ${department?.department_name} department`,
+      //     400
+      //   );
+      // }
     }
 
     const result = await prisma.hrms_d_approval_work_flow.createMany({
@@ -888,10 +888,7 @@ const updateApprovalWorkFlow = async (id, data) => {
 
     return updatedEntry;
   } catch (error) {
-    throw new CustomError(
-      `Error updating approval workflow: ${error.message}`,
-      500
-    );
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 

@@ -1,19 +1,19 @@
 const DocTypeModel = require("../models/DocTypeModel");
 
-const createDocType = async (data) => {
-  return await DocTypeModel.createDocType(data);
+const createDocType = async (data, tenantDb) => {
+  return await DocTypeModel.createDocType(data, tenantDb);
 };
 
-const findDocTypeById = async (id) => {
-  return await DocTypeModel.findDocTypeById(id);
+const findDocTypeById = async (id, tenantDb) => {
+  return await DocTypeModel.findDocTypeById(id, tenantDb);
 };
 
-const updateDocType = async (id, data) => {
-  return await DocTypeModel.updateDocType(id, data);
+const updateDocType = async (id, data, tenantDb) => {
+  return await DocTypeModel.updateDocType(id, data, tenantDb);
 };
 
-const deleteDocType = async (id) => {
-  return await DocTypeModel.deleteDocType(id);
+const deleteDocType = async (id, tenantDb) => {
+  return await DocTypeModel.deleteDocType(id, tenantDb);
 };
 
 const getAllDocType = async (
@@ -22,7 +22,8 @@ const getAllDocType = async (
   search,
   startDate,
   endDate,
-  is_active
+  is_active,
+  tenantDb
 ) => {
   return await DocTypeModel.getAllDocType(
     page,
@@ -30,7 +31,8 @@ const getAllDocType = async (
     search,
     startDate,
     endDate,
-    is_active
+    is_active,
+    tenantDb
   );
 };
 

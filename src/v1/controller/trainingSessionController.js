@@ -1,52 +1,62 @@
 const trainingSessionService = require("../services/trainingSessionService.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
-const fs = require("fs");
-const fsPromises = require("fs").promises;
 const { uploadToBackblaze } = require("../../utils/uploadBackblaze.js");
-const { log } = require("console");
 
-// Create
 const createTrainingSession = async (req, res, next) => {
   try {
-    if (!req.file) throw new CustomError("No file uploaded", 400);
+    let fileUrl = null;
 
-    const fileBuffer = await fs.promises.readFile(req.file.path);
-    const fileUrl = await uploadToBackblaze(
-      fileBuffer,
-      req.file.originalname,
-      req.file.mimetype,
-      "training_material_path"
-    );
+    if (req.file) {
+      try {
+        const fileBuffer = req.file.buffer;
+
+        fileUrl = await uploadToBackblaze(
+          fileBuffer,
+          req.file.originalname,
+          req.file.mimetype,
+          "training_material_path"
+        );
+
+        console.log(" File uploaded to Backblaze:", fileUrl);
+      } catch (uploadError) {
+        console.error("❌ File upload error:", uploadError);
+        throw new CustomError(
+          `File upload failed: ${uploadError.message}`,
+          500
+        );
+      }
+    }
 
     const trainingData = {
       ...req.body,
       training_material_path: fileUrl,
-      createdby: req.user.id,
+      createdby: req.user?.userId || req.user?.id || 1,
+      log_inst: req.user?.log_inst || 1,
     };
 
     const result = await trainingSessionService.createTrainingSession(
       trainingData
     );
+
     res.status(201).success("Training Session Created Successfully", result);
   } catch (error) {
-    next(new CustomError(error.message, 400));
+    console.error(" Create Training Session Error:", error);
+    next(error);
   }
 };
 
-// Get by ID
 const findTrainingSessionById = async (req, res, next) => {
   try {
-    const data = await trainingSessionService.getTrainingSessionById(
+    const data = await trainingSessionService.findTrainingSessionById(
       req.params.id
     );
     res.status(200).json({ success: true, data });
   } catch (error) {
-    next(new CustomError(error.message, 400));
+    next(error);
   }
 };
 
-// Update
 const updateTrainingSession = async (req, res, next) => {
   try {
     const existingTrainingSession =
@@ -59,76 +69,97 @@ const updateTrainingSession = async (req, res, next) => {
     let fileUrl = existingTrainingSession.training_material_path;
 
     if (req.file) {
-      const fileBuffer = await fs.promises.readFile(req.file.path);
+      try {
+        const fileBuffer = req.file.buffer;
 
-      fileUrl = await uploadToBackblaze(
-        fileBuffer,
-        req.file.originalname,
-        req.file.mimetype,
-        "training_material_path"
-      );
+        fileUrl = await uploadToBackblaze(
+          fileBuffer,
+          req.file.originalname,
+          req.file.mimetype,
+          "training_material_path"
+        );
+
+        console.log(" File uploaded to Backblaze:", fileUrl);
+      } catch (uploadError) {
+        console.error(" File upload error:", uploadError);
+        throw new CustomError(
+          `File upload failed: ${uploadError.message}`,
+          500
+        );
+      }
     }
 
     const trainingData = {
       ...req.body,
       training_material_path: fileUrl,
-      updatedby: req.user.id,
+      updatedby: req.user?.userId || req.user?.id || 1,
     };
 
     const result = await trainingSessionService.updateTrainingSession(
       req.params.id,
       trainingData
     );
-    res.status(200).success("Training Session updated Successfully", result);
+
+    res.status(200).success("Training Session Updated Successfully", result);
   } catch (error) {
-    next(new CustomError(error.message, 400));
+    console.error(" Update Training Session Error:", error);
+    next(error);
   }
 };
 
-// Delete
 const deleteTrainingSession = async (req, res, next) => {
   try {
     await trainingSessionService.deleteTrainingSession(req.params.id);
-    res
-      .status(200)
-      .json({ success: true, message: "Training session deleted" });
+    res.status(200).json({
+      success: true,
+      message: "Training session deleted successfully",
+    });
   } catch (error) {
-    next(new CustomError(error.message, 400));
+    next(error);
   }
 };
 
-// Get all
 const getAllTrainingSession = async (req, res, next) => {
   try {
     const { search, page, size, startDate, endDate } = req.query;
+
     const data = await trainingSessionService.getAllTrainingSession(
       search,
-      Number(page),
-      Number(size),
-      startDate && moment(startDate),
-      endDate && moment(endDate)
+      Number(page) || 1,
+      Number(size) || 10,
+      startDate ? moment(startDate).toDate() : undefined,
+      endDate ? moment(endDate).toDate() : undefined
     );
+
     res.status(200).json({ success: true, ...data });
   } catch (error) {
-    next(new CustomError(error.message, 400));
+    next(error);
   }
 };
 
 const updateTrainingSessionStatus = async (req, res, next) => {
   try {
-    console.log("Approver ID from token:", req.user.employee_id);
-    const status = req.body.status;
+    console.log("👤 Approver ID from token:", req.user?.employee_id);
+
+    const { status } = req.body;
+
+    if (!status) {
+      throw new CustomError("Status is required", 400);
+    }
+
     const data = {
       status,
-      updatedby: req.user.employee_id,
-      updatedate: new Date(),
+      updatedby: req.user?.employee_id || req.user?.userId || req.user?.id || 1,
     };
 
-    const reqData = await trainingSessionService.updateTrainingSessionStatus(
+    const result = await trainingSessionService.updateTrainingSessionStatus(
       req.params.id,
       data
     );
-    res.status(200).success("Leave status updated successfully", reqData);
+
+    res
+      .status(200)
+      .success("Training session status updated successfully", result);
   } catch (error) {
     next(error);
   }
