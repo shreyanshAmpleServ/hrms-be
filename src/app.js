@@ -62,6 +62,9 @@ const routes = require("../src/routes/index");
 const responseHandler = require("../src/utils/responseMiddleware.js");
 const cookieParser = require("cookie-parser");
 const errorHandler = require("../src/utils/errorMiddleware.js");
+const {
+  optionalTenantMiddleware,
+} = require("./v1/middlewares/tenantMiddleware.js");
 
 dotenv.config();
 
@@ -104,6 +107,7 @@ app.use(
 
 app.use(responseHandler);
 app.use("/uploads", express.static("uploads"));
+app.use("/api", optionalTenantMiddleware);
 app.use("/api", routes);
 
 app.use(errorHandler);

@@ -1,21 +1,17 @@
 const { getPrismaClient } = require("../../config/db.js");
+const {
+  withTenantContext,
+  extractTenantDbFromRequest,
+} = require("../../utils/prismaProxy");
 const logger = require("../../Comman/logger");
 
 const tenantMiddleware = async (req, res, next) => {
   try {
-    console.log(" Tenant Middleware Triggered");
-    console.log(" Path:", req.path);
-    console.log(" URL:", req.url);
-    console.log(" Method:", req.method);
-    console.log(" Headers:", JSON.stringify(req.headers, null, 2));
-
     const dbName =
       req.headers["x-tenant-db"] ||
       req.headers["x-database-name"] ||
       req.body?.dbName ||
       req.query?.dbName;
-
-    console.log("Database Name Extracted:", dbName);
 
     if (!dbName) {
       logger.warn("Missing tenant database identifier in request");
@@ -35,25 +31,28 @@ const tenantMiddleware = async (req, res, next) => {
       });
     }
 
-    console.log("Database name validated");
-
-    try {
-      req.prisma = getPrismaClient(dbName);
-      req.tenantDb = dbName;
-      console.log("Prisma client attached successfully");
-      console.log("req.prisma exists:", !!req.prisma);
-    } catch (dbError) {
-      console.error("Error getting Prisma client:", dbError);
-      throw dbError;
-    }
+    req.prisma = getPrismaClient(dbName);
+    req.tenantDb = dbName;
 
     logger.info(
       `Tenant database accessed: ${dbName} | Endpoint: ${req.method} ${req.path}`
     );
 
-    next();
+    return withTenantContext(dbName, async () => {
+      return new Promise((resolve, reject) => {
+        try {
+          const result = next();
+          if (result && typeof result.then === "function") {
+            result.then(resolve).catch(reject);
+          } else {
+            resolve(result);
+          }
+        } catch (error) {
+          reject(error);
+        }
+      });
+    });
   } catch (error) {
-    console.error("Tenant middleware error:", error);
     logger.error("Tenant middleware error:", {
       error: error.message,
       stack: error.stack,
@@ -71,4 +70,49 @@ const tenantMiddleware = async (req, res, next) => {
   }
 };
 
+const optionalTenantMiddleware = async (req, res, next) => {
+  try {
+    const { asyncLocalStorage } = require("../../utils/prismaProxy");
+    const existingStore = asyncLocalStorage.getStore();
+
+    if (existingStore && existingStore.tenantDb) {
+      req.tenantDb = existingStore.tenantDb;
+      req.prisma = getPrismaClient(existingStore.tenantDb);
+      return next();
+    }
+
+    const dbName = extractTenantDbFromRequest(req);
+
+    if (dbName && /^[a-zA-Z0-9_-]+$/.test(dbName)) {
+      req.prisma = getPrismaClient(dbName);
+      req.tenantDb = dbName;
+
+      return withTenantContext(dbName, async () => {
+        return new Promise((resolve, reject) => {
+          try {
+            const result = next();
+            if (result && typeof result.then === "function") {
+              result.then(resolve).catch(reject);
+            } else {
+              resolve(result);
+            }
+          } catch (error) {
+            reject(error);
+          }
+        });
+      });
+    }
+
+    next();
+  } catch (error) {
+    logger.error("Optional tenant middleware error:", {
+      error: error.message,
+      stack: error.stack,
+      path: req.path,
+    });
+    next(error);
+  }
+};
+
 module.exports = tenantMiddleware;
+module.exports.optionalTenantMiddleware = optionalTenantMiddleware;
