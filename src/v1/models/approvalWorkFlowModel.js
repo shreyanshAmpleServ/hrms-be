@@ -888,10 +888,7 @@ const updateApprovalWorkFlow = async (id, data) => {
 
     return updatedEntry;
   } catch (error) {
-    throw new CustomError(
-      `Error updating approval workflow: ${error.message}`,
-      500
-    );
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
