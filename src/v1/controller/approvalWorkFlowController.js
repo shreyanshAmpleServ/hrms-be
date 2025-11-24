@@ -573,7 +573,7 @@ const updateApprovalWorkFlow = async (req, res, next) => {
 
     if (idsToDelete.length > 0) {
       await approvalWorkFlowService.deleteApprovalWorkFlows(idsToDelete);
-      console.log(`🗑 Deleted ${idsToDelete.length} obsolete workflows`);
+      console.log(` Deleted ${idsToDelete.length} obsolete workflows`);
     }
 
     for (const item of dataArray) {
