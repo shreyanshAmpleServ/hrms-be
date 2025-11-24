@@ -5,6 +5,7 @@ const {
   uploadToBackblaze,
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
+const { withTenantContextFromRequest } = require("../../utils/prismaProxy");
 
 const createAnnouncement = async (req, res, next) => {
   try {
@@ -292,17 +293,17 @@ const extractBackblazeFilePath = (url, folderName) => {
 
 const getPublicAnnouncements = async (req, res, next) => {
   try {
-    console.log(" Public API: Fetching all announcements");
-
     const { page, size, search, startDate, endDate } = req.query;
 
-    const data = await announcementService.getPublicAnnouncements(
-      search,
-      Number(page) || 1,
-      Number(size) || 10,
-      startDate && moment(startDate),
-      endDate && moment(endDate)
-    );
+    const data = await withTenantContextFromRequest(req, async () => {
+      return await announcementService.getPublicAnnouncements(
+        search,
+        Number(page) || 1,
+        Number(size) || 10,
+        startDate && moment(startDate),
+        endDate && moment(endDate)
+      );
+    });
 
     res.status(200).json({
       success: true,
@@ -316,11 +317,9 @@ const getPublicAnnouncements = async (req, res, next) => {
 
 const getPublicAnnouncementById = async (req, res, next) => {
   try {
-    console.log(" Public API: Fetching announcement by ID:", req.params.id);
-
-    const reqData = await announcementService.getPublicAnnouncementById(
-      req.params.id
-    );
+    const reqData = await withTenantContextFromRequest(req, async () => {
+      return await announcementService.getPublicAnnouncementById(req.params.id);
+    });
 
     if (!reqData) {
       return res.status(404).json({

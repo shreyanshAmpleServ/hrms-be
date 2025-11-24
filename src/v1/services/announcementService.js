@@ -1092,15 +1092,12 @@ const getPublicAnnouncements = async (
       totalCount,
     };
   } catch (error) {
-    console.error("Failed to fetch public announcements:", error);
-    throw new Error("Error retrieving public announcements");
+    throw error;
   }
 };
 
 const getPublicAnnouncementById = async (id) => {
   try {
-    // console.log(" Fetching public announcement by ID:", id);
-
     const announcement = await prisma.hrms_d_announcement.findUnique({
       where: {
         id: parseInt(id),
