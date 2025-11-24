@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy.js");
+const { prisma, ensureTenantContext } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
 
 const generateDocumentCode = async () => {
@@ -104,24 +104,43 @@ const findDocTypeById = async (id) => {
   }
 };
 
-const updateDocType = async (id, data) => {
-  try {
-    const updatedData = await prisma.hrms_m_document_type.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...data,
-        updatedate: new Date(),
-      },
-    });
-    return updatedData;
-  } catch (error) {
-    throw new CustomError(
-      `Error updating document type: ${error.message}`,
-      500
-    );
-  }
-};
+// const updateDocType = async (id, data) => {
+//   try {
+//     const updatedData = await prisma.hrms_m_document_type.update({
+//       where: { id: parseInt(id) },
+//       data: {
+//         ...data,
+//         updatedate: new Date(),
+//       },
+//     });
+//     return updatedData;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error updating document type: ${error.message}`,
+//       500
+//     );
+//   }
+// };
 
+const updateDocType = async (id, data, tenantDb) => {
+  return ensureTenantContext(tenantDb, async () => {
+    try {
+      const updatedData = await prisma.hrms_m_document_type.update({
+        where: { id: parseInt(id) },
+        data: {
+          ...data,
+          updatedate: new Date(),
+        },
+      });
+      return updatedData;
+    } catch (error) {
+      throw new CustomError(
+        `Error updating document type: ${error.message}`,
+        500
+      );
+    }
+  });
+};
 const deleteDocType = async (id) => {
   try {
     await prisma.hrms_m_document_type.delete({

@@ -1,5 +1,5 @@
-const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { prisma } = require("../../utils/prismaProxy.js");
 
 const createLatterType = async (data) => {
   try {
@@ -16,8 +16,8 @@ const createLatterType = async (data) => {
     });
     return finalData;
   } catch (error) {
-    console.log("Create latter type ", error);
-    throw new CustomError(`Error creating latter type: ${error.message}`, 500);
+    console.error("Create letter type error:", error);
+    throw new CustomError(`Error creating letter type: ${error.message}`, 500);
   }
 };
 
@@ -27,48 +27,35 @@ const findLatterTypeById = async (id) => {
       where: { id: parseInt(id) },
     });
     if (!data) {
-      throw new CustomError("latter type not found", 404);
+      throw new CustomError("Letter type not found", 404);
     }
     return data;
   } catch (error) {
-    console.log("latter type By Id  ", error);
+    console.error("Find letter type error:", error);
     throw new CustomError(
-      `Error finding latter type by ID: ${error.message}`,
+      `Error finding letter type by ID: ${error.message}`,
       503
     );
   }
 };
 
-// const updateLatterType = async (id, data) => {
-//   try {
-//     const updatedData = await prisma.hrms_m_letter_type.update({
-//       where: { id: parseInt(id) },
-//       data: {
-//         ...data,
-//         updatedate: new Date(),
-//       },
-//     });
-//     return updatedData;
-//   } catch (error) {
-//     throw new CustomError(`Error updating latter type: ${error.message}`, 500);
-//   }
-// };
-
 const updateLatterType = async (id, data) => {
   try {
-    if ("id" in data) delete data.id;
+    // Remove id from data if it exists
+    const { id: _, ...updateData } = data;
 
     const updatedData = await prisma.hrms_m_letter_type.update({
       where: { id: parseInt(id) },
       data: {
-        ...data,
+        ...updateData,
         updatedate: new Date(),
       },
     });
 
     return updatedData;
   } catch (error) {
-    throw new CustomError(`Error updating latter type: ${error.message}`, 500);
+    console.error("Update letter type error:", error);
+    throw new CustomError(`Error updating letter type: ${error.message}`, 500);
   }
 };
 
@@ -84,12 +71,14 @@ const deleteLatterType = async (id) => {
         400
       );
     } else {
-      throw new CustomError(error.meta.constraint, 500);
+      throw new CustomError(
+        error.meta?.constraint || "Error deleting letter type",
+        500
+      );
     }
   }
 };
 
-// Get all latter type
 const getAllLatterType = async (
   page,
   size,
@@ -99,36 +88,22 @@ const getAllLatterType = async (
   is_active
 ) => {
   try {
-    page = page || page == 0 ? 1 : page;
+    page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
     const filters = {};
+
     // Handle search
     if (search) {
       filters.OR = [
-        // {
-        //   campaign_user: {
-        //     full_name: { contains: search.toLowerCase() },
-        //   }, // Include contact details
-        // },
-        // {
-        //   campaign_leads: {
-        //     title: { contains: search.toLowerCase() },
-        //   }, // Include contact details
-        // },
         {
           letter_name: { contains: search.toLowerCase() },
         },
-        // {
-        //   status: { contains: search.toLowerCase() },
-        // },
       ];
     }
-    // if (status) {
-    //   filters.is_active = { equals: status };
-    // }
 
+    // Handle date range
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
@@ -141,23 +116,25 @@ const getAllLatterType = async (
       }
     }
 
+    // Handle is_active
     if (typeof is_active === "boolean") {
       filters.is_active = is_active ? "Y" : "N";
     } else if (typeof is_active === "string") {
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
+
     const data = await prisma.hrms_m_letter_type.findMany({
-      //   where: filters,
+      where: filters,
       skip: skip,
       take: size,
-
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
     const totalCount = await prisma.hrms_m_letter_type.count({
-      //   where: filters,
+      where: filters,
     });
+
     return {
       data: data,
       currentPage: page,
@@ -166,8 +143,8 @@ const getAllLatterType = async (
       totalCount: totalCount,
     };
   } catch (error) {
-    console.log(error);
-    throw new CustomError("Error retrieving latter type", 503);
+    console.error("Get all letter types error:", error);
+    throw new CustomError("Error retrieving letter types", 503);
   }
 };
 

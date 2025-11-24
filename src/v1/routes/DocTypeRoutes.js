@@ -17,7 +17,7 @@ router.get(
 );
 router.put(
   "/document-type/:id",
-
+  authenticateToken,
   DocTypeController.updateDocType
 );
 router.delete(
