@@ -22,7 +22,7 @@ const findBankById = async (req, res, next) => {
 
 const updateBank = async (req, res, next) => {
   try {
-    const { id } = req.params; // Get ID from URL params
+    const { id } = req.params;
 
     const data = {
       bank_name: req.body.bank_name,
@@ -33,7 +33,7 @@ const updateBank = async (req, res, next) => {
     console.log("Update Bank - ID:", id);
     console.log("Update Bank - Data:", data);
 
-    const result = await bankService.updateBank(id, data); // Correct order
+    const result = await bankService.updateBank(id, data);
 
     res.status(200).json({
       success: true,
@@ -48,7 +48,7 @@ const updateBank = async (req, res, next) => {
 
 const deleteBank = async (req, res, next) => {
   try {
-    await bankService.deleteBank(req.prisma, req.params.id);
+    await bankService.deleteBank(req.params.id);
     res.status(200).success("bank deleted successfully", null);
   } catch (error) {
     next(error);
@@ -59,7 +59,6 @@ const getAllBank = async (req, res, next) => {
   try {
     const { search, page, size, is_active } = req.query;
     const categories = await bankService.getAllBank(
-      req.prisma,
       search,
       Number(page),
       Number(size),

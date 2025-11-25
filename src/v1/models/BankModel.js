@@ -74,7 +74,6 @@ const deleteBank = async (id) => {
   }
 };
 
-// Get all banks
 const getAllBank = async (search, page, size, is_active) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -83,8 +82,12 @@ const getAllBank = async (search, page, size, is_active) => {
 
     const filters = {};
 
-    if (search) {
-      filters.bank_name = { contains: search.toLowerCase() };
+    if (search && typeof search === "string" && search.trim() !== "") {
+      filters.OR = [
+        {
+          bank_name: { contains: search.toLowerCase() },
+        },
+      ];
     }
 
     if (typeof is_active === "boolean") {
@@ -117,7 +120,6 @@ const getAllBank = async (search, page, size, is_active) => {
     throw new CustomError("Error retrieving banks", 503);
   }
 };
-
 module.exports = {
   createBank,
   findBankById,
