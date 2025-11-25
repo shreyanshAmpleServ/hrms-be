@@ -344,13 +344,101 @@ const runAlertWorkflow = async (workflowId) => {
   }
 };
 
+// const init = async (req) => {
+//   try {
+//     const tenantId = req?.user?.log_inst || req?.tenantId;
+
+//     if (!tenantId) {
+//       console.warn(
+//         " No tenant context provided, skipping scheduler initialization"
+//       );
+//       return;
+//     }
+
+//     if (initializedTenants.has(tenantId)) {
+//       console.log(
+//         ` Alert workflow scheduler already initialized for tenant ${tenantId}`
+//       );
+//       return;
+//     }
+
+//     console.log(` Initializing alert workflows for tenant ${tenantId}...`);
+
+//     const result = await alertWorkflowModel.getAlertWorkflows();
+//     const workflows = result.data || result;
+
+//     if (!Array.isArray(workflows)) {
+//       throw new Error(`Expected workflows array, got ${typeof workflows}`);
+//     }
+
+//     const activeWorkflows = workflows.filter(
+//       (w) => w.is_active === "Y" && w.schedule_cron
+//     );
+
+//     console.log(
+//       `Found ${activeWorkflows.length} active workflows to schedule for tenant ${tenantId}`
+//     );
+
+//     for (const w of activeWorkflows) {
+//       try {
+//         console.log(
+//           `Scheduling workflow ${w.id}: "${w.name}" with cron "${w.schedule_cron}"`
+//         );
+//         scheduleCron(w.id, w.schedule_cron);
+//       } catch (scheduleError) {
+//         console.error(
+//           ` Failed to schedule workflow ${w.id}:`,
+//           scheduleError.message
+//         );
+//       }
+//     }
+
+//     initializedTenants.add(tenantId);
+//     console.log(` Alert workflow scheduler initialized for tenant ${tenantId}`);
+//   } catch (error) {
+//     console.error(" Failed to initialize alert workflows:");
+//     console.error(" Error name:", error.name);
+//     console.error(" Error message:", error.message);
+//     console.error(" Error stack:", error.stack);
+//     throw error;
+//   }
+// };
+
 const init = async (req) => {
   try {
-    const tenantId = req?.user?.log_inst || req?.tenantId;
+    const tenantId =
+      req?.user?.tenantDb ||
+      req?.tenantDb ||
+      req?.user?.log_inst ||
+      req?.user?.tenant_id ||
+      req?.headers?.["x-tenant-id"];
+
+    console.log(` Checking tenant context:`, {
+      hasReq: !!req,
+      hasUser: !!req?.user,
+      userTenantDb: req?.user?.tenantDb,
+      reqTenantDb: req?.tenantDb,
+      logInst: req?.user?.log_inst,
+      extractedTenantId: tenantId,
+    });
 
     if (!tenantId) {
       console.warn(
-        " No tenant context provided, skipping scheduler initialization"
+        "[warn] No tenant context provided, skipping scheduler initialization"
+      );
+      console.warn(
+        "[warn] Request object:",
+        JSON.stringify(
+          {
+            hasUser: !!req?.user,
+            userKeys: req?.user ? Object.keys(req.user) : [],
+            reqKeys: req
+              ? Object.keys(req).filter((k) => !k.startsWith("_"))
+              : [],
+          },
+          null,
+          2
+        )
       );
       return;
     }
@@ -362,7 +450,9 @@ const init = async (req) => {
       return;
     }
 
-    console.log(` Initializing alert workflows for tenant ${tenantId}...`);
+    console.log(
+      `[info] Initializing alert workflows for tenant ${tenantId}...`
+    );
 
     const result = await alertWorkflowModel.getAlertWorkflows();
     const workflows = result.data || result;
@@ -376,7 +466,7 @@ const init = async (req) => {
     );
 
     console.log(
-      `Found ${activeWorkflows.length} active workflows to schedule for tenant ${tenantId}`
+      ` Found ${activeWorkflows.length} active workflows to schedule for tenant ${tenantId}`
     );
 
     for (const w of activeWorkflows) {
@@ -387,19 +477,21 @@ const init = async (req) => {
         scheduleCron(w.id, w.schedule_cron);
       } catch (scheduleError) {
         console.error(
-          ` Failed to schedule workflow ${w.id}:`,
+          `Failed to schedule workflow ${w.id}:`,
           scheduleError.message
         );
       }
     }
 
     initializedTenants.add(tenantId);
-    console.log(` Alert workflow scheduler initialized for tenant ${tenantId}`);
+    console.log(
+      `  Alert workflow scheduler initialized for tenant ${tenantId}`
+    );
   } catch (error) {
-    console.error(" Failed to initialize alert workflows:");
-    console.error(" Error name:", error.name);
-    console.error(" Error message:", error.message);
-    console.error(" Error stack:", error.stack);
+    console.error("Failed to initialize alert workflows:");
+    console.error("Error name:", error.name);
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
     throw error;
   }
 };
@@ -483,19 +575,32 @@ function scheduleCron(workflowId, cronPattern) {
   }
 }
 
+// const startScheduler = async (req) => {
+//   try {
+//     console.log("Starting alert workflow scheduler");
+//     console.log("Initializing alert workflows from tenant database...");
+//     await init(req);
+//   } catch (error) {
+//     console.error("Failed to start scheduler:", error.message);
+//     console.error(" Failed to start alert workflow scheduler:", error.stack);
+//   }
+// };
+
 const startScheduler = async (req) => {
   try {
     console.log("Starting alert workflow scheduler");
     console.log("Initializing alert workflows from tenant database...");
+
     await init(req);
+
+    console.log("Alert workflow scheduler started successfully");
   } catch (error) {
     console.error("Failed to start scheduler:", error.message);
-    console.error(" Failed to start alert workflow scheduler:", error.stack);
+    console.error("Stack:", error.stack);
   }
 };
-
 const stopAllJobs = () => {
-  console.log("[info] Stopping all scheduled jobs...");
+  console.log("Stopping all scheduled jobs...");
   Object.keys(jobs).forEach((workflowId) => {
     if (jobs[workflowId]) {
       jobs[workflowId].stop();

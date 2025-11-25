@@ -1,8 +1,7 @@
 const { prisma } = require("../utils/prismaProxy.js");
-const CustomError = require("../utils/CustomError"); // make sure path is correct
+const CustomError = require("../utils/CustomError");
 
 const errorNotExist = async (modelName, id, name) => {
-  // Validate ID
   if (id === undefined || id === null || isNaN(Number(id))) {
     throw new CustomError(`Invalid or missing ID for ${name}`, 400);
   }
