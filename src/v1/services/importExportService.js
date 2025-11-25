@@ -41,19 +41,12 @@ const importDataFromExcel = async (filePath, tableName, createdBy = 1) => {
       };
     }
 
-    // Option 1: Advanced with duplicate handling
     const importResult = await importExportModel.bulkInsertData(
       parseResult.data,
       tableName,
       createdBy
     );
 
-    // Option 2: Simple without duplicate handling (uncomment if you prefer this)
-    // const importResult = await importExportModel.simpleBulkInsertData(
-    //   parseResult.data, tableName, createdBy
-    // );
-
-    // Clean up file
     if (fs.existsSync(filePath)) fs.unlinkSync(filePath);
 
     return {
@@ -71,19 +64,15 @@ const importDataFromExcel = async (filePath, tableName, createdBy = 1) => {
   }
 };
 
-// In importExportService.js - Update generateExcelTemplate function
-
 const generateExcelTemplate = async (tableName) => {
   try {
     const config = importExportModel.getTableConfig(tableName);
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet(`${config.displayName} Template`);
 
-    // Add headers with proper field names
     const headers = Object.keys(config.fields);
     worksheet.addRow(headers);
 
-    // Style header
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true, color: { argb: "FFFFFF" } };
     headerRow.fill = {
@@ -92,7 +81,6 @@ const generateExcelTemplate = async (tableName) => {
       fgColor: { argb: "FF4CAF50" },
     };
 
-    // Add sample row with correct data
     const sampleRow = {};
     Object.keys(config.fields).forEach((field) => {
       const fieldConfig = config.fields[field];
@@ -142,16 +130,15 @@ const generateExcelTemplate = async (tableName) => {
       column.width = 15;
     });
 
-    // // Add instructions
-    // worksheet.addRow([]);
-    // worksheet.addRow(["Instructions:"]);
-    // worksheet.addRow(["1. Fill the data starting from row 3"]);
-    // worksheet.addRow(["2. Do not modify column headers"]);
-    // worksheet.addRow([
-    //   "3. Required fields: " + config.requiredFields.join(", "),
-    // ]);
-    // worksheet.addRow(["4. Use phone_number instead of phone"]);
-    // worksheet.addRow(["5. Date format: YYYY-MM-DD"]);
+    worksheet.addRow([]);
+    worksheet.addRow(["Instructions:"]);
+    worksheet.addRow(["1. Fill the data starting from row 3"]);
+    worksheet.addRow(["2. Do not modify column headers"]);
+    worksheet.addRow([
+      "3. Required fields: " + config.requiredFields.join(", "),
+    ]);
+    worksheet.addRow(["4. Use phone_number instead of phone"]);
+    worksheet.addRow(["5. Date format: YYYY-MM-DD"]);
 
     return await workbook.xlsx.writeBuffer();
   } catch (error) {

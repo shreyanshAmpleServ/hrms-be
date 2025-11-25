@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy.js");
+const { prisma, asyncLocalStorage } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");
@@ -306,7 +306,6 @@ const getAppointmentLetterForPDF = async (id, tenantDb = null) => {
     console.log("Company Logo:", defaultConfig?.company_logo);
     console.log("Company Signature:", defaultConfig?.company_signature);
 
-    // ✅ ADD THIS SECTION - Logo and signature fetching
     let companyLogoBase64 = "";
     let companySignatureBase64 = "";
 

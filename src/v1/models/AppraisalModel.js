@@ -1,4 +1,4 @@
-const { prisma } = require("../../utils/prismaProxy.js");
+const { prisma, asyncLocalStorage } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest } = require("./requestsModel");

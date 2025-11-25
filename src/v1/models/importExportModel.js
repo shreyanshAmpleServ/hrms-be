@@ -184,7 +184,7 @@ const bulkInsertData = async (data, tableName, createdBy = 1) => {
     const transformedData = transformDataForInsert(data, tableName, createdBy);
 
     console.log(
-      `📋 Sample transformed record:`,
+      ` Sample transformed record:`,
       JSON.stringify(transformedData[0], null, 2)
     );
 

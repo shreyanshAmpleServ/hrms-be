@@ -94,7 +94,6 @@ const getAllLatterType = async (
 
     const filters = {};
 
-    // Handle search
     if (search) {
       filters.OR = [
         {
@@ -103,7 +102,6 @@ const getAllLatterType = async (
       ];
     }
 
-    // Handle date range
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
