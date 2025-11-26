@@ -8,10 +8,10 @@ const {
 const { findUserById } = require("../models/userModel");
 
 const sanitizeData = (data) => {
-  const { repeatPassword, role_id, ...sanitizedData } = data; // Exclude repeatPassword
+  const { repeatPassword, role_id, ...sanitizedData } = data;
   return {
     ...sanitizedData,
-    role_id: role_id ? parseInt(role_id, 10) : undefined, // Convert role_id to an integer
+    role_id: role_id ? parseInt(role_id, 10) : undefined,
   };
 };
 const createUser = async (req, res, next) => {
@@ -29,7 +29,6 @@ const createUser = async (req, res, next) => {
     userData = sanitizeData(userData);
     const user = await userService.createUser(userData);
 
-    // If userService.createUser returns an error object, handle it here
     if (user && user.success === false) {
       return res.status(user.status || 400).json({
         success: false,
@@ -79,11 +78,9 @@ const getUserByEmail = async (req, res, next) => {
 
 const updateUser = async (req, res, next) => {
   try {
-    // Initialize user data with sanitized request body
     let userData = sanitizeData(req.body);
     const existingData = await findUserById(req.params.id);
 
-    // Update profile_img only if a new image is provided
     if (req.file) {
       userData.profile_img =
         (await uploadToBackblaze(
@@ -98,7 +95,7 @@ const updateUser = async (req, res, next) => {
     res.status(200).success("User updated successfully", user);
     if (req.file) {
       if (existingData.profile_img) {
-        await deleteFromBackblaze(existingData.profile_img); // Delete the old logo
+        await deleteFromBackblaze(existingData.profile_img);
       }
     }
   } catch (error) {
@@ -108,13 +105,12 @@ const updateUser = async (req, res, next) => {
 
 const deleteUser = async (req, res, next) => {
   try {
-    // Prevent a user from deleting themselves
     if (parseInt(req.params.id) === req.user.id) {
       throw new CustomError("You cannot delete your own account.", 400);
     }
     const existingData = await findUserById(req.params.id);
     if (existingData.profile_img) {
-      await deleteFromBackblaze(existingData.profile_img); // Delete the old logo
+      await deleteFromBackblaze(existingData.profile_img);
     }
     await userService.deleteUser(req.params.id);
     res.status(200).success("User deleted successfully", null);

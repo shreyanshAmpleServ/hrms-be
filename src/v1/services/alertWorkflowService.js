@@ -413,15 +413,6 @@ const init = async (req) => {
       req?.user?.tenant_id ||
       req?.headers?.["x-tenant-id"];
 
-    console.log(` Checking tenant context:`, {
-      hasReq: !!req,
-      hasUser: !!req?.user,
-      userTenantDb: req?.user?.tenantDb,
-      reqTenantDb: req?.tenantDb,
-      logInst: req?.user?.log_inst,
-      extractedTenantId: tenantId,
-    });
-
     if (!tenantId) {
       console.warn(
         "[warn] No tenant context provided, skipping scheduler initialization"
@@ -444,15 +435,8 @@ const init = async (req) => {
     }
 
     if (initializedTenants.has(tenantId)) {
-      console.log(
-        ` Alert workflow scheduler already initialized for tenant ${tenantId}`
-      );
       return;
     }
-
-    console.log(
-      `[info] Initializing alert workflows for tenant ${tenantId}...`
-    );
 
     const result = await alertWorkflowModel.getAlertWorkflows();
     const workflows = result.data || result;
@@ -465,15 +449,8 @@ const init = async (req) => {
       (w) => w.is_active === "Y" && w.schedule_cron
     );
 
-    console.log(
-      ` Found ${activeWorkflows.length} active workflows to schedule for tenant ${tenantId}`
-    );
-
     for (const w of activeWorkflows) {
       try {
-        console.log(
-          `Scheduling workflow ${w.id}: "${w.name}" with cron "${w.schedule_cron}"`
-        );
         scheduleCron(w.id, w.schedule_cron);
       } catch (scheduleError) {
         console.error(
@@ -484,9 +461,6 @@ const init = async (req) => {
     }
 
     initializedTenants.add(tenantId);
-    console.log(
-      `  Alert workflow scheduler initialized for tenant ${tenantId}`
-    );
   } catch (error) {
     console.error("Failed to initialize alert workflows:");
     console.error("Error name:", error.name);
@@ -563,10 +537,6 @@ function scheduleCron(workflowId, cronPattern) {
         timezone: "Asia/Kolkata",
       }
     );
-
-    console.log(
-      `[info] Cron job scheduled for workflow ${workflowId} with pattern: ${cronPattern}`
-    );
   } catch (error) {
     console.error(
       `[error] Failed to schedule cron for workflow ${workflowId}:`,
@@ -575,25 +545,9 @@ function scheduleCron(workflowId, cronPattern) {
   }
 }
 
-// const startScheduler = async (req) => {
-//   try {
-//     console.log("Starting alert workflow scheduler");
-//     console.log("Initializing alert workflows from tenant database...");
-//     await init(req);
-//   } catch (error) {
-//     console.error("Failed to start scheduler:", error.message);
-//     console.error(" Failed to start alert workflow scheduler:", error.stack);
-//   }
-// };
-
 const startScheduler = async (req) => {
   try {
-    console.log("Starting alert workflow scheduler");
-    console.log("Initializing alert workflows from tenant database...");
-
     await init(req);
-
-    console.log("Alert workflow scheduler started successfully");
   } catch (error) {
     console.error("Failed to start scheduler:", error.message);
     console.error("Stack:", error.stack);
