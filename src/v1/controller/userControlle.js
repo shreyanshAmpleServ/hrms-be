@@ -53,10 +53,11 @@ const getUserById = async (req, res, next) => {
     next(error);
   }
 };
+
 const getUserByToken = async (req, res, next) => {
   try {
     if (!req.user || !req.user.userId) {
-      throw new CustomError("User not authenticated", 400);
+      throw new CustomError("User not authenticated", 401);
     }
     const user = await userService.findUserById(req.user.userId);
     if (!user) throw new CustomError("User not found", 404);
