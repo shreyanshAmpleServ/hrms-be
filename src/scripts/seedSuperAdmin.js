@@ -2,23 +2,21 @@
 
 /**
  * CLI Script to seed Super Admin user
- * Usage: npm run seed:admin -- <dbName> [email] [password] [fullName]
- * Example: npm run seed:admin -- hrms_production admin@hrms.com admin@123 "Super Admin"
+ * @fileoverview Seeds a Super Admin user with role and permissions
+ * @usage npm run seed:admin -- <dbName> [email] [password] [fullName]
+ * @example npm run seed:admin -- hrms_production admin@hrms.com admin@123 "Super Admin"
  */
 
 require("dotenv").config();
 const seederService = require("../v1/services/seederService");
 
-// Get command line arguments
 const args = process.argv.slice(2);
 
-// Parse arguments
 const dbName = args[0];
 const email = args[1] || "admin@hrms.com";
 const password = args[2] || "admin@123";
 const fullName = args[3] || "Super Admin";
 
-// Validate required arguments
 if (!dbName) {
   console.error("\n❌ Error: Database name is required!");
   console.log("\nUsage:");
@@ -36,7 +34,6 @@ if (!dbName) {
   process.exit(1);
 }
 
-// Validate database name format
 if (!/^[a-zA-Z0-9_-]+$/.test(dbName)) {
   console.error("\n❌ Error: Invalid database name format!");
   console.log(
@@ -45,7 +42,11 @@ if (!/^[a-zA-Z0-9_-]+$/.test(dbName)) {
   process.exit(1);
 }
 
-// Run seeder
+/**
+ * Main seeder execution function
+ * @async
+ * @function
+ */
 (async () => {
   try {
     console.log("\n🌱 Starting Super Admin seeder...");

@@ -1,15 +1,13 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockRoles = require("../../mock/roles.mock.js");
 
-// Create a new role
 const createRole = async (data) => {
   try {
-    // Check if role name (case-insensitive) already exists
     const existingRole = await prisma.hrms_m_role.findFirst({
       where: {
         role_name: {
-          equals: data.role_name, // Prisma case-insensitive comparison
-          // mode: 'insensitive',
+          equals: data.role_name,
         },
       },
     });
@@ -33,7 +31,6 @@ const createRole = async (data) => {
   }
 };
 
-// Find a role by ID
 const findRoleById = async (id) => {
   try {
     const role = await prisma.hrms_m_role.findUnique({
@@ -48,7 +45,6 @@ const findRoleById = async (id) => {
   }
 };
 
-// Update a role
 const updateRole = async (id, data) => {
   try {
     const updatedRole = await prisma.hrms_m_role.update({
@@ -64,7 +60,6 @@ const updateRole = async (id, data) => {
   }
 };
 
-// Delete a role
 const deleteRole = async (id) => {
   try {
     await prisma.hrms_m_role.delete({
@@ -82,12 +77,30 @@ const deleteRole = async (id) => {
   }
 };
 
-// Get all roles
 const getAllRoles = async () => {
   try {
     const roles = await prisma.hrms_m_role.findMany({
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
+
+    if (roles.length === 0) {
+      for (const roleData of mockRoles) {
+        await prisma.hrms_m_role.create({
+          data: {
+            role_name: roleData.role_name,
+            is_active: roleData.is_active || "Y",
+            log_inst: roleData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+          },
+        });
+      }
+      const createdRoles = await prisma.hrms_m_role.findMany({
+        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      });
+      return createdRoles;
+    }
+
     return roles;
   } catch (error) {
     throw new CustomError("Error retrieving roles", 503);

@@ -1,6 +1,5 @@
 const userService = require("../services/userService");
 const CustomError = require("../../utils/CustomError");
-const { generateFullUrl } = require("../../utils/helper");
 const moment = require("moment");
 const {
   deleteFromBackblaze,
@@ -56,7 +55,10 @@ const getUserById = async (req, res, next) => {
 };
 const getUserByToken = async (req, res, next) => {
   try {
-    const user = await userService.findUserById(req.user.id);
+    if (!req.user || !req.user.userId) {
+      throw new CustomError("User not authenticated", 400);
+    }
+    const user = await userService.findUserById(req.user.userId);
     if (!user) throw new CustomError("User not found", 404);
     res.status(200).success(null, user);
   } catch (error) {
