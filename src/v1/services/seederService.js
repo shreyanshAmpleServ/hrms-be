@@ -259,8 +259,65 @@ const seedSuperAdmin = async (
   }
 };
 
+const seedRoles = async (dbName, existingPrisma = null) => {
+  try {
+    const mockRoles = require("../../mock/roles.mock.js");
+    const prisma = existingPrisma || getPrismaClient(dbName);
+
+    const createdRoles = [];
+    const skippedRoles = [];
+
+    for (const roleData of mockRoles) {
+      const existingRole = await prisma.hrms_m_role.findFirst({
+        where: {
+          role_name: {
+            equals: roleData.role_name,
+          },
+        },
+      });
+
+      if (existingRole) {
+        skippedRoles.push({
+          role_name: roleData.role_name,
+          reason: "Already exists",
+        });
+        continue;
+      }
+
+      const role = await prisma.hrms_m_role.create({
+        data: {
+          role_name: roleData.role_name,
+          is_active: roleData.is_active || "Y",
+          log_inst: roleData.log_inst || 1,
+          createdby: 1,
+          createdate: new Date(),
+        },
+      });
+
+      createdRoles.push(role);
+    }
+
+    return {
+      success: true,
+      message: "Roles seeding completed",
+      data: {
+        created: createdRoles,
+        skipped: skippedRoles,
+        totalCreated: createdRoles.length,
+        totalSkipped: skippedRoles.length,
+      },
+    };
+  } catch (error) {
+    throw new CustomError(
+      `Seeder error: ${error.message}`,
+      error.status || 500
+    );
+  }
+};
+
 module.exports = {
   seedSuperAdmin,
+  seedRoles,
   isDatabaseEmpty,
   createSuperAdminRole,
   createSuperAdminPermissions,

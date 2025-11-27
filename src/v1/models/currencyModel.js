@@ -1,5 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockCurrencies = require("../../mock/currency.mock.js");
 
 const createCurrency = async (data) => {
   try {
@@ -128,6 +129,21 @@ const getAllCurrency = async (
   is_active
 ) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_currency_master.count();
+    if (totalCountCheck === 0) {
+      for (const currencyData of mockCurrencies) {
+        await prisma.hrms_m_currency_master.create({
+          data: {
+            currency_name: currencyData.currency_name,
+            currency_code: currencyData.currency_code || null,
+            is_active: currencyData.is_active || "Y",
+            log_inst: currencyData.log_inst || 1,
+            createdby: 1,
+          },
+        });
+      }
+    }
+
     page = page && page !== 0 ? parseInt(page) : 1;
     size = size || 10;
     const skip = (page - 1) * size || 0;

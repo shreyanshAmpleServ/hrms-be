@@ -1,5 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockDesignations = require("../../mock/designation.mock.js");
 
 const createDesignation = async (data) => {
   try {
@@ -78,7 +79,23 @@ const getAllDesignation = async (
   is_active
 ) => {
   try {
-    // Set default values for pagination
+    const totalCountCheck = await prisma.hrms_m_designation_master.count();
+    if (totalCountCheck === 0) {
+      for (const designationData of mockDesignations) {
+        await prisma.hrms_m_designation_master.create({
+          data: {
+            designation_name: designationData.designation_name,
+            is_active: designationData.is_active || "Y",
+            log_inst: designationData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+            updatedate: new Date(),
+            updatedby: 1,
+          },
+        });
+      }
+    }
+
     page = !page || page <= 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size;
@@ -112,7 +129,6 @@ const getAllDesignation = async (
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
-    //  Get total count for pagination
     const totalCount = await prisma.hrms_m_designation_master.count({
       where: filters,
     });
@@ -130,36 +146,25 @@ const getAllDesignation = async (
   }
 };
 
-// const getDesignationOptions = async (is_active) => {
-//   try {
-//     let where = {};
-//     if (typeof is_active === "boolean") {
-//       where.is_active = is_active ? "Y" : "N";
-//     } else if (typeof is_active === "string") {
-//       if (is_active.toLowerCase() === "true") where.is_active = "Y";
-//       else if (is_active.toLowerCase() === "false") where.is_active = "N";
-//     }
-
-//     const designation = await prisma.hrms_m_designation_master.findMany({
-//       where,
-//       select: {
-//         id: true,
-//         designation_name: true,
-//       },
-//     });
-
-//     return designation.map(({ id, designation_name }) => ({
-//       value: id,
-//       label: designation_name,
-//     }));
-//   } catch (error) {
-//     console.error("Error retrieving designation options: ", error);
-//     throw new CustomError("Error retrieving designation component", 503);
-//   }
-// };
-
 const getDesignationOptions = async (is_active) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_designation_master.count();
+    if (totalCountCheck === 0) {
+      for (const designationData of mockDesignations) {
+        await prisma.hrms_m_designation_master.create({
+          data: {
+            designation_name: designationData.designation_name,
+            is_active: designationData.is_active || "Y",
+            log_inst: designationData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+            updatedate: new Date(),
+            updatedby: 1,
+          },
+        });
+      }
+    }
+
     let where = {};
 
     let isActiveValue;

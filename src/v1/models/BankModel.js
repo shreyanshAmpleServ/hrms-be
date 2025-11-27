@@ -1,5 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockBanks = require("../../mock/bank.mock.js");
 
 // Create a new bank
 const createBank = async (data) => {
@@ -76,6 +77,21 @@ const deleteBank = async (id) => {
 
 const getAllBank = async (search, page, size, is_active) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_bank_master.count();
+    if (totalCountCheck === 0) {
+      for (const bankData of mockBanks) {
+        await prisma.hrms_m_bank_master.create({
+          data: {
+            bank_name: bankData.bank_name,
+            is_active: bankData.is_active || "Y",
+            log_inst: bankData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+          },
+        });
+      }
+    }
+
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

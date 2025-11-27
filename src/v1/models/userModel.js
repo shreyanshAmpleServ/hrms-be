@@ -804,8 +804,18 @@ const findUserByEmail = async (email) => {
 
 const findUserById = async (id) => {
   try {
-    return await getUserWithRole(parseInt(id));
+    if (!id) {
+      throw new CustomError("User ID is required", 400);
+    }
+    const userId = parseInt(id);
+    if (isNaN(userId)) {
+      throw new CustomError("Invalid user ID", 400);
+    }
+    return await getUserWithRole(userId);
   } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
     throw new CustomError(`Error finding user by ID: ${error.message}`, 503);
   }
 };

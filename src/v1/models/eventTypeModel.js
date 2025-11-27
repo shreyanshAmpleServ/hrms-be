@@ -1,5 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockEventTypes = require("../../mock/eventType.mock.js");
 
 const createWorkEventType = async (data) => {
   try {
@@ -87,6 +88,23 @@ const getAllWorkEventType = async (
   is_active
 ) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_work_life_event_type.count();
+    if (totalCountCheck === 0) {
+      for (const eventTypeData of mockEventTypes) {
+        await prisma.hrms_m_work_life_event_type.create({
+          data: {
+            event_type_name: eventTypeData.event_type_name || "",
+            is_active: eventTypeData.is_active || "Y",
+            log_inst: eventTypeData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+            updatedate: new Date(),
+            updatedby: 1,
+          },
+        });
+      }
+    }
+
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

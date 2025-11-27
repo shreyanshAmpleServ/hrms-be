@@ -1,5 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockDepartments = require("../../mock/department.mock.js");
 
 const createDepartment = async (data) => {
   try {
@@ -91,6 +92,23 @@ const getAllDepartments = async (
   is_active
 ) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_department_master.count();
+    if (totalCountCheck === 0) {
+      for (const departmentData of mockDepartments) {
+        await prisma.hrms_m_department_master.create({
+          data: {
+            department_name: departmentData.department_name,
+            is_active: departmentData.is_active || "Y",
+            log_inst: departmentData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+            updatedate: new Date(),
+            updatedby: 1,
+          },
+        });
+      }
+    }
+
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -137,6 +155,23 @@ const getAllDepartments = async (
 
 const getDepartmentOptions = async (is_active) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_department_master.count();
+    if (totalCountCheck === 0) {
+      for (const departmentData of mockDepartments) {
+        await prisma.hrms_m_department_master.create({
+          data: {
+            department_name: departmentData.department_name,
+            is_active: departmentData.is_active || "Y",
+            log_inst: departmentData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+            updatedate: new Date(),
+            updatedby: 1,
+          },
+        });
+      }
+    }
+
     let where = {};
     if (typeof is_active === "boolean") {
       where.is_active = is_active ? "Y" : "N";

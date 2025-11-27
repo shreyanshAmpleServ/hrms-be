@@ -1,7 +1,7 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockEmailTemplates = require("../../mock/emailTemplate.mock.js");
 
-// Serialize email template data
 const serializeEmailTemplateData = (data) => ({
   name: data.name,
   key: data.key,
@@ -86,7 +86,6 @@ const createEmailTemplate = async (data) => {
   }
 };
 
-// Find email template by ID
 const getEmailTemplateById = async (id) => {
   try {
     const result = await prisma.hrms_d_templates.findUnique({
@@ -129,7 +128,6 @@ const updateEmailTemplate = async (id, data) => {
   }
 };
 
-// Delete email template
 const deleteEmailTemplate = async (id) => {
   try {
     await prisma.hrms_d_templates.delete({
@@ -147,52 +145,38 @@ const deleteEmailTemplate = async (id) => {
   }
 };
 
-// const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
-//   try {
-//     page = !page || page == 0 ? 1 : page;
-//     size = size || 10;
-//     const skip = (page - 1) * size || 0;
-
-//     const filters = {};
-//     if (search) {
-//       filters.OR = [
-//         { name: { contains: search.toLowerCase() } },
-//         { subject: { contains: search.toLowerCase() } },
-//         { body: { contains: search.toLowerCase() } },
-//       ];
-//     }
-//     if (startDate && endDate) {
-//       const start = new Date(startDate);
-//       const end = new Date(endDate);
-//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-//         filters.createdate = { gte: start, lte: end };
-//       }
-//     }
-
-//     const datas = await prisma.hrms_d_templates.findMany({
-//       where: filters,
-//       skip,
-//       take: size,
-//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-//     });
-//     const totalCount = await prisma.hrms_d_templates.count({
-//       where: filters,
-//     });
-
-//     return {
-//       data: datas,
-//       currentPage: page,
-//       size,
-//       totalPages: Math.ceil(totalCount / size),
-//       totalCount,
-//     };
-//   } catch (error) {
-//     throw new CustomError("Error retrieving email templates", 503);
-//   }
-// };
-
 const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
   try {
+    const totalCountCheck = await prisma.hrms_d_templates.count();
+    if (totalCountCheck === 0) {
+      for (const templateData of mockEmailTemplates) {
+        try {
+          const existingTemplate = await prisma.hrms_d_templates.findFirst({
+            where: { key: templateData.key },
+          });
+          if (!existingTemplate) {
+            await prisma.hrms_d_templates.create({
+              data: {
+                name: templateData.name,
+                key: templateData.key,
+                channel: templateData.channel || "Other",
+                type: templateData.type || "Other",
+                subject: templateData.subject,
+                body: templateData.body || "",
+                createdby: 1,
+                createdate: new Date(),
+              },
+            });
+          }
+        } catch (seedError) {
+          console.error(
+            `Error seeding template ${templateData.key}:`,
+            seedError.message
+          );
+        }
+      }
+    }
+
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
@@ -220,7 +204,6 @@ const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
-    // Extract variables from each template
     const extractVariables = (text) => {
       if (!text) return [];
       const regex = /\{\{([^}]+)\}\}/g;

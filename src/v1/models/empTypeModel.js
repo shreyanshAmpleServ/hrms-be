@@ -1,5 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockEmploymentTypes = require("../../mock/employmentType.mock.js");
 
 const createEmpType = async (data) => {
   try {
@@ -87,6 +88,23 @@ const getAllEmpType = async (
   is_active
 ) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_employment_type.count();
+    if (totalCountCheck === 0) {
+      for (const empTypeData of mockEmploymentTypes) {
+        await prisma.hrms_m_employment_type.create({
+          data: {
+            type_name: empTypeData.type_name,
+            is_active: empTypeData.is_active || "Y",
+            log_inst: empTypeData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+            updatedate: new Date(),
+            updatedby: 1,
+          },
+        });
+      }
+    }
+
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;

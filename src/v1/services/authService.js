@@ -214,7 +214,7 @@ const registerUser = async (
 
 const loginUser = async (email, password, tenantDb) => {
   try {
-    console.log(` Attempting login for: ${email} on database: ${tenantDb}`);
+    console.log(`Login attempt for: ${email} on database: ${tenantDb}`);
 
     const tenantPrisma = getPrismaClient(tenantDb);
 
@@ -244,7 +244,7 @@ const loginUser = async (email, password, tenantDb) => {
       },
     });
 
-    console.log(` User found:`, user ? `Yes (ID: ${user.id})` : "No");
+    console.log(`User found: ${user ? `Yes (ID: ${user.id})` : "No"}`);
 
     if (!user) {
       throw new CustomError("User not found", 401);
@@ -274,6 +274,7 @@ const loginUser = async (email, password, tenantDb) => {
 
     const token = jwt.sign(
       {
+        id: user.id,
         userId: user.id,
         tenantDb: tenantDb,
         role_id: roleId,

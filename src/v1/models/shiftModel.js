@@ -2,25 +2,7 @@ const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
-
-// Serialize shift master data
-// const serializeShiftMasterData = (data) => ({
-//   shift_name: data.shift_name || "",
-//   start_time: data.start_time || null,
-//   end_time: data.end_time || null,
-//   lunch_time: data.lunch_time ? Number(data.lunch_time) : null,
-//   daily_working_hours: data.daily_working_hours
-//     ? Number(data.daily_working_hours)
-//     : null,
-//   department_id: data.department_id ? Number(data.department_id) : null,
-//   number_of_working_days: data.number_of_working_days
-//     ? Number(data.number_of_working_days)
-//     : null,
-//   half_day_working: data.half_day_working || "N",
-//   half_day_on: data.half_day_on ? Number(data.half_day_on) : null,
-//   remarks: data.remarks || "",
-//   is_active: data.is_active || "Y",
-// });
+const mockShifts = require("../../mock/shift.mock.js");
 
 const serializeShiftMasterData = (data) => ({
   id: data.id ? Number(data.id) : undefined,
@@ -136,12 +118,39 @@ const getAllShift = async (
   is_active
 ) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_shift_master.count();
+    if (totalCountCheck === 0) {
+      for (const shiftData of mockShifts) {
+        await prisma.hrms_m_shift_master.create({
+          data: {
+            shift_name: shiftData.shift_name,
+            start_time: shiftData.start_time || null,
+            end_time: shiftData.end_time || null,
+            lunch_time: shiftData.lunch_time
+              ? Number(shiftData.lunch_time)
+              : null,
+            daily_working_hours: shiftData.daily_working_hours
+              ? Number(shiftData.daily_working_hours)
+              : null,
+            number_of_working_days: shiftData.number_of_working_days
+              ? Number(shiftData.number_of_working_days)
+              : null,
+            half_day_working: shiftData.half_day_working || "N",
+            weekoff_days: shiftData.weekoff_days || "",
+            is_active: shiftData.is_active || "Y",
+            log_inst: shiftData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+          },
+        });
+      }
+    }
+
     page = page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    // Handle search
     if (search) {
       filters.OR = [
         {
@@ -162,21 +171,6 @@ const getAllShift = async (
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
-    // if (search) {
-    //   filters.shift_name = { contains: search };
-    // }
-
-    // if (startDate && endDate) {
-    //   const start = new Date(startDate);
-    //   const end = new Date(endDate);
-
-    //   if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-    //     filters.createdate = {
-    //       gte: start,
-    //       lte: end,
-    //     };
-    //   }
-    // }
     const data = await prisma.hrms_m_shift_master.findMany({
       where: filters,
       skip: skip,
