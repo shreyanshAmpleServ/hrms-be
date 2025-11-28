@@ -2,6 +2,7 @@ const B2 = require("backblaze-b2");
 const { v4: uuidv4 } = require("uuid");
 const path = require("path");
 const axios = require("axios");
+const sharp = require("sharp");
 
 const testDirectAuth = async () => {
   const credentials = Buffer.from(
@@ -30,11 +31,52 @@ const b2 = new B2({
   applicationKey: process.env.BACKBLAZE_B2_APPLICATION_KEY,
 });
 
+// const uploadToBackblaze = async (
+//   fileBuffer,
+//   originalName,
+//   mimeType,
+//   folder = "general"
+// ) => {
+//   try {
+//     await b2.authorize();
+
+//     const bucketId = process.env.BACKBLAZE_B2_BUCKET_ID;
+//     if (!bucketId) throw new Error("BACKBLAZE_B2_BUCKET_ID is not set");
+
+//     const ext = path.extname(originalName);
+//     const fileName = `${folder}/${uuidv4()}${ext}`;
+
+//     const { data: uploadData } = await b2.getUploadUrl({ bucketId });
+
+//     await b2.uploadFile({
+//       uploadUrl: uploadData.uploadUrl,
+//       uploadAuthToken: uploadData.authorizationToken,
+//       fileName,
+//       data: fileBuffer,
+//       mime: mimeType,
+//     });
+
+//     const fileUrl = `https://DCC-HRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
+//     console.log("File uploaded successfully:", fileUrl);
+//     return fileUrl;
+//   } catch (err) {
+//     verifyBackbaze();
+//     console.error("FULL ERROR:", err);
+//     console.error("BACKBLAZE RESPONSE:", err.response?.data);
+//     console.error("RAW:", err.message);
+
+//     console.error("Failed to upload file:", err.response?.data || err.message);
+//     throw new Error(`Failed to upload file to Backblaze: ${err.message}`);
+//   }
+// };
+
 const uploadToBackblaze = async (
   fileBuffer,
   originalName,
   mimeType,
-  folder = "general"
+  folder = "general",
+  processImage = true,
+  squareSize = 512
 ) => {
   try {
     await b2.authorize();
@@ -42,6 +84,14 @@ const uploadToBackblaze = async (
     const bucketId = process.env.BACKBLAZE_B2_BUCKET_ID;
     if (!bucketId) throw new Error("BACKBLAZE_B2_BUCKET_ID is not set");
 
+    let finalBuffer = fileBuffer;
+    if (processImage) {
+      finalBuffer = await processImageToSquare(
+        fileBuffer,
+        mimeType,
+        squareSize
+      );
+    }
     const ext = path.extname(originalName);
     const fileName = `${folder}/${uuidv4()}${ext}`;
 
@@ -68,7 +118,6 @@ const uploadToBackblaze = async (
     throw new Error(`Failed to upload file to Backblaze: ${err.message}`);
   }
 };
-
 const deleteFromBackblaze = async (fileUrlOrPath) => {
   try {
     await b2.authorize();
@@ -155,23 +204,45 @@ const validateFile = (fileBuffer, originalName, mimeType, maxSizeMB = 10) => {
   return true;
 };
 
+// const uploadToBackblazeWithValidation = async (
+//   fileBuffer,
+//   originalName,
+//   mimeType,
+//   folder = "general",
+//   headers = {},
+//   maxSizeMB = 10
+// ) => {
+//   validateFile(fileBuffer, originalName, mimeType, maxSizeMB);
+
+//   const uploadResult = await uploadToBackblaze(
+//     fileBuffer,
+//     originalName,
+//     mimeType,
+//     folder
+//   );
+
+//   return uploadResult;
+// };
+
 const uploadToBackblazeWithValidation = async (
   fileBuffer,
   originalName,
   mimeType,
   folder = "general",
   headers = {},
-  maxSizeMB = 10
+  maxSizeMB = 10,
+  processImage = true,
+  squareSize = 512
 ) => {
   validateFile(fileBuffer, originalName, mimeType, maxSizeMB);
-
   const uploadResult = await uploadToBackblaze(
     fileBuffer,
     originalName,
     mimeType,
-    folder
+    folder,
+    processImage,
+    squareSize
   );
-
   return uploadResult;
 };
 
@@ -204,6 +275,42 @@ const verifyBackbaze = async () => {
   }
 };
 
+const processImageToSquare = async (fileBuffer, mimeType, size = 512) => {
+  const imageTypes = ["image/jpeg", "image/jpg", "image/png", "image/gif"];
+
+  if (!imageTypes.includes(mimeType)) {
+    return fileBuffer;
+  }
+
+  try {
+    // Create circular mask
+    const circleShape = Buffer.from(
+      `<svg width="${size}" height="${size}">
+        <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="white"/>
+      </svg>`
+    );
+
+    const processedBuffer = await sharp(fileBuffer)
+      .resize(size, size, {
+        fit: "cover",
+        position: "center",
+      })
+      .composite([
+        {
+          input: circleShape,
+          blend: "dest-in",
+        },
+      ])
+      .png() // Convert to PNG to preserve transparency
+      .toBuffer();
+
+    return processedBuffer;
+  } catch (err) {
+    console.error("Image processing failed:", err.message);
+    return fileBuffer;
+  }
+};
+
 module.exports = {
   uploadToBackblaze,
   uploadToBackblazeWithValidation,
@@ -211,4 +318,5 @@ module.exports = {
   validateFile,
   testDirectAuth,
   verifyBackbaze,
+  processImageToSquare,
 };
