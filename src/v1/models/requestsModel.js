@@ -570,13 +570,14 @@ const createRequest = async (data) => {
 
     if (!workflowSteps || workflowSteps.length === 0) {
       throw new CustomError(
-        `No approval workflow defined for '${request_type}'${
+        `You need to create an approval workflow for '${request_type}'${
           requester.department_id
-            ? ` in department ${requester.hrms_employee_department?.department_name}`
+            ? ` in '${requester.hrms_employee_department?.department_name}' department`
             : requester.designation_id
-            ? ` for designation ${requester.hrms_employee_designation?.designation_name}`
+            ? ` for '${requester.hrms_employee_designation?.designation_name}' designation`
             : ""
-        } and no global fallback available`,
+        }, since none is defined and no fallback is available.
+        Please create a workflow in the HRMS settings.`,
         400
       );
     }
