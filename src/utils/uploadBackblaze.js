@@ -59,6 +59,11 @@ const uploadToBackblaze = async (
     console.log("File uploaded successfully:", fileUrl);
     return fileUrl;
   } catch (err) {
+    verifyBackbaze();
+    console.error("FULL ERROR:", err);
+    console.error("BACKBLAZE RESPONSE:", err.response?.data);
+    console.error("RAW:", err.message);
+
     console.error("Failed to upload file:", err.response?.data || err.message);
     throw new Error(`Failed to upload file to Backblaze: ${err.message}`);
   }
@@ -170,10 +175,40 @@ const uploadToBackblazeWithValidation = async (
   return uploadResult;
 };
 
+const verifyBackbaze = async () => {
+  try {
+    const credentials = Buffer.from(
+      `${process.env.BACKBLAZE_B2_KEY_ID}:${process.env.BACKBLAZE_B2_APPLICATION_KEY}`
+    ).toString("base64");
+
+    const response = await axios.get(
+      "https://api.backblazeb2.com/b2api/v2/b2_authorize_account",
+      {
+        headers: {
+          Authorization: `Basic ${credentials}`,
+        },
+      }
+    );
+
+    return res.json({
+      success: true,
+      message: "Backblaze token verification successful",
+      data: response.data,
+    });
+  } catch (err) {
+    return res.status(400).json({
+      success: false,
+      message: "Backblaze token verification failed",
+      error: err.response?.data || err.message,
+    });
+  }
+};
+
 module.exports = {
   uploadToBackblaze,
   uploadToBackblazeWithValidation,
   deleteFromBackblaze,
   validateFile,
   testDirectAuth,
+  verifyBackbaze,
 };
