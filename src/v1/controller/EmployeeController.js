@@ -147,7 +147,6 @@ const createEmployee = async (req, res, next) => {
   try {
     let profilePicUrl = null;
 
-    // Handle file upload - with upload.any(), files are in an array
     if (req.files && req.files.length > 0) {
       const profilePicFile = req.files.find(
         (f) => f.fieldname === "profile_pic"
@@ -163,12 +162,10 @@ const createEmployee = async (req, res, next) => {
       }
     }
 
-    // Parse nested JSON fields from req.body
     let lifeEvents = null;
     let workLifeEvents = null;
     let empAddressData = null;
 
-    // Parse life_events
     if (req.body?.life_events) {
       try {
         lifeEvents =
@@ -181,7 +178,6 @@ const createEmployee = async (req, res, next) => {
       }
     }
 
-    // Parse work_life_events
     if (req.body?.work_life_events) {
       try {
         workLifeEvents =
@@ -194,7 +190,6 @@ const createEmployee = async (req, res, next) => {
       }
     }
 
-    // Parse empAddressData
     if (req.body?.empAddressData) {
       try {
         empAddressData =
@@ -267,12 +262,10 @@ const updateEmployee = async (req, res, next) => {
 
     if (!existingData) throw new CustomError("Employee not found", 404);
 
-    // Parse nested JSON fields
     let lifeEvents = null;
     let workLifeEvents = null;
     let empAddressData = null;
 
-    // Parse life_events
     if (req.body?.life_events) {
       try {
         lifeEvents =
@@ -285,7 +278,6 @@ const updateEmployee = async (req, res, next) => {
       }
     }
 
-    // Parse work_life_events
     if (req.body?.work_life_events) {
       try {
         workLifeEvents =
@@ -298,7 +290,6 @@ const updateEmployee = async (req, res, next) => {
       }
     }
 
-    // Parse empAddressData
     if (req.body?.empAddressData) {
       try {
         empAddressData =
@@ -319,7 +310,6 @@ const updateEmployee = async (req, res, next) => {
       work_life_events: workLifeEvents,
     };
 
-    // Handle file upload - with upload.any(), files are in an array
     if (req.files && req.files.length > 0) {
       const profilePicFile = req.files.find(
         (f) => f.fieldname === "profile_pic"
@@ -330,7 +320,9 @@ const updateEmployee = async (req, res, next) => {
           profilePicFile.buffer,
           profilePicFile.originalname,
           profilePicFile.mimetype,
-          "profile_pics"
+          "profile_pics",
+          true,
+          512
         );
 
         data.profile_pic = fileUrl;

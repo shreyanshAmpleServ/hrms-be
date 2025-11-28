@@ -1028,16 +1028,14 @@ const findRequestByRequestUsers = async (
     filters.request_type = { equals: requestType };
   }
 
-  if (status) {
+  if (overall_status) {
+    filters.status = { equals: overall_status };
+  } else if (status) {
     filters.status = { equals: status };
   }
 
-  if (overall_status) {
-    filters.overall_status = { equals: overall_status };
-  }
-
   if (requester_id) {
-    filters.requester_id = { equals: requester_id };
+    filters.requester_id = { equals: parseInt(requester_id) };
   }
 
   if (startDate && endDate) {
@@ -1046,6 +1044,14 @@ const findRequestByRequestUsers = async (
     if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
       filters.createdate = { gte: start, lte: end };
     }
+  }
+
+  if (employee_id) {
+    filters.request_approval_request = {
+      some: {
+        approver_id: { equals: parseInt(employee_id) },
+      },
+    };
   }
 
   try {
@@ -1100,7 +1106,7 @@ const findRequestByRequestUsers = async (
 
     await Promise.all(
       reqData.map(async (request) => {
-        const requestType = request.request_type;
+        const requestTypeValue = request.request_type;
         const referenceId = request.reference_id;
 
         request.workflow_context = {
@@ -1113,8 +1119,9 @@ const findRequestByRequestUsers = async (
                 ?.department_name || "No Department"
           ),
         };
+        request.overall_status = request.status;
 
-        if (requestType === "interview_stage" && referenceId) {
+        if (requestTypeValue === "interview_stage" && referenceId) {
           const interviewRemark =
             await prisma.hrms_m_interview_stage_remark.findUnique({
               where: { id: parseInt(referenceId) },
@@ -1142,7 +1149,7 @@ const findRequestByRequestUsers = async (
           }
         }
 
-        if (requestType === "leave_request" && referenceId) {
+        if (requestTypeValue === "leave_request" && referenceId) {
           const leaveRequest = await prisma.hrms_d_leave_application.findUnique(
             {
               where: { id: parseInt(referenceId) },
@@ -1171,7 +1178,7 @@ const findRequestByRequestUsers = async (
           }
         }
 
-        if (requestType === "loan_request" && referenceId) {
+        if (requestTypeValue === "loan_request" && referenceId) {
           const loanRequest = await prisma.hrms_d_loan_request.findUnique({
             where: { id: parseInt(referenceId) },
             select: {
@@ -1221,7 +1228,7 @@ const findRequestByRequestUsers = async (
           }
         }
 
-        if (requestType === "advance_request" && referenceId) {
+        if (requestTypeValue === "advance_request" && referenceId) {
           const advancePayment =
             await prisma.hrms_d_advance_payment_entry.findUnique({
               where: { id: parseInt(referenceId) },
@@ -1266,7 +1273,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "asset_request" && referenceId) {
+
+        if (requestTypeValue === "asset_request" && referenceId) {
           const assetRequest = await prisma.hrms_d_asset_assignment.findUnique({
             where: { id: parseInt(referenceId) },
             select: {
@@ -1287,7 +1295,6 @@ const findRequestByRequestUsers = async (
               asset_assignment_type: {
                 select: {
                   id: true,
-                  id: true,
                   asset_type_name: true,
                   depreciation_rate: true,
                 },
@@ -1302,7 +1309,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "probation_review" && referenceId) {
+
+        if (requestTypeValue === "probation_review" && referenceId) {
           const probationRequest =
             await prisma.hrms_d_probation_review.findUnique({
               where: { id: parseInt(referenceId) },
@@ -1345,7 +1353,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "appraisal_review" && referenceId) {
+
+        if (requestTypeValue === "appraisal_review" && referenceId) {
           const appraisalRequest = await prisma.hrms_d_appraisal.findUnique({
             where: { id: parseInt(referenceId) },
             select: {
@@ -1370,7 +1379,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "leave_encashment" && referenceId) {
+
+        if (requestTypeValue === "leave_encashment" && referenceId) {
           const leaveEncashmentRequest =
             await prisma.hrms_d_leave_encashment.findUnique({
               where: { id: parseInt(referenceId) },
@@ -1413,7 +1423,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "job_posting" && referenceId) {
+
+        if (requestTypeValue === "job_posting" && referenceId) {
           const jobPostingRequest = await prisma.hrms_d_job_posting.findUnique({
             where: { id: parseInt(referenceId) },
             select: {
@@ -1458,7 +1469,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "offer_letter" && referenceId) {
+
+        if (requestTypeValue === "offer_letter" && referenceId) {
           const offerLetterRequest =
             await prisma.hrms_d_offer_letter.findUnique({
               where: { id: parseInt(referenceId) },
@@ -1487,7 +1499,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "appointment_letter" && referenceId) {
+
+        if (requestTypeValue === "appointment_letter" && referenceId) {
           const appointmentLetterRequest =
             await prisma.hrms_d_appointment_letter.findUnique({
               where: { id: parseInt(referenceId) },
@@ -1505,7 +1518,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "component_assignment" && referenceId) {
+
+        if (requestTypeValue === "component_assignment" && referenceId) {
           const payComponentRequest =
             await prisma.hrms_d_employee_pay_component_assignment_header.findUnique(
               {
@@ -1576,8 +1590,8 @@ const findRequestByRequestUsers = async (
             });
           }
         }
-        if (requestType === "kpi_approval" && referenceId) {
-          // Parse the request_data to get kpi_id
+
+        if (requestTypeValue === "kpi_approval" && referenceId) {
           let kpiId = referenceId;
           try {
             const requestData = JSON.parse(request.request_data);
@@ -1685,23 +1699,31 @@ const findRequestByRequestUsers = async (
 
     const filteredData = data.filter((request) => {
       const approvals = request.request_approval_request;
+      const employeeIdInt = parseInt(employee_id);
+      const requesterIdInt = requester_id ? parseInt(requester_id) : null;
+
+      if (requesterIdInt && request.requester_id !== requesterIdInt) {
+        return false;
+      }
+
       const approverIndex = approvals.findIndex(
-        (approval) =>
-          approval.approver_id === employee_id &&
-          (status === "" || approval.status === status)
+        (approval) => approval.approver_id === employeeIdInt
       );
+
       if (approverIndex === -1) {
         return false;
       }
+
       if (approverIndex === 0) {
         return true;
       }
+
       const prevApproval = approvals[approverIndex - 1];
-      const shouldInclude = prevApproval?.status === "A";
-      return shouldInclude;
+      return prevApproval?.status === "A";
     });
 
     const slideData = filteredData.slice(skip, skip + size);
+
     return {
       data: slideData,
       currentPage: page,
