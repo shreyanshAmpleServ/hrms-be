@@ -5,8 +5,34 @@ const serializeHiringStageValueData = (data) => ({
   value: data.value || "",
 });
 
+const checkDuplicateValue = async (value, excludeId = null) => {
+  if (!value) return false;
+
+  const whereClause = {
+    value: {
+      equals: value.trim().toLowerCase(),
+    },
+  };
+
+  if (excludeId) {
+    whereClause.NOT = {
+      id: parseInt(excludeId),
+    };
+  }
+
+  const existingRecord = await prisma.hrms_d_hiring_stage_value.findFirst({
+    where: whereClause,
+  });
+
+  return existingRecord;
+};
 const createHiringStageValue = async (data) => {
   try {
+    const duplicate = await checkDuplicateValue(data.value);
+    if (duplicate) {
+      throw new CustomError(`Hiring stage value already exists`, 409);
+    }
+
     const newRecord = await prisma.hrms_d_hiring_stage_value.create({
       data: {
         ...serializeHiringStageValueData(data),
@@ -18,6 +44,9 @@ const createHiringStageValue = async (data) => {
 
     return newRecord;
   } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
     throw new CustomError(
       `Error creating hiring stage value: ${error.message}`,
       500
@@ -42,6 +71,22 @@ const getHiringStageValueById = async (id) => {
 
 const updateHiringStageValue = async (id, data) => {
   try {
+    const existingRecord = await prisma.hrms_d_hiring_stage_value.findUnique({
+      where: { id: parseInt(id) },
+    });
+
+    if (!existingRecord) {
+      throw new CustomError("Hiring stage value not found", 404);
+    }
+
+    const duplicate = await checkDuplicateValue(data.value, id);
+    if (duplicate) {
+      throw new CustomError(
+        `Hiring stage value "${data.value}" already exists`,
+        409
+      );
+    }
+
     const updatedRecord = await prisma.hrms_d_hiring_stage_value.update({
       where: { id: parseInt(id) },
       data: {
@@ -50,8 +95,12 @@ const updateHiringStageValue = async (id, data) => {
         updatedate: new Date(),
       },
     });
+
     return updatedRecord;
   } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
     throw new CustomError(
       `Error updating hiring stage value: ${error.message}`,
       500
