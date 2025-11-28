@@ -13,11 +13,6 @@ router.post(
 );
 
 router.get("/announcement", authenticateToken, testDirectAuth);
-// router.get(
-//   "/announcement",
-//   authenticateToken,
-//   announcementController.getAllAnnouncement
-// );
 
 router.get(
   "/announcement/:id",
@@ -56,6 +51,7 @@ router.get(
 );
 
 router.get("/announcements", announcementController.getPublicAnnouncements);
+
 router.get(
   "/announcements/:id",
   announcementController.getPublicAnnouncementById

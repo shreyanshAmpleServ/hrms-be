@@ -1020,7 +1020,8 @@ const getPublicAnnouncements = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  is_active
 ) => {
   try {
     //  console.log(" Fetching public announcements with filters:", {
@@ -1034,7 +1035,7 @@ const getPublicAnnouncements = async (
     const skip = (page - 1) * size || 0;
 
     const filters = {
-      is_active: "Y",
+      is_active: is_active,
     };
 
     if (search) {
