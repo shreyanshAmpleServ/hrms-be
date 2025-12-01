@@ -24,17 +24,42 @@ const serializePayComponentData = (data) => ({
   tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : undefined,
   gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : null,
   factor: data.factor ? Number(data.factor) : null,
+  gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : undefined,
+  factor: data.factor ? Number(data.factor) : undefined,
   payable_glaccount_id: data.payable_glaccount_id
     ? Number(data.payable_glaccount_id)
     : null,
   project_id: data.project_id ? Number(data.project_id) : null,
-  cost_center1_id: data.cost_center1_id ? Number(data.cost_center1_id) : null,
-  cost_center2_id: data.cost_center2_id ? Number(data.cost_center2_id) : null,
-  cost_center3_id: data.cost_center3_id ? Number(data.cost_center3_id) : null,
-  cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
-  cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
+  project_id: data.project_id ? Number(data.project_id) : undefined,
+
+  // cost_center1_id: data.cost_center1_id ? Number(data.cost_center1_id) : null,
+  // cost_center2_id: data.cost_center2_id ? Number(data.cost_center2_id) : null,
+  // cost_center3_id: data.cost_center3_id ? Number(data.cost_center3_id) : null,
+  // cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
+  // cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
+  cost_center1_id: data.cost_center1_id
+    ? Number(data.cost_center1_id)
+    : undefined,
+  cost_center2_id: data.cost_center2_id
+    ? Number(data.cost_center2_id)
+    : undefined,
+  cost_center3_id: data.cost_center3_id
+    ? Number(data.cost_center3_id)
+    : undefined,
+  cost_center4_id: data.cost_center4_id
+    ? Number(data.cost_center4_id)
+    : undefined,
+  cost_center5_id: data.cost_center5_id
+    ? Number(data.cost_center5_id)
+    : undefined,
   column_order: data.column_order ? Number(data.column_order) : null,
+  column_order: data.column_order ? Number(data.column_order) : undefined,
+
   execution_order: data.execution_order ? Number(data.execution_order) : null,
+  execution_order: data.execution_order
+    ? Number(data.execution_order)
+    : undefined,
+
   visible_in_payslip: data.visible_in_payslip || "",
   default_formula: data.default_formula || "",
   formula_editable: data.formula_editable || "",
