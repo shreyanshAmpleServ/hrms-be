@@ -17,7 +17,7 @@ const createCurrency = async (data) => {
     if (data.currency_code) {
       const existingCode = await prisma.hrms_m_currency_master.findFirst({
         where: {
-          currency_code: { equals: data.currency_code, mode: "insensitive" },
+          currency_code: { equals: data.currency_code.toLowerCase() },
         },
       });
 

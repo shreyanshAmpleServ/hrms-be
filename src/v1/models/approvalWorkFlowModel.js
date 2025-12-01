@@ -526,7 +526,6 @@ const getAllApprovalWorkFlowByRequest = async (
     }
 
     if (designation_id) {
-      // Designation specific workflows
       const designWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
