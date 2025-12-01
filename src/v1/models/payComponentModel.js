@@ -236,7 +236,7 @@ const createPayComponent = async (data) => {
         const reqData = await prisma.hrms_m_pay_component.create({
           data: {
             ...serializePayComponentData(data),
-            createdby: data.createdby,
+            createdby: data.createdby || 1,
             createdate: new Date(),
             log_inst: data.log_inst || 1,
           },
