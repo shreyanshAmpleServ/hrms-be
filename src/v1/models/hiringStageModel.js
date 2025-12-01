@@ -44,7 +44,7 @@ const createHiringStage = async (data) => {
     if (error.code === "P2002") {
       throw new CustomError(`Code '${data.code}' must be unique.`, 400);
     }
-    throw new CustomError(`Error creating hiring stage: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 

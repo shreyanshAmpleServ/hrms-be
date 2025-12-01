@@ -1568,7 +1568,7 @@ const createJobPosting = async (data) => {
 
     return await enrichJobPosting(jobPosting);
   } catch (error) {
-    throw new CustomError(`Error creating job posting: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 

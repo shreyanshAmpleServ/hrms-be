@@ -36,10 +36,7 @@ const createRequestApproval = async (data) => {
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(
-      `Error creating request approval: ${error.message}`,
-      500
-    );
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
