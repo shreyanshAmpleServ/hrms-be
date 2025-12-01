@@ -1073,7 +1073,7 @@ model hrms_m_award_type {
 
 model hrms_m_bank_master {
   id                 Int               @id(map: "PK__hrms_m_b__3213E83F1B2BC21F") @default(autoincrement())
-  bank_name          String?           @db.NVarChar(255)
+  bank_name          String            @db.NVarChar(255)
   createdate         DateTime?         @default(now(), map: "DF__hrms_m_ba__creat__395884C4") @db.DateTime
   createdby          Int
   updatedate         DateTime?         @db.DateTime
