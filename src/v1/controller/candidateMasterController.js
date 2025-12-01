@@ -339,7 +339,6 @@ const processCandidateFileUploads = async (files) => {
   return result;
 };
 
-//Create
 const createCandidateMaster = async (req, res, next) => {
   try {
     const uploadResults = await processCandidateFileUploads(req.files);
@@ -427,7 +426,6 @@ const updateCandidateMaster = async (req, res, next) => {
 
       if (newResume) {
         resumePathUrl = newResume;
-        // Mark old file for deletion after successful update
         if (existingCandidateMaster.resume_path) {
           oldFilesToDelete.push(existingCandidateMaster.resume_path);
         }
@@ -472,7 +470,6 @@ const updateCandidateMaster = async (req, res, next) => {
     next(new CustomError(error.message, 400));
   }
 };
-// Delete
 const deleteCandidateMaster = async (req, res, next) => {
   try {
     const existingCandidateMaster =
@@ -501,7 +498,6 @@ const deleteCandidateMaster = async (req, res, next) => {
   }
 };
 
-// Get all
 const getAllCandidateMaster = async (req, res, next) => {
   try {
     const { search, page, size, startDate, endDate, is_active } = req.query;
