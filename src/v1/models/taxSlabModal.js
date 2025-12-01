@@ -114,7 +114,7 @@ const createTaxSlab = async (data) => {
     };
   } catch (error) {
     console.error("Error creating tax slabs: ", error);
-    throw new CustomError(`Error creating tax slabs: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 

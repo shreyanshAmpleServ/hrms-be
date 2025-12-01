@@ -6,6 +6,10 @@ const mockBanks = require("../../mock/bank.mock.js");
 const createBank = async (data) => {
   try {
     console.log("Creating bank with data:", data);
+    if (!data.bank_name || data.bank_name.trim() === "") {
+      throw new CustomError("Bank name is required", 400);
+    }
+
     const bank = await prisma.hrms_m_bank_master.create({
       data: {
         bank_name: data.bank_name,

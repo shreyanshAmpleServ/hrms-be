@@ -328,13 +328,11 @@ const path = require("path");
 const axios = require("axios");
 const sharp = require("sharp");
 
-// Initialize B2 client
 const b2 = new B2({
   applicationKeyId: process.env.BACKBLAZE_B2_KEY_ID,
   applicationKey: process.env.BACKBLAZE_B2_APPLICATION_KEY,
 });
 
-// Keep track of authorization state
 let isAuthorized = false;
 let authorizationPromise = null;
 
@@ -355,7 +353,6 @@ const ensureAuthorized = async () => {
       isAuthorized = false;
       throw err;
     } finally {
-      // Reset promise after some time to allow re-auth
       setTimeout(() => {
         authorizationPromise = null;
       }, 1000);
@@ -388,13 +385,13 @@ const testDirectAuth = async () => {
         headers: {
           Authorization: `Basic ${credentials}`,
         },
-        timeout: 30000, // 30 second timeout
+        timeout: 30000,
       }
     );
-    console.log("✅ Direct auth successful");
+    console.log("Direct auth successful");
     return res.data;
   } catch (err) {
-    console.error("❌ Auth failed directly:", err.message);
+    console.error("Auth failed directly:", err.message);
     console.error("Response data:", err.response?.data);
     console.error("Response status:", err.response?.status);
     throw err;
@@ -412,7 +409,6 @@ const processImageToSquare = async (fileBuffer, mimeType, size = 512) => {
   try {
     console.log("Processing image to square, size:", size);
 
-    // Create circular mask
     const circleShape = Buffer.from(
       `<svg width="${size}" height="${size}">
         <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="white"/>
@@ -440,7 +436,6 @@ const processImageToSquare = async (fileBuffer, mimeType, size = 512) => {
     return processedBuffer;
   } catch (err) {
     console.error("Image processing failed:", err.message);
-    // Return original buffer if processing fails
     return fileBuffer;
   }
 };
@@ -454,91 +449,115 @@ const uploadToBackblaze = async (
   squareSize = 512
 ) => {
   try {
-    console.log("=== Starting Backblaze Upload ===");
-    console.log("Original name:", originalName);
-    console.log("MIME type:", mimeType);
-    console.log("Folder:", folder);
-    console.log("Buffer size:", fileBuffer?.length);
-    console.log("Process image:", processImage);
+    console.log("=== UPLOAD DEBUG START ===");
 
-    // Validate inputs
-    if (!fileBuffer || fileBuffer.length === 0) {
-      throw new Error("File buffer is empty or undefined");
-    }
-
-    // Check environment variables
     const bucketId = process.env.BACKBLAZE_B2_BUCKET_ID;
     const keyId = process.env.BACKBLAZE_B2_KEY_ID;
     const appKey = process.env.BACKBLAZE_B2_APPLICATION_KEY;
 
-    console.log("Bucket ID exists:", !!bucketId);
-    console.log("Key ID exists:", !!keyId);
-    console.log("App Key exists:", !!appKey);
+    console.log("Step 1 - Env vars:");
+    console.log(
+      "  Bucket ID:",
+      bucketId ? `${bucketId.substring(0, 5)}...` : "MISSING!"
+    );
+    console.log(
+      "  Key ID:",
+      keyId ? `${keyId.substring(0, 5)}...` : "MISSING!"
+    );
+    console.log("  App Key:", appKey ? "EXISTS" : "MISSING!");
 
     if (!bucketId) throw new Error("BACKBLAZE_B2_BUCKET_ID is not set");
     if (!keyId) throw new Error("BACKBLAZE_B2_KEY_ID is not set");
     if (!appKey) throw new Error("BACKBLAZE_B2_APPLICATION_KEY is not set");
 
-    console.log("Authorizing...");
-    await ensureAuthorized();
-    console.log("Authorization complete");
+    console.log("Step 2 - Authorizing...");
+    try {
+      await b2.authorize();
+      console.log("  Authorization successful");
+    } catch (authErr) {
+      console.error("  Authorization FAILED:", authErr.message);
+      console.error("  Auth error response:", authErr.response?.data);
+      throw new Error(
+        `Authorization failed: ${
+          authErr.response?.data?.message || authErr.message
+        }`
+      );
+    }
 
+    console.log("Step 3 - Processing buffer...");
     let finalBuffer = fileBuffer;
-    let finalMimeType = mimeType;
-
     if (processImage) {
       finalBuffer = await processImageToSquare(
         fileBuffer,
         mimeType,
         squareSize
       );
-      if (finalBuffer !== fileBuffer) {
-        finalMimeType = "image/png";
-      }
+    }
+    console.log("  Original buffer size:", fileBuffer.length);
+    console.log("  Final buffer size:", finalBuffer.length);
+
+    const ext = path.extname(originalName);
+    const fileName = `${folder}/${uuidv4()}${ext}`;
+    console.log("Step 4 - Filename:", fileName);
+
+    console.log("Step 5 - Getting upload URL...");
+    let uploadData;
+    try {
+      const response = await b2.getUploadUrl({ bucketId });
+      uploadData = response.data;
+      console.log(
+        "  Upload URL obtained:",
+        uploadData.uploadUrl ? "YES" : "NO"
+      );
+    } catch (urlErr) {
+      console.error("  Get upload URL FAILED:", urlErr.message);
+      console.error("  URL error response:", urlErr.response?.data);
+      throw new Error(
+        `Failed to get upload URL: ${
+          urlErr.response?.data?.message || urlErr.message
+        }`
+      );
     }
 
-    console.log("Final buffer size:", finalBuffer.length);
+    console.log("Step 6 - Uploading file...");
+    console.log("  File name:", fileName);
+    console.log("  Buffer size:", finalBuffer.length);
+    console.log("  MIME type:", mimeType);
 
-    const ext =
-      processImage && finalBuffer !== fileBuffer
-        ? ".png"
-        : path.extname(originalName);
-    const fileName = `${folder}/${uuidv4()}${ext}`;
-    console.log("Generated filename:", fileName);
-
-    console.log("Getting upload URL...");
-    const { data: uploadData } = await b2.getUploadUrl({ bucketId });
-    console.log("Upload URL obtained");
-
-    console.log("Uploading file...");
-    const uploadResponse = await b2.uploadFile({
-      uploadUrl: uploadData.uploadUrl,
-      uploadAuthToken: uploadData.authorizationToken,
-      fileName,
-      data: finalBuffer,
-      mime: finalMimeType,
-    });
-    console.log("Upload response:", uploadResponse?.data?.fileName);
+    try {
+      const uploadResult = await b2.uploadFile({
+        uploadUrl: uploadData.uploadUrl,
+        uploadAuthToken: uploadData.authorizationToken,
+        fileName,
+        data: finalBuffer,
+        mime: mimeType,
+      });
+      console.log("  Upload successful:", uploadResult.data?.fileName);
+    } catch (uploadErr) {
+      console.error("  Upload FAILED!");
+      console.error("  Error name:", uploadErr.name);
+      console.error("  Error message:", uploadErr.message);
+      console.error("  Error code:", uploadErr.code);
+      console.error("  Response status:", uploadErr.response?.status);
+      console.error(
+        "  Response data:",
+        JSON.stringify(uploadErr.response?.data, null, 2)
+      );
+      throw new Error(
+        `Upload failed: ${
+          uploadErr.response?.data?.message || uploadErr.message
+        }`
+      );
+    }
 
     const fileUrl = `https://DCC-HRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
-    console.log("File uploaded successfully:", fileUrl);
+    console.log("=== UPLOAD SUCCESS ===");
+    console.log("File URL:", fileUrl);
+
     return fileUrl;
   } catch (err) {
-    console.error("=== Upload Error Details ===");
-    console.error("Error name:", err.name);
-    console.error("Error message:", err.message);
-    console.error("Error stack:", err.stack);
-    console.error("Response status:", err.response?.status);
-    console.error(
-      "Response data:",
-      JSON.stringify(err.response?.data, null, 2)
-    );
-
-    if (err.response?.status === 401 || err.message?.includes("unauthorized")) {
-      isAuthorized = false;
-      authorizationPromise = null;
-    }
-
+    console.error("=== UPLOAD ERROR ===");
+    console.error("Final error:", err.message);
     throw new Error(`Failed to upload file to Backblaze: ${err.message}`);
   }
 };

@@ -1,11 +1,9 @@
 const candidateMasterModel = require("../models/candidateMasterModel.js");
 
-// Service to create a training session
 const createCandidateMaster = async (data) => {
   return await candidateMasterModel.createCandidateMaster(data);
 };
 
-// Service to get a training session by ID
 const getCandidateMasterById = async (id) => {
   return await candidateMasterModel.findCandidateMasterById(id);
 };

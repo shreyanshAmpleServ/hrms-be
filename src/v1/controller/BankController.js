@@ -3,7 +3,7 @@ const CustomError = require("../../utils/CustomError");
 
 const createBank = async (req, res, next) => {
   try {
-    const bank = await bankService.createBank(req.prisma, req.body);
+    const bank = await bankService.createBank(req.body);
     res.status(201).success("bank created successfully", bank);
   } catch (error) {
     next(error);

@@ -3,7 +3,6 @@ const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
 
-// Serialize pay component data
 const serializePayComponentData = (data) => ({
   component_name: data.component_name || "",
   component_code: data.component_code || "",
@@ -169,12 +168,10 @@ const createPayComponent = async (data) => {
     data.component_name = data.component_name.trim();
     data.component_code = data.component_code.trim();
 
-    // Validate component_code format
     if (!/^\d+$/.test(data.component_code)) {
       throw new CustomError("Invalid component code. Must be numeric.", 400);
     }
 
-    // Check for existing component
     const existing = await prisma.hrms_m_pay_component.findFirst({
       where: {
         OR: [
@@ -201,7 +198,6 @@ const createPayComponent = async (data) => {
       }
     }
 
-    // Check if column already exists in payroll table
     const columnExists = await prisma.$queryRawUnsafe(`
       SELECT 1
       FROM INFORMATION_SCHEMA.COLUMNS
@@ -209,7 +205,6 @@ const createPayComponent = async (data) => {
       AND COLUMN_NAME = '${data.component_code}'
     `);
 
-    // Create pay component with shorter transaction
     const result = await prisma.$transaction(
       async (prisma) => {
         const reqData = await prisma.hrms_m_pay_component.create({
@@ -232,7 +227,6 @@ const createPayComponent = async (data) => {
           },
         });
 
-        // Only add column if it doesn't exist
         if (!columnExists || columnExists.length === 0) {
           await prisma.$executeRawUnsafe(`
             ALTER TABLE hrms_d_monthly_payroll_processing
@@ -248,12 +242,11 @@ const createPayComponent = async (data) => {
         return reqData;
       },
       {
-        maxWait: 10000, // 10 seconds
-        timeout: 30000, // 30 seconds
+        maxWait: 10000,
+        timeout: 30000,
       }
     );
 
-    // Handle approval request outside transaction
     const requester_id = data.createdby;
     const requesterExists = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(requester_id) },
@@ -261,7 +254,6 @@ const createPayComponent = async (data) => {
     });
 
     if (!requesterExists) {
-      // Rollback: delete the created component
       await prisma.hrms_m_pay_component.delete({
         where: { id: result.id },
       });
@@ -284,7 +276,6 @@ const createPayComponent = async (data) => {
   }
 };
 
-// Find pay component by ID
 const findPayComponentById = async (id) => {
   try {
     const reqData = await prisma.hrms_m_pay_component.findUnique({
@@ -302,7 +293,6 @@ const findPayComponentById = async (id) => {
   }
 };
 
-// Update pay component
 const updatePayComponent = async (id, data) => {
   try {
     const totalCount = await prisma.hrms_m_pay_component.count({
@@ -577,6 +567,7 @@ const updatePayComponent = async (id, data) => {
 // };
 
 // Delete pay component
+
 const deletePayComponent = async (id) => {
   try {
     await prisma.hrms_m_pay_component.delete({

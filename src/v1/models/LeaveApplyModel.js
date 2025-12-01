@@ -101,10 +101,7 @@ const createLeaveApplication = async (data) => {
 
     return reqData;
   } catch (error) {
-    throw new CustomError(
-      `Error creating leave application: ${error.message}`,
-      500
-    );
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
