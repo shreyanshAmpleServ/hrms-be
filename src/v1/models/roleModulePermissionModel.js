@@ -248,12 +248,33 @@ const getAllPermission = async (id) => {
 
   try {
     // Check if permissions already exist for this role_id
-    let savedPermissions = await prisma.hrms_d_role_permissions?.findFirst({
+    let savedPermissions = await prisma.hrms_d_role_permissions.findFirst({
       where: { role_id },
       // include: { crms_m_roles: true }, // Fetch role details
     });
 
-    // Otherwise, fetch all modules
+    // Ensure modules are seeded by checking count first
+    const moduleCount = await prisma.hrms_m_module.count();
+    if (moduleCount === 0) {
+      // Import and seed modules
+      const mockModules = require("../../mock/module.mock.js");
+      for (const moduleData of mockModules) {
+        await prisma.hrms_m_module.create({
+          data: {
+            module_name: moduleData.module_name,
+            description: moduleData.description || "",
+            is_active: moduleData.is_active || "Y",
+            log_inst: moduleData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+            updatedate: new Date(),
+            updatedby: 1,
+          },
+        });
+      }
+    }
+
+    // Fetch all modules
     const allModules = await prisma.hrms_m_module.findMany({
       select: {
         id: true,
@@ -261,16 +282,47 @@ const getAllPermission = async (id) => {
       },
     });
 
-    savedPermissions = parsePermissions(savedPermissions);
-    // // If permissions exist, return them as-is (already formatted)
-    // if (savedPermissions) {
-    //   return parsePermissions(savedPermissions);
-    // }
+    // Parse permissions if they exist
+    savedPermissions = savedPermissions
+      ? parsePermissions(savedPermissions)
+      : null;
 
     // If permissions exist, use them; otherwise, start fresh
-    let existingPermissions = savedPermissions
-      ? savedPermissions.permissions
-      : [];
+    let existingPermissions = [];
+    if (savedPermissions && savedPermissions.permissions) {
+      if (Array.isArray(savedPermissions.permissions)) {
+        // Already in array format
+        existingPermissions = savedPermissions.permissions;
+      } else if (
+        typeof savedPermissions.permissions === "object" &&
+        savedPermissions.permissions !== null
+      ) {
+        // Convert object (keyed by module_id) to array format
+        // Object format: { 1: { module_id: 1, module_name: "...", view: true, ... }, 2: {...} }
+        // Array format: [{ module_id: 1, module_name: "...", permissions: { view: true, ... } }, ...]
+        existingPermissions = Object.values(savedPermissions.permissions).map(
+          (perm) => {
+            // If the permission object has the structure from seeder (flat structure)
+            if (perm.module_id && perm.module_name) {
+              return {
+                module_id: perm.module_id,
+                module_name: perm.module_name,
+                permissions: {
+                  view: perm.view || false,
+                  create: perm.create || false,
+                  update: perm.update || false,
+                  delete: perm.delete || false,
+                  approve: perm.approve || false,
+                  reject: perm.reject || false,
+                },
+              };
+            }
+            // If already in array format structure
+            return perm;
+          }
+        );
+      }
+    }
 
     // Ensure all modules are included, keeping existing ones and adding new ones
     const updatedPermissions = allModules.map((module) => {
@@ -324,7 +376,10 @@ const getAllPermission = async (id) => {
     };
   } catch (error) {
     console.error("Error retrieving permissions:", error);
-    throw new Error("Error retrieving permissions");
+    throw new CustomError(
+      `Error retrieving permissions: ${error.message}`,
+      500
+    );
   }
 };
 // const getAllPermission = async (id) => {
