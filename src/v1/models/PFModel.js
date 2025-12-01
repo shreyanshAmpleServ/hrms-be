@@ -1,6 +1,7 @@
-const { PrismaClient, Prisma } = require("@prisma/client");
+// const { PrismaClient, Prisma } = require("@prisma/client");
 const CustomError = require("../../utils/CustomError");
-
+const { prisma } = require("../../utils/prismaProxy");
+const { Prisma } = require("@prisma/client");
 const serializePFData = (data) => ({
   pf_name: data.pf_name || "",
   employer_contribution:
