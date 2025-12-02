@@ -716,7 +716,7 @@ const createUser = async (data) => {
     return completeUser;
   } catch (error) {
     console.log(error);
-    throw new CustomError(`Error creating user: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -799,7 +799,7 @@ const updateUser = async (id, data) => {
     return await getUserWithRole(updatedUser.id);
   } catch (error) {
     console.log(error);
-    throw new CustomError(`Error updating user: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
