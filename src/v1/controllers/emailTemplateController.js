@@ -10,23 +10,46 @@ const createEmailTemplate = async (req, res) => {
   }
 };
 
+// const getAllEmailTemplate = async (req, res, next) => {
+//   try {
+//     const { page, size, search, startDate, endDate } = req.query;
+//     const data = await emailTemplateService.getAllEmailTemplate(
+//       search,
+//       Number(page),
+//       Number(size),
+//       startDate || null,
+//       endDate || null
+//     );
+//     res.status(200).success(null, data);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const getAllEmailTemplate = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, size, search, startDate, endDate, type, channel } = req.query;
 
-    const result = await emailTemplateService.getAllEmailTemplate(
+    console.log("search:", search);
+    console.log("type:", type);
+    console.log("channel:", channel);
+    console.log("startDate:", startDate);
+    console.log("endDate:", endDate);
+
+    const data = await emailTemplateService.getAllEmailTemplate(
       search,
       Number(page),
       Number(size),
-      startDate && moment(startDate),
-      endDate && moment(endDate)
+      startDate,
+      endDate,
+      type,
+      channel
     );
-    res.status(200).success(null, result);
+    res.status(200).success(null, data);
   } catch (error) {
     next(error);
   }
 };
-
 const getEmailTemplateById = async (req, res) => {
   try {
     const result = await emailTemplateService.getEmailTemplateById(

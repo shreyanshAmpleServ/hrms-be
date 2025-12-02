@@ -455,53 +455,40 @@ const processImageToSquare = async (fileBuffer, mimeType, size = 512) => {
   }
 
   try {
-    console.log("Processing image to circular shape, size:", size);
+    console.log("Processing image to square shape, size:", size);
 
-    // Determine if the original is JPEG
     const isJpeg = mimeType === "image/jpeg" || mimeType === "image/jpg";
-
-    // Create circular mask
-    const circleShape = Buffer.from(
-      `<svg width="${size}" height="${size}">
-        <circle cx="${size / 2}" cy="${size / 2}" r="${size / 2}" fill="white"/>
-      </svg>`
-    );
 
     let sharpInstance = sharp(fileBuffer).resize(size, size, {
       fit: "cover",
       position: "center",
-      kernel: "lanczos3", // Higher quality resizing
+      kernel: "lanczos3",
     });
 
     let processedBuffer;
 
     if (isJpeg) {
-      // For JPEG, add white background and keep as JPEG
       processedBuffer = await sharpInstance
-        .flatten({ background: { r: 255, g: 255, b: 255 } }) // White background
-        .composite([
-          {
-            input: circleShape,
-            blend: "dest-in",
-          },
-        ])
-        .jpeg({ quality: 95, mozjpeg: true }) // High quality JPEG
+        .jpeg({
+          quality: 95,
+          chromaSubsampling: "4:4:4",
+          mozjpeg: true,
+        })
         .toBuffer();
     } else {
-      // For PNG/GIF/WebP, preserve transparency
       processedBuffer = await sharpInstance
-        .composite([
-          {
-            input: circleShape,
-            blend: "dest-in",
-          },
-        ])
-        .png({ quality: 100, compressionLevel: 6 }) // High quality PNG
+        .png({
+          quality: 100,
+          compressionLevel: 6,
+          palette: false,
+        })
         .toBuffer();
     }
 
     console.log(
-      "Image processed successfully, new size:",
+      "Image processed successfully, original size:",
+      fileBuffer.length,
+      "new size:",
       processedBuffer.length
     );
     return processedBuffer;

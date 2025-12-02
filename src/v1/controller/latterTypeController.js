@@ -25,17 +25,15 @@ const withTenantContext = (handler) => {
 
 const createLatterType = withTenantContext(async (req, res, next) => {
   try {
-    console.log("📝 Incoming request body:", req.body);
-    console.log("📎 File:", req.file ? "Yes" : "No");
+    console.log("Incoming request body:", req.body);
+    console.log("File:", req.file ? "Yes" : "No");
 
     if (!req.file) {
       throw new CustomError("No file uploaded", 400);
     }
 
-    // ✅ Use buffer directly (memory storage)
     const fileBuffer = req.file.buffer;
 
-    // Upload to Backblaze
     const fileUrl = await uploadToBackblaze(
       fileBuffer,
       req.file.originalname,
@@ -59,7 +57,6 @@ const createLatterType = withTenantContext(async (req, res, next) => {
       status: 201,
     });
   } catch (error) {
-    console.error("❌ Create error:", error);
     next(error);
   }
 });
@@ -83,8 +80,8 @@ const findLatterTypeById = withTenantContext(async (req, res, next) => {
 
 const updateLatterType = withTenantContext(async (req, res, next) => {
   try {
-    console.log("📝 Update request body:", req.body);
-    console.log("📎 File:", req.file ? "Yes" : "No");
+    console.log("Update request body:", req.body);
+    console.log("File:", req.file ? "Yes" : "No");
 
     const existingLatterType = await latterTypeService.findLatterTypeById(
       req.params.id
@@ -94,13 +91,10 @@ const updateLatterType = withTenantContext(async (req, res, next) => {
       throw new CustomError("Letter type not found", 404);
     }
 
-    // Keep existing file URL
     let fileUrl = existingLatterType.template_path;
 
-    // Upload new file if provided
     if (req.file) {
       try {
-        // ✅ Use buffer directly (memory storage)
         const fileBuffer = req.file.buffer;
 
         fileUrl = await uploadToBackblaze(
@@ -110,9 +104,8 @@ const updateLatterType = withTenantContext(async (req, res, next) => {
           "template_path"
         );
 
-        console.log("✅ File uploaded to Backblaze:", fileUrl);
+        console.log("File uploaded to Backblaze:", fileUrl);
       } catch (uploadError) {
-        console.error("❌ Upload error:", uploadError);
         throw new CustomError(
           `File upload failed: ${uploadError.message}`,
           500
@@ -139,7 +132,6 @@ const updateLatterType = withTenantContext(async (req, res, next) => {
       status: 200,
     });
   } catch (error) {
-    console.error("❌ Update error:", error);
     next(error);
   }
 });

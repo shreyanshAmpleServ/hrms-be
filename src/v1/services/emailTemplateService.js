@@ -17,13 +17,23 @@ const deleteEmailTemplate = async (id) => {
   return await emailTemplateModel.deleteEmailTemplate(id);
 };
 
-const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
+const getAllEmailTemplate = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  type,
+  channel
+) => {
   return await emailTemplateModel.getAllEmailTemplate(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    type,
+    channel
   );
 };
 

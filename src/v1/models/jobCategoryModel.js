@@ -1,8 +1,15 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck");
 
 const createJobCategory = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_job_category",
+      field: "job_category_name",
+      value: data.job_category_name,
+      errorMessage: "Job category already exists",
+    });
     const finalData = await prisma.hrms_m_job_category.create({
       data: {
         job_category_name: data.job_category_name || "",
@@ -18,7 +25,7 @@ const createJobCategory = async (data) => {
     return finalData;
   } catch (error) {
     console.log("Create job category ", error);
-    throw new CustomError(`Error creating job category: ${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -33,15 +40,19 @@ const findJobCategoryById = async (id) => {
     return data;
   } catch (error) {
     console.log("job category By Id  ", error);
-    throw new CustomError(
-      `Error finding job category by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
 const updateJobCategory = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_job_category",
+      field: "job_category_name",
+      value: data.job_category_name,
+      excludeId: id,
+      errorMessage: "Job category already exists",
+    });
     const updatedData = await prisma.hrms_m_job_category.update({
       where: { id: parseInt(id) },
       data: {
@@ -51,7 +62,7 @@ const updateJobCategory = async (id, data) => {
     });
     return updatedData;
   } catch (error) {
-    throw new CustomError(`Error updating job category: ${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 

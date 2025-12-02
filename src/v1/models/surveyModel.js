@@ -1,8 +1,15 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 
 const createSurvey = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_survey_master",
+      field: "survey_title",
+      value: data.survey_title,
+      errorMessage: "Survey title already exists",
+    });
     const finalData = await prisma.hrms_m_survey_master.create({
       data: {
         survey_title: data.survey_title || "",
@@ -21,7 +28,7 @@ const createSurvey = async (data) => {
     return finalData;
   } catch (error) {
     console.log("Create survey ", error);
-    throw new CustomError(`Error creating survey: ${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -42,6 +49,15 @@ const findSurveyById = async (id) => {
 
 const updateSurvey = async (id, data) => {
   try {
+    if (data.survey_title) {
+      await checkDuplicate({
+        model: "hrms_m_survey_master",
+        field: "survey_title",
+        value: data.survey_title,
+        excludeId: id,
+        errorMessage: "Survey title already exists",
+      });
+    }
     const updatedData = await prisma.hrms_m_survey_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -51,7 +67,7 @@ const updateSurvey = async (id, data) => {
     });
     return updatedData;
   } catch (error) {
-    throw new CustomError(`Error updating survey: ${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 

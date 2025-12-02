@@ -1,5 +1,6 @@
 // const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 //
 const { prisma } = require("../../utils/prismaProxy.js");
 
@@ -22,6 +23,12 @@ const serializeLeaveTypeMasterData = (data) => ({
 // Create a new leave type master
 const createLeaveType = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_leave_type_master",
+      field: "leave_type",
+      value: data.leave_type,
+      errorMessage: "Leave type already exists",
+    });
     const existing = await prisma.hrms_m_leave_type_master.findFirst({
       where: {
         leave_type: data.leave_type.trim(),
@@ -69,6 +76,12 @@ const findLeaveTypById = async (id) => {
 // Update leave type master
 const updateLeaveType = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_leave_type_master",
+      field: "leave_type",
+      value: data.leave_type,
+      errorMessage: "Leave type already exists",
+    });
     const leaveType = data.leave_type.trim();
 
     const duplicate = await prisma.hrms_m_leave_type_master.findFirst({

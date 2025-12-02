@@ -1,8 +1,15 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck");
 
 const createGrievanceType = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_grievance_type",
+      field: "grievance_type_name",
+      value: data.grievance_type_name,
+      errorMessage: "Grievance type already exists",
+    });
     const finalData = await prisma.hrms_m_grievance_type.create({
       data: {
         grievance_type_name: data.grievance_type_name || "",
@@ -16,10 +23,7 @@ const createGrievanceType = async (data) => {
     return finalData;
   } catch (error) {
     console.log("Create grievance type ", error);
-    throw new CustomError(
-      `Error creating grievance type: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -34,15 +38,19 @@ const findGrievanceTypeById = async (id) => {
     return data;
   } catch (error) {
     console.log("grievance type By Id  ", error);
-    throw new CustomError(
-      `Error finding grievance type by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
 const updateGrievanceType = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_grievance_type",
+      field: "grievance_type_name",
+      value: data.grievance_type_name,
+      excludeId: id,
+      errorMessage: "Grievance type already exists",
+    });
     const updatedData = await prisma.hrms_m_grievance_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -52,10 +60,7 @@ const updateGrievanceType = async (id, data) => {
     });
     return updatedData;
   } catch (error) {
-    throw new CustomError(
-      `Error updating grievance type: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -111,7 +116,7 @@ const getAllGrievanceType = async (page, size, search) => {
     };
   } catch (error) {
     console.log(error);
-    throw new CustomError("Error retrieving grievance type", 503);
+    throw new CustomError(error.message, 500);
   }
 };
 

@@ -1,21 +1,59 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkMultipleDuplicates } = require("../../utils/duplicateCheck");
+// const serializeProjectData = (data) => ({
+//   code: data.code,
+//   name: data.name || null,
+//   locked: data.locked || "N",
+//   valid_from: data.valid_from ? new Date(data.valid_from) : null,
+//   valid_to: data.valid_to ? new Date(data.valid_to) : null,
+//   employee_id: data.employee_id ? Number(data.employee_id) : null,
+//   is_active: data.is_active || "Y",
+//   createdby: data.createdby || 1,
 
-const serializeProjectData = (data) => ({
-  code: data.code,
-  name: data.name || null,
-  locked: data.locked || "N",
-  valid_from: data.valid_from ? new Date(data.valid_from) : null,
-  valid_to: data.valid_to ? new Date(data.valid_to) : null,
-  employee_id: data.employee_id ? Number(data.employee_id) : null,
-  is_active: data.is_active || "Y",
-  createdby: data.createdby || 1,
-  createdate: new Date(),
-  log_inst: data.log_inst || 1,
-});
+//   createdate: new Date(),
+//   log_inst: data.log_inst || 1,
+// });
+
+const serializeProjectData = (data) => {
+  return {
+    code: data.code,
+    name: data.name || null,
+    locked: data.locked || "N",
+    valid_from: data.valid_from ? new Date(data.valid_from) : null,
+    valid_to: data.valid_to ? new Date(data.valid_to) : null,
+    employee_id: data.employee_id ? Number(data.employee_id) : null,
+    is_active: data.is_active || "Y",
+    createdby: data.createdby || 1,
+    ValidTo: data.ValidTo
+      ? new Date(data.ValidTo)
+      : new Date("9999-12-31 23:59:59.999"),
+    ValidTo: data.ValidTo
+      ? new Date(data.ValidTo)
+      : new Date("9999-12-31 23:59:59.999"),
+    createdate: new Date(),
+    log_inst: data.log_inst || 1,
+  };
+};
 
 const createProject = async (data) => {
   try {
+    await checkMultipleDuplicates({
+      model: "hrms_m_projects",
+      fields: [
+        {
+          field: "code",
+          value: data.code,
+          errorMessage: "Project code already exists",
+        },
+        {
+          field: "name",
+          value: data.name,
+          errorMessage: "Project name already exists",
+        },
+      ],
+    });
+
     const result = await prisma.hrms_m_projects.create({
       data: serializeProjectData(data),
       include: {
@@ -30,6 +68,7 @@ const createProject = async (data) => {
     });
     return result;
   } catch (error) {
+    if (error instanceof CustomError) throw error;
     throw new CustomError(`Error creating project: ${error.message}`, 500);
   }
 };
@@ -130,6 +169,32 @@ const findProjectById = async (id) => {
 
 const updateProject = async (id, data) => {
   try {
+    const fieldsToCheck = [];
+
+    if (data.code) {
+      fieldsToCheck.push({
+        field: "code",
+        value: data.code,
+        errorMessage: "Project code already exists",
+      });
+    }
+
+    if (data.name) {
+      fieldsToCheck.push({
+        field: "name",
+        value: data.name,
+        errorMessage: "Project name already exists",
+      });
+    }
+
+    if (fieldsToCheck.length > 0) {
+      await checkMultipleDuplicates({
+        model: "hrms_m_projects",
+        fields: fieldsToCheck,
+        excludeId: id,
+      });
+    }
+
     const result = await prisma.hrms_m_projects.update({
       where: { id: parseInt(id) },
       data: {
@@ -149,6 +214,7 @@ const updateProject = async (id, data) => {
     });
     return result;
   } catch (error) {
+    if (error instanceof CustomError) throw error;
     throw new CustomError(`Error updating project: ${error.message}`, 500);
   }
 };

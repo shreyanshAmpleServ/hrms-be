@@ -1,7 +1,7 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const { parse } = require("dotenv");
+const { checkDuplicate } = require("../../utils/duplicateCheck");
 
 const serializeData = (data) => {
   return {
@@ -28,6 +28,12 @@ const serializeData = (data) => {
 // Create a new loan request
 const createGrievanceSubmission = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_d_grievance",
+      field: "employee_id",
+      value: data.employee_id,
+      errorMessage: "Employee already exists",
+    });
     await errorNotExist("hrms_d_employee", data.employee_id, "Employee");
     await errorNotExist("hrms_d_employee", data.assigned_to, "Assign to");
     const reqData = await prisma.hrms_d_grievance.create({

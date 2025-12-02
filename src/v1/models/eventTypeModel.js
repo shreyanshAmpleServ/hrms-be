@@ -1,9 +1,16 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const mockEventTypes = require("../../mock/eventType.mock.js");
+const { checkDuplicate } = require("../../utils/duplicateCheck");
 
 const createWorkEventType = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_work_life_event_type",
+      field: "event_type_name",
+      value: data.event_type_name,
+      errorMessage: "Work life event type already exists",
+    });
     const finalData = await prisma.hrms_m_work_life_event_type.create({
       data: {
         event_type_name: data.event_type_name || "",
@@ -19,10 +26,7 @@ const createWorkEventType = async (data) => {
     return finalData;
   } catch (error) {
     console.log("Create work life event type ", error);
-    throw new CustomError(
-      `Error creating work life event type: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -37,15 +41,19 @@ const findWorkEventTypeById = async (id) => {
     return data;
   } catch (error) {
     console.log("work life event type By Id  ", error);
-    throw new CustomError(
-      `Error finding work life event type by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(error.message, 503);
   }
 };
 
 const updateWorkEventType = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_work_life_event_type",
+      field: "event_type_name",
+      value: data.event_type_name,
+      excludeId: id,
+      errorMessage: "Work life event type already exists",
+    });
     const updatedData = await prisma.hrms_m_work_life_event_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -55,10 +63,7 @@ const updateWorkEventType = async (id, data) => {
     });
     return updatedData;
   } catch (error) {
-    throw new CustomError(
-      `Error updating work life event type: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
