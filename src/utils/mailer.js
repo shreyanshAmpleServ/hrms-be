@@ -80,7 +80,7 @@ const sendEmail = async ({ to, subject, html, log_inst }) => {
     console.log("To:", to);
     console.log("Subject:", subject);
 
-    const info = await transporter.sendMail({
+    await transporter.sendMail({
       from: config.smtp_username || process.env.SMTP_USERNAME,
       to,
       subject,

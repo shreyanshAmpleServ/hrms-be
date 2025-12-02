@@ -549,15 +549,6 @@ const createRequest = async (data) => {
       }`
     );
 
-    const reqData = await prisma.hrms_d_requests.create({
-      data: {
-        ...serializeRequestsData({ request_type, ...parentData }),
-        createdby: parentData.createdby || 1,
-        createdate: new Date(),
-        log_inst: parentData.log_inst || 1,
-      },
-    });
-
     const {
       workflow: workflowSteps,
       isGlobalWorkflow,
@@ -569,18 +560,30 @@ const createRequest = async (data) => {
     );
 
     if (!workflowSteps || workflowSteps.length === 0) {
-      throw new CustomError(
-        `You need to create an approval workflow for '${request_type}'${
+      console.log(
+        `No approval workflow found for '${request_type}'${
           requester.department_id
             ? ` in '${requester.hrms_employee_department?.department_name}' department`
             : requester.designation_id
             ? ` for '${requester.hrms_employee_designation?.designation_name}' designation`
             : ""
-        }, since none is defined and no fallback is available.
-        Please create a workflow in the HRMS settings.`,
-        400
+        }. Continuing without approval workflow.`
       );
+      return {
+        message: "Operation completed without approval workflow",
+        workflow_required: false,
+        request_created: false,
+      };
     }
+
+    const reqData = await prisma.hrms_d_requests.create({
+      data: {
+        ...serializeRequestsData({ request_type, ...parentData }),
+        createdby: parentData.createdby || 1,
+        createdate: new Date(),
+        log_inst: parentData.log_inst || 1,
+      },
+    });
 
     console.log(` Using ${workflowType} workflow for ${request_type}`);
     if (!isGlobalWorkflow && requester.hrms_employee_department) {
@@ -711,17 +714,28 @@ const createRequest = async (data) => {
         }
       );
 
-      await sendEmail({
-        to: firstApprover.email,
-        subject: template.subject,
-        html: template.body,
-        createdby: parentData.createdby,
-        log_inst: parentData.log_inst,
-      });
+      try {
+        await sendEmail({
+          to: firstApprover.email,
+          subject: template.subject,
+          html: template.body,
+          createdby: parentData.createdby,
+          log_inst: parentData.log_inst,
+        });
 
-      console.log(
-        ` [Email Sent] ${workflowType} workflow → ${firstApprover.email}`
-      );
+        console.log(
+          ` [Email Sent] ${workflowType} workflow → ${firstApprover.email}`
+        );
+      } catch (emailError) {
+        console.error(
+          ` [Email Failed] Failed to send email to ${firstApprover.email}:`,
+          emailError.message
+        );
+        console.log(
+          ` [Warning] Request created but email notification failed. Request will proceed.`
+        );
+      }
+
       console.log(
         `First Approver: ${firstApprover.full_name} (${
           firstApprover.hrms_employee_department?.department_name || "No Dept"
@@ -729,7 +743,11 @@ const createRequest = async (data) => {
       );
     }
 
-    return fullData;
+    return {
+      ...fullData,
+      workflow_required: true,
+      request_created: true,
+    };
   } catch (error) {
     console.error(" Error creating request:", error);
     throw new CustomError(`Error creating request: ${error.message}`, 500);
@@ -2098,13 +2116,23 @@ const takeActionOnRequest = async ({
           }
         );
 
-        await sendEmail({
-          to: requester.email,
-          subject: template.subject,
-          html: template.body,
-          createdby: acted_by,
-          log_inst: request.log_inst,
-        });
+        try {
+          await sendEmail({
+            to: requester.email,
+            subject: template.subject,
+            html: template.body,
+            createdby: acted_by,
+            log_inst: request.log_inst,
+          });
+          console.log(
+            ` [Email Sent] Notification sent to requester: ${requester.email}`
+          );
+        } catch (emailError) {
+          console.error(
+            ` [Email Failed] Failed to send email to requester ${requester.email}:`,
+            emailError.message
+          );
+        }
       }
 
       return { message: "Request rejected and closed." };
@@ -2291,13 +2319,23 @@ const takeActionOnRequest = async ({
           }
         );
 
-        await sendEmail({
-          to: requester.email,
-          subject: template.subject,
-          html: template.body,
-          createdby: acted_by,
-          log_inst: request.log_inst,
-        });
+        try {
+          await sendEmail({
+            to: requester.email,
+            subject: template.subject,
+            html: template.body,
+            createdby: acted_by,
+            log_inst: request.log_inst,
+          });
+          console.log(
+            ` [Email Sent] Notification sent to requester: ${requester.email}`
+          );
+        } catch (emailError) {
+          console.error(
+            ` [Email Failed] Failed to send email to requester ${requester.email}:`,
+            emailError.message
+          );
+        }
       }
 
       return {
@@ -2346,13 +2384,23 @@ const takeActionOnRequest = async ({
         `1Email Sent To Approver: ${nextApproverUser.email}, Subject: ${template.subject}`
       );
 
-      await sendEmail({
-        to: nextApproverUser.email,
-        subject: template.subject,
-        html: template.body,
-        createdby: acted_by,
-        log_inst: request.log_inst,
-      });
+      try {
+        await sendEmail({
+          to: nextApproverUser.email,
+          subject: template.subject,
+          html: template.body,
+          createdby: acted_by,
+          log_inst: request.log_inst,
+        });
+        console.log(
+          ` [Email Sent] Notification sent to next approver: ${nextApproverUser.email}`
+        );
+      } catch (emailError) {
+        console.error(
+          ` [Email Failed] Failed to send email to next approver ${nextApproverUser.email}:`,
+          emailError.message
+        );
+      }
       console.log("Email successfully sent to next approver.");
     }
 
@@ -2375,4 +2423,5 @@ module.exports = {
   takeActionOnRequest,
   findRequestByRequestUsers,
   findRequestByRequestTypeAndReferenceId,
+  getWorkflowForRequest,
 };
