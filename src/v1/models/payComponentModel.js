@@ -3,185 +3,298 @@ const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
 
-const serializePayComponentData = (data) => ({
-  component_name: data.component_name || "",
-  component_code: data.component_code || "",
-  component_type: data.component_type || "",
-  is_taxable: data.is_taxable || "Y",
-  is_statutory: data.is_statutory || "N",
-  is_active: data.is_active || "Y",
-  is_loan: data.is_loan || "N",
-  is_basic: data.is_basic || "N",
-  relief_amount: data.relief_amount || "",
-  relief_type: data.relief_type || "",
-  pay_or_deduct: data.pay_or_deduct || "P",
-  is_worklife_related: data.is_worklife_related || "N",
-  is_grossable: data.is_grossable || "N",
-  is_advance: data.is_advance || "N",
-  contribution_of_employee: data.contribution_of_employee,
-  employer_default_formula: data.employer_default_formula,
-  // tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : null,
-  tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : undefined,
-  gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : null,
-  factor: data.factor ? Number(data.factor) : null,
-  gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : undefined,
-  factor: data.factor ? Number(data.factor) : undefined,
-  payable_glaccount_id: data.payable_glaccount_id
-    ? Number(data.payable_glaccount_id)
-    : null,
-  project_id: data.project_id ? Number(data.project_id) : null,
-  project_id: data.project_id ? Number(data.project_id) : undefined,
+// const serializePayComponentData = (data) => ({
+//   component_name: data.component_name || "",
+//   component_code: data.component_code || "",
+//   component_type: data.component_type || "",
+//   is_taxable: data.is_taxable || "Y",
+//   is_statutory: data.is_statutory || "N",
+//   is_active: data.is_active || "Y",
+//   is_loan: data.is_loan || "N",
+//   is_basic: data.is_basic || "N",
+//   relief_amount: data.relief_amount || "",
+//   relief_type: data.relief_type || "",
+//   pay_or_deduct: data.pay_or_deduct || "P",
+//   is_worklife_related: data.is_worklife_related || "N",
+//   is_grossable: data.is_grossable || "N",
+//   is_advance: data.is_advance || "N",
+//   contribution_of_employee: data.contribution_of_employee,
+//   employer_default_formula: data.employer_default_formula,
+//   // tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : null,
+//   tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : undefined,
+//   gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : null,
+//   factor: data.factor ? Number(data.factor) : null,
+//   gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : undefined,
+//   factor: data.factor ? Number(data.factor) : undefined,
+//   payable_glaccount_id: data.payable_glaccount_id
+//     ? Number(data.payable_glaccount_id)
+//     : null,
+//   project_id: data.project_id ? Number(data.project_id) : null,
+//   project_id: data.project_id ? Number(data.project_id) : undefined,
 
-  // cost_center1_id: data.cost_center1_id ? Number(data.cost_center1_id) : null,
-  // cost_center2_id: data.cost_center2_id ? Number(data.cost_center2_id) : null,
-  // cost_center3_id: data.cost_center3_id ? Number(data.cost_center3_id) : null,
-  // cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
-  // cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
-  cost_center1_id: data.cost_center1_id
-    ? Number(data.cost_center1_id)
-    : undefined,
-  cost_center2_id: data.cost_center2_id
-    ? Number(data.cost_center2_id)
-    : undefined,
-  cost_center3_id: data.cost_center3_id
-    ? Number(data.cost_center3_id)
-    : undefined,
-  cost_center4_id: data.cost_center4_id
-    ? Number(data.cost_center4_id)
-    : undefined,
-  cost_center5_id: data.cost_center5_id
-    ? Number(data.cost_center5_id)
-    : undefined,
-  column_order: data.column_order ? Number(data.column_order) : null,
-  column_order: data.column_order ? Number(data.column_order) : undefined,
+//   // cost_center1_id: data.cost_center1_id ? Number(data.cost_center1_id) : null,
+//   // cost_center2_id: data.cost_center2_id ? Number(data.cost_center2_id) : null,
+//   // cost_center3_id: data.cost_center3_id ? Number(data.cost_center3_id) : null,
+//   // cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
+//   // cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
+//   cost_center1_id: data.cost_center1_id
+//     ? Number(data.cost_center1_id)
+//     : undefined,
+//   cost_center2_id: data.cost_center2_id
+//     ? Number(data.cost_center2_id)
+//     : undefined,
+//   cost_center3_id: data.cost_center3_id
+//     ? Number(data.cost_center3_id)
+//     : undefined,
+//   cost_center4_id: data.cost_center4_id
+//     ? Number(data.cost_center4_id)
+//     : undefined,
+//   cost_center5_id: data.cost_center5_id
+//     ? Number(data.cost_center5_id)
+//     : undefined,
+//   column_order: data.column_order ? Number(data.column_order) : null,
+//   column_order: data.column_order ? Number(data.column_order) : undefined,
 
-  execution_order: data.execution_order ? Number(data.execution_order) : null,
-  execution_order: data.execution_order
-    ? Number(data.execution_order)
-    : undefined,
+//   execution_order: data.execution_order ? Number(data.execution_order) : null,
+//   execution_order: data.execution_order
+//     ? Number(data.execution_order)
+//     : undefined,
 
-  visible_in_payslip: data.visible_in_payslip || "",
-  default_formula: data.default_formula || "",
-  formula_editable: data.formula_editable || "",
-  is_recurring: data.is_recurring || "",
-  component_subtype: data.component_subtype || "",
-  is_overtime_related: data.is_overtime_related || "N",
-  contributes_to_paye: data.contributes_to_paye || "N",
-  contributes_to_nssf: data.contributes_to_nssf || "N",
-  auto_fill: data.auto_fill || "N",
-  unpaid_leave: data.unpaid_leave || "N",
-});
+//   visible_in_payslip: data.visible_in_payslip || "",
+//   default_formula: data.default_formula || "",
+//   formula_editable: data.formula_editable || "",
+//   is_recurring: data.is_recurring || "",
+//   component_subtype: data.component_subtype || "",
+//   is_overtime_related: data.is_overtime_related || "N",
+//   contributes_to_paye: data.contributes_to_paye || "N",
+//   contributes_to_nssf: data.contributes_to_nssf || "N",
+//   auto_fill: data.auto_fill || "N",
+//   unpaid_leave: data.unpaid_leave || "N",
+// });
 
-// Create a new pay component
+// // Create a new pay component
+// // const createPayComponent = async (data) => {
+// //   try {
+// //     const totalCount = await prisma.hrms_m_pay_component.count({
+// //       where: {
+// //         OR: [
+// //           { component_name: toLowerCase(data.component_name) },
+// //           { component_code: toLowerCase(data.component_code) },
+// //         ],
+// //       },
+// //     });
+// //     if (totalCount > 0) {
+// //       throw new CustomError(
+// //         "Pay component with the same name or code already exists",
+// //         400
+// //       );
+// //     }
+// //     const result = await prisma.$transaction(async (prisma) => {
+// //       const reqData = await prisma.hrms_m_pay_component.create({
+// //         data: {
+// //           ...serializePayComponentData(data),
+// //           createdby: data.createdby || 1,
+// //           createdate: new Date(),
+// //           log_inst: data.log_inst || 1,
+// //         },
+// //         include: {
+// //           pay_component_tax: {
+// //             select: {
+// //               id: true,
+// //               pay_component_id: true,
+// //               rule_type: true,
+// //             },
+// //           },
+// //           pay_component_project: {
+// //             select: {
+// //               id: true,
+// //               code: true,
+// //               name: true,
+// //             },
+// //           },
+// //           // pay_component_for_line: {
+// //           //   select: {
+// //           //     id: true,
+// //           //     component_name: true,
+// //           //     component_code: true,
+// //           //     component_type: true,
+// //           //   },
+// //           // },
+// //           pay_component_cost_center1: {
+// //             select: {
+// //               id: true,
+// //               name: true,
+// //               dimension_id: true,
+// //             },
+// //           },
+// //           pay_component_cost_center2: {
+// //             select: {
+// //               id: true,
+// //               name: true,
+// //               dimension_id: true,
+// //             },
+// //           },
+// //           pay_component_cost_center3: {
+// //             select: {
+// //               id: true,
+// //               name: true,
+// //               dimension_id: true,
+// //             },
+// //           },
+// //           pay_component_cost_center4: {
+// //             select: {
+// //               id: true,
+// //               name: true,
+// //               dimension_id: true,
+// //             },
+// //           },
+// //           pay_component_cost_center5: {
+// //             select: {
+// //               id: true,
+// //               name: true,
+// //               dimension_id: true,
+// //             },
+// //           },
+// //         },
+// //       });
+// //       // Step 2: Dynamically add column to monthly payroll table
+// //       // const columnName = prisma.sql([`"${data.component_code}"`]); // Safe quoting
+// //       // const alterQuery = prisma.raw(`
+// //       //   ALTER TABLE monthly_payroll_processing
+// //       //   ADD COLUMN ${data.component_code} VARCHAR(255) DEFAULT NULL;
+// //       // `);
+
+// //       if (!/^\d+$/.test(data.component_code)) {
+// //         throw new Error("Invalid column name. Must be numeric.");
+// //       }
+
+// //       await prisma.$executeRawUnsafe(`
+// //   ALTER TABLE hrms_d_monthly_payroll_processing
+// //   ADD [${data.component_code}] DECIMAL(18,4) NULL
+// // `);
+// //       return reqData;
+// //     });
+// //     return result;
+// //   } catch (error) {
+// //     if (error.code === "23505" || error.message.includes("already exists")) {
+// //       throw new CustomError(
+// //         `Component code already used as column in payroll processing`,
+// //         400
+// //       );
+// //     }
+// //     throw new CustomError(
+// //       `Error creating pay component: ${error.message}`,
+// //       500
+// //     );
+// //   }
+// // };
+
 // const createPayComponent = async (data) => {
 //   try {
-//     const totalCount = await prisma.hrms_m_pay_component.count({
+//     data.component_name = data.component_name.trim();
+//     data.component_code = data.component_code.trim();
+
+//     if (!/^\d+$/.test(data.component_code)) {
+//       throw new CustomError("Invalid component code. Must be numeric.", 400);
+//     }
+
+//     const existing = await prisma.hrms_m_pay_component.findFirst({
 //       where: {
 //         OR: [
-//           { component_name: toLowerCase(data.component_name) },
-//           { component_code: toLowerCase(data.component_code) },
+//           { component_name: { equals: data.component_name } },
+//           { component_code: { equals: data.component_code } },
 //         ],
 //       },
 //     });
-//     if (totalCount > 0) {
+
+//     if (existing) {
+//       if (
+//         existing.component_code.toLowerCase() ===
+//         data.component_code.toLowerCase()
+//       ) {
+//         throw new CustomError(
+//           "Pay component with the same code already exists",
+//           400
+//         );
+//       } else {
+//         throw new CustomError(
+//           "Pay component with the same name already exists",
+//           400
+//         );
+//       }
+//     }
+
+//     const columnExists = await prisma.$queryRawUnsafe(`
+//       SELECT 1
+//       FROM INFORMATION_SCHEMA.COLUMNS
+//       WHERE TABLE_NAME = 'hrms_d_monthly_payroll_processing'
+//       AND COLUMN_NAME = '${data.component_code}'
+//     `);
+
+//     const result = await prisma.$transaction(
+//       async (prisma) => {
+//         const reqData = await prisma.hrms_m_pay_component.create({
+//           data: {
+//             ...serializePayComponentData(data),
+//             createdby: data.createdby || 1,
+//             createdate: new Date(),
+//             log_inst: data.log_inst || 1,
+//           },
+//           include: {
+//             pay_component_tax: true,
+//             pay_component_project: true,
+//             pay_component_cost_center1: true,
+//             pay_component_cost_center2: true,
+//             pay_component_cost_center3: true,
+//             pay_component_cost_center4: true,
+//             pay_component_cost_center5: true,
+//             pay_component_for_line: true,
+//             hrms_m_pay_component_formula: true,
+//           },
+//         });
+
+//         if (!columnExists || columnExists.length === 0) {
+//           await prisma.$executeRawUnsafe(`
+//             ALTER TABLE hrms_d_monthly_payroll_processing
+//             ADD [${data.component_code}] DECIMAL(18,4) NULL
+//           `);
+//           console.log(`Column [${data.component_code}] added to payroll table`);
+//         } else {
+//           console.log(
+//             `Column [${data.component_code}] already exists in payroll table`
+//           );
+//         }
+
+//         return reqData;
+//       },
+//       {
+//         maxWait: 10000,
+//         timeout: 30000,
+//       }
+//     );
+
+//     const requester_id = data.createdby;
+//     const requesterExists = await prisma.hrms_d_employee.findUnique({
+//       where: { id: Number(requester_id) },
+//       select: { id: true, full_name: true, employee_code: true },
+//     });
+
+//     if (!requesterExists) {
+//       await prisma.hrms_m_pay_component.delete({
+//         where: { id: result.id },
+//       });
 //       throw new CustomError(
-//         "Pay component with the same name or code already exists",
-//         400
+//         `Cannot create pay component: User ID ${requester_id} is not a valid employee.`,
+//         403
 //       );
 //     }
-//     const result = await prisma.$transaction(async (prisma) => {
-//       const reqData = await prisma.hrms_m_pay_component.create({
-//         data: {
-//           ...serializePayComponentData(data),
-//           createdby: data.createdby || 1,
-//           createdate: new Date(),
-//           log_inst: data.log_inst || 1,
-//         },
-//         include: {
-//           pay_component_tax: {
-//             select: {
-//               id: true,
-//               pay_component_id: true,
-//               rule_type: true,
-//             },
-//           },
-//           pay_component_project: {
-//             select: {
-//               id: true,
-//               code: true,
-//               name: true,
-//             },
-//           },
-//           // pay_component_for_line: {
-//           //   select: {
-//           //     id: true,
-//           //     component_name: true,
-//           //     component_code: true,
-//           //     component_type: true,
-//           //   },
-//           // },
-//           pay_component_cost_center1: {
-//             select: {
-//               id: true,
-//               name: true,
-//               dimension_id: true,
-//             },
-//           },
-//           pay_component_cost_center2: {
-//             select: {
-//               id: true,
-//               name: true,
-//               dimension_id: true,
-//             },
-//           },
-//           pay_component_cost_center3: {
-//             select: {
-//               id: true,
-//               name: true,
-//               dimension_id: true,
-//             },
-//           },
-//           pay_component_cost_center4: {
-//             select: {
-//               id: true,
-//               name: true,
-//               dimension_id: true,
-//             },
-//           },
-//           pay_component_cost_center5: {
-//             select: {
-//               id: true,
-//               name: true,
-//               dimension_id: true,
-//             },
-//           },
-//         },
-//       });
-//       // Step 2: Dynamically add column to monthly payroll table
-//       // const columnName = prisma.sql([`"${data.component_code}"`]); // Safe quoting
-//       // const alterQuery = prisma.raw(`
-//       //   ALTER TABLE monthly_payroll_processing
-//       //   ADD COLUMN ${data.component_code} VARCHAR(255) DEFAULT NULL;
-//       // `);
 
-//       if (!/^\d+$/.test(data.component_code)) {
-//         throw new Error("Invalid column name. Must be numeric.");
-//       }
-
-//       await prisma.$executeRawUnsafe(`
-//   ALTER TABLE hrms_d_monthly_payroll_processing
-//   ADD [${data.component_code}] DECIMAL(18,4) NULL
-// `);
-//       return reqData;
-//     });
 //     return result;
 //   } catch (error) {
 //     if (error.code === "23505" || error.message.includes("already exists")) {
-//       throw new CustomError(
-//         `Component code already used as column in payroll processing`,
-//         400
-//       );
+//       throw new CustomError(`Component name or code already used`, 400);
 //     }
+
 //     throw new CustomError(
 //       `Error creating pay component: ${error.message}`,
 //       500
@@ -189,13 +302,81 @@ const serializePayComponentData = (data) => ({
 //   }
 // };
 
+// ===== simplified serialize function (no duplicate keys) =====
+const serializePayComponentData = (data) => ({
+  component_name: data.component_name || "",
+  component_code: data.component_code || "",
+  component_type: data.component_type || "",
+  is_taxable: data.is_taxable ?? "Y",
+  is_statutory: data.is_statutory ?? "N",
+  is_active: data.is_active ?? "Y",
+  is_loan: data.is_loan ?? "N",
+  is_basic: data.is_basic ?? "N",
+  relief_amount: data.relief_amount ?? null,
+  relief_type: data.relief_type ?? null,
+  pay_or_deduct: data.pay_or_deduct ?? "P",
+  is_worklife_related: data.is_worklife_related ?? "N",
+  is_grossable: data.is_grossable ?? "N",
+  is_advance: data.is_advance ?? "N",
+  contribution_of_employee: data.contribution_of_employee ?? null,
+  employer_default_formula: data.employer_default_formula ?? null,
+  tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : null,
+  gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : null,
+  factor: data.factor ? Number(data.factor) : null,
+  payable_glaccount_id: data.payable_glaccount_id
+    ? Number(data.payable_glaccount_id)
+    : null,
+  project_id: data.project_id ? Number(data.project_id) : null,
+  cost_center1_id: data.cost_center1_id ? Number(data.cost_center1_id) : null,
+  cost_center2_id: data.cost_center2_id ? Number(data.cost_center2_id) : null,
+  cost_center3_id: data.cost_center3_id ? Number(data.cost_center3_id) : null,
+  cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
+  cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
+  column_order: data.column_order ? Number(data.column_order) : null,
+  execution_order: data.execution_order ? Number(data.execution_order) : null,
+  visible_in_payslip: data.visible_in_payslip ?? "Y",
+  default_formula: data.default_formula ?? null,
+  formula_editable: data.formula_editable ?? "Y",
+  is_recurring: data.is_recurring ?? "Y",
+  component_subtype: data.component_subtype ?? null,
+  is_overtime_related: data.is_overtime_related ?? "N",
+  contributes_to_paye: data.contributes_to_paye ?? "N",
+  contributes_to_nssf: data.contributes_to_nssf ?? "N",
+  auto_fill: data.auto_fill ?? "N",
+  unpaid_leave: data.unpaid_leave ?? "N",
+});
+
 const createPayComponent = async (data) => {
   try {
-    data.component_name = data.component_name.trim();
-    data.component_code = data.component_code.trim();
+    if (!data.component_name || !data.component_code) {
+      throw new CustomError(
+        "component_name and component_code are required",
+        400
+      );
+    }
+
+    data.component_name = String(data.component_name).trim();
+    data.component_code = String(data.component_code).trim();
 
     if (!/^\d+$/.test(data.component_code)) {
       throw new CustomError("Invalid component code. Must be numeric.", 400);
+    }
+
+    const requesterId = Number(data.createdby ?? 1);
+    if (Number.isNaN(requesterId) || requesterId <= 0) {
+      throw new CustomError("Invalid createdby value", 400);
+    }
+
+    const requesterExists = await prisma.hrms_d_employee.findUnique({
+      where: { id: requesterId },
+      select: { id: true },
+    });
+
+    if (!requesterExists) {
+      throw new CustomError(
+        `Cannot create pay component: User ID ${requesterId} is not a valid employee.`,
+        403
+      );
     }
 
     const existing = await prisma.hrms_m_pay_component.findFirst({
@@ -209,8 +390,9 @@ const createPayComponent = async (data) => {
 
     if (existing) {
       if (
+        existing.component_code &&
         existing.component_code.toLowerCase() ===
-        data.component_code.toLowerCase()
+          data.component_code.toLowerCase()
       ) {
         throw new CustomError(
           "Pay component with the same code already exists",
@@ -232,13 +414,13 @@ const createPayComponent = async (data) => {
     `);
 
     const result = await prisma.$transaction(
-      async (prisma) => {
-        const reqData = await prisma.hrms_m_pay_component.create({
+      async (tx) => {
+        const created = await tx.hrms_m_pay_component.create({
           data: {
             ...serializePayComponentData(data),
-            createdby: data.createdby || 1,
+            createdby: requesterId,
             createdate: new Date(),
-            log_inst: data.log_inst || 1,
+            log_inst: data.log_inst ?? 1,
           },
           include: {
             pay_component_tax: true,
@@ -254,46 +436,38 @@ const createPayComponent = async (data) => {
         });
 
         if (!columnExists || columnExists.length === 0) {
-          await prisma.$executeRawUnsafe(`
-            ALTER TABLE hrms_d_monthly_payroll_processing
-            ADD [${data.component_code}] DECIMAL(18,4) NULL
-          `);
-          console.log(`Column [${data.component_code}] added to payroll table`);
+          try {
+            await tx.$executeRawUnsafe(`
+              ALTER TABLE hrms_d_monthly_payroll_processing
+              ADD [${data.component_code}] DECIMAL(18,4) NULL
+            `);
+            console.log(
+              `Column [${data.component_code}] added to payroll table`
+            );
+          } catch (sqlErr) {
+            console.error("ALTER TABLE failed:", sqlErr.message);
+            throw new Error(`Failed to add payroll column: ${sqlErr.message}`);
+          }
         } else {
-          console.log(
-            `Column [${data.component_code}] already exists in payroll table`
-          );
+          console.log(`Column [${data.component_code}] already exists`);
         }
 
-        return reqData;
+        return created;
       },
-      {
-        maxWait: 10000,
-        timeout: 30000,
-      }
+      { maxWait: 10000, timeout: 30000 }
     );
-
-    const requester_id = data.createdby;
-    const requesterExists = await prisma.hrms_d_employee.findUnique({
-      where: { id: Number(requester_id) },
-      select: { id: true, full_name: true, employee_code: true },
-    });
-
-    if (!requesterExists) {
-      await prisma.hrms_m_pay_component.delete({
-        where: { id: result.id },
-      });
-      throw new CustomError(
-        `Cannot create pay component: User ID ${requester_id} is not a valid employee.`,
-        403
-      );
-    }
 
     return result;
   } catch (error) {
-    if (error.code === "23505" || error.message.includes("already exists")) {
+    // Prisma unique violation or custom messages
+    if (
+      error.code === "23505" ||
+      (error.message && error.message.includes("already exists"))
+    ) {
       throw new CustomError(`Component name or code already used`, 400);
     }
+
+    if (error instanceof CustomError) throw error;
 
     throw new CustomError(
       `Error creating pay component: ${error.message}`,
