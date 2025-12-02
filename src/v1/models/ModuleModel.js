@@ -1,10 +1,17 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const mockModules = require("../../mock/module.mock.js");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 
 // Create a new Module Related To
 const createModuleRelatedTo = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_module",
+      field: "module_name",
+      value: data.module_name,
+      errorMessage: "Module name already exists",
+    });
     const calls = await prisma.hrms_m_module.create({
       data: {
         ...data,
@@ -15,16 +22,20 @@ const createModuleRelatedTo = async (data) => {
     });
     return calls;
   } catch (error) {
-    throw new CustomError(
-      `Error creating Module Related To : ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
 // Update a Module Related To
 const updateModuleRelatedTo = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_module",
+      field: "module_name",
+      value: data.module_name,
+      excludeId: id,
+      errorMessage: "Module name already exists",
+    });
     const updatedCalls = await prisma.hrms_m_module.update({
       where: { id: parseInt(id) },
       data: {
@@ -34,10 +45,7 @@ const updateModuleRelatedTo = async (id, data) => {
     });
     return updatedCalls;
   } catch (error) {
-    throw new CustomError(
-      `Error updating Module Related To : ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
