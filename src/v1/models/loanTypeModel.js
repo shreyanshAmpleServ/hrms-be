@@ -9,9 +9,16 @@ const serializeData = (data) => {
   };
 };
 
-// Create a new loan type
 const createLoanType = async (data) => {
   try {
+    const existing = await prisma.hrms_m_loan_type.findFirst({
+      where: {
+        loan_name: data.loan_name,
+      },
+    });
+    if (existing) {
+      throw new CustomError("Loan name already exists", 400);
+    }
     const reqData = await prisma.hrms_m_loan_type.create({
       data: {
         ...serializeData(data),
@@ -27,7 +34,6 @@ const createLoanType = async (data) => {
   }
 };
 
-// Find a loan type by ID
 const findLoanTypeById = async (id) => {
   try {
     const reqData = await prisma.hrms_m_loan_type.findUnique({
@@ -45,9 +51,19 @@ const findLoanTypeById = async (id) => {
   }
 };
 
-// Update a loan type
 const updateLoanType = async (id, data) => {
   try {
+    const existing = await prisma.hrms_m_loan_type.findFirst({
+      where: {
+        loan_name: data.loan_name,
+        NOT: { id: parseInt(id) },
+      },
+    });
+
+    if (existing) {
+      throw new CustomError("Loan name already exists", 400);
+    }
+
     const updatedLoanType = await prisma.hrms_m_loan_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -56,13 +72,13 @@ const updateLoanType = async (id, data) => {
         updatedate: new Date(),
       },
     });
+
     return updatedLoanType;
   } catch (error) {
-    throw new CustomError(`Error updating loan type: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
-// Delete a loan type
 const deleteLoanType = async (id) => {
   try {
     await prisma.hrms_m_loan_type.delete({
@@ -80,7 +96,6 @@ const deleteLoanType = async (id) => {
   }
 };
 
-// Get all loan types
 const getAllLoanType = async (
   search,
   page,

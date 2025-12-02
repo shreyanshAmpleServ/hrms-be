@@ -1194,7 +1194,6 @@ const serializeJobData = (data) => {
   let hiringStageValue = null;
   let documentTypeValue = null;
 
-  // Handle arrays for hiring stages
   if (
     Array.isArray(data.hiring_stage_ids) &&
     data.hiring_stage_ids.length > 0
@@ -1204,7 +1203,6 @@ const serializeJobData = (data) => {
     hiringStageValue = String(data.hiring_stage_id);
   }
 
-  // Handle arrays for document types
   if (
     Array.isArray(data.document_type_ids) &&
     data.document_type_ids.length > 0
@@ -1216,7 +1214,6 @@ const serializeJobData = (data) => {
     documentTypeValue = String(data.document_type_id);
   }
 
-  // ONLY return fields that exist in your Prisma model
   const serialized = {
     job_title: data.job_title || "",
     description: data.description || "",
@@ -1224,7 +1221,6 @@ const serializeJobData = (data) => {
     is_internal: data.is_internal || false,
   };
 
-  // Optional fields - only add if provided
   if (data.department_id) serialized.department_id = Number(data.department_id);
   if (data.designation_id)
     serialized.designation_id = Number(data.designation_id);
@@ -1619,7 +1615,6 @@ const findJobPostingById = async (id) => {
 
 const updateJobPosting = async (id, data) => {
   try {
-    // Validate hiring stages
     if (
       data.hiring_stage_ids &&
       Array.isArray(data.hiring_stage_ids) &&

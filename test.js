@@ -1,42 +1,57 @@
-const uploadToBackblaze = async (
-  fileBuffer,
-  originalName,
-  mimeType,
-  folder = "general",
-  processImage = true, // New parameter
-  squareSize = 512 // New parameter for square dimensions
-) => {
+const createLoanType = async (data) => {
   try {
-    await b2.authorize();
-    const bucketId = process.env.BACKBLAZE_B2_BUCKET_ID;
-    if (!bucketId) throw new Error("BACKBLAZE_B2_BUCKET_ID is not set");
-
-    // Process image to square if enabled
-    let finalBuffer = fileBuffer;
-    if (processImage) {
-      finalBuffer = await processImageToSquare(
-        fileBuffer,
-        mimeType,
-        squareSize
-      );
-    }
-
-    const ext = path.extname(originalName);
-    const fileName = `${folder}/${uuidv4()}${ext}`;
-    const { data: uploadData } = await b2.getUploadUrl({ bucketId });
-
-    await b2.uploadFile({
-      uploadUrl: uploadData.uploadUrl,
-      uploadAuthToken: uploadData.authorizationToken,
-      fileName,
-      data: finalBuffer, // Use processed buffer
-      mime: mimeType,
+    // Check if loan_name already exists
+    const existing = await prisma.hrms_m_loan_type.findFirst({
+      where: {
+        loan_name: data.loan_name,
+      },
     });
 
-    const fileUrl = `https://DCC-HRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
-    console.log("File uploaded successfully:", fileUrl);
-    return fileUrl;
-  } catch (err) {
-    // ... rest of error handling
+    if (existing) {
+      throw new CustomError("Loan name already exists", 400);
+    }
+
+    const reqData = await prisma.hrms_m_loan_type.create({
+      data: {
+        ...serializeData(data),
+        createdby: data.createdby || 1,
+        createdate: new Date(),
+        log_inst: data.log_inst || 1,
+      },
+    });
+
+    return reqData;
+  } catch (error) {
+    console.error("Error creating loan type:", error);
+    throw new CustomError(`Error creating loan type: ${error.message}`, 500);
+  }
+};
+
+const updateLoanType = async (id, data) => {
+  try {
+    // Check duplicate loan_name with different id
+    const existing = await prisma.hrms_m_loan_type.findFirst({
+      where: {
+        loan_name: data.loan_name,
+        NOT: { id: parseInt(id) },
+      },
+    });
+
+    if (existing) {
+      throw new CustomError("Loan name already exists", 400);
+    }
+
+    const updatedLoanType = await prisma.hrms_m_loan_type.update({
+      where: { id: parseInt(id) },
+      data: {
+        ...serializeData(data),
+        updatedby: data.updatedby || 1,
+        updatedate: new Date(),
+      },
+    });
+
+    return updatedLoanType;
+  } catch (error) {
+    throw new CustomError(`Error updating loan type: ${error.message}`, 500);
   }
 };
