@@ -67,13 +67,33 @@ const deleteEmployee = async (id) => {
   return await employeeModel.deleteEmployee(id);
 };
 
+// const getAllEmployee = async (
+//   page,
+//   size,
+//   search,
+//   startDate,
+//   endDate,
+//   status
+// ) => {
+//   return await employeeModel.getAllEmployee(
+//     page,
+//     size,
+//     search,
+//     startDate,
+//     endDate,
+//     status
+//   );
+// };
+
 const getAllEmployee = async (
   page,
   size,
   search,
   startDate,
   endDate,
-  status
+  status,
+  priority,
+  managerId
 ) => {
   return await employeeModel.getAllEmployee(
     page,
@@ -81,7 +101,9 @@ const getAllEmployee = async (
     search,
     startDate,
     endDate,
-    status
+    status,
+    priority,
+    managerId
   );
 };
 
