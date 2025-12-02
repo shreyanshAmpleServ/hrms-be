@@ -189,7 +189,17 @@ const deleteCostCenter = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
-    throw new CustomError(`Error deleting cost center: ${error.message}`, 500);
+    if (error.code === "P2003") {
+      throw new CustomError(
+        "This record is connected to other data. Please remove that first.",
+        400
+      );
+    } else {
+      throw new CustomError(
+        `Error deleting cost center: ${error.message}`,
+        500
+      );
+    }
   }
 };
 

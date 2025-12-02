@@ -1,18 +1,34 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
-const serializeProjectData = (data) => ({
-  code: data.code,
-  name: data.name || null,
-  locked: data.locked || "N",
-  valid_from: data.valid_from ? new Date(data.valid_from) : null,
-  valid_to: data.valid_to ? new Date(data.valid_to) : null,
-  employee_id: data.employee_id ? Number(data.employee_id) : null,
-  is_active: data.is_active || "Y",
-  createdby: data.createdby || 1,
-  createdate: new Date(),
-  log_inst: data.log_inst || 1,
-});
+// const serializeProjectData = (data) => ({
+//   code: data.code,
+//   name: data.name || null,
+//   locked: data.locked || "N",
+//   valid_from: data.valid_from ? new Date(data.valid_from) : null,
+//   valid_to: data.valid_to ? new Date(data.valid_to) : null,
+//   employee_id: data.employee_id ? Number(data.employee_id) : null,
+//   is_active: data.is_active || "Y",
+//   createdby: data.createdby || 1,
+
+//   createdate: new Date(),
+//   log_inst: data.log_inst || 1,
+// });
+
+const serializeProjectData = (data) => {
+  return {
+    code: data.code,
+    name: data.name || null,
+    locked: data.locked || "N",
+    valid_from: data.valid_from ? new Date(data.valid_from) : null,
+    valid_to: data.valid_to ? new Date(data.valid_to) : null,
+    employee_id: data.employee_id ? Number(data.employee_id) : null,
+    is_active: data.is_active || "Y",
+    createdby: data.createdby || 1,
+    createdate: new Date(),
+    log_inst: data.log_inst || 1,
+  };
+};
 
 const createProject = async (data) => {
   try {

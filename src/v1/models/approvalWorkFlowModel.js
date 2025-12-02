@@ -412,7 +412,6 @@ const getAllApprovalWorkFlowByRequest = async (
     const results = [];
     const seenApprovers = new Set();
 
-    // Helper function to add workflows without duplicate approvers
     const addWorkflows = (workflows) => {
       workflows.forEach((wf) => {
         if (!seenApprovers.has(wf.approver_id)) {
@@ -423,7 +422,6 @@ const getAllApprovalWorkFlowByRequest = async (
     };
 
     if (department_id && designation_id) {
-      // Priority 1: Exact match (both department AND designation)
       const exactMatchWorkflows =
         await prisma.hrms_d_approval_work_flow.findMany({
           where: {
@@ -437,7 +435,6 @@ const getAllApprovalWorkFlowByRequest = async (
         });
       addWorkflows(exactMatchWorkflows);
 
-      // Priority 2: Department only (designation is null)
       const deptOnlyWorkflows = await prisma.hrms_d_approval_work_flow.findMany(
         {
           where: {
@@ -452,7 +449,6 @@ const getAllApprovalWorkFlowByRequest = async (
       );
       addWorkflows(deptOnlyWorkflows);
 
-      // Priority 3: Designation only (department is null)
       const designOnlyWorkflows =
         await prisma.hrms_d_approval_work_flow.findMany({
           where: {
@@ -466,7 +462,6 @@ const getAllApprovalWorkFlowByRequest = async (
         });
       addWorkflows(designOnlyWorkflows);
 
-      // Priority 4: Global workflows (both null)
       const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
@@ -490,7 +485,6 @@ const getAllApprovalWorkFlowByRequest = async (
     }
 
     if (department_id) {
-      // Department specific workflows
       const deptWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
@@ -502,7 +496,6 @@ const getAllApprovalWorkFlowByRequest = async (
       });
       addWorkflows(deptWorkflows);
 
-      // Global workflows
       const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
@@ -537,7 +530,6 @@ const getAllApprovalWorkFlowByRequest = async (
       });
       addWorkflows(designWorkflows);
 
-      // Global workflows
       const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
@@ -560,7 +552,6 @@ const getAllApprovalWorkFlowByRequest = async (
       return results;
     }
 
-    // No filters - return global workflows only
     const workflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: {
         request_type,
