@@ -145,7 +145,15 @@ const deleteEmailTemplate = async (id) => {
   }
 };
 
-const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
+const getAllEmailTemplate = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  type,
+  channel
+) => {
   try {
     const totalCountCheck = await prisma.hrms_d_templates.count();
     if (totalCountCheck === 0) {
@@ -182,18 +190,37 @@ const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    if (search) {
+
+    if (search && search.trim() !== "") {
+      const searchTerm = search.trim();
       filters.OR = [
-        { name: { contains: search.toLowerCase() } },
-        { subject: { contains: search.toLowerCase() } },
-        { body: { contains: search.toLowerCase() } },
+        { name: { contains: searchTerm } },
+        { subject: { contains: searchTerm } },
+        { body: { contains: searchTerm } },
+        { key: { contains: searchTerm } },
       ];
     }
+
+    if (type && type.trim() !== "") {
+      filters.type = type.trim();
+    }
+
+    if (channel && channel.trim() !== "") {
+      filters.channel = channel.trim();
+    }
+
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);
+
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = { gte: start, lte: end };
+        start.setHours(0, 0, 0, 0);
+        end.setHours(23, 59, 59, 999);
+
+        filters.createdate = {
+          gte: start,
+          lte: end,
+        };
       }
     }
 
@@ -240,6 +267,8 @@ const getAllEmailTemplate = async (search, page, size, startDate, endDate) => {
       totalCount,
     };
   } catch (error) {
+    console.error("Error in getAllEmailTemplate:", error);
+    if (error instanceof CustomError) throw error;
     throw new CustomError("Error retrieving email templates", 503);
   }
 };

@@ -141,20 +141,21 @@ const {
   uploadToBackblaze,
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
-const fs = require("fs");
 
 const createTravelExpense = async (req, res, next) => {
   try {
     console.log("Incoming request body:", req.body);
-    if (!req.file) throw new CustomError("No file uploaded", 400);
 
-    const fileBuffer = await fs.promises.readFile(req.file.path);
-    const fileUrl = await uploadToBackblaze(
-      fileBuffer,
-      req.file.originalname,
-      req.file.mimetype,
-      "travel_expenses"
-    );
+    let fileUrl = "";
+
+    if (req.file) {
+      fileUrl = await uploadToBackblaze(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        "travel_expenses"
+      );
+    }
 
     const travelData = {
       ...req.body,
@@ -166,6 +167,7 @@ const createTravelExpense = async (req, res, next) => {
     const reqData = await travelExpenseService.createTravelExpense(travelData);
     res.status(201).success("Travel expense created successfully", reqData);
   } catch (error) {
+    if (error instanceof CustomError) throw error;
     next(error);
   }
 };
@@ -190,47 +192,37 @@ const updateTravelExpense = async (req, res, next) => {
         req.params.id,
         req.tenantDb
       );
+
     if (!existingTravelExpense) {
       throw new CustomError("Travel expense not found", 404);
     }
 
-    let fileUrl = existingTravelExpense.attachment_path;
-
-    const safeDeleteFromBackblaze = async (fileUrl) => {
-      if (!fileUrl) return;
-
-      try {
-        console.log(`Attempting to delete file: ${fileUrl}`);
-        await deleteFromBackblaze(fileUrl);
-        console.log(`Successfully deleted file: ${fileUrl}`);
-      } catch (error) {
-        console.warn(`Failed to delete old file:`, error.message);
-        console.warn(`File URL: ${fileUrl}`);
-        console.warn(`Error details:`, error);
-      }
-    };
+    let fileUrl = existingTravelExpense.attachment_path || "";
 
     if (req.file) {
       try {
-        const fileBuffer = await fs.promises.readFile(req.file.path);
-
         fileUrl = await uploadToBackblaze(
-          fileBuffer,
+          req.file.buffer,
           req.file.originalname,
           req.file.mimetype,
           "travel_expenses"
         );
         console.log(`New file uploaded: ${fileUrl}`);
 
+        // Delete old file if exists and different
         if (
           existingTravelExpense.attachment_path &&
           existingTravelExpense.attachment_path !== fileUrl
         ) {
-          await safeDeleteFromBackblaze(existingTravelExpense.attachment_path);
+          try {
+            await deleteFromBackblaze(existingTravelExpense.attachment_path);
+          } catch (err) {
+            console.warn("Failed to delete old file:", err.message);
+          }
         }
       } catch (error) {
         console.error("Failed to upload new file:", error.message);
-        throw new Error("Failed to upload new file");
+        throw new CustomError("Failed to upload file", 500);
       }
     }
 
@@ -247,6 +239,7 @@ const updateTravelExpense = async (req, res, next) => {
     );
     res.status(200).success("Travel expense updated successfully", result);
   } catch (error) {
+    if (error instanceof CustomError) throw error;
     next(error);
   }
 };
@@ -272,6 +265,7 @@ const deleteTravelExpense = async (req, res, next) => {
 
     res.status(200).success("Travel expense deleted successfully", null);
   } catch (error) {
+    if (error instanceof CustomError) throw error;
     next(error);
   }
 };
@@ -299,7 +293,7 @@ const updateTravelExpenseStatus = async (req, res, next) => {
 
     const status = req.body.status;
     const rejection_reason = req.body.rejection_reason || "";
-    console.log("User : ", req.user);
+
     const data = {
       status,
       rejection_reason,
@@ -317,6 +311,7 @@ const updateTravelExpenseStatus = async (req, res, next) => {
       .status(200)
       .success("Travel expense status updated successfully", reqData);
   } catch (error) {
+    if (error instanceof CustomError) throw error;
     next(error);
   }
 };

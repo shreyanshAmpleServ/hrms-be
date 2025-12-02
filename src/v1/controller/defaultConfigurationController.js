@@ -23,7 +23,8 @@ const createDefaultConfiguration = async (req, res, next) => {
         buffer,
         file.originalname,
         file.mimetype,
-        "company_logo"
+        "company_logo",
+        false
       );
     }
 
@@ -34,7 +35,8 @@ const createDefaultConfiguration = async (req, res, next) => {
         buffer,
         file.originalname,
         file.mimetype,
-        "company_signature"
+        "company_signature",
+        false
       );
     }
     console.log("company url", companyLogo, companySignature);
@@ -81,7 +83,8 @@ const updateDefaultConfiguration = async (req, res, next) => {
         buffer,
         file.originalname,
         file.mimetype,
-        "company_logo"
+        "company_logo",
+        false
       );
       if (existingData.company_logo) {
         await deleteFromBackblaze(existingData.company_logo);
@@ -94,7 +97,8 @@ const updateDefaultConfiguration = async (req, res, next) => {
         buffer,
         file.originalname,
         file.mimetype,
-        "company_signature"
+        "company_signature",
+        false
       );
       if (existingData.company_signature) {
         await deleteFromBackblaze(existingData.company_signature);
@@ -241,7 +245,8 @@ const createOrUpdateDefaultConfiguration = async (req, res, next) => {
           file.buffer,
           file.originalname,
           file.mimetype,
-          "company_logo"
+          "company_logo",
+          false
         );
         console.log(`New company logo uploaded: ${companyLogoUrl}`);
 
@@ -272,7 +277,8 @@ const createOrUpdateDefaultConfiguration = async (req, res, next) => {
           file.buffer,
           file.originalname,
           file.mimetype,
-          "company_signature"
+          "company_signature",
+          false
         );
         console.log(`New company signature uploaded: ${companySignatureUrl}`);
 
@@ -284,7 +290,8 @@ const createOrUpdateDefaultConfiguration = async (req, res, next) => {
         ) {
           await safeDeleteFromBackblaze(
             existingData.company_signature,
-            "company signature"
+            "company signature",
+            false
           );
         }
       } catch (error) {
