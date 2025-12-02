@@ -28,6 +28,9 @@ const serializeProjectData = (data) => {
     ValidTo: data.ValidTo
       ? new Date(data.ValidTo)
       : new Date("9999-12-31 23:59:59.999"),
+    ValidTo: data.ValidTo
+      ? new Date(data.ValidTo)
+      : new Date("9999-12-31 23:59:59.999"),
     createdate: new Date(),
     log_inst: data.log_inst || 1,
   };
