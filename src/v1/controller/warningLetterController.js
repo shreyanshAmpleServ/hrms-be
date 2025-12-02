@@ -6,22 +6,21 @@ const {
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
 
-const fs = require("fs").promises;
-
 const createWarningLetter = async (req, res, next) => {
   try {
     console.log("Incoming request body:", req.body);
 
-    if (!req.file) throw new CustomError("No file uploaded", 400);
+    let fileUrl = "";
 
-    const fileBuffer = await fs.readFile(req.file.path);
-
-    const fileUrl = await uploadToBackblaze(
-      fileBuffer,
-      req.file.originalname,
-      req.file.mimetype,
-      "warning_letters"
-    );
+    if (req.file) {
+      fileUrl = await uploadToBackblaze(
+        req.file.buffer,
+        req.file.originalname,
+        req.file.mimetype,
+        "warning_letters",
+        false
+      );
+    }
 
     const warningLetterData = {
       ...req.body,
@@ -63,31 +62,16 @@ const updateWarningLetter = async (req, res, next) => {
     );
     if (!existingLetter) throw new CustomError("Warning letter not found", 404);
 
-    let fileUrl = existingLetter.attachment_path;
-
-    const safeDeleteFromBackblaze = async (fileUrl) => {
-      if (!fileUrl) return;
-
-      try {
-        console.log(`Attempting to delete file: ${fileUrl}`);
-        await deleteFromBackblaze(fileUrl);
-        console.log(`Successfully deleted file: ${fileUrl}`);
-      } catch (error) {
-        console.warn(`Failed to delete old file:`, error.message);
-        console.log(`File URL: ${fileUrl}`);
-        console.log(`Error details:`, error);
-      }
-    };
+    let fileUrl = existingLetter.attachment_path || "";
 
     if (req.file) {
       try {
-        const fileBuffer = await fs.readFile(req.file.path);
-
         fileUrl = await uploadToBackblaze(
-          fileBuffer,
+          req.file.buffer,
           req.file.originalname,
           req.file.mimetype,
-          "warning_letters"
+          "warning_letters",
+          false
         );
         console.log(`New file uploaded: ${fileUrl}`);
 
@@ -95,11 +79,16 @@ const updateWarningLetter = async (req, res, next) => {
           existingLetter.attachment_path &&
           existingLetter.attachment_path !== fileUrl
         ) {
-          await safeDeleteFromBackblaze(existingLetter.attachment_path);
+          try {
+            await deleteFromBackblaze(existingLetter.attachment_path);
+            console.log(`Deleted old file: ${existingLetter.attachment_path}`);
+          } catch (error) {
+            console.warn(`Failed to delete old file:`, error.message);
+          }
         }
       } catch (error) {
         console.error("Failed to upload new file:", error.message);
-        throw new Error("Failed to upload new file");
+        throw new CustomError("Failed to upload file", 500);
       }
     }
 
@@ -155,8 +144,8 @@ const getAllWarningLetters = async (req, res, next) => {
       search,
       Number(page),
       Number(size),
-      startDate && moment(startDate),
-      endDate && moment(endDate)
+      startDate || null,
+      endDate || null
     );
     res.status(200).success(null, data);
   } catch (error) {

@@ -465,6 +465,7 @@
 
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 
 const findUserByEmailForLogin = async (tenantPrisma, email) => {
   try {
@@ -602,6 +603,12 @@ const getUserWithRole = async (userId, is_password = false) => {
 
 const createUser = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_user",
+      field: "email",
+      value: data.email,
+      errorMessage: "Email already exists",
+    });
     if (data.employee_id) {
       const existingUser = await prisma.hrms_m_user.findFirst({
         where: { employee_id: Number(data.employee_id) },
@@ -709,12 +716,21 @@ const createUser = async (data) => {
     return completeUser;
   } catch (error) {
     console.log(error);
-    throw new CustomError(`Error creating user: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
 const updateUser = async (id, data) => {
   try {
+    if (data.email) {
+      await checkDuplicate({
+        model: "hrms_m_user",
+        field: "email",
+        value: data.email,
+        excludeId: id,
+        errorMessage: "Email already exists",
+      });
+    }
     if (data.employee_id) {
       const employee = await prisma.hrms_d_employee.findUnique({
         where: { id: Number(data.employee_id) },
@@ -783,7 +799,7 @@ const updateUser = async (id, data) => {
     return await getUserWithRole(updatedUser.id);
   } catch (error) {
     console.log(error);
-    throw new CustomError(`Error updating user: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
