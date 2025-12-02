@@ -1,36 +1,174 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-const { createRequest } = require("./requestsModel");
+const { createRequest, getWorkflowForRequest } = require("./requestsModel");
 
 if (!prisma) {
   throw new Error("Prisma client failed to initialize");
 }
 
-const serializeEmployeeKPIData = (data, defaultEmploymentType = null) => ({
-  employee_id: Number(data.employee_id),
-  reviewer_id: Number(data.reviewer_id),
-  review_date: data.review_date ? new Date(data.review_date) : new Date(),
-  review_remarks: data.review_remarks || "",
-  next_review_date: data.next_review_date
-    ? new Date(data.next_review_date)
-    : null,
-  employment_type: data.employment_type || defaultEmploymentType || null,
-  contract_expiry_date: data.contract_expiry_date
-    ? new Date(data.contract_expiry_date)
-    : null,
-  employment_remarks: data.employment_remarks || "",
-  rating: data.rating || 0,
-  revise_component_assignment:
-    data.revise_component_assignment === true ||
-    data.revise_component_assignment === "Y"
-      ? "Y"
-      : "N",
-  status: data.status || "Pending",
-  last_kpi_id: data.last_kpi_id ? Number(data.last_kpi_id) : null,
-});
+const serializeEmployeeKPIData = (data, defaultEmploymentType = null) => {
+  const serialized = {
+    employee_id: Number(data.employee_id),
+    reviewer_id: Number(data.reviewer_id),
+    review_date: data.review_date ? new Date(data.review_date) : new Date(),
+    review_remarks: data.review_remarks || "",
+    next_review_date: data.next_review_date
+      ? new Date(data.next_review_date)
+      : null,
+    employment_type: data.employment_type || defaultEmploymentType || null,
+    contract_expiry_date: data.contract_expiry_date
+      ? new Date(data.contract_expiry_date)
+      : null,
+    employment_remarks: data.employment_remarks || "",
+    rating: data.rating || 0,
+    revise_component_assignment:
+      data.revise_component_assignment === true ||
+      data.revise_component_assignment === "Y"
+        ? "Y"
+        : "N",
+    last_kpi_id: data.last_kpi_id ? Number(data.last_kpi_id) : null,
+  };
+  if (data.status !== undefined) {
+    serialized.status = data.status;
+  }
+  return serialized;
+};
+
+const approveKPIInTransaction = async (tx, kpiId, approverId) => {
+  const kpi = await tx.hrms_d_employee_kpi.findUnique({
+    where: { id: Number(kpiId) },
+    include: {
+      kpi_contents: true,
+      kpi_component_assignment: {
+        include: { kpi_component_lines: true },
+      },
+      kpi_attachments: true,
+    },
+  });
+
+  if (!kpi) {
+    throw new CustomError("KPI not found", 404);
+  }
+
+  await tx.hrms_d_employee_kpi.update({
+    where: { id: Number(kpiId) },
+    data: { status: "A", updatedate: new Date() },
+  });
+
+  await tx.hrms_d_employee_kpi.updateMany({
+    where: {
+      employee_id: kpi.employee_id,
+      id: { not: Number(kpiId) },
+      status: "A",
+    },
+    data: { status: "Inactive", updatedate: new Date() },
+  });
+
+  const updateEmployeeData = {};
+  if (kpi.employment_type)
+    updateEmployeeData.employment_type = kpi.employment_type;
+  if (kpi.kpi_component_assignment?.department_id) {
+    updateEmployeeData.department_id =
+      kpi.kpi_component_assignment.department_id;
+  }
+  if (kpi.kpi_component_assignment?.designation_id) {
+    updateEmployeeData.designation_id =
+      kpi.kpi_component_assignment.designation_id;
+  }
+  if (kpi.kpi_component_assignment?.position) {
+    updateEmployeeData.work_location = kpi.kpi_component_assignment.position;
+  }
+
+  if (Object.keys(updateEmployeeData).length > 0) {
+    await tx.hrms_d_employee.update({
+      where: { id: kpi.employee_id },
+      data: updateEmployeeData,
+    });
+  }
+
+  if (kpi.revise_component_assignment === "Y" && kpi.kpi_component_assignment) {
+    const newComponentAssignment =
+      await tx.hrms_d_employee_pay_component_assignment_header.create({
+        data: {
+          employee_id: kpi.employee_id,
+          effective_from:
+            kpi.kpi_component_assignment.effective_from || new Date(),
+          effective_to: kpi.kpi_component_assignment.effective_to,
+          department_id: kpi.kpi_component_assignment.department_id,
+          position_id: null,
+          status: "A",
+          remarks: `Created from Employee KPI #${kpi.id}`,
+          createdby: approverId,
+          createdate: new Date(),
+        },
+      });
+
+    let lineNum = 1;
+    for (const line of kpi.kpi_component_assignment.kpi_component_lines) {
+      await tx.hrms_d_employee_pay_component_assignment_line.create({
+        data: {
+          parent_id: newComponentAssignment.id,
+          line_num: lineNum++,
+          pay_component_id: line.pay_component_id,
+          amount: line.amount,
+          type_value: line.amount,
+          is_taxable: "Y",
+          is_recurring: "Y",
+          component_type: "O",
+          createdby: approverId,
+          createdate: new Date(),
+        },
+      });
+    }
+  }
+
+  await tx.hrms_d_employee_kpi_attachments.updateMany({
+    where: { employee_kpi_id: Number(kpiId) },
+    data: { status: "Verified" },
+  });
+
+  for (const attachment of kpi.kpi_attachments) {
+    await tx.hrms_d_document_upload.create({
+      data: {
+        employee_id: kpi.employee_id,
+        document_type: attachment.kpi_attachment_doc_type?.name || "",
+        document_path: attachment.attachment_url || "",
+        document_number: attachment.document_name || "",
+        issued_date: attachment.issue_date,
+        expiry_date: attachment.expiry_date,
+        is_mandatory: "Y",
+        document_owner_type: "employee",
+        document_owner_id: kpi.employee_id,
+        createdby: approverId,
+        createdate: new Date(),
+      },
+    });
+  }
+};
 
 const createEmployeeKPI = async (data) => {
   try {
+    const reviewer = await prisma.hrms_d_employee.findUnique({
+      where: { id: Number(data.reviewer_id) },
+      select: {
+        department_id: true,
+        designation_id: true,
+      },
+    });
+
+    const { workflow: workflowSteps } = await getWorkflowForRequest(
+      "kpi_approval",
+      reviewer?.department_id,
+      reviewer?.designation_id
+    );
+
+    const needsWorkflow = workflowSteps && workflowSteps.length > 0;
+    const initialStatus = needsWorkflow ? "P" : "A";
+
+    console.log(
+      `KPI Workflow Check: needsWorkflow=${needsWorkflow}, initialStatus=${initialStatus}`
+    );
+
     const kpiHeaderId = await prisma.$transaction(
       async (tx) => {
         const employee = await tx.hrms_d_employee.findUnique({
@@ -41,7 +179,7 @@ const createEmployeeKPI = async (data) => {
         const lastKPI = await tx.hrms_d_employee_kpi.findFirst({
           where: {
             employee_id: Number(data.employee_id),
-            status: "Active",
+            status: "A",
           },
           orderBy: { createdate: "desc" },
           include: {
@@ -65,12 +203,17 @@ const createEmployeeKPI = async (data) => {
 
         const rating = totalWeightedAchieved / 20;
 
+        const serializedData = serializeEmployeeKPIData(
+          data,
+          employee?.employment_type
+        );
+        const { status: _, ...dataWithoutStatus } = serializedData;
         const kpiHeader = await tx.hrms_d_employee_kpi.create({
           data: {
-            ...serializeEmployeeKPIData(data, employee?.employment_type),
+            ...dataWithoutStatus,
             rating: rating,
             last_kpi_id: lastKPI?.id || null,
-            status: "Pending",
+            status: initialStatus,
             createdby: data.createdby || 1,
             createdate: new Date(),
             log_inst: data.log_inst || 1,
@@ -126,7 +269,7 @@ const createEmployeeKPI = async (data) => {
             await tx.hrms_d_employee_pay_component_assignment_header.findFirst({
               where: {
                 employee_id: Number(data.employee_id),
-                status: "Active",
+                status: "A",
               },
               orderBy: { createdate: "desc" },
               include: {
@@ -158,7 +301,7 @@ const createEmployeeKPI = async (data) => {
                 effective_to: data.component_assignment.effective_to
                   ? new Date(data.component_assignment.effective_to)
                   : null,
-                status: "Pending",
+                status: "P",
                 last_component_assignment_id:
                   lastComponentAssignment?.id || null,
                 change_percentage:
@@ -237,7 +380,7 @@ const createEmployeeKPI = async (data) => {
                 expiry_date: attachment.expiry_date
                   ? new Date(attachment.expiry_date)
                   : null,
-                status: "Pending",
+                status: "P",
                 remarks: attachment.remarks || "",
                 attachment_url: attachment.attachment_url || "",
                 createdby: data.createdby || 1,
@@ -247,6 +390,14 @@ const createEmployeeKPI = async (data) => {
           }
         }
 
+        if (!needsWorkflow) {
+          console.log(`Auto-approving KPI ${kpiHeader.id} (no workflow found)`);
+          await approveKPIInTransaction(tx, kpiHeader.id, data.createdby || 1);
+          console.log(`KPI ${kpiHeader.id} auto-approved successfully`);
+        } else {
+          console.log(`KPI ${kpiHeader.id} requires workflow approval`);
+        }
+
         return kpiHeader.id;
       },
       {
@@ -254,13 +405,15 @@ const createEmployeeKPI = async (data) => {
       }
     );
 
-    await createRequest({
-      requester_id: Number(data.reviewer_id),
-      request_type: "kpi_approval",
-      reference_id: kpiHeaderId,
-      createdby: data.createdby || 1,
-      log_inst: data.log_inst || 1,
-    });
+    if (needsWorkflow) {
+      await createRequest({
+        requester_id: Number(data.reviewer_id),
+        request_type: "kpi_approval",
+        reference_id: kpiHeaderId,
+        createdby: data.createdby || 1,
+        log_inst: data.log_inst || 1,
+      });
+    }
 
     const result = await findEmployeeKPIById(kpiHeaderId);
     return result;
@@ -296,7 +449,7 @@ const approveEmployeeKPI = async (kpiId, approverId) => {
         where: {
           employee_id: kpi.employee_id,
           id: { not: Number(kpiId) },
-          status: "Active",
+          status: "A",
         },
         data: { status: "Inactive", updatedate: new Date() },
       });
@@ -337,7 +490,7 @@ const approveEmployeeKPI = async (kpiId, approverId) => {
               effective_to: kpi.kpi_component_assignment.effective_to,
               department_id: kpi.kpi_component_assignment.department_id,
               position_id: null,
-              status: "Active",
+              status: "A",
               remarks: `Created from Employee KPI #${kpi.id}`,
               createdby: approverId,
               createdate: new Date(),
@@ -466,7 +619,7 @@ const getLastKPIForEmployee = async (employeeId) => {
     const lastKPI = await prisma.hrms_d_employee_kpi.findFirst({
       where: {
         employee_id: Number(employeeId),
-        status: "Active",
+        status: "A",
       },
       orderBy: { createdate: "desc" },
       include: {
@@ -485,7 +638,7 @@ const getLastComponentAssignmentForEmployee = async (employeeId) => {
       await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
         where: {
           employee_id: Number(employeeId),
-          status: "Active",
+          status: "A",
         },
         orderBy: { createdate: "desc" },
         include: {
@@ -720,7 +873,7 @@ const getAllEmployeeKPI = async (
 //             await tx.hrms_d_employee_pay_component_assignment_header.findFirst({
 //               where: {
 //                 employee_id: Number(data.employee_id),
-//                 status: "Active",
+//                 status: "A",
 //               },
 //               orderBy: { createdate: "desc" },
 //               include: {
@@ -752,7 +905,7 @@ const getAllEmployeeKPI = async (
 //                 effective_to: data.component_assignment.effective_to
 //                   ? new Date(data.component_assignment.effective_to)
 //                   : null,
-//                 status: "Pending",
+//                 status: "P",
 //                 last_component_assignment_id:
 //                   lastComponentAssignment?.id || null,
 //                 change_percentage:
@@ -835,7 +988,7 @@ const getAllEmployeeKPI = async (
 //                 expiry_date: attachment.expiry_date
 //                   ? new Date(attachment.expiry_date)
 //                   : null,
-//                 status: "Pending",
+//                 status: "P",
 //                 remarks: attachment.remarks || "",
 //                 attachment_url: attachment.attachment_url || "",
 //                 createdby: data.createdby || 1,
@@ -860,6 +1013,27 @@ const getAllEmployeeKPI = async (
 
 const updateEmployeeKPI = async (id, data) => {
   try {
+    const reviewer = await prisma.hrms_d_employee.findUnique({
+      where: { id: Number(data.reviewer_id) },
+      select: {
+        department_id: true,
+        designation_id: true,
+      },
+    });
+
+    const { workflow: workflowSteps } = await getWorkflowForRequest(
+      "kpi_approval",
+      reviewer?.department_id,
+      reviewer?.designation_id
+    );
+
+    const needsWorkflow = workflowSteps && workflowSteps.length > 0;
+    const updateStatus = needsWorkflow ? "P" : "A";
+
+    console.log(
+      `KPI Update Workflow Check: needsWorkflow=${needsWorkflow}, updateStatus=${updateStatus}`
+    );
+
     const kpiId = await prisma.$transaction(
       async (tx) => {
         const existingKPI = await tx.hrms_d_employee_kpi.findUnique({
@@ -897,11 +1071,17 @@ const updateEmployeeKPI = async (id, data) => {
 
         const rating = totalWeightedAchieved / 20;
 
+        const serializedData = serializeEmployeeKPIData(
+          data,
+          employee?.employment_type
+        );
+        const { status: _, ...dataWithoutStatus } = serializedData;
         const updatedKPI = await tx.hrms_d_employee_kpi.update({
           where: { id: Number(id) },
           data: {
-            ...serializeEmployeeKPIData(data, employee?.employment_type),
+            ...dataWithoutStatus,
             rating: rating,
+            status: updateStatus,
             updatedby: data.updatedby || data.createdby || 1,
             updatedate: new Date(),
           },
@@ -984,7 +1164,7 @@ const updateEmployeeKPI = async (id, data) => {
                 expiry_date: attachment.expiry_date
                   ? new Date(attachment.expiry_date)
                   : null,
-                status: "Pending",
+                status: "P",
                 remarks: attachment.remarks || "",
                 attachment_url: attachment.attachment_url || "",
                 createdby: data.createdby || 1,
@@ -994,6 +1174,16 @@ const updateEmployeeKPI = async (id, data) => {
           }
         }
 
+        if (!needsWorkflow) {
+          console.log(
+            `Auto-approving KPI ${updatedKPI.id} (no workflow found)`
+          );
+          await approveKPIInTransaction(tx, updatedKPI.id, data.createdby || 1);
+          console.log(`KPI ${updatedKPI.id} auto-approved successfully`);
+        } else {
+          console.log(`KPI ${updatedKPI.id} requires workflow approval`);
+        }
+
         return updatedKPI.id;
       },
       {
@@ -1001,13 +1191,15 @@ const updateEmployeeKPI = async (id, data) => {
       }
     );
 
-    await createRequest({
-      requester_id: Number(data.reviewer_id),
-      request_type: "kpi_approval",
-      reference_id: kpiId,
-      createdby: data.createdby || 1,
-      log_inst: data.log_inst || 1,
-    });
+    if (needsWorkflow) {
+      await createRequest({
+        requester_id: Number(data.reviewer_id),
+        request_type: "kpi_approval",
+        reference_id: kpiId,
+        createdby: data.createdby || 1,
+        log_inst: data.log_inst || 1,
+      });
+    }
 
     const result = await findEmployeeKPIById(kpiId);
     return result;
