@@ -25,6 +25,9 @@ const serializeProjectData = (data) => {
     employee_id: data.employee_id ? Number(data.employee_id) : null,
     is_active: data.is_active || "Y",
     createdby: data.createdby || 1,
+    ValidTo: data.ValidTo
+      ? new Date(data.ValidTo)
+      : new Date("9999-12-31 23:59:59.999"),
     createdate: new Date(),
     log_inst: data.log_inst || 1,
   };
