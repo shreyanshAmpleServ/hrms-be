@@ -1,5 +1,6 @@
 const { prisma, ensureTenantContext } = require("../../utils/prismaProxy");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck");
 
 const generateDocumentCode = async () => {
   try {
@@ -61,6 +62,12 @@ const generateDocumentCode = async () => {
 
 const createDocType = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_document_type",
+      field: "name",
+      value: data.name,
+      errorMessage: "Document type already exists",
+    });
     const finalData = await prisma.hrms_m_document_type.create({
       data: {
         name: data.name || "",
@@ -79,10 +86,7 @@ const createDocType = async (data) => {
     return finalData;
   } catch (error) {
     console.log("Create document type ", error);
-    throw new CustomError(
-      `Error creating document type: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -97,10 +101,7 @@ const findDocTypeById = async (id) => {
     return data;
   } catch (error) {
     console.log("document type By Id  ", error);
-    throw new CustomError(
-      `Error finding document type by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(error.message, 503);
   }
 };
 
@@ -125,6 +126,15 @@ const findDocTypeById = async (id) => {
 const updateDocType = async (id, data, tenantDb) => {
   return ensureTenantContext(tenantDb, async () => {
     try {
+      if (data.name) {
+        await checkDuplicate({
+          model: "hrms_m_document_type",
+          field: "name",
+          value: data.name,
+          excludeId: id,
+          errorMessage: "Document type already exists",
+        });
+      }
       const updatedData = await prisma.hrms_m_document_type.update({
         where: { id: parseInt(id) },
         data: {
@@ -134,10 +144,7 @@ const updateDocType = async (id, data, tenantDb) => {
       });
       return updatedData;
     } catch (error) {
-      throw new CustomError(
-        `Error updating document type: ${error.message}`,
-        500
-      );
+      throw new CustomError(error.message, 500);
     }
   });
 };
@@ -207,7 +214,7 @@ const getAllDocType = async (
     };
   } catch (error) {
     console.log(error);
-    throw new CustomError("Error retrieving document type", 503);
+    throw new CustomError(error.message, 503);
   }
 };
 

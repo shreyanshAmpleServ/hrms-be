@@ -1,6 +1,7 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("./requestsModel");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 
 // Serialize asset assignment data
 const serializeAssetAssignment = (data) => ({
@@ -16,6 +17,12 @@ const serializeAssetAssignment = (data) => ({
 // Create a new asset assignment
 const createAssetAssignment = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_d_asset_assignment",
+      field: "asset_name",
+      value: data.asset_name,
+      errorMessage: "Asset name already exists",
+    });
     const created = await prisma.hrms_d_asset_assignment.create({
       data: {
         ...serializeAssetAssignment(data),
@@ -41,18 +48,12 @@ const createAssetAssignment = async (data) => {
       requester_id: reqData.employee_id,
       request_type: "asset_request",
       reference_id: reqData.id,
-      // request_data:
-      //   reqData.reason ||
-      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });
     return reqData;
   } catch (error) {
-    throw new CustomError(
-      `Error creating asset assignment: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -77,16 +78,22 @@ const findAssetAssignmentById = async (id) => {
     }
     return reqData;
   } catch (error) {
-    throw new CustomError(
-      `Error finding asset assignment by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(error.message, 503);
   }
 };
 
 // Update an asset assignment
 const updateAssetAssignment = async (id, data) => {
   try {
+    if (data.asset_name) {
+      await checkDuplicate({
+        model: "hrms_d_asset_assignment",
+        field: "asset_name",
+        value: data.asset_name,
+        excludeId: id,
+        errorMessage: "Asset name already exists",
+      });
+    }
     const updated = await prisma.hrms_d_asset_assignment.update({
       where: { id: parseInt(id) },
       data: {
@@ -109,10 +116,7 @@ const updateAssetAssignment = async (id, data) => {
       },
     });
   } catch (error) {
-    throw new CustomError(
-      `Error updating asset assignment: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
