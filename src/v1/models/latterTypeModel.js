@@ -1,8 +1,15 @@
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 const { prisma } = require("../../utils/prismaProxy.js");
 
 const createLatterType = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_letter_type",
+      field: "letter_name",
+      value: data.letter_name,
+      errorMessage: "Letter type name already exists",
+    });
     const finalData = await prisma.hrms_m_letter_type.create({
       data: {
         letter_name: data.letter_name || "",
@@ -17,7 +24,7 @@ const createLatterType = async (data) => {
     return finalData;
   } catch (error) {
     console.error("Create letter type error:", error);
-    throw new CustomError(`Error creating letter type: ${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -32,16 +39,21 @@ const findLatterTypeById = async (id) => {
     return data;
   } catch (error) {
     console.error("Find letter type error:", error);
-    throw new CustomError(
-      `Error finding letter type by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(error.message, 503);
   }
 };
 
 const updateLatterType = async (id, data) => {
   try {
-    // Remove id from data if it exists
+    if (data.letter_name) {
+      await checkDuplicate({
+        model: "hrms_m_letter_type",
+        field: "letter_name",
+        value: data.letter_name,
+        excludeId: id,
+        errorMessage: "Letter type name already exists",
+      });
+    }
     const { id: _, ...updateData } = data;
 
     const updatedData = await prisma.hrms_m_letter_type.update({
@@ -55,7 +67,7 @@ const updateLatterType = async (id, data) => {
     return updatedData;
   } catch (error) {
     console.error("Update letter type error:", error);
-    throw new CustomError(`Error updating letter type: ${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -71,10 +83,7 @@ const deleteLatterType = async (id) => {
         400
       );
     } else {
-      throw new CustomError(
-        error.meta?.constraint || "Error deleting letter type",
-        500
-      );
+      throw new CustomError(error.message, 500);
     }
   }
 };

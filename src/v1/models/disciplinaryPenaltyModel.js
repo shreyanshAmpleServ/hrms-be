@@ -1,8 +1,15 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck");
 
 const createDisciplinaryPenalty = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_disciplinary_penalty",
+      field: "penalty_type",
+      value: data.penalty_type,
+      errorMessage: "Disciplinary penalty already exists",
+    });
     const finalData = await prisma.hrms_m_disciplinary_penalty.create({
       data: {
         penalty_type: data.penalty_type || "",
@@ -18,10 +25,7 @@ const createDisciplinaryPenalty = async (data) => {
     return finalData;
   } catch (error) {
     console.log("Create disciplinary penalty ", error);
-    throw new CustomError(
-      `Error creating disciplinary penalty: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -45,6 +49,13 @@ const findDisciplinaryPenaltyById = async (id) => {
 
 const updateDisciplinaryPenalty = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_disciplinary_penalty",
+      field: "penalty_type",
+      value: data.penalty_type,
+      excludeId: id,
+      errorMessage: "Disciplinary penalty already exists",
+    });
     const updatedData = await prisma.hrms_m_disciplinary_penalty.update({
       where: { id: parseInt(id) },
       data: {
@@ -54,10 +65,7 @@ const updateDisciplinaryPenalty = async (id, data) => {
     });
     return updatedData;
   } catch (error) {
-    throw new CustomError(
-      `Error updating disciplinary penalty: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 

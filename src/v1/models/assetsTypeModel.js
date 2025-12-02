@@ -1,8 +1,15 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 
 const createAssetsType = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_asset_type",
+      field: "asset_type_name",
+      value: data.asset_type_name,
+      errorMessage: "Asset type name already exists",
+    });
     const finalData = await prisma.hrms_m_asset_type.create({
       data: {
         asset_type_name: data.asset_type_name || "",
@@ -19,7 +26,10 @@ const createAssetsType = async (data) => {
     return finalData;
   } catch (error) {
     console.log("Create assets type ", error);
-    throw new CustomError(`Error creating assets type: ${error.message}`, 500);
+    if (error instanceof CustomError) {
+      throw error;
+    }
+    throw new CustomError(` ${error.message}`, 500);
   }
 };
 
@@ -43,6 +53,15 @@ const findAssetsTypeById = async (id) => {
 
 const updateAssetsType = async (id, data) => {
   try {
+    if (data.asset_type_name) {
+      await checkDuplicate({
+        model: "hrms_m_asset_type",
+        field: "asset_type_name",
+        value: data.asset_type_name,
+        excludeId: id,
+        errorMessage: "Asset type name already exists",
+      });
+    }
     const updatedData = await prisma.hrms_m_asset_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -52,7 +71,11 @@ const updateAssetsType = async (id, data) => {
     });
     return updatedData;
   } catch (error) {
-    throw new CustomError(`Error updating assets type: ${error.message}`, 500);
+    console.log("Update assets type ", error);
+    if (error instanceof CustomError) {
+      throw error;
+    }
+    throw new CustomError(` ${error.message}`, 500);
   }
 };
 

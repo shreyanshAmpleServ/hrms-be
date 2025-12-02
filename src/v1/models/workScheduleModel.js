@@ -1,8 +1,15 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck");
 
 const createWorkSchedule = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_work_schedule_template",
+      field: "template_name",
+      value: data.template_name,
+      errorMessage: "Work schedule already exists",
+    });
     const newSchedule = await prisma.hrms_m_work_schedule_template.create({
       data: {
         template_name: data.template_name,
@@ -45,10 +52,7 @@ const createWorkSchedule = async (data) => {
       approval_steps_created: workflowSteps.length,
     };
   } catch (error) {
-    throw new CustomError(
-      `Error creating work schedule: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 const findWorkScheduleById = async (id) => {
@@ -61,15 +65,19 @@ const findWorkScheduleById = async (id) => {
     }
     return data;
   } catch (error) {
-    throw new CustomError(
-      `Error finding work schedule by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(error.message, 503);
   }
 };
 
 const updateWorkSchedule = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_work_schedule_template",
+      field: "template_name",
+      value: data.template_name,
+      excludeId: id,
+      errorMessage: "Work schedule already exists",
+    });
     const upsertedData = await prisma.hrms_m_work_schedule_template.upsert({
       where: { id: parseInt(id) },
       update: {
@@ -88,10 +96,7 @@ const updateWorkSchedule = async (id, data) => {
     });
     return upsertedData;
   } catch (error) {
-    throw new CustomError(
-      `Error updating work schedule: ${error.message}`,
-      500
-    );
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -155,7 +160,7 @@ const getAllWorkSchedule = async (
       totalCount: totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving work schedule", 503);
+    throw new CustomError(error.message, 503);
   }
 };
 

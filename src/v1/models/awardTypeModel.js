@@ -1,8 +1,15 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck");
 
 const createAwardType = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_award_type",
+      field: "award_name",
+      value: data.award_name,
+      errorMessage: "Award type already exists",
+    });
     const finalData = await prisma.hrms_m_award_type.create({
       data: {
         award_name: data.award_name || "",
@@ -19,7 +26,7 @@ const createAwardType = async (data) => {
     return finalData;
   } catch (error) {
     console.log("Create award type ", error);
-    throw new CustomError(`Error creating award type: ${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 
@@ -34,15 +41,19 @@ const findAwardTypeById = async (id) => {
     return data;
   } catch (error) {
     console.log("award type By Id  ", error);
-    throw new CustomError(
-      `Error finding award type by ID: ${error.message}`,
-      503
-    );
+    throw new CustomError(error.message, 503);
   }
 };
 
 const updateAwardType = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_award_type",
+      field: "award_name",
+      value: data.award_name,
+      excludeId: id,
+      errorMessage: "Award type already exists",
+    });
     const updatedData = await prisma.hrms_m_award_type.update({
       where: { id: parseInt(id) },
       data: {
@@ -52,7 +63,7 @@ const updateAwardType = async (id, data) => {
     });
     return updatedData;
   } catch (error) {
-    throw new CustomError(`Error updating award type: ${error.message}`, 500);
+    throw new CustomError(error.message, 500);
   }
 };
 
