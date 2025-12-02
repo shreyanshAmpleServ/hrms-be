@@ -432,7 +432,7 @@ const safeUploadToBackblaze = async (
   file,
   folder,
   resize = false,
-  size = 512
+  size = 1024
 ) => {
   if (!file) return null;
 
@@ -483,7 +483,7 @@ const processFileUploads = async (files) => {
       profilePicFile,
       "profile_pics",
       true,
-      512
+      1024
     );
     if (!result.profile_pic) {
       result.warnings.push(

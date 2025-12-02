@@ -1,5 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const mockModules = require("../../mock/module.mock.js");
 
 // Create a new Module Related To
 const createModuleRelatedTo = async (data) => {
@@ -61,6 +62,24 @@ const deleteModuleRelatedTo = async (id) => {
 // Get related To Data
 const getModuleRelatedTos = async (search, page, size, is_active) => {
   try {
+    const totalCountCheck = await prisma.hrms_m_module.count();
+    if (totalCountCheck === 0) {
+      for (const moduleData of mockModules) {
+        await prisma.hrms_m_module.create({
+          data: {
+            module_name: moduleData.module_name,
+            description: moduleData.description || "",
+            is_active: moduleData.is_active || "Y",
+            log_inst: moduleData.log_inst || 1,
+            createdby: 1,
+            createdate: new Date(),
+            updatedate: new Date(),
+            updatedby: 1,
+          },
+        });
+      }
+    }
+
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
