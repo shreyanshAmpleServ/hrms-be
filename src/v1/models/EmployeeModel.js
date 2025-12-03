@@ -2239,19 +2239,39 @@ const getAllEmployee = async (
     const filters = {};
 
     const adminRoles = [
-      "Admin",
       "admin",
+      "Admin",
       "ADMIN",
       "Super Admin",
       "super_admin",
-      "SUPER_ADMIN",
+      "Sr Admin",
+      "HR Admin",
+      "Head HR",
     ];
 
-    if (managerId && !adminRoles.includes(userRole)) {
+    let actualRoleName = userRole;
+
+    if (typeof userRole === "number" || !isNaN(Number(userRole))) {
+      const roleData = await prisma.hrms_m_role.findUnique({
+        where: { id: Number(userRole) },
+        select: { role_name: true },
+      });
+      actualRoleName = roleData?.role_name || null;
+      console.log("Fetched role name from DB:", actualRoleName);
+    }
+
+    const isAdmin = adminRoles.some(
+      (role) => role.toLowerCase() === actualRoleName?.toLowerCase()?.trim()
+    );
+
+    console.log("User Role ID:", userRole);
+    console.log("Actual Role Name:", actualRoleName);
+    console.log("Is Admin:", isAdmin);
+    if (managerId && !isAdmin) {
       filters.manager_id = parseInt(managerId);
       console.log("Applying manager filter for employee_id:", managerId);
-    } else if (managerId && adminRoles.includes(userRole)) {
-      console.log("Admin user - no manager filter applied");
+    } else {
+      console.log("Admin user - showing all employees");
     }
 
     if (search) {
@@ -2281,7 +2301,7 @@ const getAllEmployee = async (
       }
     }
 
-    if (status !== undefined && status !== "") {
+    if (status !== undefined && status !== "" && status !== null) {
       filters.status = status;
     }
 
@@ -2356,11 +2376,11 @@ const getAllEmployee = async (
       size,
       totalPages: Math.ceil(totalCount / size),
       totalCount,
-      filterApplied:
-        managerId && !adminRoles.includes(userRole) ? "manager" : "all",
+      filterApplied: isAdmin ? "all" : "manager",
+      userRole: actualRoleName,
     };
   } catch (error) {
-    console.error("Error employee get : ", error);
+    console.error("Error employee get:", error);
     throw new CustomError("Error retrieving employees", 503);
   }
 };

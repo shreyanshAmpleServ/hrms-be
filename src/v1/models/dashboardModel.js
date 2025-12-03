@@ -614,14 +614,107 @@ const getStatus = async () => {
   };
 };
 
+// const workAnniversary = async (page = 1, size = 10) => {
+//   const today = moment();
+//   const next30Days = moment().add(30, "days");
+
+//   const employees = await prisma.hrms_d_employee.findMany({
+//     where: {
+//       join_date: {
+//         not: null,
+//       },
+//     },
+//     select: {
+//       id: true,
+//       first_name: true,
+//       last_name: true,
+//       designation_id: true,
+//       profile_pic: true,
+//       join_date: true,
+//       hrms_employee_designation: {
+//         select: {
+//           designation_name: true,
+//         },
+//       },
+//     },
+//   });
+
+//   const resultList = [];
+
+//   employees.forEach((emp) => {
+//     const joinDate = moment(emp.join_date);
+//     const currentYear = today.year();
+
+//     let anniversaryThisYear = moment(
+//       `${currentYear}-${joinDate.format("MM-DD")}`,
+//       "YYYY-MM-DD"
+//     );
+
+//     if (anniversaryThisYear.isBefore(today, "day")) {
+//       anniversaryThisYear.add(1, "year");
+//     }
+
+//     if (
+//       anniversaryThisYear.isSameOrAfter(today, "day") &&
+//       anniversaryThisYear.isSameOrBefore(next30Days, "day")
+//     ) {
+//       const yearsOfService = anniversaryThisYear.year() - joinDate.year();
+
+//       const formattedLabel = anniversaryThisYear.isSame(today, "day")
+//         ? "today"
+//         : anniversaryThisYear.isSame(moment().add(1, "day"), "day")
+//         ? "tomorrow"
+//         : anniversaryThisYear.format("DD MMM YYYY");
+
+//       resultList.push({
+//         id: emp.id,
+//         name: `${emp.first_name || ""} ${emp.last_name || ""}`.trim(),
+//         designation: emp.hrms_employee_designation?.designation_name || "",
+//         profile_pic: emp.profile_pic || "",
+//         anniversary: anniversaryThisYear.toDate(),
+//         years_of_service: yearsOfService,
+//         label: formattedLabel,
+//       });
+//     }
+//   });
+
+//   const all = resultList.sort((a, b) => a.anniversary - b.anniversary);
+
+//   const totalCount = all.length;
+//   const totalPages = Math.ceil(totalCount / size);
+//   const offset = (page - 1) * size;
+
+//   const paginated = all.slice(offset, offset + size);
+
+//   const grouped = {};
+//   paginated.forEach((item) => {
+//     const { anniversary, label, ...rest } = item;
+//     if (!grouped[label]) {
+//       grouped[label] = [];
+//     }
+//     grouped[label].push(rest);
+//   });
+
+//   return {
+//     data: grouped,
+//     currentPage: page,
+//     size,
+//     totalPages,
+//     totalCount,
+//   };
+// };
+
 const workAnniversary = async (page = 1, size = 10) => {
   const today = moment();
   const next30Days = moment().add(30, "days");
+
+  const oneYearAgo = moment().subtract(1, "year");
 
   const employees = await prisma.hrms_d_employee.findMany({
     where: {
       join_date: {
         not: null,
+        lte: oneYearAgo.toDate(),
       },
     },
     select: {
@@ -654,12 +747,13 @@ const workAnniversary = async (page = 1, size = 10) => {
       anniversaryThisYear.add(1, "year");
     }
 
+    const yearsOfService = anniversaryThisYear.year() - joinDate.year();
+
     if (
       anniversaryThisYear.isSameOrAfter(today, "day") &&
-      anniversaryThisYear.isSameOrBefore(next30Days, "day")
+      anniversaryThisYear.isSameOrBefore(next30Days, "day") &&
+      yearsOfService >= 1
     ) {
-      const yearsOfService = anniversaryThisYear.year() - joinDate.year();
-
       const formattedLabel = anniversaryThisYear.isSame(today, "day")
         ? "today"
         : anniversaryThisYear.isSame(moment().add(1, "day"), "day")
@@ -703,7 +797,6 @@ const workAnniversary = async (page = 1, size = 10) => {
     totalCount,
   };
 };
-
 const attendanceOverview = async (dateString) => {
   try {
     let today;

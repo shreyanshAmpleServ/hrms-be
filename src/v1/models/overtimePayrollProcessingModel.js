@@ -99,96 +99,401 @@ const serializeOvertimeData = (data) => ({
 //   }
 // };
 
+// const createOvertimePayrollProcessing = async (dataArray) => {
+//   try {
+//     if (!Array.isArray(dataArray) || dataArray.length === 0) {
+//       throw new CustomError("Input must be a non-empty array", 400);
+//     }
+
+//     const errorResults = [];
+
+//     await Promise.all(
+//       dataArray.map(async (data) => {
+//         try {
+//           const requiredFields = [
+//             "employee_id",
+//             "payroll_month",
+//             "payroll_year",
+//             "payroll_week",
+//             "component_id",
+//             "pay_currency",
+//             "status",
+//           ];
+
+//           const missing = requiredFields.filter(
+//             (field) => !data[field] && data[field] !== 0
+//           );
+
+//           if (missing.length) {
+//             errorResults.push({
+//               employee_id: data.employee_id || null,
+//               error: `Missing required fields: ${missing.join(", ")}`,
+//             });
+//             return;
+//           }
+
+//           const record = {
+//             ...serializeOvertimeData(data),
+//             createdby: data.createdby || 1,
+//             createdate: new Date(),
+//             log_inst: data.log_inst || 1,
+
+//             employee_payroll_adjustment_employee: {
+//               connect: { id: Number(data.employee_id) },
+//             },
+//             employee_payroll_adjustment_component: {
+//               connect: { id: Number(data.component_id) },
+//             },
+//             employee_payroll_adjustment_currency: {
+//               connect: { id: Number(data.pay_currency) },
+//             },
+//             employee_payroll_adjustment_project: data.project_id
+//               ? { connect: { id: Number(data.project_id) } }
+//               : undefined,
+//             employee_payroll_adjustment_center1: data.cost_center1_id
+//               ? { connect: { id: Number(data.cost_center1_id) } }
+//               : undefined,
+//             employee_payroll_adjustment_center2: data.cost_center2_id
+//               ? { connect: { id: Number(data.cost_center2_id) } }
+//               : undefined,
+//             employee_payroll_adjustment_center3: data.cost_center3_id
+//               ? { connect: { id: Number(data.cost_center3_id) } }
+//               : undefined,
+//             employee_payroll_adjustment_center4: data.cost_center4_id
+//               ? { connect: { id: Number(data.cost_center4_id) } }
+//               : undefined,
+//             employee_payroll_adjustment_center5: data.cost_center5_id
+//               ? { connect: { id: Number(data.cost_center5_id) } }
+//               : undefined,
+//           };
+
+//           await prisma.hrms_d_employee_payroll_adjustment.create({
+//             data: record,
+//           });
+//         } catch (err) {
+//           errorResults.push({
+//             employee_id: data.employee_id || null,
+//             error: `Insert failed: ${err.message}`,
+//           });
+//         }
+//       })
+//     );
+
+//     return errorResults;
+//   } catch (error) {
+//     console.error("Bulk insert error:", error);
+//     throw new CustomError(
+//       `Error creating overtime payroll records: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const createOvertimePayrollProcessing = async (dataArray) => {
   try {
     if (!Array.isArray(dataArray) || dataArray.length === 0) {
       throw new CustomError("Input must be a non-empty array", 400);
     }
 
+    const successResults = [];
     const errorResults = [];
 
-    await Promise.all(
-      dataArray.map(async (data) => {
-        try {
-          const requiredFields = [
-            "employee_id",
-            "payroll_month",
-            "payroll_year",
-            "payroll_week",
-            "component_id",
-            "pay_currency",
-            "status",
-          ];
+    console.log(`Processing ${dataArray.length} overtime payroll records...`);
 
-          const missing = requiredFields.filter(
-            (field) => !data[field] && data[field] !== 0
-          );
+    for (const data of dataArray) {
+      try {
+        const requiredFields = [
+          "employee_id",
+          "payroll_month",
+          "payroll_year",
+          "payroll_week",
+          "component_id",
+          "pay_currency",
+          "status",
+        ];
 
-          if (missing.length) {
-            errorResults.push({
-              employee_id: data.employee_id || null,
-              error: `Missing required fields: ${missing.join(", ")}`,
-            });
-            return;
-          }
+        const missingFields = requiredFields.filter(
+          (field) => data[field] === undefined || data[field] === null
+        );
 
-          const record = {
-            ...serializeOvertimeData(data),
-            createdby: data.createdby || 1,
-            createdate: new Date(),
-            log_inst: data.log_inst || 1,
-
-            employee_payroll_adjustment_employee: {
-              connect: { id: Number(data.employee_id) },
-            },
-            employee_payroll_adjustment_component: {
-              connect: { id: Number(data.component_id) },
-            },
-            employee_payroll_adjustment_currency: {
-              connect: { id: Number(data.pay_currency) },
-            },
-            employee_payroll_adjustment_project: data.project_id
-              ? { connect: { id: Number(data.project_id) } }
-              : undefined,
-            employee_payroll_adjustment_center1: data.cost_center1_id
-              ? { connect: { id: Number(data.cost_center1_id) } }
-              : undefined,
-            employee_payroll_adjustment_center2: data.cost_center2_id
-              ? { connect: { id: Number(data.cost_center2_id) } }
-              : undefined,
-            employee_payroll_adjustment_center3: data.cost_center3_id
-              ? { connect: { id: Number(data.cost_center3_id) } }
-              : undefined,
-            employee_payroll_adjustment_center4: data.cost_center4_id
-              ? { connect: { id: Number(data.cost_center4_id) } }
-              : undefined,
-            employee_payroll_adjustment_center5: data.cost_center5_id
-              ? { connect: { id: Number(data.cost_center5_id) } }
-              : undefined,
-          };
-
-          await prisma.hrms_d_employee_payroll_adjustment.create({
-            data: record,
-          });
-        } catch (err) {
+        if (missingFields.length > 0) {
           errorResults.push({
             employee_id: data.employee_id || null,
-            error: `Insert failed: ${err.message}`,
+            error: `Incomplete data: ${missingFields.join(", ")} required`,
           });
+          console.warn(
+            ` Skipping employee_id=${
+              data.employee_id || "Unknown"
+            }: Missing fields - ${missingFields.join(", ")}`
+          );
+          continue;
         }
-      })
-    );
 
-    return errorResults;
+        const componentId = Number(data.component_id);
+
+        const columnCheck = await prisma.$queryRawUnsafe(`
+          SELECT COLUMN_NAME 
+          FROM INFORMATION_SCHEMA.COLUMNS 
+          WHERE TABLE_NAME = 'hrms_d_monthly_payroll_processing' 
+          AND COLUMN_NAME = '${componentId}'
+        `);
+
+        if (columnCheck.length === 0) {
+          await prisma.$executeRawUnsafe(`
+            ALTER TABLE hrms_d_monthly_payroll_processing 
+            ADD [${componentId}] DECIMAL(18,2) NULL
+          `);
+          console.log(` Added overtime component column [${componentId}]`);
+        }
+
+        const existingRecord = await prisma.$queryRawUnsafe(`
+          SELECT TOP 1 id, [${componentId}] as component_value
+          FROM hrms_d_monthly_payroll_processing
+          WHERE employee_id = ${Number(data.employee_id)}
+            AND payroll_month = ${Number(data.payroll_month)}
+            AND payroll_year = ${Number(data.payroll_year)}
+            AND payroll_week = ${Number(data.payroll_week)}
+        `);
+
+        const amount = Number(data.amount || 0);
+        const userId = data.createdby || 1;
+        const logInst = data.log_inst || 1;
+
+        let result;
+
+        if (existingRecord && existingRecord.length > 0) {
+          const recordId = existingRecord[0].id;
+          const currentComponentValue = Number(
+            existingRecord[0].component_value || 0
+          );
+          const newComponentValue = currentComponentValue + amount;
+
+          const updateQuery = `
+            UPDATE hrms_d_monthly_payroll_processing
+            SET 
+              [${componentId}] = ${newComponentValue},
+              pay_currency = ${Number(data.pay_currency)},
+              status = '${data.status}',
+              ${
+                data.payroll_start_date
+                  ? `payroll_start_date = '${new Date(
+                      data.payroll_start_date
+                    ).toISOString()}',`
+                  : ""
+              }
+              ${
+                data.payroll_end_date
+                  ? `payroll_end_date = '${new Date(
+                      data.payroll_end_date
+                    ).toISOString()}',`
+                  : ""
+              }
+              ${
+                data.payroll_paid_days !== undefined
+                  ? `payroll_paid_days = ${Number(data.payroll_paid_days)},`
+                  : ""
+              }
+              ${
+                data.project_id
+                  ? `project_id = ${Number(data.project_id)},`
+                  : ""
+              }
+              ${
+                data.cost_center1_id
+                  ? `cost_center1_id = ${Number(data.cost_center1_id)},`
+                  : ""
+              }
+              ${
+                data.cost_center2_id
+                  ? `cost_center2_id = ${Number(data.cost_center2_id)},`
+                  : ""
+              }
+              ${
+                data.cost_center3_id
+                  ? `cost_center3_id = ${Number(data.cost_center3_id)},`
+                  : ""
+              }
+              ${
+                data.cost_center4_id
+                  ? `cost_center4_id = ${Number(data.cost_center4_id)},`
+                  : ""
+              }
+              ${
+                data.cost_center5_id
+                  ? `cost_center5_id = ${Number(data.cost_center5_id)},`
+                  : ""
+              }
+              ${
+                data.remarks
+                  ? `remarks = '${data.remarks.replace(/'/g, "''")}',`
+                  : ""
+              }
+              updatedby = ${userId},
+              updatedate = GETDATE()
+            WHERE id = ${recordId}
+          `;
+
+          await prisma.$executeRawUnsafe(updateQuery);
+
+          result = {
+            action: "updated",
+            id: recordId,
+            employee_id: data.employee_id,
+            component_id: componentId,
+            previous_amount: currentComponentValue,
+            new_amount: newComponentValue,
+          };
+
+          console.log(
+            `Updated overtime payroll for employee ${data.employee_id}, component ${componentId}`
+          );
+        } else {
+          const insertQuery = `
+            INSERT INTO hrms_d_monthly_payroll_processing (
+              employee_id,
+              payroll_month,
+              payroll_year,
+              payroll_week,
+              ${data.payroll_start_date ? "payroll_start_date," : ""}
+              ${data.payroll_end_date ? "payroll_end_date," : ""}
+              ${
+                data.payroll_paid_days !== undefined ? "payroll_paid_days," : ""
+              }
+              pay_currency,
+              [${componentId}],
+              total_earnings,
+              taxable_earnings,
+              tax_amount,
+              total_deductions,
+              net_pay,
+              status,
+              ${data.project_id ? "project_id," : ""}
+              ${data.cost_center1_id ? "cost_center1_id," : ""}
+              ${data.cost_center2_id ? "cost_center2_id," : ""}
+              ${data.cost_center3_id ? "cost_center3_id," : ""}
+              ${data.cost_center4_id ? "cost_center4_id," : ""}
+              ${data.cost_center5_id ? "cost_center5_id," : ""}
+              ${data.remarks ? "remarks," : ""}
+              processed,
+              je_transid,
+              approved1,
+              approver1_id,
+              createdate,
+              createdby,
+              updatedate,
+              updatedby,
+              log_inst
+            )
+            VALUES (
+              ${Number(data.employee_id)},
+              ${Number(data.payroll_month)},
+              ${Number(data.payroll_year)},
+              ${Number(data.payroll_week)},
+              ${
+                data.payroll_start_date
+                  ? `'${new Date(data.payroll_start_date).toISOString()}',`
+                  : ""
+              }
+              ${
+                data.payroll_end_date
+                  ? `'${new Date(data.payroll_end_date).toISOString()}',`
+                  : ""
+              }
+              ${
+                data.payroll_paid_days !== undefined
+                  ? `${Number(data.payroll_paid_days)},`
+                  : ""
+              }
+              ${Number(data.pay_currency)},
+              ${amount},
+              0.00,
+              0.00,
+              0.00,
+              0.00,
+              0.00,
+              '${data.status}',
+              ${data.project_id ? `${Number(data.project_id)},` : ""}
+              ${data.cost_center1_id ? `${Number(data.cost_center1_id)},` : ""}
+              ${data.cost_center2_id ? `${Number(data.cost_center2_id)},` : ""}
+              ${data.cost_center3_id ? `${Number(data.cost_center3_id)},` : ""}
+              ${data.cost_center4_id ? `${Number(data.cost_center4_id)},` : ""}
+              ${data.cost_center5_id ? `${Number(data.cost_center5_id)},` : ""}
+              ${data.remarks ? `'${data.remarks.replace(/'/g, "''")}',` : ""}
+              'N',
+              0,
+              'N',
+              0,
+              GETDATE(),
+              ${userId},
+              GETDATE(),
+              ${userId},
+              ${logInst}
+            )
+          `;
+
+          await prisma.$executeRawUnsafe(insertQuery);
+
+          const insertedRecord = await prisma.$queryRawUnsafe(`
+            SELECT TOP 1 id 
+            FROM hrms_d_monthly_payroll_processing
+            WHERE employee_id = ${Number(data.employee_id)}
+              AND payroll_month = ${Number(data.payroll_month)}
+              AND payroll_year = ${Number(data.payroll_year)}
+              AND payroll_week = ${Number(data.payroll_week)}
+            ORDER BY id DESC
+          `);
+
+          result = {
+            action: "created",
+            id: insertedRecord[0]?.id,
+            employee_id: data.employee_id,
+            component_id: componentId,
+            amount: amount,
+          };
+
+          console.log(
+            `Created overtime payroll for employee ${data.employee_id}, component ${componentId}`
+          );
+        }
+
+        successResults.push(result);
+      } catch (err) {
+        errorResults.push({
+          employee_id: data.employee_id || null,
+          error: `Processing failed: ${err.message}`,
+        });
+        console.error(
+          ` Processing failed for employee_id=${
+            data.employee_id || "Unknown"
+          }: ${err.message}`
+        );
+      }
+    }
+
+    console.log(` Overtime Payroll Processing Complete`);
+    console.log(`Success: ${successResults.length}`);
+    console.log(`Errors: ${errorResults.length}`);
+
+    return {
+      success: successResults.length > 0,
+      successCount: successResults.length,
+      errorCount: errorResults.length,
+      successResults,
+      errorResults,
+      summary: {
+        total: dataArray.length,
+        processed: successResults.length,
+        failed: errorResults.length,
+      },
+    };
   } catch (error) {
-    console.error("Bulk insert error:", error);
+    console.error(" Bulk overtime payroll processing error:", error);
     throw new CustomError(
       `Error creating overtime payroll records: ${error.message}`,
       500
     );
   }
 };
-
 // GET ALL
 const getAllOvertimePayrollProcessing = async (
   search,

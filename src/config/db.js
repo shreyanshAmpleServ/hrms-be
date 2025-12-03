@@ -78,7 +78,6 @@ function getPrismaClient(dbName) {
 
   const [, server, port, , user, password, options] = urlParts;
   const clientDbUrl = `sqlserver://${server}:${port};initial catalog=${dbName};user=${user};password=${password};${options}`;
-
   const prisma = new PrismaClient({
     datasources: { db: { url: clientDbUrl } },
   });

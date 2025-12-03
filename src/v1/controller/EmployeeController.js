@@ -788,7 +788,7 @@ const getAllEmployee = async (req, res, next) => {
     const { page, size, search, startDate, endDate, status } = req.query;
 
     const managerId = req.user?.employee_id;
-    const userRole = req.user?.role;
+    const userRole = req.user?.role_id;
 
     console.log("Manager ID:", managerId);
     console.log("User Role:", userRole);

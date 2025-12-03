@@ -93,7 +93,8 @@ const getAllEmployee = async (
   endDate,
   status,
   priority,
-  managerId
+  managerId,
+  userRole
 ) => {
   return await employeeModel.getAllEmployee(
     page,
@@ -103,7 +104,8 @@ const getAllEmployee = async (
     endDate,
     status,
     priority,
-    managerId
+    managerId,
+    userRole
   );
 };
 
