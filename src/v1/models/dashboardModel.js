@@ -141,134 +141,31 @@ const getDashboardData = async (filterDays) => {
   }
 };
 
-// const getAllEmployeeAttendance = async (dateString) => {
-//   let today;
+const getAllEmployeeAttendance = async (dateString, managerId, roleId) => {
+  console.log("Model received:", { dateString, managerId, roleId });
 
-//   if (dateString) {
-//     today = DateTime.fromISO(dateString, { zone: "Asia/Kolkata" }).startOf(
-//       "day"
-//     );
-//   } else {
-//     today = DateTime.now().setZone("Asia/Kolkata").startOf("day");
-//   }
-
-//   const endOfDay = today.endOf("day");
-
-//   const employees = await prisma.hrms_d_employee.findMany({
-//     where: {
-//       status: { in: ["Active", "Probation", "Notice Period"] },
-//     },
-//     select: { id: true, full_name: true, employee_code: true },
-//   });
-
-//   const totalEmployees = employees.length;
-//   const employeeIds = employees.map((e) => e.id);
-
-//   const attendanceRecords = await prisma.hrms_d_daily_attendance_entry.findMany(
-//     {
-//       where: {
-//         attendance_date: {
-//           gte: today.toJSDate(),
-//           lte: endOfDay.toJSDate(),
-//         },
-//         employee_id: { in: employeeIds },
-//         manager_verified: "A",
-//         manager_verification_date: {
-//           gte: today.toJSDate(),
-//           lte: endOfDay.toJSDate(),
-//         },
-//       },
-//       orderBy: { check_in_time: "desc" },
-//       select: {
-//         employee_id: true,
-//         status: true,
-//         check_in_time: true,
-//         manager_verified: true,
-//         manager_verification_date: true,
-//         manager_remarks: true,
-//         verified_by_manager_id: true,
-//         hrms_daily_attendance_employee: {
-//           select: { full_name: true, employee_code: true },
-//         },
-//       },
-//     }
-//   );
-
-//   const latestRecordMap = new Map();
-//   for (const record of attendanceRecords) {
-//     if (!latestRecordMap.has(record.employee_id)) {
-//       latestRecordMap.set(record.employee_id, record);
-//     }
-//   }
-
-//   let present = 0;
-//   let wfh = 0;
-//   const markedEmployees = new Set();
-//   const detailedRecords = [];
-
-//   for (const [empId, record] of latestRecordMap.entries()) {
-//     markedEmployees.add(empId);
-
-//     const status = record.status?.toLowerCase();
-//     if (status === "present") present++;
-//     else if (status === "work from home" || status === "wfh") wfh++;
-
-//     let managerVerifiedToday = false;
-//     if (record.manager_verification_date) {
-//       const verificationDate = DateTime.fromJSDate(
-//         record.manager_verification_date,
-//         { zone: "Asia/Kolkata" }
-//       );
-//       managerVerifiedToday = verificationDate.hasSame(today, "day");
-//     }
-
-//     detailedRecords.push({
-//       status: record.status,
-//       check_in_time: record.check_in_time,
-//       manager_verified: record.manager_verified || "P",
-//       manager_verification_date: record.manager_verification_date,
-//       manager_verified_today: managerVerifiedToday,
-//     });
-//   }
-//   const isVerified = detailedRecords?.every((i) => i.manager_verified === "A");
-
-//   // const halfDay = detailedRecords.filter(
-//   //   (i) =>
-//   //     i.status?.toLowerCase() === "half day" ||
-//   //     i.status?.toLowerCase() === "half-day" ||
-//   //     i.status?.toLowerCase() === "hd"
-//   // ).length;
-
-//   const absent = totalEmployees - (present + wfh);
-
-//   const presentPercentage =
-//     totalEmployees === 0
-//       ? "0.00%"
-//       : ((present / totalEmployees) * 100).toFixed(2) + "%";
-
-//   return {
-//     date: today.toISODate(),
-//     total_employees: totalEmployees,
-//     present,
-//     work_from_home: wfh,
-//     // half_day: halfDay,
-//     absent,
-//     is_verified: isVerified,
-//     present_percentage: presentPercentage,
-//   };
-// };
-
-const getAllEmployeeAttendance = async (dateString, managerId) => {
   const zone = "Asia/Kolkata";
   const today = dateString
     ? DateTime.fromISO(dateString, { zone }).startOf("day")
     : DateTime.now().setZone(zone).startOf("day");
   const endOfDay = today.endOf("day");
 
+  // Check if admin by role_id
+  // Assuming role_id = 1 is admin (adjust if different)
+  const isAdmin = roleId === 1;
+
+  console.log("Role ID:", roleId);
+  console.log("Is Admin:", isAdmin);
+
   const employeeWhere = {
     status: { in: ["Active", "Probation", "Notice Period"] },
-    ...(managerId ? { manager_id: managerId } : {}),
   };
+
+  if (!isAdmin && managerId) {
+    employeeWhere.manager_id = managerId;
+  }
+
+  console.log("Employee WHERE clause:", employeeWhere);
 
   const employees = await prisma.hrms_d_employee.findMany({
     where: employeeWhere,
@@ -277,6 +174,8 @@ const getAllEmployeeAttendance = async (dateString, managerId) => {
 
   const totalEmployees = employees.length;
   const employeeIds = employees.map((e) => e.id);
+
+  console.log(`Total employees: ${totalEmployees}`);
 
   const latestRecords = await prisma.hrms_d_daily_attendance_entry.findMany({
     where: {
@@ -304,14 +203,6 @@ const getAllEmployeeAttendance = async (dateString, managerId) => {
     else if (s === "work from home" || s === "wfh") wfh++;
   }
 
-  // const pendingCount = await prisma.hrms_d_daily_attendance_entry.count({
-  //   where: {
-  //     attendance_date: { gte: today.toJSDate(), lte: endOfDay.toJSDate() },
-  //     employee_id: { in: employeeIds },
-  //     OR: [{ manager_verified: null }, { manager_verified: { not: "A" } }],
-  //   },
-  // });
-
   const pendingCount = await prisma.hrms_d_daily_attendance_entry.count({
     where: {
       attendance_date: { gte: today.toJSDate(), lte: endOfDay.toJSDate() },
@@ -336,10 +227,10 @@ const getAllEmployeeAttendance = async (dateString, managerId) => {
     absent,
     is_verified: is_verified,
     present_percentage: presentPercentage,
-    manager_id: managerId ?? null,
+    manager_id: isAdmin ? null : managerId ?? null,
+    is_admin_view: isAdmin,
   };
 };
-
 const getUpcomingBirthdays = async (page = 1, size = 10) => {
   const today = moment();
   const next30Days = moment().add(30, "days");

@@ -7,8 +7,13 @@ const getDashboardData = async (filterDays) => {
   return await dashboardModel.getDashboardData(filterDays);
 };
 
-const getAllEmployeeAttendance = async (dateString, managerId) => {
-  return await dashboardModel.getAllEmployeeAttendance(dateString, managerId);
+const getAllEmployeeAttendance = async (dateString, managerId, roleId) => {
+  console.log("Service received:", { dateString, managerId, roleId });
+  return await dashboardModel.getAllEmployeeAttendance(
+    dateString,
+    managerId,
+    roleId
+  );
 };
 
 const getUpcomingBirthdays = async (page, limit) => {
