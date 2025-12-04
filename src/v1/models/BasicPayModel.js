@@ -472,18 +472,16 @@ const createBasicPay = async (data) => {
       await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
         where: {
           employee_id: Number(data.employee_id),
-          status: "Active",
         },
       });
 
     if (existingAssignment) {
       throw new CustomError(
-        "Employee already has an active pay component assignment",
+        "This employee have already assigned the component",
         400
       );
     }
 
-    // Rest of your code continues here...
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(data.employee_id) },
       select: {
@@ -651,7 +649,7 @@ const updateBasicPay = async (id, data) => {
         });
       if (existing) {
         throw new CustomError(
-          "Another basic pay record already exists for this employee.",
+          "This employee have already assigned the component",
           400
         );
       }
