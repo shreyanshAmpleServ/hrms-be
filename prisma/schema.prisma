@@ -381,6 +381,7 @@ model hrms_d_employee {
 model hrms_d_employee_address {
   id                    Int                    @id(map: "PK__hrms_d_e__3213E83F2523D35F") @default(autoincrement())
   employee_id           Int
+  address_name          String                 @db.NVarChar(100)
   address_type          String?                @db.VarChar(50)
   street                String?                @db.NVarChar(255)
   street_no             String?                @db.NVarChar(50)
@@ -2402,7 +2403,7 @@ model hrms_m_interview_stage_remark {
   stage_id                            Int
   stage_name                          String?                 @db.VarChar(50)
   remark                              String?                 @db.NText
-  rating                              Decimal?               
+  rating                              Decimal?
   createdate                          DateTime?               @default(now(), map: "DF__stage_remark__createdate") @db.DateTime
   createdby                           Int
   updatedate                          DateTime?

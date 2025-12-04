@@ -146,7 +146,7 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
     const previousRemarks = Array.from(latestRemarkByStage.values());
 
     console.log(
-      `📝 Previous stage remarks found: ${previousRemarks.length} (unique stages)`
+      ` Previous stage remarks found: ${previousRemarks.length} (unique stages)`
     );
     previousRemarks.forEach((remark) => {
       console.log(
@@ -227,6 +227,7 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
     };
   }
 };
+
 const convertSnapshotIdToStageId = async (candidateId, possibleSnapshotId) => {
   try {
     console.log(

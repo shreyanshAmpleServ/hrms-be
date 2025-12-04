@@ -62,4 +62,10 @@ router.post(
   candidateMasterController.createEmployeeFromCandidate
 );
 
+router.get(
+  "/candidate-master-document-verification/:id",
+  authenticateToken,
+  candidateMasterController.getCandidateDocumentVerificationStatus
+);
+
 module.exports = router;
