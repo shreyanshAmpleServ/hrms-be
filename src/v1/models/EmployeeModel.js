@@ -2243,10 +2243,9 @@ const getAllEmployee = async (
       "Admin",
       "ADMIN",
       "Super Admin",
-      "super_admin",
-      "Sr Admin",
-      "HR Admin",
-      "Head HR",
+      "super admin",
+      "superadmin",
+      "SuperAdmin",
     ];
 
     let actualRoleName = userRole;

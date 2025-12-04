@@ -43,8 +43,6 @@ const getDashboardData = async (req, res, next) => {
 
 const getAllEmployeeAttendance = async (req, res, next) => {
   try {
-    console.log("req.user:", req.user);
-
     const managerId = req.user?.employee_id;
     const roleId = req.user?.role_id;
     const { date } = req.query;
