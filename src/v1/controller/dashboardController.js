@@ -43,12 +43,18 @@ const getDashboardData = async (req, res, next) => {
 
 const getAllEmployeeAttendance = async (req, res, next) => {
   try {
+    console.log("req.user:", req.user);
+
     const managerId = req.user?.employee_id;
+    const roleId = req.user?.role_id;
     const { date } = req.query;
+
+    console.log("Params:", { date, managerId, roleId });
 
     const attendanceData = await dashboardService.getAllEmployeeAttendance(
       date,
-      managerId
+      managerId,
+      roleId // Pass role_id
     );
 
     res.status(200).json({
@@ -58,6 +64,7 @@ const getAllEmployeeAttendance = async (req, res, next) => {
       status: 200,
     });
   } catch (error) {
+    console.error("Error in getAllEmployeeAttendance:", error);
     next(error);
   }
 };

@@ -4,9 +4,12 @@ const CustomError = require("../../utils/CustomError");
 const { generateEmailContent } = require("../../utils/emailTemplates");
 const sendEmail = require("../../utils/mailer");
 
+const moment = require("moment");
+
 const previewAnniversaryEmail = async (req, res, next) => {
   try {
     const { employeeId } = req.params;
+
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(employeeId) },
       select: {
@@ -20,7 +23,30 @@ const previewAnniversaryEmail = async (req, res, next) => {
       },
     });
 
-    if (!employee) throw new CustomError("Employee not found", 404);
+    if (!employee) {
+      throw new CustomError("Employee not found", 404);
+    }
+
+    if (!employee.join_date) {
+      throw new CustomError("Employee join date is not available", 400);
+    }
+
+    const joinDate = moment(employee.join_date);
+    const today = moment();
+
+    if (!joinDate.isValid()) {
+      throw new CustomError("Invalid join date", 400);
+    }
+
+    const years = today.diff(joinDate, "years");
+    const months = today.diff(joinDate, "months");
+
+    if (years < 1) {
+      throw new CustomError(
+        `Employee has only ${months} month of experience. Minimum 1 year required for anniversary email.`,
+        400
+      );
+    }
 
     const sender = await prisma.hrms_d_employee.findUnique({
       where: { id: req.user.employee_id },
@@ -31,12 +57,6 @@ const previewAnniversaryEmail = async (req, res, next) => {
         },
       },
     });
-
-    const joinDate = employee.join_date ? new Date(employee.join_date) : null;
-    const years =
-      joinDate && !isNaN(joinDate)
-        ? new Date().getFullYear() - joinDate.getFullYear()
-        : 0;
 
     const emailContent = await generateEmailContent("work_anniversary", {
       employee_name: employee.full_name,
@@ -49,9 +69,23 @@ const previewAnniversaryEmail = async (req, res, next) => {
     });
 
     res.json({
-      to: employee.email,
-      subject: emailContent.subject,
-      body: emailContent.body,
+      success: true,
+      data: {
+        to: employee.email,
+        subject: emailContent.subject,
+        body: emailContent.body,
+        years_of_service: years,
+        join_date: joinDate.format("YYYY-MM-DD"),
+        next_anniversary: joinDate
+          .clone()
+          .year(today.year())
+          .add(
+            today.isAfter(joinDate.clone().year(today.year())) ? 1 : 0,
+            "year"
+          )
+          .format("YYYY-MM-DD"),
+      },
+      message: `Anniversary email preview for ${years} year(s) of service`,
     });
   } catch (error) {
     next(error);

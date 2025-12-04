@@ -303,48 +303,81 @@ const { id } = require("date-fns/locale");
 // };
 
 // ===== simplified serialize function (no duplicate keys) =====
-const serializePayComponentData = (data) => ({
-  component_name: data.component_name || "",
-  component_code: data.component_code || "",
-  component_type: data.component_type || "",
-  is_taxable: data.is_taxable ?? "Y",
-  is_statutory: data.is_statutory ?? "N",
-  is_active: data.is_active ?? "Y",
-  is_loan: data.is_loan ?? "N",
-  is_basic: data.is_basic ?? "N",
-  relief_amount: data.relief_amount ?? null,
-  relief_type: data.relief_type ?? null,
-  pay_or_deduct: data.pay_or_deduct ?? "P",
-  is_worklife_related: data.is_worklife_related ?? "N",
-  is_grossable: data.is_grossable ?? "N",
-  is_advance: data.is_advance ?? "N",
-  contribution_of_employee: data.contribution_of_employee ?? null,
-  employer_default_formula: data.employer_default_formula ?? null,
-  tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : null,
-  gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : null,
-  factor: data.factor ? Number(data.factor) : null,
-  payable_glaccount_id: data.payable_glaccount_id
-    ? Number(data.payable_glaccount_id)
-    : null,
-  project_id: data.project_id ? Number(data.project_id) : null,
-  cost_center1_id: data.cost_center1_id ? Number(data.cost_center1_id) : null,
-  cost_center2_id: data.cost_center2_id ? Number(data.cost_center2_id) : null,
-  cost_center3_id: data.cost_center3_id ? Number(data.cost_center3_id) : null,
-  cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
-  cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
-  column_order: data.column_order ? Number(data.column_order) : null,
-  execution_order: data.execution_order ? Number(data.execution_order) : null,
-  visible_in_payslip: data.visible_in_payslip ?? "Y",
-  default_formula: data.default_formula ?? null,
-  formula_editable: data.formula_editable ?? "Y",
-  is_recurring: data.is_recurring ?? "Y",
-  component_subtype: data.component_subtype ?? null,
-  is_overtime_related: data.is_overtime_related ?? "N",
-  contributes_to_paye: data.contributes_to_paye ?? "N",
-  contributes_to_nssf: data.contributes_to_nssf ?? "N",
-  auto_fill: data.auto_fill ?? "N",
-  unpaid_leave: data.unpaid_leave ?? "N",
-});
+const serializePayComponentData = (data) => {
+  const SMALLINT_MIN = -32768;
+  const SMALLINT_MAX = 32767;
+
+  let factor = null;
+  if (data.factor !== null && data.factor !== undefined && data.factor !== "") {
+    const factorNum = Math.round(Number(data.factor));
+    if (factorNum < SMALLINT_MIN || factorNum > SMALLINT_MAX) {
+      throw new CustomError(
+        `Factor value ${factorNum} is out of range. Must be between ${SMALLINT_MIN} and ${SMALLINT_MAX}.`,
+        400
+      );
+    }
+    factor = factorNum;
+  }
+
+  let columnOrder = null;
+  if (
+    data.column_order !== null &&
+    data.column_order !== undefined &&
+    data.column_order !== ""
+  ) {
+    const columnOrderNum = Number(data.column_order);
+    if (columnOrderNum < SMALLINT_MIN || columnOrderNum > SMALLINT_MAX) {
+      throw new CustomError(
+        `Column order value ${columnOrderNum} is out of range. Must be between ${SMALLINT_MIN} and ${SMALLINT_MAX}.`,
+        400
+      );
+    }
+    columnOrder = columnOrderNum;
+  }
+
+  return {
+    component_name: data.component_name || "",
+    component_code: data.component_code || "",
+    component_type: data.component_type || "",
+    is_taxable: data.is_taxable ?? "Y",
+    is_statutory: data.is_statutory ?? "N",
+    is_active: data.is_active ?? "Y",
+    is_loan: data.is_loan ?? "N",
+    is_basic: data.is_basic ?? "N",
+    relief_amount: data.relief_amount ?? null,
+    relief_type: data.relief_type ?? null,
+    pay_or_deduct: data.pay_or_deduct ?? "P",
+    is_worklife_related: data.is_worklife_related ?? "N",
+    is_grossable: data.is_grossable ?? "N",
+    is_advance: data.is_advance ?? "N",
+    contribution_of_employee: data.contribution_of_employee ?? null,
+    employer_default_formula: data.employer_default_formula ?? null,
+    tax_code_id: data.tax_code_id ? Number(data.tax_code_id) : null,
+    gl_account_id: data.gl_account_id ? Number(data.gl_account_id) : null,
+    factor: factor,
+    payable_glaccount_id: data.payable_glaccount_id
+      ? Number(data.payable_glaccount_id)
+      : null,
+    project_id: data.project_id ? Number(data.project_id) : null,
+    cost_center1_id: data.cost_center1_id ? Number(data.cost_center1_id) : null,
+    cost_center2_id: data.cost_center2_id ? Number(data.cost_center2_id) : null,
+    cost_center3_id: data.cost_center3_id ? Number(data.cost_center3_id) : null,
+    cost_center4_id: data.cost_center4_id ? Number(data.cost_center4_id) : null,
+    cost_center5_id: data.cost_center5_id ? Number(data.cost_center5_id) : null,
+    column_order: columnOrder,
+    execution_order: data.execution_order ? Number(data.execution_order) : null,
+    visible_in_payslip: data.visible_in_payslip ?? "Y",
+    default_formula: data.default_formula ?? null,
+    formula_editable: data.formula_editable ?? "Y",
+    is_recurring: data.is_recurring ?? "Y",
+    component_subtype: data.component_subtype ?? null,
+    is_overtime_related: data.is_overtime_related ?? "N",
+    contributes_to_paye: data.contributes_to_paye ?? "N",
+    contributes_to_nssf: data.contributes_to_nssf ?? "N",
+    auto_fill: data.auto_fill ?? "N",
+    unpaid_leave: data.unpaid_leave ?? "N",
+  };
+};
 
 const createPayComponent = async (data) => {
   try {

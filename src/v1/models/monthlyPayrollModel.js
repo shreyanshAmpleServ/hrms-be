@@ -158,6 +158,66 @@ const deleteMonthlyPayroll = async (id) => {
 };
 
 // Get all payroll entries
+// const getAllMonthlyPayroll = async (
+//   search,
+//   page,
+//   size,
+//   startDate,
+//   endDate,
+//   payroll_month,
+//   payroll_year
+// ) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+//     const skip = (page - 1) * size || 0;
+
+//     const filters = {};
+//     if (search) {
+//       filters.OR = [
+//         {
+//           hrms_monthly_payroll_employee: {
+//             full_name: { contains: search.toLowerCase() },
+//           },
+//         },
+//         { payroll_month: { contains: search.toLowerCase() } },
+//         { status: { contains: search.toLowerCase() } },
+//         { remarks: { contains: search.toLowerCase() } },
+//       ];
+//     }
+//     const datas = await prisma.hrms_d_monthly_payroll_processing.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//       include: {
+//         hrms_monthly_payroll_employee: {
+//           select: {
+//             id: true,
+//             employee_code: true,
+//             full_name: true,
+//           },
+//         },
+//       },
+//     });
+//     const totalCount = await prisma.hrms_d_monthly_payroll_processing.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: datas,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     console.log("Payroll retreival error", error);
+
+//     throw new CustomError("Error retrieving payroll entries", 503);
+//   }
+// };
+
 const getAllMonthlyPayroll = async (
   search,
   page,
@@ -165,59 +225,369 @@ const getAllMonthlyPayroll = async (
   startDate,
   endDate,
   payroll_month,
-  payroll_year
+  payroll_year,
+  is_overtime,
+  is_advance,
+  empidto = "",
+  empidfrom = "",
+  depidfrom = "",
+  depidto = "",
+  positionidfrom = "",
+  positionidto = "",
+  wage = ""
 ) => {
   try {
+    console.log("=== getAllMonthlyPayroll START ===");
+    console.log("Input Parameters:", {
+      search,
+      page,
+      size,
+      startDate,
+      endDate,
+      payroll_month,
+      payroll_year,
+      is_overtime,
+      is_advance,
+      empidto,
+      empidfrom,
+      depidfrom,
+      depidto,
+      positionidfrom,
+      positionidto,
+      wage,
+    });
+
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
-    const filters = {};
-    if (search) {
-      filters.OR = [
-        {
-          hrms_monthly_payroll_employee: {
-            full_name: { contains: search.toLowerCase() },
-          },
-        },
-        { payroll_month: { contains: search.toLowerCase() } },
-        { status: { contains: search.toLowerCase() } },
-        { remarks: { contains: search.toLowerCase() } },
-      ];
+    console.log("Pagination Settings:", { page, size, skip });
+
+    // Handle is_overtime filter
+    let overtimeEmployeeIds = [];
+
+    if (is_overtime === true || is_overtime === "Y" || is_overtime === "true") {
+      console.log("Processing OVERTIME filter...");
+
+      const month = String(payroll_month || new Date().getMonth() + 1).padStart(
+        2,
+        "0"
+      );
+      const year = String(payroll_year || new Date().getFullYear());
+
+      console.log("Overtime Period:", { month, year });
+
+      const overtimeQuery = `
+        EXEC [dbo].[sp_hrms_employee_overtime_posting] 
+          @paymonth = '${month}',
+          @payyear = '${year}',
+          @empidto = '${empidto || ""}',
+          @empidfrom = '${empidfrom || ""}',
+          @depidfrom = '${depidfrom || ""}',
+          @depidto = '${depidto || ""}',
+          @positionidfrom = '${positionidfrom || ""}',
+          @positionidto = '${positionidto || ""}',
+          @wage = '${wage || ""}'
+      `;
+
+      console.log("Executing Overtime SP:", overtimeQuery);
+
+      const overtimeResults = await prisma.$queryRawUnsafe(overtimeQuery);
+      console.log("Overtime SP Results Count:", overtimeResults.length);
+
+      overtimeEmployeeIds = overtimeResults
+        .map((row) => row.employee_id)
+        .filter((id) => id !== null && id !== undefined);
+
+      console.log("Overtime Employee IDs found:", overtimeEmployeeIds.length);
+      console.log("Overtime Employee IDs:", overtimeEmployeeIds);
+
+      if (overtimeEmployeeIds.length === 0) {
+        console.log("No overtime employees found - returning empty result");
+        return {
+          data: [],
+          currentPage: page,
+          size,
+          totalPages: 0,
+          totalCount: 0,
+        };
+      }
+    } else {
+      console.log("Overtime filter NOT applied");
     }
-    const datas = await prisma.hrms_d_monthly_payroll_processing.findMany({
-      where: filters,
-      skip,
-      take: size,
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      include: {
-        hrms_monthly_payroll_employee: {
-          select: {
-            id: true,
-            employee_code: true,
-            full_name: true,
-          },
-        },
-      },
-    });
-    const totalCount = await prisma.hrms_d_monthly_payroll_processing.count({
-      where: filters,
+
+    // Handle is_advance filter
+    let advanceComponentIds = [];
+
+    if (is_advance !== undefined && is_advance !== null && is_advance !== "") {
+      console.log("Processing ADVANCE filter...");
+      console.log("is_advance value:", is_advance);
+
+      const advanceValue =
+        is_advance === true || is_advance === "Y" || is_advance === "true"
+          ? "Y"
+          : "N";
+
+      console.log("Advance filter value:", advanceValue);
+
+      const advanceQuery = `
+        SELECT id 
+        FROM hrms_m_pay_component 
+        WHERE is_advance = '${advanceValue}' AND is_active = 'Y'
+      `;
+
+      console.log("Executing Advance Query:", advanceQuery);
+
+      const advanceResults = await prisma.$queryRawUnsafe(advanceQuery);
+      console.log("Advance Query Results Count:", advanceResults.length);
+
+      advanceComponentIds = advanceResults
+        .map((row) => row.id)
+        .filter((id) => id !== null && id !== undefined);
+
+      console.log("Advance Component IDs:", advanceComponentIds);
+
+      if (advanceComponentIds.length === 0) {
+        console.log("No advance components found - returning empty result");
+        return {
+          data: [],
+          currentPage: page,
+          size,
+          totalPages: 0,
+          totalCount: 0,
+        };
+      }
+    } else {
+      console.log("Advance filter NOT applied");
+    }
+
+    // Build WHERE conditions
+    let whereConditions = ["1=1"];
+    console.log("Building WHERE conditions...");
+
+    // Filter by overtime employees
+    if (overtimeEmployeeIds.length > 0) {
+      const overtimeCondition = `mp.employee_id IN (${overtimeEmployeeIds.join(
+        ","
+      )})`;
+      whereConditions.push(overtimeCondition);
+      console.log("Added overtime condition:", overtimeCondition);
+    }
+
+    if (search) {
+      const sanitizedSearch = search.replace(/'/g, "''");
+      const searchCondition = `
+        (e.first_name LIKE '%${sanitizedSearch}%' OR 
+         e.last_name LIKE '%${sanitizedSearch}%' OR
+         e.employee_code LIKE '%${sanitizedSearch}%' OR
+         mp.status LIKE '%${sanitizedSearch}%')
+      `;
+      whereConditions.push(searchCondition);
+      console.log("Added search condition");
+    }
+
+    if (payroll_month) {
+      const monthCondition = `mp.payroll_month = ${parseInt(payroll_month)}`;
+      whereConditions.push(monthCondition);
+      console.log("Added month condition:", monthCondition);
+    }
+
+    if (payroll_year) {
+      const yearCondition = `mp.payroll_year = ${parseInt(payroll_year)}`;
+      whereConditions.push(yearCondition);
+      console.log("Added year condition:", yearCondition);
+    }
+
+    if (startDate && endDate) {
+      const start = new Date(startDate);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+
+      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+        const dateCondition = `mp.createdate BETWEEN '${start.toISOString()}' AND '${end.toISOString()}'`;
+        whereConditions.push(dateCondition);
+        console.log("Added date range condition");
+      }
+    }
+
+    const whereClause = `WHERE ${whereConditions.join(" AND ")}`;
+    console.log("Final WHERE clause:", whereClause);
+
+    // Get all data including dynamic columns
+    const dataQuery = `
+      SELECT 
+        mp.*,
+        e.id as emp_id,
+        e.employee_code,
+        e.first_name + ' ' + ISNULL(e.last_name, '') as full_name,
+        cur.id as currency_id,
+        cur.currency_code,
+        cur.currency_name
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
+      LEFT JOIN hrms_m_currency_master cur ON mp.pay_currency = cur.id
+      ${whereClause}
+      ORDER BY 
+        COALESCE(mp.updatedate, '1900-01-01') DESC, 
+        COALESCE(mp.createdate, '1900-01-01') DESC
+      OFFSET ${skip} ROWS
+      FETCH NEXT ${size} ROWS ONLY
+    `;
+
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
+      ${whereClause}
+    `;
+
+    console.log("Executing queries...");
+
+    const data = await prisma.$queryRawUnsafe(dataQuery);
+    const countResult = await prisma.$queryRawUnsafe(countQuery);
+    const totalCount = Number(countResult[0]?.total) || 0;
+
+    console.log("Data query returned rows:", data.length);
+    console.log("Total count:", totalCount);
+
+    // Fixed columns list
+    const fixedColumns = [
+      "id",
+      "employee_id",
+      "payroll_month",
+      "payroll_year",
+      "payroll_week",
+      "payroll_start_date",
+      "payroll_end_date",
+      "payroll_paid_days",
+      "pay_currency",
+      "total_earnings",
+      "taxable_earnings",
+      "tax_amount",
+      "total_deductions",
+      "net_pay",
+      "status",
+      "execution_date",
+      "pay_date",
+      "doc_date",
+      "processed",
+      "je_transid",
+      "project_id",
+      "cost_center1_id",
+      "cost_center2_id",
+      "cost_center3_id",
+      "cost_center4_id",
+      "cost_center5_id",
+      "approved1",
+      "approver1_id",
+      "employee_email",
+      "remarks",
+      "createdate",
+      "createdby",
+      "updatedate",
+      "updatedby",
+      "log_inst",
+      "emp_id",
+      "employee_code",
+      "full_name",
+      "currency_id",
+      "currency_code",
+      "currency_name",
+    ];
+
+    // Format data
+    const formattedData = data.map((row) => {
+      const result = {};
+
+      // Add dynamic component columns
+      Object.keys(row).forEach((key) => {
+        if (!fixedColumns.includes(key) && /^\d+$/.test(key)) {
+          // If advance filter is active, only include matching components
+          if (advanceComponentIds.length > 0) {
+            if (advanceComponentIds.includes(parseInt(key))) {
+              result[key] = row[key];
+            }
+          } else {
+            result[key] = row[key];
+          }
+        }
+      });
+
+      // Add fixed columns
+      result.id = row.id;
+      result.employee_id = row.employee_id;
+      result.payroll_month = row.payroll_month;
+      result.payroll_year = row.payroll_year;
+      result.payroll_week = row.payroll_week;
+      result.payroll_start_date = row.payroll_start_date;
+      result.payroll_end_date = row.payroll_end_date;
+      result.payroll_paid_days = row.payroll_paid_days;
+      result.pay_currency = row.pay_currency;
+      result.total_earnings = row.total_earnings;
+      result.taxable_earnings = row.taxable_earnings;
+      result.tax_amount = row.tax_amount;
+      result.total_deductions = row.total_deductions;
+      result.net_pay = row.net_pay;
+      result.status = row.status;
+      result.execution_date = row.execution_date;
+      result.pay_date = row.pay_date;
+      result.doc_date = row.doc_date;
+      result.processed = row.processed;
+      result.je_transid = row.je_transid;
+      result.project_id = row.project_id;
+      result.cost_center1_id = row.cost_center1_id;
+      result.cost_center2_id = row.cost_center2_id;
+      result.cost_center3_id = row.cost_center3_id;
+      result.cost_center4_id = row.cost_center4_id;
+      result.cost_center5_id = row.cost_center5_id;
+      result.approved1 = row.approved1;
+      result.approver1_id = row.approver1_id;
+      result.employee_email = row.employee_email;
+      result.remarks = row.remarks;
+      result.createdate = row.createdate;
+      result.createdby = row.createdby;
+      result.updatedate = row.updatedate;
+      result.updatedby = row.updatedby;
+      result.log_inst = row.log_inst;
+
+      // Add related objects
+      result.hrms_monthly_payroll_employee = {
+        id: row.emp_id,
+        full_name: row.full_name,
+        employee_code: row.employee_code,
+      };
+
+      result.hrms_monthly_payroll_currency = row.currency_id
+        ? {
+            id: row.currency_id,
+            currency_code: row.currency_code,
+            currency_name: row.currency_name,
+          }
+        : null;
+
+      return result;
     });
 
-    return {
-      data: datas,
+    const response = {
+      data: formattedData,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
       totalCount,
     };
-  } catch (error) {
-    console.log("Payroll retreival error", error);
 
+    console.log("=== getAllMonthlyPayroll END ===");
+    console.log("Returning", formattedData.length, "records");
+
+    return response;
+  } catch (error) {
+    console.error("=== getAllMonthlyPayroll ERROR ===");
+    console.error("Error message:", error.message);
+    console.error("Error stack:", error.stack);
     throw new CustomError("Error retrieving payroll entries", 503);
   }
 };
-
 // Mothly payroll stored procedure
 const callMonthlyPayrollSP = async (params) => {
   try {

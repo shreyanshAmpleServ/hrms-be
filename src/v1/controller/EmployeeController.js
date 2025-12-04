@@ -759,23 +759,55 @@ const deleteEmployee = async (req, res, next) => {
   }
 };
 
+// const getAllEmployee = async (req, res, next) => {
+//   try {
+//     const { page, size, search, startDate, endDate, status } = req.query;
+
+//     const employees = await EmployeeService.getAllEmployee(
+//       Number(page),
+//       Number(size),
+//       search,
+//       startDate && moment(startDate),
+//       endDate && moment(endDate),
+//       status
+//     );
+
+//     res.status(200).json({
+//       success: true,
+//       message: "Employees fetched successfully",
+//       data: employees,
+//       status: 200,
+//     });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const getAllEmployee = async (req, res, next) => {
   try {
     const { page, size, search, startDate, endDate, status } = req.query;
 
-    const employees = await EmployeeService.getAllEmployee(
+    const managerId = req.user?.employee_id;
+    const userRole = req.user?.role_id;
+
+    console.log("Manager ID:", managerId);
+    console.log("User Role:", userRole);
+
+    const deals = await EmployeeService.getAllEmployee(
       Number(page),
       Number(size),
       search,
       startDate && moment(startDate),
       endDate && moment(endDate),
-      status
+      status,
+      managerId,
+      userRole
     );
 
     res.status(200).json({
       success: true,
       message: "Employees fetched successfully",
-      data: employees,
+      data: deals,
       status: 200,
     });
   } catch (error) {
