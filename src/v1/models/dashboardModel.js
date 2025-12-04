@@ -150,21 +150,45 @@ const getAllEmployeeAttendance = async (dateString, managerId, roleId) => {
     : DateTime.now().setZone(zone).startOf("day");
   const endOfDay = today.endOf("day");
 
-  // Check if admin by role_id
-  // Assuming role_id = 1 is admin (adjust if different)
-  const isAdmin = roleId === 1;
+  const adminRoles = [
+    "admin",
+    "Admin",
+    "ADMIN",
+    "Super Admin",
+    "super admin",
+    "superadmin",
+    "SuperAdmin",
+  ];
+
+  let actualRoleName = roleId;
+
+  if (typeof roleId === "number" || !isNaN(Number(roleId))) {
+    const roleData = await prisma.hrms_m_role.findUnique({
+      where: { id: Number(roleId) },
+      select: { role_name: true },
+    });
+    actualRoleName = roleData?.role_name || null;
+    console.log("Fetched role name from DB:", actualRoleName);
+  }
+
+  const isAdmin = adminRoles.some(
+    (role) => role.toLowerCase() === actualRoleName?.toLowerCase()?.trim()
+  );
 
   console.log("Role ID:", roleId);
+  console.log("Actual Role Name:", actualRoleName);
   console.log("Is Admin:", isAdmin);
 
   const employeeWhere = {
     status: { in: ["Active", "Probation", "Notice Period"] },
   };
 
-  if (!isAdmin && managerId) {
-    employeeWhere.manager_id = managerId;
+  if (managerId && !isAdmin) {
+    employeeWhere.manager_id = parseInt(managerId);
+    console.log("Applying manager filter for manager_id:", managerId);
+  } else {
+    console.log("Admin user - showing all employees attendance");
   }
-
   console.log("Employee WHERE clause:", employeeWhere);
 
   const employees = await prisma.hrms_d_employee.findMany({

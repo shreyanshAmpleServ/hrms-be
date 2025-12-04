@@ -6,6 +6,7 @@ const xlsx = require("xlsx");
 const moment = require("moment");
 const { errorNotExist } = require("../../Comman/errorNotExist");
 const { createRequest, getWorkflowForRequest } = require("./requestsModel");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 const requiredFields = {
   pay_component_id: "Pay Component is required",
   amount: "Amount is required",
@@ -276,10 +277,209 @@ const validateContactsExist = async (contactIds) => {
 //   }
 // };
 
+// const createBasicPay = async (data) => {
+//   try {
+//     // await checkDuplicate({
+//     //   model: "hrms_d_employee_pay_component_assignment_header",
+//     //   field: "employee_id",
+//     //   value: data.employee_id,
+//     //   excludeId: data.id,
+//     //   errorMessage: "Employee ID already exists",
+//     // });
+//     if (!data.employee_id) {
+//       throw new CustomError("Employee ID is required", 400);
+//     }
+
+//     const employee = await prisma.hrms_d_employee.findUnique({
+//       where: { id: Number(data.employee_id) },
+//       select: {
+//         department_id: true,
+//         designation_id: true,
+//       },
+//     });
+
+//     const { workflow: workflowSteps } = await getWorkflowForRequest(
+//       "component_assignment",
+//       employee?.department_id,
+//       employee?.designation_id
+//     );
+
+//     const hasWorkflow = workflowSteps && workflowSteps.length > 0;
+
+//     if (hasWorkflow) {
+//       const existing =
+//         await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+//           where: {
+//             employee_id: Number(data.employee_id),
+//             status: { in: ["Active"] },
+//           },
+//         });
+
+//       if (existing) {
+//         throw new CustomError(
+//           "An active or pending pay component assignment already exists for this employee.",
+//           400
+//         );
+//       }
+//     }
+
+//     const { payLineData = [], ...headerData } = data;
+
+//     if (!payLineData || payLineData.length === 0) {
+//       throw new CustomError("At least one pay component line is required", 400);
+//     }
+
+//     const initialStatus = hasWorkflow ? "Pending" : "Active";
+
+//     const payComponentHeader =
+//       await prisma.hrms_d_employee_pay_component_assignment_header.create({
+//         data: {
+//           ...serializeHeaders(headerData),
+//           status: initialStatus,
+//           createdby: data.createdby || 1,
+//           createdate: new Date(),
+//           log_inst: data.log_inst || 1,
+//         },
+//         include: {
+//           hrms_d_employee: {
+//             select: {
+//               id: true,
+//               employee_code: true,
+//               full_name: true,
+//               email: true,
+//             },
+//           },
+//           branch_pay_component_header: {
+//             select: {
+//               id: true,
+//               branch_name: true,
+//             },
+//           },
+//           work_life_entry_pay_header: {
+//             select: {
+//               id: true,
+//               event_type: true,
+//             },
+//           },
+//         },
+//       });
+
+//     const lineDatas = payLineData.map((line, index) => ({
+//       parent_id: payComponentHeader.id,
+//       ...serializePayLine(line),
+//       line_num: index + 1,
+//       createdate: new Date(),
+//       createdby: data.createdby || 1,
+//     }));
+
+//     await prisma.hrms_d_employee_pay_component_assignment_line.createMany({
+//       data: lineDatas,
+//     });
+
+//     const requestResult = await createRequest({
+//       requester_id: payComponentHeader.employee_id,
+//       request_type: "component_assignment",
+//       reference_id: payComponentHeader.id,
+//       request_data: `Pay component assignment for ${payComponentHeader.hrms_d_employee.full_name}`,
+//       createdby: data.createdby || 1,
+//       log_inst: data.log_inst || 1,
+//     });
+
+//     if (!requestResult?.request_created && !hasWorkflow) {
+//       await prisma.hrms_d_employee_pay_component_assignment_header.update({
+//         where: { id: payComponentHeader.id },
+//         data: { status: "Active" },
+//       });
+//     }
+
+//     const fullData =
+//       await prisma.hrms_d_employee_pay_component_assignment_header.findUnique({
+//         where: { id: payComponentHeader.id },
+//         include: {
+//           hrms_d_employee_pay_component_assignment_line: {
+//             include: {
+//               pay_component_for_line: {
+//                 select: {
+//                   id: true,
+//                   component_name: true,
+//                   component_code: true,
+//                 },
+//               },
+//               pay_component_line_currency: {
+//                 select: {
+//                   id: true,
+//                   currency_name: true,
+//                   currency_code: true,
+//                 },
+//               },
+//             },
+//           },
+//           hrms_d_employee: {
+//             select: {
+//               id: true,
+//               employee_code: true,
+//               full_name: true,
+//               email: true,
+//               hrms_employee_department: {
+//                 select: {
+//                   id: true,
+//                   department_name: true,
+//                 },
+//               },
+//               hrms_employee_designation: {
+//                 select: {
+//                   id: true,
+//                   designation_name: true,
+//                 },
+//               },
+//             },
+//           },
+//           branch_pay_component_header: {
+//             select: {
+//               id: true,
+//               branch_name: true,
+//             },
+//           },
+//           work_life_entry_pay_header: {
+//             select: {
+//               id: true,
+//               event_type: true,
+//               work_life_event_type: {
+//                 select: {
+//                   id: true,
+//                   event_type_name: true,
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       });
+
+//     return fullData;
+//   } catch (error) {
+//     console.error("Error creating pay component assignment:", error);
+//     throw new CustomError(error.message, error.status || 500);
+//   }
+// };
+
 const createBasicPay = async (data) => {
   try {
     if (!data.employee_id) {
       throw new CustomError("Employee ID is required", 400);
+    }
+
+    const existingAssignment =
+      await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
+        where: {
+          employee_id: Number(data.employee_id),
+        },
+      });
+
+    if (existingAssignment) {
+      throw new CustomError(
+        "This employee have already assigned the component",
+        400
+      );
     }
 
     const employee = await prisma.hrms_d_employee.findUnique({
@@ -297,23 +497,6 @@ const createBasicPay = async (data) => {
     );
 
     const hasWorkflow = workflowSteps && workflowSteps.length > 0;
-
-    if (hasWorkflow) {
-      const existing =
-        await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
-          where: {
-            employee_id: Number(data.employee_id),
-            status: { in: ["Active", "Pending"] },
-          },
-        });
-
-      if (existing) {
-        throw new CustomError(
-          "An active or pending pay component assignment already exists for this employee.",
-          400
-        );
-      }
-    }
 
     const { payLineData = [], ...headerData } = data;
 
@@ -450,13 +633,9 @@ const createBasicPay = async (data) => {
     return fullData;
   } catch (error) {
     console.error("Error creating pay component assignment:", error);
-    throw new CustomError(
-      `Error creating pay component assignment: ${error.message}`,
-      error.status || 500
-    );
+    throw new CustomError(error.message, error.status || 500);
   }
 };
-
 const updateBasicPay = async (id, data) => {
   const { payLineData, ...headerDatas } = data;
   try {
@@ -470,7 +649,7 @@ const updateBasicPay = async (id, data) => {
         });
       if (existing) {
         throw new CustomError(
-          "Another basic pay record already exists for this employee.",
+          "This employee have already assigned the component",
           400
         );
       }

@@ -1,9 +1,17 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { checkDuplicate } = require("../../utils/duplicateCheck.js");
 
 // Create a new branch
 const createBranch = async (data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_branch_master",
+      field: "branch_name",
+      value: data.branch_name,
+      errorMessage: "Branch name already exists",
+    });
+
     const branch = await prisma.hrms_m_branch_master.create({
       data: {
         company_id: Number(data.company_id),
@@ -26,7 +34,7 @@ const createBranch = async (data) => {
     });
     return branch;
   } catch (error) {
-    throw new CustomError(`Error creating branch: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -50,13 +58,20 @@ const findBranchById = async (id) => {
     }
     return branch;
   } catch (error) {
-    throw new CustomError(`Error finding branch by ID: ${error.message}`, 503);
+    throw new CustomError(`${error.message}`, 503);
   }
 };
 
 // Update a branch
 const updateBranch = async (id, data) => {
   try {
+    await checkDuplicate({
+      model: "hrms_m_branch_master",
+      field: "branch_name",
+      value: data.branch_name,
+      excludeId: id,
+      errorMessage: "Branch name already exists",
+    });
     const updatedbranch = await prisma.hrms_m_branch_master.update({
       where: { id: parseInt(id) },
       data: {
@@ -76,7 +91,7 @@ const updateBranch = async (id, data) => {
     });
     return updatedbranch;
   } catch (error) {
-    throw new CustomError(`Error updating branch: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
