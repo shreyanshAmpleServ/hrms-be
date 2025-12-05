@@ -15,6 +15,51 @@ const serializeJobData = (data) => {
   };
 };
 
+// const createOfferLetter = async (data) => {
+//   try {
+//     await errorNotExist(
+//       "hrms_d_candidate_master",
+//       data.candidate_id,
+//       "Candidate"
+//     );
+//     const reqData = await prisma.hrms_d_offer_letter.create({
+//       data: {
+//         ...serializeJobData(data),
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst || 1,
+//       },
+//       include: {
+//         offered_candidate: {
+//           select: {
+//             full_name: true,
+//             id: true,
+//           },
+//         },
+//         offer_letter_currencyId: {
+//           select: {
+//             id: true,
+//             currency_code: true,
+//             currency_name: true,
+//           },
+//         },
+//       },
+//     });
+//     await createRequest({
+//       request_type: "offer_letter",
+//       reference_id: reqData.id,
+//       status: "P",
+//       requester_id: data.createdby || 1,
+//       createdby: data.createdby || 1,
+//       createdate: new Date(),
+//       log_inst: data.log_inst || 1,
+//     });
+//     return reqData;
+//   } catch (error) {
+//     throw new CustomError(`Error creating offer letter: ${error.message}`, 500);
+//   }
+// };
+
 const createOfferLetter = async (data) => {
   try {
     await errorNotExist(
@@ -22,6 +67,36 @@ const createOfferLetter = async (data) => {
       data.candidate_id,
       "Candidate"
     );
+
+    const existingOfferLetter = await prisma.hrms_d_offer_letter.findFirst({
+      where: {
+        candidate_id: Number(data.candidate_id),
+      },
+      select: {
+        id: true,
+        status: true,
+        position: true,
+        offer_date: true,
+        offered_candidate: {
+          select: {
+            full_name: true,
+            candidate_code: true,
+          },
+        },
+      },
+      orderBy: {
+        createdate: "desc",
+      },
+    });
+
+    if (existingOfferLetter) {
+      throw new CustomError(
+        `An offer letter already exists for candidate "${existingOfferLetter.offered_candidate?.full_name}" (${existingOfferLetter.offered_candidate?.candidate_code}). ` +
+          `Existing offer: ${existingOfferLetter.position} - Status: ${existingOfferLetter.status} (ID: ${existingOfferLetter.id})`,
+        409
+      );
+    }
+
     const reqData = await prisma.hrms_d_offer_letter.create({
       data: {
         ...serializeJobData(data),
@@ -34,6 +109,7 @@ const createOfferLetter = async (data) => {
           select: {
             full_name: true,
             id: true,
+            candidate_code: true,
           },
         },
         offer_letter_currencyId: {
@@ -45,6 +121,7 @@ const createOfferLetter = async (data) => {
         },
       },
     });
+
     await createRequest({
       request_type: "offer_letter",
       reference_id: reqData.id,
@@ -54,13 +131,16 @@ const createOfferLetter = async (data) => {
       createdate: new Date(),
       log_inst: data.log_inst || 1,
     });
+
     return reqData;
   } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
     throw new CustomError(`Error creating offer letter: ${error.message}`, 500);
   }
 };
 
-// Find a offer letter by ID
 const findOfferLetterById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_offer_letter.findUnique({
@@ -78,7 +158,6 @@ const findOfferLetterById = async (id) => {
   }
 };
 
-// Update a offer letter
 const updateOfferLetter = async (id, data) => {
   try {
     await errorNotExist(
@@ -86,6 +165,45 @@ const updateOfferLetter = async (id, data) => {
       data.candidate_id,
       "Candidate"
     );
+
+    const currentOfferLetter = await prisma.hrms_d_offer_letter.findUnique({
+      where: { id: parseInt(id) },
+      select: { candidate_id: true },
+    });
+
+    if (!currentOfferLetter) {
+      throw new CustomError("Offer letter not found", 404);
+    }
+
+    if (currentOfferLetter.candidate_id !== Number(data.candidate_id)) {
+      const existingOfferForNewCandidate =
+        await prisma.hrms_d_offer_letter.findFirst({
+          where: {
+            candidate_id: Number(data.candidate_id),
+            id: { not: parseInt(id) },
+          },
+          select: {
+            id: true,
+            status: true,
+            position: true,
+            offered_candidate: {
+              select: {
+                full_name: true,
+                candidate_code: true,
+              },
+            },
+          },
+        });
+
+      if (existingOfferForNewCandidate) {
+        throw new CustomError(
+          `Candidate "${existingOfferForNewCandidate.offered_candidate?.full_name}" already has an existing offer letter ` +
+            `(ID: ${existingOfferForNewCandidate.id}, Status: ${existingOfferForNewCandidate.status}). ` +
+            `Please use that offer letter or delete it first.`,
+          409
+        );
+      }
+    }
 
     const updatedOfferLetter = await prisma.hrms_d_offer_letter.update({
       where: { id: parseInt(id) },
@@ -99,6 +217,7 @@ const updateOfferLetter = async (id, data) => {
           select: {
             full_name: true,
             id: true,
+            candidate_code: true,
           },
         },
         offer_letter_currencyId: {
@@ -110,13 +229,16 @@ const updateOfferLetter = async (id, data) => {
         },
       },
     });
+
     return updatedOfferLetter;
   } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
     throw new CustomError(`Error updating offer letter: ${error.message}`, 500);
   }
 };
 
-// Delete a offer letter
 const deleteOfferLetter = async (id) => {
   try {
     await prisma.hrms_d_offer_letter.delete({
@@ -134,7 +256,6 @@ const deleteOfferLetter = async (id) => {
   }
 };
 
-// Get all offer letters
 const getAllOfferLetter = async (
   search,
   page,
@@ -149,7 +270,6 @@ const getAllOfferLetter = async (
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    // Handle search
     if (search) {
       filters.OR = [
         {

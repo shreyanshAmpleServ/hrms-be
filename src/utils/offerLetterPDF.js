@@ -365,13 +365,9 @@ const offerLetterTemplate = `<!DOCTYPE html>
 </body>
 </html>`;
 
-/**
- * Generate HTML offer letter from data
- */
 const generateOfferLetterHTML = (data) => {
   return new Promise((resolve, reject) => {
     try {
-      // Generate pay components rows
       const payComponentsRows = (data.payComponents || [])
         .map(
           (component) =>
@@ -430,9 +426,6 @@ const generateOfferLetterHTML = (data) => {
   });
 };
 
-/**
- * Generate Offer Letter PDF using Puppeteer
- */
 const generateOfferLetterPDF = async (data, filePath) => {
   let browser = null;
   try {
@@ -494,7 +487,6 @@ const generateOfferLetterPDF = async (data, filePath) => {
   }
 };
 
-// Helper function
 const formatDate = (date) => {
   if (!date) return "";
   return new Date(date).toLocaleDateString("en-GB", {

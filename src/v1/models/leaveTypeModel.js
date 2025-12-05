@@ -80,6 +80,7 @@ const updateLeaveType = async (id, data) => {
       model: "hrms_m_leave_type_master",
       field: "leave_type",
       value: data.leave_type,
+      excludeId: parseInt(id),
       errorMessage: "Leave type already exists",
     });
     const leaveType = data.leave_type.trim();
