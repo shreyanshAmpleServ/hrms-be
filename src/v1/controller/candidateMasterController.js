@@ -339,6 +339,17 @@ const processCandidateFileUploads = async (files) => {
   return result;
 };
 
+const getCandidateDocumentVerificationStatus = async (req, res, next) => {
+  try {
+    const data =
+      await candidateMasterService.getCandidateDocumentVerificationStatus(
+        req.params.id
+      );
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    next(new CustomError(error.message, 400));
+  }
+};
 const createCandidateMaster = async (req, res, next) => {
   try {
     const uploadResults = await processCandidateFileUploads(req.files);
@@ -617,4 +628,5 @@ module.exports = {
   getAllCandidateMaster,
   updateCandidateMasterStatus,
   createEmployeeFromCandidate,
+  getCandidateDocumentVerificationStatus,
 };

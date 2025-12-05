@@ -26,6 +26,11 @@ const getRequiredDocumentsForJobPosting = async (jobPostingId) => {
   );
 };
 
+const getCandidateDocumentVerificationStatus = async (candidateId) => {
+  return await candidateMasterModel.getCandidateDocumentVerificationStatus(
+    candidateId
+  );
+};
 const createEmployeeFromCandidate = async (
   candidateId,
   additionalData,
@@ -71,4 +76,5 @@ module.exports = {
   getAllCandidateMaster,
   createEmployeeFromCandidate,
   getRequiredDocumentsForJobPosting,
+  getCandidateDocumentVerificationStatus,
 };

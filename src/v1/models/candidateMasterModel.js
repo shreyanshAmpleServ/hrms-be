@@ -3,46 +3,6 @@ const CustomError = require("../../utils/CustomError");
 
 const employeeModel = require("./EmployeeModel");
 
-// const serializeCandidateMasterData = (data) => ({
-//   candidate_code: data.candidate_code ?? undefined,
-//   full_name: data.full_name || "",
-//   email: data.email || "",
-//   phone: data.phone || "",
-//   date_of_birth: data.date_of_birth ? new Date(data.date_of_birth) : null,
-//   gender: data.gender || "",
-//   date_of_application: data.date_of_application
-//     ? new Date(data.date_of_application)
-//     : null,
-//   nationality: data.nationality || "",
-//   profile_pic: data.profile_pic || "",
-//   resume_path: data.resume_path || "",
-//   applied_position_id: data.applied_position_id
-//     ? Number(data.applied_position_id)
-//     : null,
-//   status: data.status || "Pending",
-//   application_source: Number(data.application_source),
-//   interview1_remarks: data.interview1_remarks || "",
-//   interview2_remarks: data.interview2_remarks || "",
-//   interview3_remarks: data.interview3_remarks || "",
-//   interview_stage: Number(data.interview_stage) || null,
-//   expected_joining_date: data.expected_joining_date
-//     ? new Date(data.expected_joining_date)
-//     : null,
-//   job_posting: data.job_posting ? Number(data.job_posting) : null,
-//   actual_joining_date: data.actual_joining_date
-//     ? new Date(data.actual_joining_date)
-//     : null,
-//   offer_accepted_date: data.offer_accepted_date
-//     ? new Date(data.offer_accepted_date)
-//     : null,
-//   no_show_flag: data.no_show_flag || "N",
-//   no_show_remarks: data.no_show_remarks || "",
-//   no_show_marked_date: data.no_show_marked_date
-//     ? new Date(data.no_show_marked_date)
-//     : null,
-//   department_id: Number(data.department_id),
-// });
-
 const serializeCandidateMasterData = (data) => {
   const serialized = {
     candidate_code: data.candidate_code ?? undefined,
@@ -91,6 +51,7 @@ const serializeCandidateMasterData = (data) => {
 
   return serialized;
 };
+
 const snapshotHiringStagesForCandidate = async (
   candidateId,
   jobPostingId,
@@ -640,67 +601,6 @@ const findCandidateMasterById = async (id) => {
   }
 };
 
-// const updateCandidateMaster = async (id, data) => {
-//   try {
-//     const updatedEntry = await prisma.hrms_d_candidate_master.update({
-//       where: { id: parseInt(id) },
-//       include: {
-//         candidate_job_posting: {
-//           select: {
-//             id: true,
-//             job_title: true,
-//             hiring_stage_id: true,
-//           },
-//         },
-//         candidate_application_source: {
-//           select: {
-//             id: true,
-//             source_name: true,
-//           },
-//         },
-//         candidate_interview_stage: {
-//           select: {
-//             id: true,
-//             stage_name: true,
-//           },
-//         },
-//         candidate_master_applied_position: {
-//           select: {
-//             id: true,
-//             designation_name: true,
-//           },
-//         },
-//         candidate_department: {
-//           select: {
-//             id: true,
-//             department_name: true,
-//           },
-//         },
-//       },
-//       data: {
-//         ...serializeCandidateMasterData(data),
-//         updatedby: data.updatedby || 1,
-//         updatedate: new Date(),
-//       },
-//     });
-
-//     const hiringStages = await getCandidateHiringStages(updatedEntry.id);
-//     const documentTypes = await getCandidateDocumentTypes(updatedEntry.id);
-
-//     return {
-//       ...updatedEntry,
-//       hiring_stages: hiringStages,
-//       document_types: documentTypes,
-//     };
-//   } catch (error) {
-//     console.error("Error updating candidate master:", error);
-//     throw new CustomError(
-//       `Error updating candidate master: ${error.message}`,
-//       500
-//     );
-//   }
-// };
-
 const updateCandidateMaster = async (id, data) => {
   try {
     const existingCandidate = await prisma.hrms_d_candidate_master.findUnique({
@@ -831,6 +731,195 @@ const deleteCandidateMaster = async (id) => {
   }
 };
 
+// const getAllCandidateMaster = async (
+//   search,
+//   page,
+//   size,
+//   startDate,
+//   endDate,
+//   is_active = "false"
+// ) => {
+//   try {
+//     if (is_active === "true") {
+//       const filters = {};
+
+//       if (search && search.trim()) {
+//         const searchTerm = search.trim().toLowerCase();
+//         filters.OR = [
+//           { full_name: { contains: searchTerm } },
+//           { candidate_code: { contains: searchTerm } },
+//         ];
+//       }
+
+//       const datas = await prisma.hrms_d_candidate_master.findMany({
+//         where: filters,
+//         select: {
+//           id: true,
+//           full_name: true,
+//           candidate_code: true,
+//         },
+//         orderBy: [{ id: "asc" }],
+//       });
+//       return {
+//         data: datas,
+//       };
+//     } else {
+//       page = !page || page <= 0 ? 1 : parseInt(page);
+//       size = !size || size <= 0 ? 10 : parseInt(size);
+//       const skip = (page - 1) * size;
+
+//       const filters = {};
+
+//       if (search && search.trim()) {
+//         const searchTerm = search.trim().toLowerCase();
+//         filters.OR = [
+//           { full_name: { contains: searchTerm } },
+//           { email: { contains: searchTerm } },
+//           { phone: { contains: searchTerm } },
+//           { status: { contains: searchTerm } },
+//           { candidate_code: { contains: searchTerm } },
+//         ];
+//       }
+
+//       if (startDate && endDate) {
+//         const start = new Date(startDate);
+//         const end = new Date(endDate);
+//         end.setHours(23, 59, 59, 999);
+
+//         if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//           filters.createdate = {
+//             gte: start,
+//             lte: end,
+//           };
+//         }
+//       }
+
+//       const [datas, totalCount] = await Promise.all([
+//         prisma.hrms_d_candidate_master.findMany({
+//           where: filters,
+//           skip,
+//           take: size,
+//           orderBy: [{ createdate: "desc" }],
+//           include: {
+//             candidate_job_posting: {
+//               select: {
+//                 id: true,
+//                 job_title: true,
+//                 hiring_stage_id: true,
+//               },
+//             },
+//             candidate_application_source: {
+//               select: {
+//                 id: true,
+//                 source_name: true,
+//               },
+//             },
+//             candidate_interview_stage: {
+//               select: {
+//                 id: true,
+//                 stage_name: true,
+//               },
+//             },
+//             candidate_master_applied_position: {
+//               select: {
+//                 id: true,
+//                 designation_name: true,
+//               },
+//             },
+//             candidate_department: {
+//               select: {
+//                 id: true,
+//                 department_name: true,
+//               },
+//             },
+//             interview_stage_candidate: {
+//               select: {
+//                 id: true,
+//                 status: true,
+//               },
+//             },
+//           },
+//         }),
+//         prisma.hrms_d_candidate_master.count({
+//           where: filters,
+//         }),
+//       ]);
+
+//       const stageCount = await prisma.hrms_m_interview_stage.count();
+//       const candidatesToUpdate = [];
+
+//       for (const candidate of datas) {
+//         if (candidate.status !== "A") continue;
+//         const remarkCount = await prisma.hrms_m_interview_stage_remark?.count({
+//           where: { candidate_id: candidate.id },
+//         });
+
+//         if (remarkCount === stageCount) {
+//           const allRemarksAreA = candidate.interview_stage_candidate.every(
+//             (remark) => remark.status === "A"
+//           );
+
+//           if (allRemarksAreA) {
+//             candidatesToUpdate.push(candidate.id);
+//           }
+//         }
+//       }
+
+//       if (candidatesToUpdate.length > 0) {
+//         await prisma.hrms_d_candidate_master.updateMany({
+//           where: {
+//             id: {
+//               in: candidatesToUpdate.map((id) => parseInt(id)),
+//             },
+//           },
+//           data: {
+//             status: "A",
+//             updatedate: new Date(),
+//           },
+//         });
+
+//         datas.forEach((candidate) => {
+//           if (candidatesToUpdate.includes(candidate.id)) {
+//             candidate.status = "A";
+//           }
+//         });
+//       }
+
+//       const enrichedData = await Promise.all(
+//         datas.map(async (candidate) => {
+//           const hiringStages = await getCandidateHiringStages(candidate.id);
+//           return {
+//             ...candidate,
+//             hiring_stages: hiringStages,
+//           };
+//         })
+//       );
+
+//       return {
+//         data: enrichedData,
+//         currentPage: page,
+//         size,
+//         totalPages: Math.ceil(totalCount / size),
+//         totalCount,
+//         message:
+//           candidatesToUpdate.length > 0
+//             ? `Updated ${candidatesToUpdate.length} candidate(s) status to 'A'`
+//             : null,
+//       };
+//     }
+//   } catch (error) {
+//     console.log("Candidate error", error);
+
+//     if (error.code === "P2002") {
+//       throw new CustomError("Duplicate entry found", 409);
+//     } else if (error.code === "P2025") {
+//       throw new CustomError("Record not found", 404);
+//     } else {
+//       throw new CustomError("Error retrieving candidates", 503);
+//     }
+//   }
+// };
+
 const getAllCandidateMaster = async (
   search,
   page,
@@ -914,12 +1003,6 @@ const getAllCandidateMaster = async (
                 source_name: true,
               },
             },
-            candidate_interview_stage: {
-              select: {
-                id: true,
-                stage_name: true,
-              },
-            },
             candidate_master_applied_position: {
               select: {
                 id: true,
@@ -932,12 +1015,12 @@ const getAllCandidateMaster = async (
                 department_name: true,
               },
             },
-            interview_stage_candidate: {
-              select: {
-                id: true,
-                status: true,
-              },
-            },
+            // interview_stage_candidate: {
+            //   select: {
+            //     id: true,
+            //     status: true,
+            //   },
+            // },
           },
         }),
         prisma.hrms_d_candidate_master.count({
@@ -988,8 +1071,29 @@ const getAllCandidateMaster = async (
       const enrichedData = await Promise.all(
         datas.map(async (candidate) => {
           const hiringStages = await getCandidateHiringStages(candidate.id);
+
+          let interviewStageDetails = null;
+          if (candidate.interview_stage) {
+            try {
+              interviewStageDetails =
+                await prisma.hrms_m_interview_stage.findUnique({
+                  where: { id: parseInt(candidate.interview_stage) },
+                  select: {
+                    id: true,
+                    stage_name: true,
+                  },
+                });
+            } catch (error) {
+              console.warn(
+                `Could not fetch interview stage for candidate ${candidate.id}:`,
+                error
+              );
+            }
+          }
+
           return {
             ...candidate,
+            candidate_interview_stage: interviewStageDetails,
             hiring_stages: hiringStages,
           };
         })
@@ -1019,7 +1123,6 @@ const getAllCandidateMaster = async (
     }
   }
 };
-
 const updateCandidateMasterStatus = async (id, data) => {
   try {
     const candidateMasterId = parseInt(id);
@@ -1159,6 +1262,103 @@ const updateCandidateStageStatus = async (
   }
 };
 
+// const createEmployeeFromCandidate = async (
+//   candidateId,
+//   additionalData,
+//   createdBy,
+//   logInst
+// ) => {
+//   try {
+//     const candidate = await prisma.hrms_d_candidate_master.findUnique({
+//       where: { id: parseInt(candidateId) },
+//       include: {
+//         candidate_master_applied_position: true,
+//         candidate_application_source: true,
+//         candidate_interview_stage: true,
+//       },
+//     });
+
+//     if (!candidate) {
+//       throw new CustomError("Candidate not found", 404);
+//     }
+
+//     if (candidate.status !== "A") {
+//       throw new CustomError(
+//         "Candidate must be hired or selected to create employee",
+//         400
+//       );
+//     }
+
+//     const existingEmployee = await prisma.hrms_d_employee.findFirst({
+//       where: {
+//         OR: [{ email: candidate.email }],
+//       },
+//     });
+
+//     if (existingEmployee) {
+//       throw new CustomError("Employee already exists for this candidate", 400);
+//     }
+
+//     const employee_code = await generateEmployeeCode(candidate.full_name);
+
+//     const employeeData = {
+//       employee_code: employee_code,
+//       first_name: candidate.full_name.split(" ")[0] || "",
+//       last_name: candidate.full_name.split(" ").slice(1).join(" ") || "",
+//       full_name: candidate.full_name,
+//       email: candidate.email,
+//       phone_number: candidate.phone,
+//       date_of_birth: candidate.date_of_birth,
+//       gender: candidate.gender,
+//       nationality: candidate.nationality,
+//       profile_pic: candidate.profile_pic,
+//       department_id: candidate.department_id,
+//       designation_id: candidate.applied_position_id,
+//       join_date: candidate.actual_joining_date || new Date(),
+//       employment_type: additionalData.employment_type || "Full-time",
+//       employee_category: additionalData.employee_category || "Regular",
+//       status: "Active",
+//       ...additionalData,
+//       createdby: createdBy,
+//       log_inst: logInst,
+//     };
+
+//     if (!employeeData.department_id) {
+//       throw new CustomError(
+//         "Department ID is required to create employee",
+//         400
+//       );
+//     }
+
+//     const newEmployee = await employeeModel.createEmployee(employeeData);
+
+//     await prisma.hrms_d_candidate_master.update({
+//       where: { id: parseInt(candidateId) },
+//       data: {
+//         status: "A",
+//         status_remarks: `Converted to employee with ID: ${newEmployee.id}`,
+//         updatedate: new Date(),
+//         updatedby: createdBy,
+//       },
+//     });
+
+//     return {
+//       employee: newEmployee,
+//       candidate: candidate,
+//       message: "Employee created successfully from candidate",
+//     };
+//   } catch (error) {
+//     console.error("Error creating employee from candidate:", error);
+//     if (error instanceof CustomError) {
+//       throw error;
+//     }
+//     throw new CustomError(
+//       `Error creating employee from candidate: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const createEmployeeFromCandidate = async (
   candidateId,
   additionalData,
@@ -1186,17 +1386,68 @@ const createEmployeeFromCandidate = async (
       );
     }
 
+    if (candidate.status === "Converted") {
+      throw new CustomError(
+        "This candidate has already been converted to an employee",
+        400
+      );
+    }
+
+    const documentVerification = await verifyCandidateDocuments(
+      parseInt(candidateId)
+    );
+
+    if (!documentVerification.allRequiredDocumentsUploaded) {
+      console.warn(
+        ` Warning: Creating employee for candidate ${candidateId} with missing documents: ${documentVerification.missingDocuments
+          .map((d) => d.name)
+          .join(", ")}`
+      );
+    }
+
     const existingEmployee = await prisma.hrms_d_employee.findFirst({
       where: {
-        OR: [{ email: candidate.email }],
+        email: candidate.email,
+      },
+      select: {
+        id: true,
+        employee_code: true,
+        full_name: true,
+        email: true,
       },
     });
 
     if (existingEmployee) {
-      throw new CustomError("Employee already exists for this candidate", 400);
+      throw new CustomError(
+        `Employee already exists with this email (${candidate.email}). Existing employee: ${existingEmployee.full_name} (${existingEmployee.employee_code})`,
+        400
+      );
     }
 
     const employee_code = await generateEmployeeCode(candidate.full_name);
+
+    const cleanAdditionalData = { ...additionalData };
+
+    const fieldsToRemove = [
+      "reporting_manager_id",
+      "branch_id",
+      "company_id",
+      "location_id",
+      "grade_id",
+      "category_id",
+      "cost_center_id",
+      "profit_center_id",
+      "pay_group_id",
+      "holiday_calendar_id",
+      "shift_id",
+      "attendance_rule_id",
+      "leave_policy_id",
+      "header_attendance_rule",
+    ];
+
+    fieldsToRemove.forEach((field) => {
+      delete cleanAdditionalData[field];
+    });
 
     const employeeData = {
       employee_code: employee_code,
@@ -1209,41 +1460,264 @@ const createEmployeeFromCandidate = async (
       gender: candidate.gender,
       nationality: candidate.nationality,
       profile_pic: candidate.profile_pic,
-      department_id: candidate.department_id,
-      designation_id: candidate.applied_position_id,
       join_date: candidate.actual_joining_date || new Date(),
-      employment_type: additionalData.employment_type || "Full-time",
-      employee_category: additionalData.employee_category || "Regular",
       status: "Active",
-      ...additionalData,
       createdby: createdBy,
       log_inst: logInst,
+      ...cleanAdditionalData,
     };
 
-    if (!employeeData.department_id) {
-      throw new CustomError(
-        "Department ID is required to create employee",
-        400
-      );
+    if (candidate.department_id) {
+      employeeData.department_id = candidate.department_id;
     }
 
+    if (candidate.applied_position_id) {
+      employeeData.designation_id = candidate.applied_position_id;
+    }
+
+    console.log(
+      "Creating employee with data:",
+      JSON.stringify(employeeData, null, 2)
+    );
+
     const newEmployee = await employeeModel.createEmployee(employeeData);
+
+    console.log(
+      ` Employee created with ID: ${newEmployee.id}, Code: ${newEmployee.employee_code}`
+    );
+
+    console.log(`\n Fetching candidate documents to transfer...`);
+
+    const candidateDocuments = await prisma.hrms_d_candidate_documents.findMany(
+      {
+        where: {
+          candidate_id: parseInt(candidateId),
+          path: { not: null },
+        },
+        include: {
+          candidate_documents_type: {
+            select: {
+              id: true,
+              name: true,
+              code: true,
+            },
+          },
+        },
+      }
+    );
+
+    console.log(
+      ` Found ${candidateDocuments.length} document(s) to transfer from candidate to employee`
+    );
+
+    let transferredDocuments = [];
+    let failedTransfers = [];
+    let nidaFilePath = null;
+    let nssfFilePath = null;
+    let wcfFilePath = null;
+    let nhifFilePath = null;
+
+    if (candidateDocuments.length > 0) {
+      for (const candidateDoc of candidateDocuments) {
+        try {
+          const docTypeName = (
+            candidateDoc.candidate_documents_type?.name || ""
+          ).toLowerCase();
+          const docTypeCode = (
+            candidateDoc.candidate_documents_type?.code || ""
+          ).toLowerCase();
+
+          console.log(`\n Processing: ${candidateDoc.name}`);
+          console.log(
+            `     Type: ${
+              candidateDoc.candidate_documents_type?.name || "Unknown"
+            }`
+          );
+          console.log(`     Path: ${candidateDoc.path}`);
+
+          const employeeDocument = await prisma.hrms_d_document_upload.create({
+            data: {
+              document_upload_employee: {
+                connect: { id: newEmployee.id },
+              },
+              document_type:
+                candidateDoc.candidate_documents_type?.name || "Other",
+              document_path: candidateDoc.path,
+              uploaded_on: new Date(),
+              createdate: new Date(),
+              createdby: createdBy,
+              log_inst: logInst || 1,
+            },
+          });
+
+          transferredDocuments.push({
+            candidateDocId: candidateDoc.id,
+            employeeDocId: employeeDocument.id,
+            documentName: candidateDoc.name,
+            documentType:
+              candidateDoc.candidate_documents_type?.name || "Unknown",
+            filePath: candidateDoc.path,
+          });
+
+          if (docTypeName.includes("nida") || docTypeCode.includes("nida")) {
+            nidaFilePath = candidateDoc.path;
+          } else if (
+            docTypeName.includes("nssf") ||
+            docTypeCode.includes("nssf")
+          ) {
+            nssfFilePath = candidateDoc.path;
+          } else if (
+            docTypeName.includes("wcf") ||
+            docTypeCode.includes("wcf")
+          ) {
+            wcfFilePath = candidateDoc.path;
+          } else if (
+            docTypeName.includes("nhif") ||
+            docTypeCode.includes("nhif")
+          ) {
+            nhifFilePath = candidateDoc.path;
+          }
+
+          console.log(
+            `     Transferred successfully (Employee Doc ID: ${employeeDocument.id})`
+          );
+        } catch (docError) {
+          console.error(`      Failed to transfer: ${docError.message}`);
+
+          failedTransfers.push({
+            candidateDocId: candidateDoc.id,
+            documentName: candidateDoc.name,
+            documentType:
+              candidateDoc.candidate_documents_type?.name || "Unknown",
+            error: docError.message,
+          });
+        }
+      }
+
+      console.log(`\n Document Transfer Summary:`);
+      console.log(
+        `   Successfully transferred: ${transferredDocuments.length} document(s)`
+      );
+      console.log(`   Failed transfers: ${failedTransfers.length} document(s)`);
+
+      if (nidaFilePath || nssfFilePath || wcfFilePath || nhifFilePath) {
+        console.log(`\n Updating employee record with document paths...`);
+
+        const updateData = {};
+        if (nidaFilePath) updateData.nida_file = nidaFilePath;
+        if (nssfFilePath) updateData.nssf_file = nssfFilePath;
+        if (wcfFilePath) updateData.wcf = wcfFilePath;
+        if (nhifFilePath) updateData.nhif = nhifFilePath;
+
+        await prisma.hrms_d_employee.update({
+          where: { id: newEmployee.id },
+          data: {
+            ...updateData,
+            updatedate: new Date(),
+            updatedby: createdBy,
+          },
+        });
+
+        newEmployee.nida_file = nidaFilePath;
+        newEmployee.nssf_file = nssfFilePath;
+        newEmployee.wcf = wcfFilePath;
+        newEmployee.nhif = nhifFilePath;
+      }
+    } else {
+      console.log(` No documents to transfer`);
+    }
 
     await prisma.hrms_d_candidate_master.update({
       where: { id: parseInt(candidateId) },
       data: {
-        status: "A",
-        status_remarks: `Converted to employee with ID: ${newEmployee.id}`,
+        status: "Converted",
+        status_remarks: `Converted to employee ${newEmployee.employee_code} (ID: ${newEmployee.id}). ${transferredDocuments.length} document(s) transferred.`,
         updatedate: new Date(),
         updatedby: createdBy,
       },
     });
 
-    return {
+    console.log(` Candidate ${candidate.candidate_code} marked as Converted\n`);
+
+    const documentsList = [
+      {
+        documentName: "Offer Letter",
+        status: documentVerification.documentStatus.offerLetter.uploaded
+          ? "Uploaded"
+          : "Not Uploaded",
+        isUploaded: documentVerification.documentStatus.offerLetter.uploaded,
+        filePath: documentVerification.documentStatus.offerLetter.documentPath,
+      },
+      {
+        documentName: "Appointment Letter",
+        status: documentVerification.documentStatus.appointmentLetter.uploaded
+          ? "Uploaded"
+          : "Not Uploaded",
+        isUploaded:
+          documentVerification.documentStatus.appointmentLetter.uploaded,
+        filePath:
+          documentVerification.documentStatus.appointmentLetter.documentPath,
+      },
+      {
+        documentName: "Employment Contract",
+        status: documentVerification.documentStatus.employmentContract.uploaded
+          ? "Uploaded"
+          : "Not Uploaded",
+        isUploaded:
+          documentVerification.documentStatus.employmentContract.uploaded,
+        filePath:
+          documentVerification.documentStatus.employmentContract.documentPath,
+      },
+    ];
+
+    const response = {
       employee: newEmployee,
       candidate: candidate,
       message: "Employee created successfully from candidate",
+      documentStatus: {
+        allUploaded: documentVerification.allRequiredDocumentsUploaded,
+        totalRequired: 3,
+        totalUploaded: documentVerification.uploadedDocuments.length,
+        summary: documentVerification.summary,
+        documents: documentsList,
+      },
+      documentTransfer: {
+        totalCandidateDocuments: candidateDocuments.length,
+        successfullyTransferred: transferredDocuments.length,
+        failedTransfers: failedTransfers.length,
+        transferredDocuments: transferredDocuments,
+        failedDocuments: failedTransfers,
+        employeeTableFields: {
+          nida_file: newEmployee.nida_file || null,
+          nssf_file: newEmployee.nssf_file || null,
+          wcf: newEmployee.wcf || null,
+          nhif: newEmployee.nhif || null,
+        },
+      },
     };
+
+    if (!documentVerification.allRequiredDocumentsUploaded) {
+      response.warning = {
+        type: "MISSING_DOCUMENTS",
+        message: `Employee created with ${documentVerification.missingDocuments.length} missing document(s)`,
+        missingDocuments: documentVerification.missingDocuments.map(
+          (d) => d.name
+        ),
+        uploadedDocuments: documentVerification.uploadedDocuments.map(
+          (d) => d.name
+        ),
+      };
+    }
+
+    if (failedTransfers.length > 0) {
+      response.documentTransferWarning = {
+        type: "PARTIAL_DOCUMENT_TRANSFER",
+        message: `${failedTransfers.length} document(s) failed to transfer`,
+        failedDocuments: failedTransfers,
+      };
+    }
+
+    return response;
   } catch (error) {
     console.error("Error creating employee from candidate:", error);
     if (error instanceof CustomError) {
@@ -1251,6 +1725,383 @@ const createEmployeeFromCandidate = async (
     }
     throw new CustomError(
       `Error creating employee from candidate: ${error.message}`,
+      500
+    );
+  }
+};
+
+const verifyCandidateDocuments = async (candidateId) => {
+  try {
+    const candidateDocuments = await prisma.hrms_d_candidate_documents.findMany(
+      {
+        where: {
+          candidate_id: candidateId,
+          path: { not: null },
+        },
+      }
+    );
+
+    console.log(" Found documents for candidate:", candidateId);
+    console.log("Total documents found:", candidateDocuments.length);
+
+    const typeIds = [
+      ...new Set(candidateDocuments.map((doc) => doc.type_id).filter(Boolean)),
+    ];
+    const documentTypes = await prisma.hrms_m_document_type.findMany({
+      where: { id: { in: typeIds } },
+    });
+
+    const typeMap = new Map(documentTypes.map((dt) => [dt.id, dt]));
+
+    candidateDocuments.forEach((doc) => {
+      const docType = typeMap.get(doc.type_id);
+      console.log(`\n Document in DB:`);
+      console.log(`  ID: ${doc.id}`);
+      console.log(`  Filename: ${doc.name}`);
+      console.log(`  Type ID: ${doc.type_id}`);
+      console.log(`  Type Name: ${docType?.name}`);
+      console.log(`  Type Code: ${docType?.code}`);
+      console.log(`  Path: ${doc.path}`);
+    });
+
+    const documentStatus = {
+      offerLetter: {
+        required: true,
+        uploaded: false,
+        documentName: "Offer Letter",
+        documentPath: null,
+      },
+      appointmentLetter: {
+        required: true,
+        uploaded: false,
+        documentName: "Appointment Letter",
+        documentPath: null,
+      },
+      employmentContract: {
+        required: true,
+        uploaded: false,
+        documentName: "Employment Contract",
+        documentPath: null,
+      },
+    };
+
+    for (const doc of candidateDocuments) {
+      const docType = typeMap.get(doc.type_id);
+      const docTypeName = (docType?.name || "").toLowerCase().trim();
+      const docTypeCode = (docType?.code || "").toUpperCase().trim();
+      const fileName = (doc.name || "").toLowerCase().trim();
+      const filePath = doc.path;
+
+      console.log(`\n Checking document: "${doc.name}"`);
+      console.log(`  Type name: "${docTypeName}"`);
+      console.log(`  Type code: "${docTypeCode}"`);
+      console.log(`  Filename: "${fileName}"`);
+
+      if (
+        docTypeCode === "OFFER_LETTER" ||
+        docTypeCode === "OFFERLETTER" ||
+        docTypeCode === "OFFER" ||
+        docTypeName.includes("offer letter") ||
+        docTypeName.includes("offer_letter") ||
+        docTypeName.includes("offerletter") ||
+        docTypeName === "offer letter" ||
+        docTypeName === "offer" ||
+        fileName.includes("offer") ||
+        fileName.includes("offer_letter") ||
+        fileName.includes("offerletter")
+      ) {
+        documentStatus.offerLetter.uploaded = true;
+        documentStatus.offerLetter.documentPath = filePath;
+      } else if (
+        docTypeCode === "APPOINTMENT_LETTER" ||
+        docTypeCode === "APPOINTMENTLETTER" ||
+        docTypeCode === "APPOINTMENT" ||
+        docTypeName.includes("appointment letter") ||
+        docTypeName.includes("appointment_letter") ||
+        docTypeName.includes("appointmentletter") ||
+        docTypeName === "appointment letter" ||
+        docTypeName === "appointment" ||
+        fileName.includes("appointment") ||
+        fileName.includes("appointment_letter") ||
+        fileName.includes("appointmentletter")
+      ) {
+        documentStatus.appointmentLetter.uploaded = true;
+        documentStatus.appointmentLetter.documentPath = filePath;
+      } else if (
+        docTypeCode === "EMPLOYMENT_CONTRACT" ||
+        docTypeCode === "EMPLOYMENTCONTRACT" ||
+        docTypeCode === "CONTRACT" ||
+        docTypeName.includes("employment contract") ||
+        docTypeName.includes("employment_contract") ||
+        docTypeName.includes("employmentcontract") ||
+        docTypeName === "employment contract" ||
+        docTypeName === "contract" ||
+        fileName.includes("contract") ||
+        fileName.includes("employment") ||
+        fileName.includes("employment_contract") ||
+        fileName.includes("employmentcontract")
+      ) {
+        documentStatus.employmentContract.uploaded = true;
+        documentStatus.employmentContract.documentPath = filePath;
+      } else {
+        console.log("Neither type nor filename matched");
+      }
+    }
+
+    const missingDocuments = [];
+    const uploadedDocuments = [];
+
+    Object.entries(documentStatus).forEach(([key, value]) => {
+      if (value.required && !value.uploaded) {
+        missingDocuments.push({ key, name: value.documentName });
+      } else if (value.uploaded) {
+        uploadedDocuments.push({
+          key,
+          name: value.documentName,
+          path: value.documentPath,
+        });
+      }
+    });
+
+    console.log("\nFinal Document Summary:");
+    console.log(
+      `Uploaded (${uploadedDocuments.length}):`,
+      uploadedDocuments.map((d) => d.name)
+    );
+    console.log(
+      `Missing (${missingDocuments.length}):`,
+      missingDocuments.map((d) => d.name)
+    );
+
+    return {
+      allRequiredDocumentsUploaded: missingDocuments.length === 0,
+      documentStatus,
+      missingDocuments,
+      uploadedDocuments,
+      totalRequired: 3,
+      totalUploaded: uploadedDocuments.length,
+      summary: `${uploadedDocuments.length}/3 required documents uploaded`,
+    };
+  } catch (error) {
+    console.error("Error verifying candidate documents:", error);
+    return {
+      allRequiredDocumentsUploaded: false,
+      documentStatus: {},
+      missingDocuments: [
+        { key: "unknown", name: "Unable to verify documents" },
+      ],
+      uploadedDocuments: [],
+      totalRequired: 3,
+      totalUploaded: 0,
+      summary: "Unable to verify documents",
+      error: error.message,
+    };
+  }
+};
+
+const getCandidateDocumentVerificationStatus = async (candidateId) => {
+  try {
+    const candidate = await prisma.hrms_d_candidate_master.findUnique({
+      where: { id: parseInt(candidateId) },
+      select: {
+        id: true,
+        candidate_code: true,
+        full_name: true,
+        email: true,
+        status: true,
+        job_posting: true,
+      },
+    });
+
+    if (!candidate) {
+      throw new CustomError("Candidate not found", 404);
+    }
+
+    if (candidate.status === "Converted") {
+      return {
+        candidateId: parseInt(candidateId),
+        candidateCode: candidate.candidate_code,
+        candidateName: candidate.full_name,
+        status: candidate.status,
+        canConvert: false,
+        message: "This candidate has already been converted to an employee",
+        documentStatus: null,
+      };
+    }
+
+    const isEligibleForConversion = candidate.status === "A";
+
+    const verification = await verifyCandidateDocuments(parseInt(candidateId));
+
+    const documents = [
+      {
+        id: 1,
+        name: "Offer Letter",
+        code: "OFFER_LETTER",
+        isUploaded: verification.documentStatus.offerLetter?.uploaded || false,
+        status: verification.documentStatus.offerLetter?.uploaded
+          ? "Uploaded"
+          : "Not Uploaded",
+        statusCode: verification.documentStatus.offerLetter?.uploaded
+          ? "UPLOADED"
+          : "MISSING",
+        filePath: verification.documentStatus.offerLetter?.documentPath || null,
+        isRequired: true,
+        message: verification.documentStatus.offerLetter?.uploaded
+          ? "Document has been uploaded"
+          : "Document is missing - Please upload Offer Letter",
+      },
+      {
+        id: 2,
+        name: "Appointment Letter",
+        code: "APPOINTMENT_LETTER",
+        isUploaded:
+          verification.documentStatus.appointmentLetter?.uploaded || false,
+        status: verification.documentStatus.appointmentLetter?.uploaded
+          ? "Uploaded"
+          : "Not Uploaded",
+        statusCode: verification.documentStatus.appointmentLetter?.uploaded
+          ? "UPLOADED"
+          : "MISSING",
+        filePath:
+          verification.documentStatus.appointmentLetter?.documentPath || null,
+        isRequired: true,
+        message: verification.documentStatus.appointmentLetter?.uploaded
+          ? "Document has been uploaded"
+          : "Document is missing - Please upload Appointment Letter",
+      },
+      {
+        id: 3,
+        name: "Employment Contract",
+        code: "EMPLOYMENT_CONTRACT",
+        isUploaded:
+          verification.documentStatus.employmentContract?.uploaded || false,
+        status: verification.documentStatus.employmentContract?.uploaded
+          ? "Uploaded"
+          : "Not Uploaded",
+        statusCode: verification.documentStatus.employmentContract?.uploaded
+          ? "UPLOADED"
+          : "MISSING",
+        filePath:
+          verification.documentStatus.employmentContract?.documentPath || null,
+        isRequired: true,
+        message: verification.documentStatus.employmentContract?.uploaded
+          ? "Document has been uploaded"
+          : "Document is missing - Please upload Employment Contract",
+      },
+    ];
+
+    const missingDocuments = documents
+      .filter((doc) => !doc.isUploaded)
+      .map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        code: doc.code,
+        status: "Not Uploaded",
+        statusCode: "MISSING",
+        message: `${doc.name} is not uploaded`,
+      }));
+
+    const uploadedDocuments = documents
+      .filter((doc) => doc.isUploaded)
+      .map((doc) => ({
+        id: doc.id,
+        name: doc.name,
+        code: doc.code,
+        status: "Uploaded",
+        statusCode: "UPLOADED",
+        filePath: doc.filePath,
+        message: `${doc.name} has been uploaded`,
+      }));
+
+    let warningMessage = null;
+    let warningDetails = null;
+
+    if (missingDocuments.length > 0) {
+      const missingNames = missingDocuments.map((d) => d.name);
+      warningMessage = `${missingDocuments.length} required document(s) not uploaded`;
+      warningDetails = {
+        type: "MISSING_DOCUMENTS",
+        severity: "warning",
+        title: "Missing Documents",
+        message: warningMessage,
+        description: `The following documents are missing: ${missingNames.join(
+          ", "
+        )}. You can still proceed with employee creation, but it's recommended to upload all documents.`,
+        missingDocumentNames: missingNames,
+        missingCount: missingDocuments.length,
+        canProceed: true,
+        proceedMessage:
+          "You can proceed with conversion, but documents are incomplete.",
+      };
+    }
+
+    let eligibilityMessage = null;
+    if (!isEligibleForConversion) {
+      eligibilityMessage = `Candidate status is "${candidate.status}". Status must be "A" (Approved/Hired) to convert to employee.`;
+    }
+
+    const totalRequired = 3;
+    const totalUploaded = uploadedDocuments.length;
+    const totalMissing = missingDocuments.length;
+    const progressPercentage = Math.round(
+      (totalUploaded / totalRequired) * 100
+    );
+
+    let summaryMessage = "";
+    if (totalUploaded === totalRequired) {
+      summaryMessage =
+        "All required documents are uploaded. Ready to convert to employee.";
+    } else if (totalUploaded === 0) {
+      summaryMessage = `No documents uploaded. Missing: ${missingDocuments
+        .map((d) => d.name)
+        .join(", ")}`;
+    } else {
+      summaryMessage = `${totalUploaded}/${totalRequired} documents uploaded. Missing: ${missingDocuments
+        .map((d) => d.name)
+        .join(", ")}`;
+    }
+
+    return {
+      success: true,
+      candidateId: parseInt(candidateId),
+      candidateCode: candidate.candidate_code,
+      candidateName: candidate.full_name,
+      candidateEmail: candidate.email,
+      candidateStatus: candidate.status,
+
+      isEligibleForConversion,
+      eligibilityMessage,
+      canConvert: isEligibleForConversion,
+
+      documentSummary: {
+        totalRequired,
+        totalUploaded,
+        totalMissing,
+        progressPercentage,
+        allUploaded: totalMissing === 0,
+        summary: `${totalUploaded}/${totalRequired} required documents uploaded`,
+      },
+
+      documents,
+
+      missingDocuments,
+      missingDocumentNames: missingDocuments.map((d) => d.name),
+
+      uploadedDocuments,
+      uploadedDocumentNames: uploadedDocuments.map((d) => d.name),
+
+      warning: warningDetails,
+
+      message: summaryMessage,
+    };
+  } catch (error) {
+    console.error("Error getting document verification status:", error);
+    if (error instanceof CustomError) {
+      throw error;
+    }
+    throw new CustomError(
+      `Error getting document verification status: ${error.message}`,
       500
     );
   }
@@ -1294,4 +2145,5 @@ module.exports = {
   snapshotHiringStagesForCandidate,
   getCandidateDocumentTypes,
   createRequiredDocumentsForCandidate,
+  getCandidateDocumentVerificationStatus,
 };

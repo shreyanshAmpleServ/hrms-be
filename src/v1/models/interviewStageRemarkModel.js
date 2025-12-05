@@ -1,6 +1,8 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { createRequest } = require("../models/requestsModel");
+const { log } = require("../../Comman/logger/index.js");
+const logger = require("../../Comman/logger/index.js");
 
 const serializeRemarkData = (data) => ({
   candidate_id: data.candidate_id ? Number(data.candidate_id) : null,
@@ -144,7 +146,7 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
     const previousRemarks = Array.from(latestRemarkByStage.values());
 
     console.log(
-      `📝 Previous stage remarks found: ${previousRemarks.length} (unique stages)`
+      ` Previous stage remarks found: ${previousRemarks.length} (unique stages)`
     );
     previousRemarks.forEach((remark) => {
       console.log(
@@ -225,6 +227,7 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
     };
   }
 };
+
 const convertSnapshotIdToStageId = async (candidateId, possibleSnapshotId) => {
   try {
     console.log(
@@ -299,6 +302,8 @@ const createInterviewStageRemark = async (data) => {
       throw new CustomError(canProceed.message, 400);
     }
 
+    let rating = data.rating ? Number(data.rating) : null;
+    logger.info(`Rating: ${rating} for candidate ${data.rating}`);
     const result = await prisma.hrms_m_interview_stage_remark.create({
       data: {
         ...serializeRemarkData({
