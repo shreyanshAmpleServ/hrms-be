@@ -381,7 +381,7 @@ model hrms_d_employee {
 model hrms_d_employee_address {
   id                    Int                    @id(map: "PK__hrms_d_e__3213E83F2523D35F") @default(autoincrement())
   employee_id           Int
-  address_name          String                 @db.NVarChar(100)
+  address_name          String                 @db.NVarChar(100) @default("Home")
   address_type          String?                @db.VarChar(50)
   street                String?                @db.NVarChar(255)
   street_no             String?                @db.NVarChar(50)
