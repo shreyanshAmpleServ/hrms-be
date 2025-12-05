@@ -1,7 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
-// Serialize default configuration data
 const serializeDefaultConfig = (data) => ({
   company_logo: data.company_logo || null,
   company_name: data.company_name || "",
@@ -66,7 +65,6 @@ const createDefaultConfiguration = async (data) => {
   }
 };
 
-// Find a default configuration by ID
 const findDefaultConfiguration = async (id) => {
   try {
     const reqData = await prisma.hrms_d_default_configurations.findUnique({
@@ -92,7 +90,6 @@ const findDefaultConfiguration = async (id) => {
   }
 };
 
-// Update a default configuration
 const updateDefaultConfiguration = async (id, data) => {
   try {
     const payload = {
@@ -124,7 +121,6 @@ const updateDefaultConfiguration = async (id, data) => {
   }
 };
 
-// Delete a default configuration
 const deleteDefaultConfiguration = async (id) => {
   try {
     await prisma.hrms_d_default_configurations.delete({
@@ -142,7 +138,6 @@ const deleteDefaultConfiguration = async (id) => {
   }
 };
 
-// Get all default configurations (with optional search, pagination, date filter)
 const getAllDefaultConfiguration = async () => {
   try {
     const data = await prisma.hrms_d_default_configurations.findFirst({

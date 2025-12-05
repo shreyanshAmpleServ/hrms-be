@@ -14,6 +14,58 @@ const serializeJobData = (data) => {
   };
 };
 
+// const createAppointmentLatter = async (data) => {
+//   try {
+//     await errorNotExist(
+//       "hrms_d_candidate_master",
+//       data.candidate_id,
+//       "Candidate"
+//     );
+//     const reqData = await prisma.hrms_d_appointment_letter.create({
+//       data: {
+//         ...serializeJobData(data),
+//         createdby: data.createdby || 1,
+//         createdate: new Date(),
+//         log_inst: data.log_inst || 1,
+//       },
+//       include: {
+//         appointment_candidate: {
+//           select: {
+//             full_name: true,
+//             id: true,
+//           },
+//         },
+//         appointment_designation: {
+//           select: {
+//             designation_name: true,
+//             id: true,
+//           },
+//         },
+//       },
+//     });
+//     await createRequest({
+//       requester_id: data.createdby || 1,
+//       request_type: "appointment_letter",
+//       reference_id: reqData.id,
+//       request_data: `Appointment Letter for ${reqData.appointment_candidate?.full_name} - ${reqData.appointment_designation?.designation_name}`,
+//       status: "P",
+//       createdby: data.createdby || 1,
+//       log_inst: data.log_inst || 1,
+//     });
+
+//     console.log(
+//       ` Appointment letter created with ID: ${reqData.id} for candidate: ${reqData.appointment_candidate?.full_name}`
+//     );
+//     console.log(`Approval request initiated for appointment letter`);
+//     return reqData;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error creating appointment latter: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const createAppointmentLatter = async (data) => {
   try {
     await errorNotExist(
@@ -21,6 +73,7 @@ const createAppointmentLatter = async (data) => {
       data.candidate_id,
       "Candidate"
     );
+
     const reqData = await prisma.hrms_d_appointment_letter.create({
       data: {
         ...serializeJobData(data),
@@ -33,6 +86,7 @@ const createAppointmentLatter = async (data) => {
           select: {
             full_name: true,
             id: true,
+            applied_position_id: true,
           },
         },
         appointment_designation: {
@@ -43,6 +97,22 @@ const createAppointmentLatter = async (data) => {
         },
       },
     });
+
+    if (data.designation_id) {
+      await prisma.hrms_d_candidate_master.update({
+        where: { id: Number(data.candidate_id) },
+        data: {
+          applied_position_id: Number(data.designation_id),
+          updatedate: new Date(),
+          updatedby: data.createdby || 1,
+        },
+      });
+
+      console.log(
+        ` Updated candidate ${data.candidate_id} applied_position_id to ${data.designation_id}`
+      );
+    }
+
     await createRequest({
       requester_id: data.createdby || 1,
       request_type: "appointment_letter",
@@ -57,6 +127,7 @@ const createAppointmentLatter = async (data) => {
       ` Appointment letter created with ID: ${reqData.id} for candidate: ${reqData.appointment_candidate?.full_name}`
     );
     console.log(`Approval request initiated for appointment letter`);
+
     return reqData;
   } catch (error) {
     throw new CustomError(
@@ -65,7 +136,6 @@ const createAppointmentLatter = async (data) => {
     );
   }
 };
-
 const findAppointmentLatterById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_appointment_letter.findUnique({
@@ -83,6 +153,45 @@ const findAppointmentLatterById = async (id) => {
   }
 };
 
+// const updateAppointmentLatter = async (id, data) => {
+//   try {
+//     await errorNotExist(
+//       "hrms_d_candidate_master",
+//       data.candidate_id,
+//       "Candidate"
+//     );
+//     const updatedAppointmentLatter =
+//       await prisma.hrms_d_appointment_letter.update({
+//         where: { id: parseInt(id) },
+//         data: {
+//           ...serializeJobData(data),
+//           updatedby: data.updatedby || 1,
+//           updatedate: new Date(),
+//         },
+//         include: {
+//           appointment_candidate: {
+//             select: {
+//               full_name: true,
+//               id: true,
+//             },
+//           },
+//           appointment_designation: {
+//             select: {
+//               designation_name: true,
+//               id: true,
+//             },
+//           },
+//         },
+//       });
+//     return updatedAppointmentLatter;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error updating appointment latter: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const updateAppointmentLatter = async (id, data) => {
   try {
     await errorNotExist(
@@ -90,6 +199,7 @@ const updateAppointmentLatter = async (id, data) => {
       data.candidate_id,
       "Candidate"
     );
+
     const updatedAppointmentLatter =
       await prisma.hrms_d_appointment_letter.update({
         where: { id: parseInt(id) },
@@ -103,6 +213,7 @@ const updateAppointmentLatter = async (id, data) => {
             select: {
               full_name: true,
               id: true,
+              applied_position_id: true,
             },
           },
           appointment_designation: {
@@ -113,6 +224,22 @@ const updateAppointmentLatter = async (id, data) => {
           },
         },
       });
+
+    if (data.designation_id && data.candidate_id) {
+      await prisma.hrms_d_candidate_master.update({
+        where: { id: Number(data.candidate_id) },
+        data: {
+          applied_position_id: Number(data.designation_id),
+          updatedate: new Date(),
+          updatedby: data.updatedby || 1,
+        },
+      });
+
+      console.log(
+        ` Updated candidate ${data.candidate_id} applied_position_id to ${data.designation_id}`
+      );
+    }
+
     return updatedAppointmentLatter;
   } catch (error) {
     throw new CustomError(
