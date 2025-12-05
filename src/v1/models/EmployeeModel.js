@@ -1644,7 +1644,20 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
           },
         },
         hrms_employee_address: {
-          include: {
+          select: {
+            id: true,
+            employee_id: true,
+            address_name: true,
+            address_type: true,
+            street: true,
+            street_no: true,
+            building: true,
+            floor: true,
+            city: true,
+            district: true,
+            state: true,
+            country: true,
+            zip_code: true,
             employee_state: {
               select: {
                 id: true,
@@ -1859,7 +1872,20 @@ const updateEmployee = async (
           },
         },
         hrms_employee_address: {
-          include: {
+          select: {
+            id: true,
+            employee_id: true,
+            address_name: true,
+            address_type: true,
+            street: true,
+            street_no: true,
+            building: true,
+            floor: true,
+            city: true,
+            district: true,
+            state: true,
+            country: true,
+            zip_code: true,
             employee_state: {
               select: {
                 id: true,
@@ -2023,7 +2049,20 @@ const findEmployeeById = async (id) => {
           },
         },
         hrms_employee_address: {
-          include: {
+          select: {
+            id: true,
+            employee_id: true,
+            address_name: true,
+            address_type: true,
+            street: true,
+            street_no: true,
+            building: true,
+            floor: true,
+            city: true,
+            district: true,
+            state: true,
+            country: true,
+            zip_code: true,
             employee_state: {
               select: {
                 id: true,
@@ -2319,7 +2358,20 @@ const getAllEmployee = async (
           },
         },
         hrms_employee_address: {
-          include: {
+          select: {
+            id: true,
+            employee_id: true,
+            address_name: true,
+            address_type: true,
+            street: true,
+            street_no: true,
+            building: true,
+            floor: true,
+            city: true,
+            district: true,
+            state: true,
+            country: true,
+            zip_code: true,
             employee_state: { select: { id: true, name: true } },
             employee_country: { select: { id: true, name: true } },
           },
@@ -2380,7 +2432,7 @@ const getAllEmployee = async (
     };
   } catch (error) {
     console.error("Error employee get:", error);
-    throw new CustomError("Error retrieving employees", 503);
+    throw new CustomError(`Error retrieving employees: ${error.message}`, 503);
   }
 };
 

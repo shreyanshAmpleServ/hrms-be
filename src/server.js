@@ -53,18 +53,17 @@ process.on("unhandledRejection", (reason) => {
   process.exit(1);
 });
 
-console.log("Loading app.");
-const app = require("./app");
-console.log("App loaded");
-
 const logger = require("./Comman/logger");
-console.log("Logger loaded");
+
+logger.info("Loading app.");
+const app = require("./app");
+logger.success("App loaded");
 
 const { initializeCronJobs } = require("./cronjobs");
-console.log("Cronjobs loaded");
+logger.success("Cronjobs loaded");
 
 const { disconnectAll } = require("./config/db.js");
-console.log("DB loaded");
+logger.success("DB loaded");
 
 const PORT = process.env.PORT || 5000;
 
