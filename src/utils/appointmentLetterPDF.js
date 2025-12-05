@@ -302,26 +302,7 @@ const appointmentLetterTemplate = `<!DOCTYPE html>
             </div>
         </div>
 
-        <!-- Compensation Breakdown -->
-        <div class="section-title">Compensation Package</div>
-        <table class="compensation-table">
-            <thead>
-                <tr>
-                    <th>Component</th>
-                    <th>Amount</th>
-                    <th>Frequency</th>
-                </tr>
-            </thead>
-            <tbody>
-                {{payComponentsRows}}
-                <tr class="total-row">
-                    <td><strong>Total Annual Compensation</strong></td>
-                    <td><strong>{{currencyCode}} {{totalCompensation}}</strong></td>
-                    <td><strong>Per Annum</strong></td>
-                </tr>
-            </tbody>
-        </table>
-
+       
         <!-- Terms and Conditions -->
         <div class="section-title">Terms and Conditions</div>
         <div class="terms-section">
@@ -377,9 +358,6 @@ const appointmentLetterTemplate = `<!DOCTYPE html>
 </body>
 </html>`;
 
-/**
- * Generate HTML appointment letter from data
- */
 const generateAppointmentLetterHTML = (data) => {
   return new Promise((resolve, reject) => {
     try {
@@ -423,7 +401,7 @@ const generateAppointmentLetterHTML = (data) => {
         status: data.status || "Active",
         payComponentsRows,
         currencyCode: data.currencyCode || "",
-        totalCompensation: totalAnnual,
+        totalAnnual: totalAnnual,
         termsSummary:
           data.termsSummary || "Employment terms as per company policy",
         companySignatory: data.companySignatory || "HR Manager",

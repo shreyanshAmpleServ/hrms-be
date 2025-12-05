@@ -1,6 +1,5 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
-
 const employeeModel = require("./EmployeeModel");
 
 const serializeCandidateMasterData = (data) => {
@@ -542,6 +541,65 @@ const createCandidateMaster = async (data) => {
   }
 };
 
+// const findCandidateMasterById = async (id) => {
+//   try {
+//     const reqData = await prisma.hrms_d_candidate_master.findUnique({
+//       where: { id: parseInt(id) },
+//       include: {
+//         candidate_job_posting: {
+//           select: {
+//             id: true,
+//             job_title: true,
+//             hiring_stage_id: true,
+//           },
+//         },
+//         candidate_application_source: {
+//           select: {
+//             id: true,
+//             source_name: true,
+//           },
+//         },
+//         candidate_interview_stage: {
+//           select: {
+//             id: true,
+//             stage_name: true,
+//           },
+//         },
+//         candidate_master_applied_position: {
+//           select: {
+//             id: true,
+//             designation_name: true,
+//           },
+//         },
+//         candidate_department: {
+//           select: {
+//             id: true,
+//             department_name: true,
+//           },
+//         },
+//       },
+//     });
+
+//     if (!reqData) {
+//       throw new CustomError("Candidate not found", 404);
+//     }
+
+//     const hiringStages = await getCandidateHiringStages(reqData.id);
+//     const documentTypes = await getCandidateDocumentTypes(reqData.id);
+
+//     return {
+//       ...reqData,
+//       hiring_stages: hiringStages,
+//       document_types: documentTypes,
+//     };
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error finding candidate by ID: ${error.message}`,
+//       503
+//     );
+//   }
+// };
+
 const findCandidateMasterById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_candidate_master.findUnique({
@@ -558,12 +616,6 @@ const findCandidateMasterById = async (id) => {
           select: {
             id: true,
             source_name: true,
-          },
-        },
-        candidate_interview_stage: {
-          select: {
-            id: true,
-            stage_name: true,
           },
         },
         candidate_master_applied_position: {
@@ -585,11 +637,48 @@ const findCandidateMasterById = async (id) => {
       throw new CustomError("Candidate not found", 404);
     }
 
+    // Check if candidate is Approved or Converted
+    const isApprovedOrConverted =
+      reqData.status === "A" ||
+      reqData.status === "Approved" ||
+      reqData.status === "Converted";
+
+    // Fetch interview stage details only if NOT Approved or Converted
+    let interviewStageDetails = null;
+    if (!isApprovedOrConverted && reqData.interview_stage) {
+      try {
+        interviewStageDetails = await prisma.hrms_m_interview_stage.findUnique({
+          where: { id: parseInt(reqData.interview_stage) },
+          select: {
+            id: true,
+            stage_name: true,
+            description: true,
+            status: true,
+          },
+        });
+
+        console.log(
+          `✓ Fetched interview stage for candidate ${id}:`,
+          interviewStageDetails?.stage_name || "N/A"
+        );
+      } catch (error) {
+        console.warn(
+          `Could not fetch interview stage for candidate ${id}:`,
+          error.message
+        );
+      }
+    } else if (isApprovedOrConverted) {
+      console.log(
+        `ℹ Skipping interview_stage for candidate ${id} - Status: ${reqData.status}`
+      );
+    }
+
     const hiringStages = await getCandidateHiringStages(reqData.id);
     const documentTypes = await getCandidateDocumentTypes(reqData.id);
 
     return {
       ...reqData,
+      candidate_interview_stage: interviewStageDetails,
       hiring_stages: hiringStages,
       document_types: documentTypes,
     };
@@ -600,7 +689,6 @@ const findCandidateMasterById = async (id) => {
     );
   }
 };
-
 const updateCandidateMaster = async (id, data) => {
   try {
     const existingCandidate = await prisma.hrms_d_candidate_master.findUnique({
@@ -731,195 +819,6 @@ const deleteCandidateMaster = async (id) => {
   }
 };
 
-const getAllCandidateMaster = async (
-  search,
-  page,
-  size,
-  startDate,
-  endDate,
-  is_active = "false"
-) => {
-  try {
-    if (is_active === "true") {
-      const filters = {};
-
-      if (search && search.trim()) {
-        const searchTerm = search.trim().toLowerCase();
-        filters.OR = [
-          { full_name: { contains: searchTerm } },
-          { candidate_code: { contains: searchTerm } },
-        ];
-      }
-
-      const datas = await prisma.hrms_d_candidate_master.findMany({
-        where: filters,
-        select: {
-          id: true,
-          full_name: true,
-          candidate_code: true,
-        },
-        orderBy: [{ id: "asc" }],
-      });
-      return {
-        data: datas,
-      };
-    } else {
-      page = !page || page <= 0 ? 1 : parseInt(page);
-      size = !size || size <= 0 ? 10 : parseInt(size);
-      const skip = (page - 1) * size;
-
-      const filters = {};
-
-      if (search && search.trim()) {
-        const searchTerm = search.trim().toLowerCase();
-        filters.OR = [
-          { full_name: { contains: searchTerm } },
-          { email: { contains: searchTerm } },
-          { phone: { contains: searchTerm } },
-          { status: { contains: searchTerm } },
-          { candidate_code: { contains: searchTerm } },
-        ];
-      }
-
-      if (startDate && endDate) {
-        const start = new Date(startDate);
-        const end = new Date(endDate);
-        end.setHours(23, 59, 59, 999);
-
-        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-          filters.createdate = {
-            gte: start,
-            lte: end,
-          };
-        }
-      }
-
-      const [datas, totalCount] = await Promise.all([
-        prisma.hrms_d_candidate_master.findMany({
-          where: filters,
-          skip,
-          take: size,
-          orderBy: [{ createdate: "desc" }],
-          include: {
-            candidate_job_posting: {
-              select: {
-                id: true,
-                job_title: true,
-                hiring_stage_id: true,
-              },
-            },
-            candidate_application_source: {
-              select: {
-                id: true,
-                source_name: true,
-              },
-            },
-            candidate_interview_stage: {
-              select: {
-                id: true,
-                stage_name: true,
-              },
-            },
-            candidate_master_applied_position: {
-              select: {
-                id: true,
-                designation_name: true,
-              },
-            },
-            candidate_department: {
-              select: {
-                id: true,
-                department_name: true,
-              },
-            },
-            interview_stage_candidate: {
-              select: {
-                id: true,
-                status: true,
-              },
-            },
-          },
-        }),
-        prisma.hrms_d_candidate_master.count({
-          where: filters,
-        }),
-      ]);
-
-      const stageCount = await prisma.hrms_m_interview_stage.count();
-      const candidatesToUpdate = [];
-
-      for (const candidate of datas) {
-        if (candidate.status !== "A") continue;
-        const remarkCount = await prisma.hrms_m_interview_stage_remark?.count({
-          where: { candidate_id: candidate.id },
-        });
-
-        if (remarkCount === stageCount) {
-          const allRemarksAreA = candidate.interview_stage_candidate.every(
-            (remark) => remark.status === "A"
-          );
-
-          if (allRemarksAreA) {
-            candidatesToUpdate.push(candidate.id);
-          }
-        }
-      }
-
-      if (candidatesToUpdate.length > 0) {
-        await prisma.hrms_d_candidate_master.updateMany({
-          where: {
-            id: {
-              in: candidatesToUpdate.map((id) => parseInt(id)),
-            },
-          },
-          data: {
-            status: "A",
-            updatedate: new Date(),
-          },
-        });
-
-        datas.forEach((candidate) => {
-          if (candidatesToUpdate.includes(candidate.id)) {
-            candidate.status = "A";
-          }
-        });
-      }
-
-      const enrichedData = await Promise.all(
-        datas.map(async (candidate) => {
-          const hiringStages = await getCandidateHiringStages(candidate.id);
-          return {
-            ...candidate,
-            hiring_stages: hiringStages,
-          };
-        })
-      );
-
-      return {
-        data: enrichedData,
-        currentPage: page,
-        size,
-        totalPages: Math.ceil(totalCount / size),
-        totalCount,
-        message:
-          candidatesToUpdate.length > 0
-            ? `Updated ${candidatesToUpdate.length} candidate(s) status to 'A'`
-            : null,
-      };
-    }
-  } catch (error) {
-    console.log("Candidate error", error);
-
-    if (error.code === "P2002") {
-      throw new CustomError("Duplicate entry found", 409);
-    } else if (error.code === "P2025") {
-      throw new CustomError("Record not found", 404);
-    } else {
-      throw new CustomError("Error retrieving candidates", 503);
-    }
-  }
-};
-
 // const getAllCandidateMaster = async (
 //   search,
 //   page,
@@ -1003,6 +902,12 @@ const getAllCandidateMaster = async (
 //                 source_name: true,
 //               },
 //             },
+//             candidate_interview_stage: {
+//               select: {
+//                 id: true,
+//                 stage_name: true,
+//               },
+//             },
 //             candidate_master_applied_position: {
 //               select: {
 //                 id: true,
@@ -1015,12 +920,12 @@ const getAllCandidateMaster = async (
 //                 department_name: true,
 //               },
 //             },
-//             // interview_stage_candidate: {
-//             //   select: {
-//             //     id: true,
-//             //     status: true,
-//             //   },
-//             // },
+//             interview_stage_candidate: {
+//               select: {
+//                 id: true,
+//                 status: true,
+//               },
+//             },
 //           },
 //         }),
 //         prisma.hrms_d_candidate_master.count({
@@ -1071,29 +976,8 @@ const getAllCandidateMaster = async (
 //       const enrichedData = await Promise.all(
 //         datas.map(async (candidate) => {
 //           const hiringStages = await getCandidateHiringStages(candidate.id);
-
-//           let interviewStageDetails = null;
-//           if (candidate.interview_stage) {
-//             try {
-//               interviewStageDetails =
-//                 await prisma.hrms_m_interview_stage.findUnique({
-//                   where: { id: parseInt(candidate.interview_stage) },
-//                   select: {
-//                     id: true,
-//                     stage_name: true,
-//                   },
-//                 });
-//             } catch (error) {
-//               console.warn(
-//                 `Could not fetch interview stage for candidate ${candidate.id}:`,
-//                 error
-//               );
-//             }
-//           }
-
 //           return {
 //             ...candidate,
-//             candidate_interview_stage: interviewStageDetails,
 //             hiring_stages: hiringStages,
 //           };
 //         })
@@ -1123,6 +1007,227 @@ const getAllCandidateMaster = async (
 //     }
 //   }
 // };
+
+const getAllCandidateMaster = async (
+  search,
+  page,
+  size,
+  startDate,
+  endDate,
+  is_active = "false"
+) => {
+  try {
+    if (is_active === "true") {
+      const filters = {};
+
+      if (search && search.trim()) {
+        const searchTerm = search.trim().toLowerCase();
+        filters.OR = [
+          { full_name: { contains: searchTerm } },
+          { candidate_code: { contains: searchTerm } },
+        ];
+      }
+
+      const datas = await prisma.hrms_d_candidate_master.findMany({
+        where: filters,
+        select: {
+          id: true,
+          full_name: true,
+          candidate_code: true,
+        },
+        orderBy: [{ id: "asc" }],
+      });
+      return {
+        data: datas,
+      };
+    } else {
+      page = !page || page <= 0 ? 1 : parseInt(page);
+      size = !size || size <= 0 ? 10 : parseInt(size);
+      const skip = (page - 1) * size;
+
+      const filters = {};
+
+      if (search && search.trim()) {
+        const searchTerm = search.trim().toLowerCase();
+        filters.OR = [
+          { full_name: { contains: searchTerm } },
+          { email: { contains: searchTerm } },
+          { phone: { contains: searchTerm } },
+          { status: { contains: searchTerm } },
+          { candidate_code: { contains: searchTerm } },
+        ];
+      }
+
+      if (startDate && endDate) {
+        const start = new Date(startDate);
+        const end = new Date(endDate);
+        end.setHours(23, 59, 59, 999);
+
+        if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+          filters.createdate = {
+            gte: start,
+            lte: end,
+          };
+        }
+      }
+
+      const [datas, totalCount] = await Promise.all([
+        prisma.hrms_d_candidate_master.findMany({
+          where: filters,
+          skip,
+          take: size,
+          orderBy: [{ createdate: "desc" }],
+          include: {
+            candidate_job_posting: {
+              select: {
+                id: true,
+                job_title: true,
+                hiring_stage_id: true,
+              },
+            },
+            candidate_application_source: {
+              select: {
+                id: true,
+                source_name: true,
+              },
+            },
+            candidate_master_applied_position: {
+              select: {
+                id: true,
+                designation_name: true,
+              },
+            },
+            candidate_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
+            interview_stage_candidate: {
+              select: {
+                id: true,
+                status: true,
+              },
+            },
+          },
+        }),
+        prisma.hrms_d_candidate_master.count({
+          where: filters,
+        }),
+      ]);
+
+      const stageCount = await prisma.hrms_m_interview_stage.count();
+      const candidatesToUpdate = [];
+
+      for (const candidate of datas) {
+        if (candidate.status !== "A") continue;
+        const remarkCount = await prisma.hrms_m_interview_stage_remark?.count({
+          where: { candidate_id: candidate.id },
+        });
+
+        if (remarkCount === stageCount) {
+          const allRemarksAreA = candidate.interview_stage_candidate.every(
+            (remark) => remark.status === "A"
+          );
+
+          if (allRemarksAreA) {
+            candidatesToUpdate.push(candidate.id);
+          }
+        }
+      }
+
+      if (candidatesToUpdate.length > 0) {
+        await prisma.hrms_d_candidate_master.updateMany({
+          where: {
+            id: {
+              in: candidatesToUpdate.map((id) => parseInt(id)),
+            },
+          },
+          data: {
+            status: "A",
+            updatedate: new Date(),
+          },
+        });
+
+        datas.forEach((candidate) => {
+          if (candidatesToUpdate.includes(candidate.id)) {
+            candidate.status = "A";
+          }
+        });
+      }
+
+      const enrichedData = await Promise.all(
+        datas.map(async (candidate) => {
+          const hiringStages = await getCandidateHiringStages(candidate.id);
+
+          const isApprovedOrConverted =
+            candidate.status === "A" ||
+            candidate.status === "Approved" ||
+            candidate.status === "Converted";
+
+          let interviewStageDetails = null;
+          if (!isApprovedOrConverted && candidate.interview_stage) {
+            try {
+              interviewStageDetails =
+                await prisma.hrms_m_interview_stage.findUnique({
+                  where: { id: parseInt(candidate.interview_stage) },
+                  select: {
+                    id: true,
+                    stage_name: true,
+                    description: true,
+                  },
+                });
+
+              console.log(
+                ` Fetched interview stage for candidate ${candidate.id}:`,
+                interviewStageDetails?.stage_name || "N/A"
+              );
+            } catch (error) {
+              console.warn(
+                ` Could not fetch interview stage for candidate ${candidate.id}:`,
+                error.message
+              );
+              interviewStageDetails = null;
+            }
+          } else if (isApprovedOrConverted) {
+            console.log(
+              `Skipping interview_stage for candidate ${candidate.id} - Status: ${candidate.status}`
+            );
+          }
+
+          return {
+            ...candidate,
+            candidate_interview_stage: interviewStageDetails,
+            hiring_stages: hiringStages,
+          };
+        })
+      );
+
+      return {
+        data: enrichedData,
+        currentPage: page,
+        size,
+        totalPages: Math.ceil(totalCount / size),
+        totalCount,
+        message:
+          candidatesToUpdate.length > 0
+            ? `Updated ${candidatesToUpdate.length} candidate(s) status to 'A'`
+            : null,
+      };
+    }
+  } catch (error) {
+    console.log("Candidate error", error);
+
+    if (error.code === "P2002") {
+      throw new CustomError("Duplicate entry found", 409);
+    } else if (error.code === "P2025") {
+      throw new CustomError("Record not found", 404);
+    } else {
+      throw new CustomError("Error retrieving candidates", 503);
+    }
+  }
+};
+
 const updateCandidateMasterStatus = async (id, data) => {
   try {
     const candidateMasterId = parseInt(id);
@@ -1765,12 +1870,10 @@ const createEmployeeFromCandidate = async (
       );
     }
 
-    // ✅ Get document verification - using new structure
     const documentVerification = await verifyCandidateDocuments(
       parseInt(candidateId)
     );
 
-    // ✅ Log warning if there are no documents (optional)
     if (!documentVerification.hasAnyDocument) {
       console.warn(
         ` Warning: Creating employee for candidate ${candidateId} with no documents uploaded`
@@ -2011,7 +2114,6 @@ const createEmployeeFromCandidate = async (
 
     console.log(` Candidate ${candidate.candidate_code} marked as Converted\n`);
 
-    // ✅ Build response using new documentVerification structure
     const response = {
       employee: newEmployee,
       candidate: candidate,
@@ -2037,7 +2139,6 @@ const createEmployeeFromCandidate = async (
       },
     };
 
-    // ✅ Add warning only if no documents at all
     if (!documentVerification.hasAnyDocument) {
       response.warning = {
         type: "NO_DOCUMENTS",
