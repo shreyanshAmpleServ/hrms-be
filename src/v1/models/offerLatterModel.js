@@ -15,51 +15,6 @@ const serializeJobData = (data) => {
   };
 };
 
-// const createOfferLetter = async (data) => {
-//   try {
-//     await errorNotExist(
-//       "hrms_d_candidate_master",
-//       data.candidate_id,
-//       "Candidate"
-//     );
-//     const reqData = await prisma.hrms_d_offer_letter.create({
-//       data: {
-//         ...serializeJobData(data),
-//         createdby: data.createdby || 1,
-//         createdate: new Date(),
-//         log_inst: data.log_inst || 1,
-//       },
-//       include: {
-//         offered_candidate: {
-//           select: {
-//             full_name: true,
-//             id: true,
-//           },
-//         },
-//         offer_letter_currencyId: {
-//           select: {
-//             id: true,
-//             currency_code: true,
-//             currency_name: true,
-//           },
-//         },
-//       },
-//     });
-//     await createRequest({
-//       request_type: "offer_letter",
-//       reference_id: reqData.id,
-//       status: "P",
-//       requester_id: data.createdby || 1,
-//       createdby: data.createdby || 1,
-//       createdate: new Date(),
-//       log_inst: data.log_inst || 1,
-//     });
-//     return reqData;
-//   } catch (error) {
-//     throw new CustomError(`Error creating offer letter: ${error.message}`, 500);
-//   }
-// };
-
 const createOfferLetter = async (data) => {
   try {
     await errorNotExist(
