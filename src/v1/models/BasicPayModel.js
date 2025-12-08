@@ -639,21 +639,6 @@ const createBasicPay = async (data) => {
 const updateBasicPay = async (id, data) => {
   const { payLineData, ...headerDatas } = data;
   try {
-    if (data.employee_id) {
-      const existing =
-        await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
-          where: {
-            employee_id: Number(data.employee_id),
-            NOT: { id: Number(id) },
-          },
-        });
-      if (existing) {
-        throw new CustomError(
-          "This employee have already assigned the component",
-          400
-        );
-      }
-    }
     const updatedData = {
       ...headerDatas,
     };
@@ -661,6 +646,16 @@ const updateBasicPay = async (id, data) => {
 
     const newAddresses = payLineData?.filter((addr) => !addr.id) || [];
     const existingAddresses = payLineData?.filter((addr) => addr.id) || [];
+
+    if (Array.isArray(payLineData) && payLineData.length > 0) {
+      for (const addr of payLineData) {
+        for (const [field, message] of Object.entries(requiredFields)) {
+          if (!addr[field]) {
+            throw new CustomError(message, 400);
+          }
+        }
+      }
+    }
 
     const newSerialized =
       newAddresses?.map((addr) => ({
@@ -693,14 +688,6 @@ const updateBasicPay = async (id, data) => {
               (a) => a.id
             );
           const requestIds = existingAddresses?.map((a) => a.id);
-
-          for (const addr of payLineData) {
-            for (const [field, message] of Object.entries(requiredFields)) {
-              if (!addr[field]) {
-                throw new CustomError(message, 400);
-              }
-            }
-          }
           const toDeleteIds = payLineData
             ? dbIds.filter((id) => !requestIds.includes(id))
             : [];
@@ -712,11 +699,15 @@ const updateBasicPay = async (id, data) => {
             );
           }
 
-          for (const addr of existingAddresses) {
-            await prisma.hrms_d_employee_pay_component_assignment_line.update({
-              where: { id: addr.id },
-              data: serializePayLine(addr),
-            });
+          if (existingAddresses.length > 0) {
+            await Promise.all(
+              existingAddresses.map((addr) =>
+                prisma.hrms_d_employee_pay_component_assignment_line.update({
+                  where: { id: addr.id },
+                  data: serializePayLine(addr),
+                })
+              )
+            );
           }
 
           if (newSerialized.length > 0) {
@@ -742,13 +733,6 @@ const updateBasicPay = async (id, data) => {
                         currency_code: true,
                       },
                     },
-                    // pay_component_line_tax_slab: {
-                    //   select: {
-                    //     id: true,
-                    //     pay_component_id: true,
-                    //     rule_type: true,
-                    //   },
-                    // },
                     pay_component_line_project: {
                       select: {
                         id: true,
@@ -830,7 +814,7 @@ const updateBasicPay = async (id, data) => {
 
         return updatedEmp;
       },
-      { timeout: 20000 }
+      { timeout: 60000 }
     );
 
     return parseData(result);

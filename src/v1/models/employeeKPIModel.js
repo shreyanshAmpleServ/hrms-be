@@ -483,6 +483,19 @@ const createEmployeeKPI = async (data) => {
           select: { employment_type: true },
         });
 
+        const existingPendingKPI = await tx.hrms_d_employee_kpi.findFirst({
+          where: {
+            employee_id: Number(data.employee_id),
+          },
+        });
+
+        if (existingPendingKPI) {
+          throw new CustomError(
+            "A pending KPI already exists for this employee. Please wait for approval or reject the existing KPI before creating a new one.",
+            400
+          );
+        }
+
         const lastKPI = await tx.hrms_d_employee_kpi.findFirst({
           where: {
             employee_id: Number(data.employee_id),
@@ -756,7 +769,7 @@ const createEmployeeKPI = async (data) => {
     const result = await findEmployeeKPIById(kpiHeaderId);
     return result;
   } catch (error) {
-    throw new CustomError(`Error creating Employee KPI: ${error.message}`, 500);
+    throw new CustomError(`${error.message}`, 500);
   }
 };
 
@@ -1917,6 +1930,18 @@ const deleteEmployeeKPI = async (id) => {
       await tx.hrms_d_employee_kpi_attachments.deleteMany({
         where: { employee_kpi_id: Number(id) },
       });
+
+      const referencingKPIs = await tx.hrms_d_employee_kpi.findMany({
+        where: { last_kpi_id: Number(id) },
+        select: { id: true },
+      });
+
+      if (referencingKPIs.length > 0) {
+        await tx.hrms_d_employee_kpi.updateMany({
+          where: { last_kpi_id: Number(id) },
+          data: { last_kpi_id: kpi.last_kpi_id },
+        });
+      }
 
       await tx.hrms_d_employee_kpi.delete({
         where: { id: Number(id) },
