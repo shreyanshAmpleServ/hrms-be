@@ -289,7 +289,7 @@ const createEmployeeKPI = async (data) => {
                     rule !== "Standard"
                   ) {
                     throw new CustomError(
-                      'Header Payroll Rule must be either "Biometric/Manual Attendance" or "Standard"',
+                      'Payroll Rule must be either "Biometric/Manual Attendance" or "Standard"',
                       400
                     );
                   }
@@ -1057,11 +1057,26 @@ const updateEmployeeKPI = async (id, data) => {
 
         const contents = data.contents || [];
         let totalWeightedAchieved = 0;
+        let totalWeightage = 0;
 
-        contents.forEach((item) => {
+        const validContents = contents.filter((content) => {
+          if (!content || !content.kpi_name || content.kpi_name.trim() === "") {
+            return false;
+          }
+          const drawingType =
+            content.kpi_drawing_type || "Active for Current & Next KPI";
+          return (
+            drawingType === "Active for Current & Next KPI" ||
+            drawingType === "Active for Next KPI"
+          );
+        });
+
+        validContents.forEach((item) => {
           const targetPoint = Number(item.target_point) || 0;
           const achievedPoint = Number(item.achieved_point) || 0;
           const weightage = Number(item.weightage_percentage) || 0;
+
+          totalWeightage += weightage;
 
           if (targetPoint > 0) {
             const achievedPercent = (achievedPoint / targetPoint) * 100;
@@ -1069,7 +1084,10 @@ const updateEmployeeKPI = async (id, data) => {
           }
         });
 
-        const rating = totalWeightedAchieved / 20;
+        // Calculate rating: (totalWeightedAchieved / totalWeightage) * 5
+        // Rating is out of 5, so multiply by 5
+        const rating =
+          totalWeightage > 0 ? (totalWeightedAchieved / totalWeightage) * 5 : 0;
 
         const serializedData = serializeEmployeeKPIData(
           data,
