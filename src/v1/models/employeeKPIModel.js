@@ -96,7 +96,7 @@ const approveKPIInTransaction = async (tx, kpiId, approverId) => {
           effective_to: kpi.kpi_component_assignment.effective_to,
           department_id: kpi.kpi_component_assignment.department_id,
           position_id: null,
-          status: "A",
+          status: "Active",
           remarks: `Created from Employee KPI #${kpi.id}`,
           createdby: approverId,
           createdate: new Date(),
@@ -189,11 +189,26 @@ const createEmployeeKPI = async (data) => {
 
         const contents = data.contents || [];
         let totalWeightedAchieved = 0;
+        let totalWeightage = 0;
 
-        contents.forEach((item) => {
+        const validContents = contents.filter((content) => {
+          if (!content || !content.kpi_name || content.kpi_name.trim() === "") {
+            return false;
+          }
+          const drawingType =
+            content.kpi_drawing_type || "Active for Current & Next KPI";
+          return (
+            drawingType === "Active for Current & Next KPI" ||
+            drawingType === "Active for Next KPI"
+          );
+        });
+
+        validContents.forEach((item) => {
           const targetPoint = Number(item.target_point) || 0;
           const achievedPoint = Number(item.achieved_point) || 0;
           const weightage = Number(item.weightage_percentage) || 0;
+
+          totalWeightage += weightage;
 
           if (targetPoint > 0) {
             const achievedPercent = (achievedPoint / targetPoint) * 100;
@@ -201,7 +216,8 @@ const createEmployeeKPI = async (data) => {
           }
         });
 
-        const rating = totalWeightedAchieved / 20;
+        const rating =
+          totalWeightage > 0 ? (totalWeightedAchieved / totalWeightage) * 5 : 0;
 
         const serializedData = serializeEmployeeKPIData(
           data,
@@ -269,7 +285,7 @@ const createEmployeeKPI = async (data) => {
             await tx.hrms_d_employee_pay_component_assignment_header.findFirst({
               where: {
                 employee_id: Number(data.employee_id),
-                status: "A",
+                status: "Active",
               },
               orderBy: { createdate: "desc" },
               include: {
@@ -406,13 +422,25 @@ const createEmployeeKPI = async (data) => {
     );
 
     if (needsWorkflow) {
-      await createRequest({
-        requester_id: Number(data.reviewer_id),
-        request_type: "kpi_approval",
-        reference_id: kpiHeaderId,
-        createdby: data.createdby || 1,
-        log_inst: data.log_inst || 1,
-      });
+      try {
+        const requestResult = await createRequest({
+          requester_id: Number(data.employee_id),
+          request_type: "kpi_approval",
+          reference_id: kpiHeaderId,
+          createdby: data.createdby || 1,
+          log_inst: data.log_inst || 1,
+        });
+        console.log(
+          `Request created for KPI ${kpiHeaderId}:`,
+          requestResult?.request_created
+        );
+      } catch (requestError) {
+        console.error("Error creating approval request:", requestError);
+        throw new CustomError(
+          `Failed to create approval request: ${requestError.message}`,
+          500
+        );
+      }
     }
 
     const result = await findEmployeeKPIById(kpiHeaderId);
@@ -490,7 +518,7 @@ const approveEmployeeKPI = async (kpiId, approverId) => {
               effective_to: kpi.kpi_component_assignment.effective_to,
               department_id: kpi.kpi_component_assignment.department_id,
               position_id: null,
-              status: "A",
+              status: "Active",
               remarks: `Created from Employee KPI #${kpi.id}`,
               createdby: approverId,
               createdate: new Date(),
@@ -638,7 +666,7 @@ const getLastComponentAssignmentForEmployee = async (employeeId) => {
       await prisma.hrms_d_employee_pay_component_assignment_header.findFirst({
         where: {
           employee_id: Number(employeeId),
-          status: "A",
+          status: "Active",
         },
         orderBy: { createdate: "desc" },
         include: {
@@ -649,6 +677,51 @@ const getLastComponentAssignmentForEmployee = async (employeeId) => {
                   id: true,
                   component_name: true,
                   component_code: true,
+                  pay_or_deduct: true,
+                  component_type: true,
+                },
+              },
+              pay_component_line_currency: {
+                select: {
+                  id: true,
+                  currency_name: true,
+                  currency_code: true,
+                },
+              },
+              pay_component_line_cost_center1: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              pay_component_line_cost_center2: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              pay_component_line_cost_center3: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              pay_component_line_cost_center4: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              pay_component_line_cost_center5: {
+                select: {
+                  id: true,
+                  name: true,
+                },
+              },
+              pay_component_line_project: {
+                select: {
+                  id: true,
+                  name: true,
                 },
               },
             },
@@ -1161,6 +1234,105 @@ const updateEmployeeKPI = async (id, data) => {
               where: { employee_kpi_id: Number(id) },
             });
           }
+
+          const lastComponentAssignment =
+            await tx.hrms_d_employee_pay_component_assignment_header.findFirst({
+              where: {
+                employee_id: Number(data.employee_id),
+                status: "Active",
+              },
+              orderBy: { createdate: "desc" },
+              include: {
+                hrms_d_employee_pay_component_assignment_line: true,
+              },
+            });
+
+          const componentAssignment =
+            await tx.hrms_d_employee_kpi_component_assignment.create({
+              data: {
+                employee_kpi_id: updatedKPI.id,
+                header_payroll_rule: (() => {
+                  const rule = data.component_assignment.header_payroll_rule;
+                  if (
+                    rule &&
+                    rule !== "Biometric/Manual Attendance" &&
+                    rule !== "Standard"
+                  ) {
+                    throw new CustomError(
+                      'Payroll Rule must be either "Biometric/Manual Attendance" or "Standard"',
+                      400
+                    );
+                  }
+                  return rule || "Standard";
+                })(),
+                effective_from: data.component_assignment.effective_from
+                  ? new Date(data.component_assignment.effective_from)
+                  : new Date(),
+                effective_to: data.component_assignment.effective_to
+                  ? new Date(data.component_assignment.effective_to)
+                  : null,
+                status: "P",
+                last_component_assignment_id:
+                  lastComponentAssignment?.id || null,
+                change_percentage:
+                  Number(data.component_assignment.change_percentage) || 0,
+                department_id: data.component_assignment.department_id
+                  ? Number(data.component_assignment.department_id)
+                  : null,
+                designation_id: data.component_assignment.designation_id
+                  ? Number(data.component_assignment.designation_id)
+                  : null,
+                position: data.component_assignment.position || "",
+                successor_id: data.component_assignment.successor_id
+                  ? Number(data.component_assignment.successor_id)
+                  : null,
+                createdby: data.createdby || 1,
+                createdate: new Date(),
+              },
+            });
+
+          const componentLines =
+            data.component_assignment.component_lines || [];
+          const linesToProcess =
+            componentLines.length > 0
+              ? componentLines
+              : (
+                  lastComponentAssignment?.hrms_d_employee_pay_component_assignment_line ||
+                  []
+                ).map((l) => ({
+                  pay_component_id: l.pay_component_id,
+                  amount: l.amount,
+                }));
+
+          for (const line of linesToProcess) {
+            let amount = Number(line.amount) || 0;
+
+            if (!line.amount && lastComponentAssignment) {
+              const lastLine =
+                lastComponentAssignment.hrms_d_employee_pay_component_assignment_line.find(
+                  (l) => l.pay_component_id === Number(line.pay_component_id)
+                );
+              if (lastLine) {
+                amount = Number(lastLine.amount);
+              }
+            }
+
+            if (data.component_assignment.change_percentage) {
+              const changePercent =
+                Number(data.component_assignment.change_percentage) / 100;
+              amount = amount * (1 + changePercent);
+            }
+
+            await tx.hrms_d_employee_kpi_component_lines.create({
+              data: {
+                component_assignment_id: componentAssignment.id,
+                pay_component_id: Number(line.pay_component_id),
+                amount: amount,
+                createdby: data.createdby || 1,
+                createdate: new Date(),
+              },
+            });
+          }
         }
 
         await tx.hrms_d_employee_kpi_attachments.deleteMany({
@@ -1210,13 +1382,25 @@ const updateEmployeeKPI = async (id, data) => {
     );
 
     if (needsWorkflow) {
-      await createRequest({
-        requester_id: Number(data.reviewer_id),
-        request_type: "kpi_approval",
-        reference_id: kpiId,
-        createdby: data.createdby || 1,
-        log_inst: data.log_inst || 1,
-      });
+      try {
+        const requestResult = await createRequest({
+          requester_id: Number(data.employee_id),
+          request_type: "kpi_approval",
+          reference_id: kpiId,
+          createdby: data.createdby || 1,
+          log_inst: data.log_inst || 1,
+        });
+        console.log(
+          `Request created for KPI ${kpiId}:`,
+          requestResult?.request_created
+        );
+      } catch (requestError) {
+        console.error("Error creating approval request:", requestError);
+        throw new CustomError(
+          `Failed to create approval request: ${requestError.message}`,
+          500
+        );
+      }
     }
 
     const result = await findEmployeeKPIById(kpiId);
