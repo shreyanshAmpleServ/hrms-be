@@ -11,6 +11,12 @@ const currencies = [
     is_active: "Y",
     log_inst: 1,
   },
+  {
+    currency_name: "Tanzania Shilling",
+    currency_code: "TZS",
+    is_active: "Y",
+    log_inst: 1,
+  },
 ];
 
 module.exports = currencies;
