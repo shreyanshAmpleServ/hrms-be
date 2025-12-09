@@ -10,6 +10,7 @@ const serializeJobData = (data) => {
     currency_id: Number(data.currency_id) || null,
     offer_date: data.offer_date || new Date(),
     position: data.position || "",
+    status: data.status || "P",
     offered_salary: Number(data.offered_salary) || 0,
     valid_until: data.valid_until || new Date(),
   };
