@@ -77,17 +77,17 @@ const createOfferLetter = async (data) => {
         },
       },
     });
-
-    await createRequest({
-      request_type: "offer_letter",
-      reference_id: reqData.id,
-      status: "P",
-      requester_id: data.createdby || 1,
-      createdby: data.createdby || 1,
-      createdate: new Date(),
-      log_inst: data.log_inst || 1,
-    });
-
+    if (reqData.status === "P") {
+      await createRequest({
+        request_type: "offer_letter",
+        reference_id: reqData.id,
+        status: "P",
+        requester_id: data.createdby || 1,
+        createdby: data.createdby || 1,
+        createdate: new Date(),
+        log_inst: data.log_inst || 1,
+      });
+    }
     return reqData;
   } catch (error) {
     if (error instanceof CustomError) {
