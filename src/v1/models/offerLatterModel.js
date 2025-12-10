@@ -47,7 +47,14 @@ const createOfferLetter = async (data) => {
 
     if (existingOfferLetter) {
       throw new CustomError(
-        `An offer letter already exists for candidate "${existingOfferLetter.offered_candidate?.full_name}" (${existingOfferLetter.offered_candidate?.candidate_code}). `,
+        `An offer letter already exists for candidate ${(
+          existingOfferLetter.offered_candidate?.full_name || ""
+        )
+          .split(" ")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(" ")} (${
+          existingOfferLetter.offered_candidate?.candidate_code
+        }). `,
         // `Existing offer: ${existingOfferLetter.position} - Status: ${existingOfferLetter.status} (ID: ${existingOfferLetter.id})`,
         409
       );
