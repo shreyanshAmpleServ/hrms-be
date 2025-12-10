@@ -47,8 +47,8 @@ const createOfferLetter = async (data) => {
 
     if (existingOfferLetter) {
       throw new CustomError(
-        `An offer letter already exists for candidate "${existingOfferLetter.offered_candidate?.full_name}" (${existingOfferLetter.offered_candidate?.candidate_code}). ` +
-          `Existing offer: ${existingOfferLetter.position} - Status: ${existingOfferLetter.status} (ID: ${existingOfferLetter.id})`,
+        `An offer letter already exists for candidate "${existingOfferLetter.offered_candidate?.full_name}" (${existingOfferLetter.offered_candidate?.candidate_code}). `,
+        // `Existing offer: ${existingOfferLetter.position} - Status: ${existingOfferLetter.status} (ID: ${existingOfferLetter.id})`,
         409
       );
     }
