@@ -536,7 +536,6 @@ const processKPIComponentAssignments = async () => {
 const initializeCronJobs = () => {
   try {
     logger.info("Initializing HRMS Cron Jobs");
-    // createMissingTodayAttendance();
 
     cron.schedule("0 10 * * *", HealthCheckUp, {
       scheduled: true,
@@ -556,7 +555,7 @@ const initializeCronJobs = () => {
       name: "Daily Attendance Initializer",
     });
 
-    cron.schedule("0 0 * * *", processKPIComponentAssignments, {
+    cron.schedule("* * * * *", processKPIComponentAssignments, {
       scheduled: true,
       name: "KPI Component Assignment Processor",
       timezone: "Asia/Kolkata",

@@ -52,7 +52,7 @@ const createEmployeeKPI = async (data) => {
 
     const needsWorkflow = workflowSteps && workflowSteps.length > 0;
 
-    const initialStatus = "P";
+    const initialStatus = needsWorkflow ? "P" : "A";
 
     console.log(
       `KPI Workflow Check: needsWorkflow=${needsWorkflow}, initialStatus=${initialStatus}, approverCount=${
@@ -70,6 +70,7 @@ const createEmployeeKPI = async (data) => {
         const existingPendingKPI = await tx.hrms_d_employee_kpi.findFirst({
           where: {
             employee_id: Number(data.employee_id),
+            status: "P",
           },
         });
 
@@ -268,12 +269,6 @@ const createEmployeeKPI = async (data) => {
               }
             }
 
-            if (data.component_assignment.change_percentage) {
-              const changePercent =
-                Number(data.component_assignment.change_percentage) / 100;
-              amount = amount * (1 + changePercent);
-            }
-
             await tx.hrms_d_employee_kpi_component_lines.create({
               data: {
                 component_assignment_id: componentAssignment.id,
@@ -313,8 +308,140 @@ const createEmployeeKPI = async (data) => {
 
         if (!needsWorkflow) {
           console.log(
-            `KPI ${kpiHeader.id} created as Pending (no workflow configured - requires manual approval)`
+            `KPI ${kpiHeader.id} created as Active (no workflow configured - auto-approved)`
           );
+
+          await tx.hrms_d_employee_kpi.update({
+            where: { id: kpiHeader.id },
+            data: { status: "A", updatedate: new Date() },
+          });
+
+          await tx.hrms_d_employee_kpi.updateMany({
+            where: {
+              employee_id: Number(data.employee_id),
+              id: { not: kpiHeader.id },
+              status: "A",
+            },
+            data: { status: "A", updatedate: new Date() },
+          });
+
+          const updateEmployeeData = {};
+          if (serializedData.employment_type)
+            updateEmployeeData.employment_type = serializedData.employment_type;
+          if (
+            data.revise_component_assignment === "Y" &&
+            data.component_assignment
+          ) {
+            if (data.component_assignment.department_id) {
+              updateEmployeeData.department_id = Number(
+                data.component_assignment.department_id
+              );
+            }
+            if (data.component_assignment.designation_id) {
+              updateEmployeeData.designation_id = Number(
+                data.component_assignment.designation_id
+              );
+            }
+            if (data.component_assignment.position) {
+              updateEmployeeData.work_location =
+                data.component_assignment.position;
+            }
+          }
+
+          if (Object.keys(updateEmployeeData).length > 0) {
+            await tx.hrms_d_employee.update({
+              where: { id: Number(data.employee_id) },
+              data: updateEmployeeData,
+            });
+          }
+
+          if (
+            data.revise_component_assignment === "Y" &&
+            data.component_assignment
+          ) {
+            const componentAssignmentRecord =
+              await tx.hrms_d_employee_kpi_component_assignment.findFirst({
+                where: { employee_kpi_id: kpiHeader.id },
+              });
+
+            if (componentAssignmentRecord) {
+              const newComponentAssignment =
+                await tx.hrms_d_employee_pay_component_assignment_header.create(
+                  {
+                    data: {
+                      employee_id: Number(data.employee_id),
+                      effective_from:
+                        componentAssignmentRecord.effective_from || new Date(),
+                      effective_to: componentAssignmentRecord.effective_to,
+                      department_id: componentAssignmentRecord.department_id,
+                      position_id: null,
+                      status: "Active",
+                      remarks: `Created from Employee KPI #${kpiHeader.id}`,
+                      createdby: data.createdby || 1,
+                      createdate: new Date(),
+                    },
+                  }
+                );
+
+              const componentLines =
+                await tx.hrms_d_employee_kpi_component_lines.findMany({
+                  where: {
+                    component_assignment_id: componentAssignmentRecord.id,
+                  },
+                });
+
+              let lineNum = 1;
+              for (const line of componentLines) {
+                await tx.hrms_d_employee_pay_component_assignment_line.create({
+                  data: {
+                    parent_id: newComponentAssignment.id,
+                    line_num: lineNum++,
+                    pay_component_id: line.pay_component_id,
+                    amount: line.amount,
+                    type_value: line.amount,
+                    is_taxable: "Y",
+                    is_recurring: "Y",
+                    component_type: "O",
+                    createdby: data.createdby || 1,
+                    createdate: new Date(),
+                  },
+                });
+              }
+            }
+          }
+
+          if (data.attachments && data.attachments.length > 0) {
+            await tx.hrms_d_employee_kpi_attachments.updateMany({
+              where: { employee_kpi_id: kpiHeader.id },
+              data: { status: "Verified" },
+            });
+
+            const attachments =
+              await tx.hrms_d_employee_kpi_attachments.findMany({
+                where: { employee_kpi_id: kpiHeader.id },
+                include: {
+                  kpi_attachment_doc_type: true,
+                },
+              });
+
+            for (const attachment of attachments) {
+              await tx.hrms_d_document_upload.create({
+                data: {
+                  employee_id: Number(data.employee_id),
+                  document_type: attachment.kpi_attachment_doc_type?.name || "",
+                  document_path: attachment.attachment_url || "",
+                  document_number: attachment.document_name || "",
+                  issued_date: attachment.issue_date,
+                  expiry_date: attachment.expiry_date,
+                  is_mandatory: "Y",
+                  document_owner_type: "employee",
+                  document_owner_id: Number(data.employee_id),
+                  createdby: data.createdby || 1,
+                  createdate: new Date(),
+                },
+              });
+            }
+          }
         } else {
           console.log(
             `KPI ${kpiHeader.id} created as Pending (workflow approval required)`
@@ -377,7 +504,7 @@ const approveEmployeeKPI = async (kpiId, approverId) => {
 
       await tx.hrms_d_employee_kpi.update({
         where: { id: Number(kpiId) },
-        data: { status: "Active", updatedate: new Date() },
+        data: { status: "A", updatedate: new Date() },
       });
 
       await tx.hrms_d_employee_kpi.updateMany({
@@ -386,7 +513,7 @@ const approveEmployeeKPI = async (kpiId, approverId) => {
           id: { not: Number(kpiId) },
           status: "A",
         },
-        data: { status: "Inactive", updatedate: new Date() },
+        data: { status: "A", updatedate: new Date() },
       });
 
       const updateEmployeeData = {};
@@ -765,7 +892,7 @@ const updateEmployeeKPI = async (id, data) => {
 
     const needsWorkflow = workflowSteps && workflowSteps.length > 0;
 
-    const updateStatus = "P";
+    const updateStatus = needsWorkflow ? "P" : "A";
 
     console.log(
       `KPI Update Workflow Check: needsWorkflow=${needsWorkflow}, updateStatus=${updateStatus}, approverCount=${
@@ -983,12 +1110,6 @@ const updateEmployeeKPI = async (id, data) => {
               }
             }
 
-            if (data.component_assignment.change_percentage) {
-              const changePercent =
-                Number(data.component_assignment.change_percentage) / 100;
-              amount = amount * (1 + changePercent);
-            }
-
             await tx.hrms_d_employee_kpi_component_lines.create({
               data: {
                 component_assignment_id: componentAssignment.id,
@@ -1032,8 +1153,140 @@ const updateEmployeeKPI = async (id, data) => {
 
         if (!needsWorkflow) {
           console.log(
-            `KPI ${updatedKPI.id} updated as Pending (no workflow configured - requires manual approval)`
+            `KPI ${updatedKPI.id} updated as Active (no workflow configured - auto-approved)`
           );
+
+          await tx.hrms_d_employee_kpi.update({
+            where: { id: updatedKPI.id },
+            data: { status: "A", updatedate: new Date() },
+          });
+
+          await tx.hrms_d_employee_kpi.updateMany({
+            where: {
+              employee_id: Number(data.employee_id),
+              id: { not: updatedKPI.id },
+              status: "A",
+            },
+            data: { status: "A", updatedate: new Date() },
+          });
+
+          const updateEmployeeData = {};
+          if (serializedData.employment_type)
+            updateEmployeeData.employment_type = serializedData.employment_type;
+          if (
+            data.revise_component_assignment === "Y" &&
+            data.component_assignment
+          ) {
+            if (data.component_assignment.department_id) {
+              updateEmployeeData.department_id = Number(
+                data.component_assignment.department_id
+              );
+            }
+            if (data.component_assignment.designation_id) {
+              updateEmployeeData.designation_id = Number(
+                data.component_assignment.designation_id
+              );
+            }
+            if (data.component_assignment.position) {
+              updateEmployeeData.work_location =
+                data.component_assignment.position;
+            }
+          }
+
+          if (Object.keys(updateEmployeeData).length > 0) {
+            await tx.hrms_d_employee.update({
+              where: { id: Number(data.employee_id) },
+              data: updateEmployeeData,
+            });
+          }
+
+          if (
+            data.revise_component_assignment === "Y" &&
+            data.component_assignment
+          ) {
+            const componentAssignmentRecord =
+              await tx.hrms_d_employee_kpi_component_assignment.findFirst({
+                where: { employee_kpi_id: updatedKPI.id },
+              });
+
+            if (componentAssignmentRecord) {
+              const newComponentAssignment =
+                await tx.hrms_d_employee_pay_component_assignment_header.create(
+                  {
+                    data: {
+                      employee_id: Number(data.employee_id),
+                      effective_from:
+                        componentAssignmentRecord.effective_from || new Date(),
+                      effective_to: componentAssignmentRecord.effective_to,
+                      department_id: componentAssignmentRecord.department_id,
+                      position_id: null,
+                      status: "Active",
+                      remarks: `Created from Employee KPI #${updatedKPI.id}`,
+                      createdby: data.createdby || 1,
+                      createdate: new Date(),
+                    },
+                  }
+                );
+
+              const componentLines =
+                await tx.hrms_d_employee_kpi_component_lines.findMany({
+                  where: {
+                    component_assignment_id: componentAssignmentRecord.id,
+                  },
+                });
+
+              let lineNum = 1;
+              for (const line of componentLines) {
+                await tx.hrms_d_employee_pay_component_assignment_line.create({
+                  data: {
+                    parent_id: newComponentAssignment.id,
+                    line_num: lineNum++,
+                    pay_component_id: line.pay_component_id,
+                    amount: line.amount,
+                    type_value: line.amount,
+                    is_taxable: "Y",
+                    is_recurring: "Y",
+                    component_type: "O",
+                    createdby: data.createdby || 1,
+                    createdate: new Date(),
+                  },
+                });
+              }
+            }
+          }
+
+          if (data.attachments && data.attachments.length > 0) {
+            await tx.hrms_d_employee_kpi_attachments.updateMany({
+              where: { employee_kpi_id: updatedKPI.id },
+              data: { status: "Verified" },
+            });
+
+            const attachments =
+              await tx.hrms_d_employee_kpi_attachments.findMany({
+                where: { employee_kpi_id: updatedKPI.id },
+                include: {
+                  kpi_attachment_doc_type: true,
+                },
+              });
+
+            for (const attachment of attachments) {
+              await tx.hrms_d_document_upload.create({
+                data: {
+                  employee_id: Number(data.employee_id),
+                  document_type: attachment.kpi_attachment_doc_type?.name || "",
+                  document_path: attachment.attachment_url || "",
+                  document_number: attachment.document_name || "",
+                  issued_date: attachment.issue_date,
+                  expiry_date: attachment.expiry_date,
+                  is_mandatory: "Y",
+                  document_owner_type: "employee",
+                  document_owner_id: Number(data.employee_id),
+                  createdby: data.createdby || 1,
+                  createdate: new Date(),
+                },
+              });
+            }
+          }
         } else {
           console.log(
             `KPI ${updatedKPI.id} updated as Pending (workflow approval required)`
@@ -1079,58 +1332,83 @@ const updateEmployeeKPI = async (id, data) => {
 
 const deleteEmployeeKPI = async (id) => {
   try {
-    return await prisma.$transaction(async (tx) => {
-      const kpi = await tx.hrms_d_employee_kpi.findUnique({
-        where: { id: Number(id) },
-      });
+    const kpiId = Number(id);
 
-      if (!kpi) {
-        throw new CustomError("Employee KPI not found", 404);
-      }
+    return await prisma.$transaction(
+      async (tx) => {
+        const kpi = await tx.hrms_d_employee_kpi.findUnique({
+          where: { id: kpiId },
+        });
 
-      await tx.hrms_d_employee_kpi_contents.deleteMany({
-        where: { employee_kpi_id: Number(id) },
-      });
+        if (!kpi) {
+          throw new CustomError("Employee KPI not found", 404);
+        }
 
-      const componentAssignments =
-        await tx.hrms_d_employee_kpi_component_assignment.findMany({
-          where: { employee_kpi_id: Number(id) },
+        await tx.hrms_d_employee_kpi_contents.deleteMany({
+          where: { employee_kpi_id: kpiId },
+        });
+
+        const componentAssignments =
+          await tx.hrms_d_employee_kpi_component_assignment.findMany({
+            where: { employee_kpi_id: kpiId },
+            select: { id: true },
+          });
+
+        if (componentAssignments.length > 0) {
+          const assignmentIds = componentAssignments.map((a) => a.id);
+          await tx.hrms_d_employee_kpi_component_lines.deleteMany({
+            where: {
+              component_assignment_id: { in: assignmentIds },
+            },
+          });
+        }
+
+        await tx.hrms_d_employee_kpi_component_assignment.deleteMany({
+          where: { employee_kpi_id: kpiId },
+        });
+
+        await tx.hrms_d_employee_kpi_attachments.deleteMany({
+          where: { employee_kpi_id: kpiId },
+        });
+
+        const referencingKPIs = await tx.hrms_d_employee_kpi.findMany({
+          where: { last_kpi_id: kpiId },
           select: { id: true },
         });
 
-      for (const assignment of componentAssignments) {
-        await tx.hrms_d_employee_kpi_component_lines.deleteMany({
-          where: { component_assignment_id: assignment.id },
+        if (referencingKPIs.length > 0) {
+          await tx.hrms_d_employee_kpi.updateMany({
+            where: { last_kpi_id: kpiId },
+            data: { last_kpi_id: kpi.last_kpi_id },
+          });
+        }
+
+        await tx.hrms_d_employee_kpi.delete({
+          where: { id: kpiId },
         });
+
+        return { id: kpiId, message: "Employee KPI deleted successfully" };
+      },
+      {
+        timeout: 30000,
+        isolationLevel: "ReadCommitted",
       }
-
-      await tx.hrms_d_employee_kpi_component_assignment.deleteMany({
-        where: { employee_kpi_id: Number(id) },
-      });
-
-      await tx.hrms_d_employee_kpi_attachments.deleteMany({
-        where: { employee_kpi_id: Number(id) },
-      });
-
-      const referencingKPIs = await tx.hrms_d_employee_kpi.findMany({
-        where: { last_kpi_id: Number(id) },
-        select: { id: true },
-      });
-
-      if (referencingKPIs.length > 0) {
-        await tx.hrms_d_employee_kpi.updateMany({
-          where: { last_kpi_id: Number(id) },
-          data: { last_kpi_id: kpi.last_kpi_id },
-        });
-      }
-
-      await tx.hrms_d_employee_kpi.delete({
-        where: { id: Number(id) },
-      });
-
-      return { id: Number(id), message: "Employee KPI deleted successfully" };
-    });
+    );
   } catch (error) {
+    if (error instanceof CustomError) {
+      throw error;
+    }
+
+    if (
+      error.code === "P2025" ||
+      error.message?.includes("Transaction not found")
+    ) {
+      throw new CustomError(
+        "Transaction failed. Please try again. If the issue persists, the KPI may have been partially deleted.",
+        500
+      );
+    }
+
     throw new CustomError(`Error deleting Employee KPI: ${error.message}`, 500);
   }
 };
