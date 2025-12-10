@@ -315,22 +315,15 @@ const updateOfferLetterStatus = async (id, data) => {
     }
 
     const updateData = {
-      status: data.status,
+      status: data.status || "P",
       updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
 
-    if (data.status === "Approved") {
-      updateData.status = data.status;
-    } else if (data.status === "Rejected") {
-      updateData.status = data.status;
-    } else {
-      updateData.status = data.status;
-    }
     const updatedEntry = await prisma.hrms_d_offer_letter.update({
       where: { id: offerLetterId },
       include: {
-        offered_caZndidate: {
+        offered_candidate: {
           select: {
             full_name: true,
             id: true,

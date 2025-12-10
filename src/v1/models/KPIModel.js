@@ -72,9 +72,9 @@ const deleteKPI = async (id) => {
 
 const getAllKPI = async (page, size, search, startDate, endDate, is_active) => {
   try {
-    page = page || page == 0 ? 1 : page;
-    size = size || 10;
-    const skip = (page - 1) * size || 0;
+    page = page && page > 0 ? Number(page) : 1;
+    size = size && size > 0 ? Number(size) : 10;
+    const skip = (page - 1) * size;
 
     const filters = {};
     if (search) {
@@ -84,17 +84,6 @@ const getAllKPI = async (page, size, search, startDate, endDate, is_active) => {
         },
       ];
     }
-    if (startDate && endDate) {
-      const start = new Date(startDate);
-      start.setHours(0, 0, 0, 0);
-
-      const end = new Date(endDate);
-      end.setHours(23, 59, 59, 999);
-
-      if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-        filters.createdate = { gte: start, lte: end };
-      }
-    }
 
     if (typeof is_active === "boolean") {
       filters.is_active = is_active ? "Y" : "N";
@@ -103,17 +92,6 @@ const getAllKPI = async (page, size, search, startDate, endDate, is_active) => {
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
 
-    // if (startDate && endDate) {
-    //   const start = new Date(startDate);
-    //   const end = new Date(endDate);
-
-    //   if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
-    //     filters.createdate = {
-    //       gte: start,
-    //       lte: end,
-    //     };
-    //   }
-    // }
     const data = await prisma.hrms_m_kpi_master.findMany({
       where: filters,
       skip: skip,
