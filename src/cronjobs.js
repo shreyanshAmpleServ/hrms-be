@@ -555,7 +555,7 @@ const initializeCronJobs = () => {
       name: "Daily Attendance Initializer",
     });
 
-    cron.schedule("* * * * *", processKPIComponentAssignments, {
+    cron.schedule("0 0 * * *", processKPIComponentAssignments, {
       scheduled: true,
       name: "KPI Component Assignment Processor",
       timezone: "Asia/Kolkata",
