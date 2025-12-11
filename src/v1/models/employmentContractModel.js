@@ -1,13 +1,6 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { errorNotExist } = require("../../Comman/errorNotExist");
-const moment = require("moment");
-const sendEmail = require("../../utils/mailer");
-const logger = require("../../Comman/logger");
-const { templateKeyMap } = require("../../utils/templateKeyMap");
-const { generateEmailContent } = require("../../utils/emailTemplates");
-
-const notificationLogModel = require("./notificationLogModel");
 
 const serializeJobData = (data) => {
   return {
@@ -20,7 +13,6 @@ const serializeJobData = (data) => {
   };
 };
 
-// Create a new employment contract
 const createEmploymentContract = async (data) => {
   try {
     await errorNotExist(
@@ -61,7 +53,6 @@ const createEmploymentContract = async (data) => {
   }
 };
 
-// Find a employment contract by ID
 const findEmploymentContractById = async (id) => {
   try {
     const reqData = await prisma.hrms_d_employment_contract.findUnique({
@@ -79,7 +70,6 @@ const findEmploymentContractById = async (id) => {
   }
 };
 
-// Update a employment contract
 const updateEmploymentContract = async (id, data) => {
   try {
     await errorNotExist(
@@ -125,7 +115,6 @@ const updateEmploymentContract = async (id, data) => {
   }
 };
 
-// Delete a employment contract
 const deleteEmploymentContract = async (id) => {
   try {
     await prisma.hrms_d_employment_contract.delete({
@@ -143,7 +132,6 @@ const deleteEmploymentContract = async (id) => {
   }
 };
 
-// Get all employment contracts
 const getAllEmploymentContract = async (
   search,
   page,
@@ -158,7 +146,6 @@ const getAllEmploymentContract = async (
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    // Handle search
     if (search) {
       filters.OR = [
         {

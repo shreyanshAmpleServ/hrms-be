@@ -47,8 +47,15 @@ const createOfferLetter = async (data) => {
 
     if (existingOfferLetter) {
       throw new CustomError(
-        `An offer letter already exists for candidate "${existingOfferLetter.offered_candidate?.full_name}" (${existingOfferLetter.offered_candidate?.candidate_code}). ` +
-          `Existing offer: ${existingOfferLetter.position} - Status: ${existingOfferLetter.status} (ID: ${existingOfferLetter.id})`,
+        `An offer letter already exists for candidate ${(
+          existingOfferLetter.offered_candidate?.full_name || ""
+        )
+          .split(" ")
+          .map((w) => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase())
+          .join(" ")} (${
+          existingOfferLetter.offered_candidate?.candidate_code
+        }). `,
+        // `Existing offer: ${existingOfferLetter.position} - Status: ${existingOfferLetter.status} (ID: ${existingOfferLetter.id})`,
         409
       );
     }
@@ -315,22 +322,15 @@ const updateOfferLetterStatus = async (id, data) => {
     }
 
     const updateData = {
-      status: data.status,
+      status: data.status || "P",
       updatedby: data.updatedby || 1,
       updatedate: new Date(),
     };
 
-    if (data.status === "Approved") {
-      updateData.status = data.status;
-    } else if (data.status === "Rejected") {
-      updateData.status = data.status;
-    } else {
-      updateData.status = data.status;
-    }
     const updatedEntry = await prisma.hrms_d_offer_letter.update({
       where: { id: offerLetterId },
       include: {
-        offered_caZndidate: {
+        offered_candidate: {
           select: {
             full_name: true,
             id: true,
