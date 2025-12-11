@@ -312,9 +312,9 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
     if (!data.gender) {
       throw new CustomError(`Gender is required`, 400);
     }
-    if (!data.employment_type) {
-      throw new CustomError(`Employment Type is required`, 400);
-    }
+    // if (!data.employment_type) {
+    //   throw new CustomError(`Employment Type is required`, 400);
+    // }
     if (!data.designation_id) {
       throw new CustomError(`Designation is required`, 400);
     }
