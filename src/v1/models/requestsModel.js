@@ -2127,6 +2127,14 @@ const takeActionOnRequest = async ({
               updatedate: new Date(),
             },
           });
+          await prisma.hrms_d_employee_kpi_attachments.updateMany({
+            where: { employee_kpi_id: request.reference_id },
+            data: {
+              status: "R",
+              updatedby: acted_by,
+              updatedate: new Date(),
+            },
+          });
         }
       }
       const requester = await prisma.hrms_d_employee.findUnique({
@@ -2322,14 +2330,17 @@ const takeActionOnRequest = async ({
             },
           });
         } else if (request.request_type === "kpi_approval") {
-          await prisma.hrms_d_employee_kpi.update({
-            where: { id: request.reference_id },
-            data: {
-              status: "A",
-              updatedby: acted_by,
-              updatedate: new Date(),
-            },
-          });
+          // Call approveEmployeeKPI which handles:
+          // - KPI status update to "A"
+          // - Attachment status update to "Verified"
+          // - Component assignment creation
+          // - Document upload creation
+          // - Employee data updates
+          const employeeKPIModel = require("./employeeKPIModel");
+          await employeeKPIModel.approveEmployeeKPI(
+            request.reference_id,
+            acted_by
+          );
         }
       }
       const requester = await prisma.hrms_d_employee.findUnique({
