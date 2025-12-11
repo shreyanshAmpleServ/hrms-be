@@ -1678,14 +1678,46 @@ const findRequestByRequestUsers = async (
                 status: kpiRequest.status,
                 revise_component_assignment:
                   kpiRequest.revise_component_assignment,
-                kpi_contents: kpiRequest.kpi_contents?.map((content) => ({
-                  kpi_name: content.kpi_name,
-                  target_point: content.target_point,
-                  achieved_point: content.achieved_point,
-                  weightage_percentage: content.weightage_percentage,
-                  achieved_percentage: content.achieved_percentage,
-                  remarks: content.kpi_remarks,
-                })),
+                kpi_contents:
+                  kpiRequest.kpi_contents?.map((content) => ({
+                    kpi_name: content.kpi_name || null,
+                    weight: content.weightage_percentage
+                      ? Number(content.weightage_percentage)
+                      : null,
+                    target: content.target_point
+                      ? Number(content.target_point)
+                      : null,
+                    achieved: content.achieved_point
+                      ? Number(content.achieved_point)
+                      : null,
+                    rating:
+                      content.achieved_percentage != null
+                        ? Math.min(
+                            5,
+                            Math.max(
+                              0,
+                              Number(content.achieved_percentage) / 20
+                            )
+                          )
+                        : content.target_point && content.achieved_point
+                        ? Math.min(
+                            5,
+                            Math.max(
+                              0,
+                              (Number(content.achieved_point) /
+                                Number(content.target_point)) *
+                                5
+                            )
+                          )
+                        : null,
+                    weightage_percentage: content.weightage_percentage
+                      ? Number(content.weightage_percentage)
+                      : null,
+                    achieved_percentage: content.achieved_percentage
+                      ? Number(content.achieved_percentage)
+                      : null,
+                    remarks: content.kpi_remarks || null,
+                  })) || [],
                 component_assignment: kpiRequest.kpi_component_assignment
                   ? {
                       header_payroll_rule:
@@ -1697,13 +1729,18 @@ const findRequestByRequestUsers = async (
                       change_percentage:
                         kpiRequest.kpi_component_assignment.change_percentage,
                       component_lines:
-                        kpiRequest.kpi_component_assignment.kpi_component_lines?.map(
-                          (line) => ({
+                        kpiRequest.kpi_component_assignment.kpi_component_lines
+                          ?.filter(
+                            (line) =>
+                              line.kpi_component_pay_component &&
+                              line.amount != null
+                          )
+                          .map((line) => ({
                             component_name:
-                              line.kpi_component_pay_component?.component_name,
-                            amount: line.amount,
-                          })
-                        ),
+                              line.kpi_component_pay_component
+                                ?.component_name || "N/A",
+                            amount: line.amount ? Number(line.amount) : 0,
+                          })) || [],
                     }
                   : null,
               },

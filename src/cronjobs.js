@@ -474,6 +474,47 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
               },
             });
 
+            // Update employee department_id, designation_id, work_location, and header_attendance_rule from KPI component assignment
+            // This matches the behavior in employeeKPIModel.js when revise_component_assignment === "Y"
+            const updateEmployeeData = {};
+            if (kpiAssignment.department_id) {
+              updateEmployeeData.department_id = Number(
+                kpiAssignment.department_id
+              );
+            }
+            if (kpiAssignment.designation_id) {
+              updateEmployeeData.designation_id = Number(
+                kpiAssignment.designation_id
+              );
+            }
+            if (kpiAssignment.position) {
+              updateEmployeeData.work_location = kpiAssignment.position;
+            }
+            if (kpiAssignment.header_payroll_rule) {
+              // Map header_payroll_rule to header_attendance_rule (similar to attendance_type)
+              updateEmployeeData.header_attendance_rule =
+                kpiAssignment.header_payroll_rule;
+            }
+
+            if (Object.keys(updateEmployeeData).length > 0) {
+              await tx.hrms_d_employee.update({
+                where: { id: kpi.employee_id },
+                data: updateEmployeeData,
+              });
+
+              logger.info(
+                `Updated employee ${kpi.employee_id} with department_id: ${
+                  updateEmployeeData.department_id || "unchanged"
+                }, designation_id: ${
+                  updateEmployeeData.designation_id || "unchanged"
+                }, work_location: ${
+                  updateEmployeeData.work_location || "unchanged"
+                }, header_attendance_rule: ${
+                  updateEmployeeData.header_attendance_rule || "unchanged"
+                }`
+              );
+            }
+
             logger.info(
               `Successfully processed KPI component assignment ${kpiAssignment.id} for employee ${kpi.employee_id}`
             );

@@ -100,12 +100,7 @@ const createEmployeeKPI = async (data) => {
           if (!content || !content.kpi_name || content.kpi_name.trim() === "") {
             return false;
           }
-          const drawingType =
-            content.kpi_drawing_type || "Active for Current & Next KPI";
-          return (
-            drawingType === "Active for Current & Next KPI" ||
-            drawingType === "Active for Next KPI"
-          );
+          return true;
         });
 
         validContents.forEach((item) => {
@@ -143,19 +138,7 @@ const createEmployeeKPI = async (data) => {
         });
 
         if (contents.length > 0) {
-          const filteredContents = lastKPI
-            ? contents.filter((content) => {
-                const lastKpiContent = lastKPI.kpi_contents.find(
-                  (k) => k.kpi_name === content.kpi_name
-                );
-                return (
-                  !lastKpiContent ||
-                  lastKpiContent.kpi_drawing_type !== "Inactive for Next"
-                );
-              })
-            : contents;
-
-          for (const content of filteredContents) {
+          for (const content of contents) {
             const targetPoint = Number(content.target_point) || 0;
             const achievedPoint = Number(content.achieved_point) || 0;
             const achievedPercent =
@@ -929,12 +912,7 @@ const updateEmployeeKPI = async (id, data) => {
           if (!content || !content.kpi_name || content.kpi_name.trim() === "") {
             return false;
           }
-          const drawingType =
-            content.kpi_drawing_type || "Active for Current & Next KPI";
-          return (
-            drawingType === "Active for Current & Next KPI" ||
-            drawingType === "Active for Next KPI"
-          );
+          return true;
         });
 
         validContents.forEach((item) => {

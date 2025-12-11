@@ -374,6 +374,24 @@ const getAllApprovalWorkFlowByRequest = async (
   designation_id = null
 ) => {
   try {
+    // Normalize inputs: ensure null for invalid values
+    const normalizedDeptId =
+      department_id !== null &&
+      department_id !== undefined &&
+      department_id !== "" &&
+      !isNaN(Number(department_id)) &&
+      Number(department_id) > 0
+        ? Number(department_id)
+        : null;
+    const normalizedDesignId =
+      designation_id !== null &&
+      designation_id !== undefined &&
+      designation_id !== "" &&
+      !isNaN(Number(designation_id)) &&
+      Number(designation_id) > 0
+        ? Number(designation_id)
+        : null;
+
     const includeConfig = {
       approval_work_approver: {
         select: {
@@ -421,13 +439,14 @@ const getAllApprovalWorkFlowByRequest = async (
       });
     };
 
-    if (department_id && designation_id) {
+    if (normalizedDeptId && normalizedDesignId) {
+      // Both department and designation filters provided
       const exactMatchWorkflows =
         await prisma.hrms_d_approval_work_flow.findMany({
           where: {
             request_type,
-            department_id: Number(department_id),
-            designation_id: Number(designation_id),
+            department_id: normalizedDeptId,
+            designation_id: normalizedDesignId,
             is_active: "Y",
           },
           orderBy: { sequence: "asc" },
@@ -439,7 +458,7 @@ const getAllApprovalWorkFlowByRequest = async (
         {
           where: {
             request_type,
-            department_id: Number(department_id),
+            department_id: normalizedDeptId,
             designation_id: null,
             is_active: "Y",
           },
@@ -453,7 +472,7 @@ const getAllApprovalWorkFlowByRequest = async (
         await prisma.hrms_d_approval_work_flow.findMany({
           where: {
             request_type,
-            designation_id: Number(designation_id),
+            designation_id: normalizedDesignId,
             department_id: null,
             is_active: "Y",
           },
@@ -484,11 +503,12 @@ const getAllApprovalWorkFlowByRequest = async (
       return results;
     }
 
-    if (department_id) {
+    if (normalizedDeptId) {
+      // Only department filter provided
       const deptWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
-          department_id: Number(department_id),
+          department_id: normalizedDeptId,
           is_active: "Y",
         },
         orderBy: { sequence: "asc" },
@@ -518,11 +538,12 @@ const getAllApprovalWorkFlowByRequest = async (
       return results;
     }
 
-    if (designation_id) {
+    if (normalizedDesignId) {
+      // Only designation filter provided
       const designWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
         where: {
           request_type,
-          designation_id: Number(designation_id),
+          designation_id: normalizedDesignId,
           is_active: "Y",
         },
         orderBy: { sequence: "asc" },
@@ -552,6 +573,7 @@ const getAllApprovalWorkFlowByRequest = async (
       return results;
     }
 
+    // No filters provided - return global workflows only
     const workflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: {
         request_type,

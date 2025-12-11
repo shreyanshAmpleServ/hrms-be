@@ -631,10 +631,19 @@ const getAllApprovalWorkFlowByRequest = async (req, res) => {
       });
     }
 
+    const normalizedDepartmentId =
+      department_id && department_id !== "" && !isNaN(Number(department_id))
+        ? Number(department_id)
+        : null;
+    const normalizedDesignationId =
+      designation_id && designation_id !== "" && !isNaN(Number(designation_id))
+        ? Number(designation_id)
+        : null;
+
     const data = await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
       request_type,
-      department_id,
-      designation_id
+      normalizedDepartmentId,
+      normalizedDesignationId
     );
 
     const isGlobal =
@@ -647,8 +656,8 @@ const getAllApprovalWorkFlowByRequest = async (req, res) => {
       data,
       meta: {
         request_type,
-        department_id: department_id || null,
-        designation_id: designation_id || null,
+        department_id: normalizedDepartmentId,
+        designation_id: normalizedDesignationId,
         is_global_workflow: isGlobal,
         total_approvers: data.length,
       },
