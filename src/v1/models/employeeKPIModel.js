@@ -100,6 +100,16 @@ const createEmployeeKPI = async (data) => {
           if (!content || !content.kpi_name || content.kpi_name.trim() === "") {
             return false;
           }
+          const validDrawingTypes = [
+            "Active for Current & Next KPI",
+            "Active for Next KPI",
+            "Inactive for Next",
+          ];
+          const drawingType =
+            content.kpi_drawing_type || "Active for Current & Next KPI";
+          if (!validDrawingTypes.includes(drawingType)) {
+            return false;
+          }
           return true;
         });
 
@@ -910,6 +920,17 @@ const updateEmployeeKPI = async (id, data) => {
 
         const validContents = contents.filter((content) => {
           if (!content || !content.kpi_name || content.kpi_name.trim() === "") {
+            return false;
+          }
+          // Validate kpi_drawing_type is one of the allowed values
+          const validDrawingTypes = [
+            "Active for Current & Next KPI",
+            "Active for Next KPI",
+            "Inactive for Next",
+          ];
+          const drawingType =
+            content.kpi_drawing_type || "Active for Current & Next KPI";
+          if (!validDrawingTypes.includes(drawingType)) {
             return false;
           }
           return true;
