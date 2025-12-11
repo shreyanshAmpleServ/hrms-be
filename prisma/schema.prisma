@@ -2730,14 +2730,13 @@ model hrms_d_employee_kpi_contents {
   employee_kpi_header hrms_d_employee_kpi @relation(fields: [employee_kpi_id], references: [id], onUpdate: NoAction)
 }
 
-// Employee KPI Component Assignment (Sub-Form)
 model hrms_d_employee_kpi_component_assignment {
   id                           Int       @id @default(autoincrement())
   employee_kpi_id              Int       @unique
   header_payroll_rule          String?   @db.VarChar(100)
   effective_from               DateTime? @db.Date
   effective_to                 DateTime? @db.Date
-  status                       String    @default("Pending") @db.VarChar(20)
+  status                       String    @default("P") @db.VarChar(20)
   last_component_assignment_id Int?
   change_percentage            Decimal?  @db.Decimal(19, 6)
   department_id                Int?
@@ -2757,7 +2756,6 @@ model hrms_d_employee_kpi_component_assignment {
   kpi_component_lines       hrms_d_employee_kpi_component_lines[]
 }
 
-// Employee KPI Component Assignment Lines
 model hrms_d_employee_kpi_component_lines {
   id                      Int      @id @default(autoincrement())
   component_assignment_id Int
@@ -2771,7 +2769,6 @@ model hrms_d_employee_kpi_component_lines {
   kpi_component_pay_component hrms_m_pay_component                     @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
 }
 
-// Employee KPI Attachments (Tab 2)
 model hrms_d_employee_kpi_attachments {
   id               Int       @id @default(autoincrement())
   employee_kpi_id  Int
@@ -2779,7 +2776,7 @@ model hrms_d_employee_kpi_attachments {
   document_name    String?   @db.NVarChar(255)
   issue_date       DateTime? @db.Date
   expiry_date      DateTime? @db.Date
-  status           String    @default("Pending") @db.VarChar(20)
+  status           String    @default("P") @db.VarChar(20)
   remarks          String?   @db.NVarChar(500)
   attachment_url   String?   @db.NVarChar(500)
   createdate       DateTime  @default(now()) @db.DateTime
