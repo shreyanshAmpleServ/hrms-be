@@ -637,13 +637,11 @@ const findCandidateMasterById = async (id) => {
       throw new CustomError("Candidate not found", 404);
     }
 
-    // Check if candidate is Approved or Converted
     const isApprovedOrConverted =
       reqData.status === "A" ||
       reqData.status === "Approved" ||
       reqData.status === "Converted";
 
-    // Fetch interview stage details only if NOT Approved or Converted
     let interviewStageDetails = null;
     if (!isApprovedOrConverted && reqData.interview_stage) {
       try {
@@ -658,7 +656,7 @@ const findCandidateMasterById = async (id) => {
         });
 
         console.log(
-          `✓ Fetched interview stage for candidate ${id}:`,
+          `Fetched interview stage for candidate ${id}:`,
           interviewStageDetails?.stage_name || "N/A"
         );
       } catch (error) {
@@ -669,7 +667,7 @@ const findCandidateMasterById = async (id) => {
       }
     } else if (isApprovedOrConverted) {
       console.log(
-        `ℹ Skipping interview_stage for candidate ${id} - Status: ${reqData.status}`
+        `Skipping interview_stage for candidate ${id} - Status: ${reqData.status}`
       );
     }
 
