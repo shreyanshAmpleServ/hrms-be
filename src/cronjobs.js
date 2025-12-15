@@ -218,6 +218,356 @@ const sendContractExpiryAlert = async (contract, daysUntilExpiry) => {
  * @param {string} tenantDb - The tenant database identifier
  * @returns {Promise<void>}
  */
+
+// const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
+//   try {
+//     const tenantPrisma = getPrismaClient(tenantDb);
+
+//     logger.info(
+//       `KPI Component Assignment Task Started for tenant ${tenantDb} at ${moment().format(
+//         "YYYY-MM-DD HH:mm:ss"
+//       )}`
+//     );
+
+//     const todayDateStr = moment
+//       .tz("Asia/Kolkata")
+//       .startOf("day")
+//       .format("YYYY-MM-DD");
+//     const todayDateStart = new Date(todayDateStr + "T00:00:00.000Z");
+//     const todayDateEnd = new Date(todayDateStr + "T23:59:59.999Z");
+
+//     const kpiComponentAssignments =
+//       await tenantPrisma.hrms_d_employee_kpi_component_assignment.findMany({
+//         where: {
+//           effective_from: {
+//             gte: todayDateStart,
+//             lte: todayDateEnd,
+//           },
+//           status: "P",
+//         },
+//         include: {
+//           employee_kpi_header: {
+//             select: {
+//               id: true,
+//               employee_id: true,
+//               status: true,
+//               revise_component_assignment: true,
+//             },
+//           },
+//           kpi_component_lines: true,
+//         },
+//       });
+
+//     if (kpiComponentAssignments.length === 0) {
+//       logger.info(
+//         `No KPI component assignments found with effective_from = ${todayDateStr}`
+//       );
+//       return;
+//     }
+
+//     logger.info(
+//       `Found ${kpiComponentAssignments.length} KPI component assignment(s) to process`
+//     );
+
+//     for (const kpiAssignment of kpiComponentAssignments) {
+//       try {
+//         await tenantPrisma.$transaction(
+//           async (tx) => {
+//             const kpi = kpiAssignment.employee_kpi_header;
+
+//             if (!kpi) {
+//               logger.warn(
+//                 `Skipping KPI component assignment ${kpiAssignment.id} - No KPI header found`
+//               );
+//               return;
+//             }
+
+//             if (kpi.status !== "A" && kpi.status !== "Active") {
+//               logger.warn(
+//                 `Skipping KPI ${kpi.id} - Status is "${kpi.status}", not approved`
+//               );
+//               return;
+//             }
+
+//             if (kpi.revise_component_assignment !== "Y") {
+//               logger.warn(
+//                 `Skipping KPI ${kpi.id} - revise_component_assignment is not "Y"`
+//               );
+//               return;
+//             }
+
+//             const effectiveFromDate = kpiAssignment.effective_from
+//               ? moment(kpiAssignment.effective_from).startOf("day").toDate()
+//               : moment().startOf("day").toDate();
+
+//             const existingAssignment =
+//               await tx.hrms_d_employee_pay_component_assignment_header.findFirst(
+//                 {
+//                   where: {
+//                     employee_id: kpi.employee_id,
+//                     effective_from: effectiveFromDate,
+//                   },
+//                   orderBy: { createdate: "desc" },
+//                 }
+//               );
+
+//             let componentAssignment;
+
+//             if (existingAssignment) {
+//               logger.info(
+//                 `Updating existing pay component assignment header ${existingAssignment.id} for employee ${kpi.employee_id} from KPI ${kpi.id}`
+//               );
+
+//               await tx.hrms_d_employee_pay_component_assignment_line.deleteMany(
+//                 {
+//                   where: {
+//                     parent_id: existingAssignment.id,
+//                   },
+//                 }
+//               );
+
+//               componentAssignment =
+//                 await tx.hrms_d_employee_pay_component_assignment_header.update(
+//                   {
+//                     where: { id: existingAssignment.id },
+//                     data: {
+//                       effective_from: effectiveFromDate,
+//                       effective_to: kpiAssignment.effective_to,
+//                       department_id: kpiAssignment.department_id,
+//                       position_id: null,
+//                       status: "Active",
+//                       remarks: `Updated from Employee KPI #${
+//                         kpi.id
+//                       } via automated system on ${moment().format(
+//                         "YYYY-MM-DD"
+//                       )}`,
+//                       updatedby: kpiAssignment.createdby || 1,
+//                       updatedate: new Date(),
+//                     },
+//                   }
+//                 );
+
+//               logger.info(
+//                 `Updated pay component assignment header ${componentAssignment.id}`
+//               );
+//             } else {
+//               const anyExistingAssignment =
+//                 await tx.hrms_d_employee_pay_component_assignment_header.findFirst(
+//                   {
+//                     where: {
+//                       employee_id: kpi.employee_id,
+//                     },
+//                     orderBy: { createdate: "desc" },
+//                   }
+//                 );
+
+//               if (anyExistingAssignment) {
+//                 logger.info(
+//                   `Found existing assignment ${anyExistingAssignment.id} for employee ${kpi.employee_id}, updating it from KPI ${kpi.id}`
+//                 );
+
+//                 await tx.hrms_d_employee_pay_component_assignment_line.deleteMany(
+//                   {
+//                     where: {
+//                       parent_id: anyExistingAssignment.id,
+//                     },
+//                   }
+//                 );
+
+//                 componentAssignment =
+//                   await tx.hrms_d_employee_pay_component_assignment_header.update(
+//                     {
+//                       where: { id: anyExistingAssignment.id },
+//                       data: {
+//                         effective_from: effectiveFromDate,
+//                         effective_to: kpiAssignment.effective_to,
+//                         department_id: kpiAssignment.department_id,
+//                         position_id: null,
+//                         status: "Active",
+//                         remarks: `Updated from Employee KPI #${
+//                           kpi.id
+//                         } via automated system on ${moment().format(
+//                           "YYYY-MM-DD"
+//                         )}`,
+//                         updatedby: kpiAssignment.createdby || 1,
+//                         updatedate: new Date(),
+//                       },
+//                     }
+//                   );
+
+//                 logger.info(
+//                   `Updated pay component assignment header ${componentAssignment.id}`
+//                 );
+//               } else {
+//                 logger.info(
+//                   `Creating new pay component assignment header for employee ${kpi.employee_id} from KPI ${kpi.id}`
+//                 );
+
+//                 componentAssignment =
+//                   await tx.hrms_d_employee_pay_component_assignment_header.create(
+//                     {
+//                       data: {
+//                         employee_id: kpi.employee_id,
+//                         effective_from: effectiveFromDate,
+//                         effective_to: kpiAssignment.effective_to,
+//                         department_id: kpiAssignment.department_id,
+//                         position_id: null,
+//                         status: "Active",
+//                         remarks: `Created from Employee KPI #${
+//                           kpi.id
+//                         } via automated system on ${moment().format(
+//                           "YYYY-MM-DD"
+//                         )}`,
+//                         createdby: kpiAssignment.createdby || 1,
+//                         createdate: new Date(),
+//                       },
+//                     }
+//                   );
+
+//                 logger.info(
+//                   `Created pay component assignment header ${componentAssignment.id}`
+//                 );
+//               }
+//             }
+
+//             if (
+//               !kpiAssignment.kpi_component_lines ||
+//               kpiAssignment.kpi_component_lines.length === 0
+//             ) {
+//               logger.warn(
+//                 `Skipping KPI component assignment ${kpiAssignment.id} - No component lines found`
+//               );
+//               return;
+//             }
+
+//             let lineNum = 1;
+//             for (const kpiLine of kpiAssignment.kpi_component_lines) {
+//               if (!kpiLine || !kpiLine.pay_component_id) {
+//                 logger.warn(
+//                   `Skipping invalid component line in assignment ${kpiAssignment.id} - Missing pay_component_id`
+//                 );
+//                 continue;
+//               }
+
+//               const amount = Number(kpiLine.amount) || 0;
+
+//               await tx.hrms_d_employee_pay_component_assignment_line.create({
+//                 data: {
+//                   parent_id: componentAssignment.id,
+//                   line_num: lineNum++,
+//                   pay_component_id: Number(kpiLine.pay_component_id),
+//                   amount: amount,
+//                   type_value: amount,
+//                   is_taxable: "Y",
+//                   is_recurring: "Y",
+//                   component_type: "O",
+//                   createdby: kpiAssignment.createdby || 1,
+//                   createdate: new Date(),
+//                 },
+//               });
+//             }
+
+//             await tx.hrms_d_employee_kpi_component_assignment.update({
+//               where: { id: kpiAssignment.id },
+//               data: {
+//                 status: "Processed",
+//                 updatedate: new Date(),
+//               },
+//             });
+
+//             // Update employee department_id, designation_id, work_location, and header_attendance_rule from KPI component assignment
+//             // This matches the behavior in employeeKPIModel.js when revise_component_assignment === "Y"
+//             const updateEmployeeData = {};
+//             if (kpiAssignment.department_id) {
+//               updateEmployeeData.department_id = Number(
+//                 kpiAssignment.department_id
+//               );
+//             }
+//             if (kpiAssignment.designation_id) {
+//               updateEmployeeData.designation_id = Number(
+//                 kpiAssignment.designation_id
+//               );
+//             }
+//             if (kpiAssignment.position) {
+//               updateEmployeeData.work_location = kpiAssignment.position;
+//             }
+//             if (kpiAssignment.header_payroll_rule) {
+//               // Map header_payroll_rule to header_attendance_rule (similar to attendance_type)
+//               updateEmployeeData.header_attendance_rule =
+//                 kpiAssignment.header_payroll_rule;
+//             }
+
+//             if (Object.keys(updateEmployeeData).length > 0) {
+//               await tx.hrms_d_employee.update({
+//                 where: { id: kpi.employee_id },
+//                 data: updateEmployeeData,
+//               });
+
+//               logger.info(
+//                 `Updated employee ${kpi.employee_id} with department_id: ${
+//                   updateEmployeeData.department_id || "unchanged"
+//                 }, designation_id: ${
+//                   updateEmployeeData.designation_id || "unchanged"
+//                 }, work_location: ${
+//                   updateEmployeeData.work_location || "unchanged"
+//                 }, header_attendance_rule: ${
+//                   updateEmployeeData.header_attendance_rule || "unchanged"
+//                 }`
+//               );
+//             }
+
+//             logger.info(
+//               `Successfully processed KPI component assignment ${kpiAssignment.id} for employee ${kpi.employee_id}`
+//             );
+//           },
+//           {
+//             timeout: 30000,
+//           }
+//         );
+//       } catch (error) {
+//         logger.error(
+//           `Error processing KPI component assignment ${kpiAssignment.id}:`,
+//           error
+//         );
+//       }
+//     }
+
+//     logger.info(
+//       `KPI Component Assignment Task Completed for tenant ${tenantDb} at ${moment().format(
+//         "YYYY-MM-DD HH:mm:ss"
+//       )} - Processed ${kpiComponentAssignments.length} assignment(s)`
+//     );
+//   } catch (error) {
+//     logger.error(
+//       `Failed to process KPI Component Assignments for tenant ${tenantDb}:`,
+//       error
+//     );
+//   }
+// };
+
+// /**
+//  * Processes KPI component assignments for all configured tenants
+//  * @description Wraps the tenant-specific processing function
+//  * @async
+//  * @returns {Promise<void>}
+//  */
+// const processKPIComponentAssignments = async () => {
+//   const tenants = process.env.CRON_TENANT_DBS
+//     ? process.env.CRON_TENANT_DBS.split(",").map((t) => t.trim())
+//     : ["DCC_HRMS_HESU"];
+
+//   for (const tenantDb of tenants) {
+//     try {
+//       await processKPIComponentAssignmentsForTenant(tenantDb);
+//     } catch (error) {
+//       logger.error(
+//         `Failed to process KPI assignments for tenant ${tenantDb}:`,
+//         error
+//       );
+//     }
+//   }
+// };
+
 const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
   try {
     const tenantPrisma = getPrismaClient(tenantDb);
@@ -474,26 +824,40 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
               },
             });
 
-            // Update employee department_id, designation_id, work_location, and header_attendance_rule from KPI component assignment
-            // This matches the behavior in employeeKPIModel.js when revise_component_assignment === "Y"
+            // ======= UPDATED SECTION: Now includes employment_type_id =======
+            // Update employee department_id, designation_id, work_location, header_attendance_rule,
+            // and employment_type_id from KPI component assignment
             const updateEmployeeData = {};
+
             if (kpiAssignment.department_id) {
               updateEmployeeData.department_id = Number(
                 kpiAssignment.department_id
               );
             }
+
             if (kpiAssignment.designation_id) {
               updateEmployeeData.designation_id = Number(
                 kpiAssignment.designation_id
               );
             }
+
             if (kpiAssignment.position) {
               updateEmployeeData.work_location = kpiAssignment.position;
             }
+
             if (kpiAssignment.header_payroll_rule) {
-              // Map header_payroll_rule to header_attendance_rule (similar to attendance_type)
               updateEmployeeData.header_attendance_rule =
                 kpiAssignment.header_payroll_rule;
+            }
+
+            // ======= ADD: employment_type_id update =======
+            if (kpiAssignment.employment_type_id) {
+              updateEmployeeData.employment_type_id = Number(
+                kpiAssignment.employment_type_id
+              );
+              logger.info(
+                `Setting employment_type_id to ${kpiAssignment.employment_type_id} for employee ${kpi.employee_id}`
+              );
             }
 
             if (Object.keys(updateEmployeeData).length > 0) {
@@ -503,17 +867,25 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
               });
 
               logger.info(
-                `Updated employee ${kpi.employee_id} with department_id: ${
-                  updateEmployeeData.department_id || "unchanged"
-                }, designation_id: ${
-                  updateEmployeeData.designation_id || "unchanged"
-                }, work_location: ${
-                  updateEmployeeData.work_location || "unchanged"
-                }, header_attendance_rule: ${
-                  updateEmployeeData.header_attendance_rule || "unchanged"
-                }`
+                `Updated employee ${kpi.employee_id} with ` +
+                  `department_id: ${
+                    updateEmployeeData.department_id || "unchanged"
+                  }, ` +
+                  `designation_id: ${
+                    updateEmployeeData.designation_id || "unchanged"
+                  }, ` +
+                  `work_location: ${
+                    updateEmployeeData.work_location || "unchanged"
+                  }, ` +
+                  `header_attendance_rule: ${
+                    updateEmployeeData.header_attendance_rule || "unchanged"
+                  }, ` +
+                  `employment_type_id: ${
+                    updateEmployeeData.employment_type_id || "unchanged"
+                  }`
               );
             }
+            // ======= END OF UPDATED SECTION =======
 
             logger.info(
               `Successfully processed KPI component assignment ${kpiAssignment.id} for employee ${kpi.employee_id}`
@@ -553,7 +925,7 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
 const processKPIComponentAssignments = async () => {
   const tenants = process.env.CRON_TENANT_DBS
     ? process.env.CRON_TENANT_DBS.split(",").map((t) => t.trim())
-    : ["DCC_HRMS_HESU"];
+    : ["DCC_HRMS_DEV"];
 
   for (const tenantDb of tenants) {
     try {
@@ -566,7 +938,6 @@ const processKPIComponentAssignments = async () => {
     }
   }
 };
-
 /**
  * Initializes and schedules all HRMS cron jobs
  * @description Sets up health check and contract expiry alert cron jobs with specified schedules
