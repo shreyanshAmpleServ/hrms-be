@@ -453,7 +453,6 @@ const approvalWorkFlowService = require("../services/approvalWorkFlowService.js"
 const approvalWorkFlowModel = require("../models/approvalWorkFlowModel.js");
 const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
-const { request } = require("express");
 
 const createApprovalWorkFlow = async (req, res, next) => {
   try {
@@ -631,10 +630,27 @@ const getAllApprovalWorkFlowByRequest = async (req, res) => {
       });
     }
 
+    const normalizedDepartmentId =
+      department_id !== null &&
+      department_id !== undefined &&
+      department_id !== "" &&
+      !isNaN(Number(department_id)) &&
+      Number(department_id) > 0
+        ? Number(department_id)
+        : null;
+    const normalizedDesignationId =
+      designation_id !== null &&
+      designation_id !== undefined &&
+      designation_id !== "" &&
+      !isNaN(Number(designation_id)) &&
+      Number(designation_id) > 0
+        ? Number(designation_id)
+        : null;
+
     const data = await approvalWorkFlowModel.getAllApprovalWorkFlowByRequest(
       request_type,
-      department_id,
-      designation_id
+      normalizedDepartmentId,
+      normalizedDesignationId
     );
 
     const isGlobal =
@@ -647,8 +663,8 @@ const getAllApprovalWorkFlowByRequest = async (req, res) => {
       data,
       meta: {
         request_type,
-        department_id: department_id || null,
-        designation_id: designation_id || null,
+        department_id: normalizedDepartmentId,
+        designation_id: normalizedDesignationId,
         is_global_workflow: isGlobal,
         total_approvers: data.length,
       },

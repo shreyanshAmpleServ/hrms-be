@@ -314,12 +314,20 @@ const getWorkflowForRequest = async (
 //     const requester = await prisma.hrms_d_employee.findUnique({
 //       where: { id: parentData.requester_id },
 //       select: {
-//         department_id: true,
+//         id: true,
 //         full_name: true,
+//         department_id: true,
+//         designation_id: true,
 //         hrms_employee_department: {
 //           select: {
 //             id: true,
 //             department_name: true,
+//           },
+//         },
+//         hrms_employee_designation: {
+//           select: {
+//             id: true,
+//             designation_name: true,
 //           },
 //         },
 //       },
@@ -332,8 +340,38 @@ const getWorkflowForRequest = async (
 //     console.log(
 //       ` Requester: ${requester.full_name} from ${
 //         requester.hrms_employee_department?.department_name || "No Department"
+//       }, Designation: ${
+//         requester.hrms_employee_designation?.designation_name ||
+//         "No Designation"
 //       }`
 //     );
+
+//     const {
+//       workflow: workflowSteps,
+//       isGlobalWorkflow,
+//       workflowType,
+//     } = await getWorkflowForRequest(
+//       request_type,
+//       requester.department_id,
+//       requester.designation_id
+//     );
+
+//     if (!workflowSteps || workflowSteps.length === 0) {
+//       console.log(
+//         `No approval workflow found for '${request_type}'${
+//           requester.department_id
+//             ? ` in '${requester.hrms_employee_department?.department_name}' department`
+//             : requester.designation_id
+//             ? ` for '${requester.hrms_employee_designation?.designation_name}' designation`
+//             : ""
+//         }. Continuing without approval workflow.`
+//       );
+//       return {
+//         message: "Operation completed without approval workflow",
+//         workflow_required: false,
+//         request_created: false,
+//       };
+//     }
 
 //     const reqData = await prisma.hrms_d_requests.create({
 //       data: {
@@ -344,27 +382,15 @@ const getWorkflowForRequest = async (
 //       },
 //     });
 
-//     const {
-//       workflow: workflowSteps,
-//       isGlobalWorkflow,
-//       workflowType,
-//     } = await getWorkflowForRequest(request_type, requester.department_id);
-
-//     if (!workflowSteps || workflowSteps.length === 0) {
-//       throw new CustomError(
-//         `No approval workflow defined for '${request_type}'${
-//           requester.department_id
-//             ? ` in department ${requester.hrms_employee_department?.department_name}`
-//             : ""
-//         } and no global fallback available`,
-//         400
-//       );
-//     }
-
 //     console.log(` Using ${workflowType} workflow for ${request_type}`);
 //     if (!isGlobalWorkflow && requester.hrms_employee_department) {
 //       console.log(
 //         ` Department: ${requester.hrms_employee_department.department_name}`
+//       );
+//     }
+//     if (!isGlobalWorkflow && requester.hrms_employee_designation) {
+//       console.log(
+//         ` Designation: ${requester.hrms_employee_designation.designation_name}`
 //       );
 //     }
 
@@ -477,23 +503,36 @@ const getWorkflowForRequest = async (
 //           stage_name: parentData.stage_name,
 //           workflow_info: isGlobalWorkflow
 //             ? "(Global Workflow)"
+//             : workflowType === "designation-specific"
+//             ? `(${requester.hrms_employee_designation?.designation_name} Designation Workflow)`
 //             : `(${requester.hrms_employee_department?.department_name} Department Workflow)`,
 //           approver_department:
 //             firstApprover.hrms_employee_department?.department_name,
 //         }
 //       );
 
-//       await sendEmail({
-//         to: firstApprover.email,
-//         subject: template.subject,
-//         html: template.body,
-//         createdby: parentData.createdby,
-//         log_inst: parentData.log_inst,
-//       });
+//       try {
+//         await sendEmail({
+//           to: firstApprover.email,
+//           subject: template.subject,
+//           html: template.body,
+//           createdby: parentData.createdby,
+//           log_inst: parentData.log_inst,
+//         });
 
-//       console.log(
-//         ` [Email Sent] ${workflowType} workflow → ${firstApprover.email}`
-//       );
+//         console.log(
+//           ` [Email Sent] ${workflowType} workflow → ${firstApprover.email}`
+//         );
+//       } catch (emailError) {
+//         console.error(
+//           ` [Email Failed] Failed to send email to ${firstApprover.email}:`,
+//           emailError.message
+//         );
+//         console.log(
+//           ` [Warning] Request created but email notification failed. Request will proceed.`
+//         );
+//       }
+
 //       console.log(
 //         `First Approver: ${firstApprover.full_name} (${
 //           firstApprover.hrms_employee_department?.department_name || "No Dept"
@@ -501,7 +540,11 @@ const getWorkflowForRequest = async (
 //       );
 //     }
 
-//     return fullData;
+//     return {
+//       ...fullData,
+//       workflow_required: true,
+//       request_created: true,
+//     };
 //   } catch (error) {
 //     console.error(" Error creating request:", error);
 //     throw new CustomError(`Error creating request: ${error.message}`, 500);
@@ -509,10 +552,17 @@ const getWorkflowForRequest = async (
 // };
 
 const createRequest = async (data) => {
-  const { request_type, ...parentData } = data;
+  const {
+    request_type,
+    workflow_department_id,
+    workflow_designation_id,
+    ...parentData
+  } = data;
 
   try {
-    if (!request_type) throw new CustomError("request_type is required", 400);
+    if (!request_type) {
+      throw new CustomError("request_type is required", 400);
+    }
 
     const requester = await prisma.hrms_d_employee.findUnique({
       where: { id: parentData.requester_id },
@@ -541,40 +591,13 @@ const createRequest = async (data) => {
     }
 
     console.log(
-      ` Requester: ${requester.full_name} from ${
+      `Requester: ${requester.full_name} from ${
         requester.hrms_employee_department?.department_name || "No Department"
       }, Designation: ${
         requester.hrms_employee_designation?.designation_name ||
         "No Designation"
       }`
     );
-
-    const {
-      workflow: workflowSteps,
-      isGlobalWorkflow,
-      workflowType,
-    } = await getWorkflowForRequest(
-      request_type,
-      requester.department_id,
-      requester.designation_id
-    );
-
-    if (!workflowSteps || workflowSteps.length === 0) {
-      console.log(
-        `No approval workflow found for '${request_type}'${
-          requester.department_id
-            ? ` in '${requester.hrms_employee_department?.department_name}' department`
-            : requester.designation_id
-            ? ` for '${requester.hrms_employee_designation?.designation_name}' designation`
-            : ""
-        }. Continuing without approval workflow.`
-      );
-      return {
-        message: "Operation completed without approval workflow",
-        workflow_required: false,
-        request_created: false,
-      };
-    }
 
     const reqData = await prisma.hrms_d_requests.create({
       data: {
@@ -585,26 +608,61 @@ const createRequest = async (data) => {
       },
     });
 
-    console.log(` Using ${workflowType} workflow for ${request_type}`);
-    if (!isGlobalWorkflow && requester.hrms_employee_department) {
+    let workflowResult;
+
+    if (request_type === "job_posting") {
+      const workflowDeptId = workflow_department_id;
+      const workflowDesigId = workflow_designation_id;
+
       console.log(
-        ` Department: ${requester.hrms_employee_department.department_name}`
+        ` Job Posting workflow search: dept=${workflowDeptId}, desig=${workflowDesigId}`
+      );
+
+      workflowResult = await getWorkflowForJobPosting(
+        request_type,
+        workflowDeptId,
+        workflowDesigId
+      );
+    } else {
+      const workflowDeptId =
+        workflow_department_id !== undefined
+          ? workflow_department_id
+          : requester.department_id;
+      const workflowDesigId =
+        workflow_designation_id !== undefined
+          ? workflow_designation_id
+          : requester.designation_id;
+
+      workflowResult = await getWorkflowForRequest(
+        request_type,
+        workflowDeptId,
+        workflowDesigId
       );
     }
-    if (!isGlobalWorkflow && requester.hrms_employee_designation) {
+
+    const { workflowSteps, isGlobalWorkflow, workflowType } = workflowResult;
+
+    if (!workflowSteps || workflowSteps.length === 0) {
       console.log(
-        ` Designation: ${requester.hrms_employee_designation.designation_name}`
+        ` No approval workflow found for ${request_type}. Continuing without approval workflow.`
       );
+      return {
+        message: "Operation completed without approval workflow",
+        workflow_required: false,
+        request_created: false,
+      };
     }
+
+    console.log(`Using ${workflowType} workflow for ${request_type}`);
 
     const approvalsToInsert = workflowSteps.map((step, index) => ({
       request_id: Number(reqData.id),
       approver_id: Number(step.approver_id),
-      sequence: Number(step.sequence) || index + 1,
+      sequence: Number(step.sequence || index + 1),
       status: "P",
-      createdby: Number(parentData.createdby) || 1,
+      createdby: Number(parentData.createdby || 1),
       createdate: new Date(),
-      log_inst: Number(parentData.log_inst) || 1,
+      log_inst: Number(parentData.log_inst || 1),
     }));
 
     if (
@@ -683,13 +741,34 @@ const createRequest = async (data) => {
       where: { id: parentData.log_inst },
       select: { company_name: true },
     });
-    const company_name = company?.company_name || "HRMS System";
+
+    const companyname = company?.company_name || "HRMS System";
 
     if (firstApprover?.email && requester?.full_name) {
-      const request_detail = await getRequestDetailsByType(
+      const requestdetail = await getRequestDetailsByType(
         request_type,
         reqData.reference_id
       );
+      // const template = await generateEmailContent(
+      //   request_type === "interview_stage"
+      //     ? templateKeyMap.interviewRemark
+      //     : templateKeyMap.notifyApprover,
+      //   {
+      //     employeename: firstApprover.full_name,
+      //     approvername: firstApprover.full_name,
+      //     requestername: requester.full_name,
+      //     requesttype: request_type,
+      //     action: "created",
+      //     companyname,
+      //     requestdetail,
+      //     stagename: parentData.stagename,
+      //     workflowinfo: isGlobalWorkflow
+      //       ? "Global Workflow"
+      //       : `${workflowType} Workflow`,
+      //     approverdepartment:
+      //       firstApprover.hrms_employee_department?.department_name,
+      //   }
+      // );
 
       const template = await generateEmailContent(
         request_type === "interview_stage"
@@ -701,14 +780,12 @@ const createRequest = async (data) => {
           requester_name: requester.full_name,
           request_type: request_type,
           action: "created",
-          company_name,
-          request_detail,
-          stage_name: parentData.stage_name,
+          company_name: companyname,
+          request_detail: requestdetail,
+          stage_name: parentData.stagename,
           workflow_info: isGlobalWorkflow
-            ? "(Global Workflow)"
-            : workflowType === "designation-specific"
-            ? `(${requester.hrms_employee_designation?.designation_name} Designation Workflow)`
-            : `(${requester.hrms_employee_department?.department_name} Department Workflow)`,
+            ? "Global Workflow"
+            : `${workflowType} Workflow`,
           approver_department:
             firstApprover.hrms_employee_department?.department_name,
         }
@@ -722,26 +799,25 @@ const createRequest = async (data) => {
           createdby: parentData.createdby,
           log_inst: parentData.log_inst,
         });
-
         console.log(
-          ` [Email Sent] ${workflowType} workflow → ${firstApprover.email}`
+          `Email Sent (${workflowType} workflow): ${firstApprover.email}`
         );
       } catch (emailError) {
         console.error(
-          ` [Email Failed] Failed to send email to ${firstApprover.email}:`,
+          ` Email Failed: Failed to send email to ${firstApprover.email}`,
           emailError.message
         );
         console.log(
-          ` [Warning] Request created but email notification failed. Request will proceed.`
+          " Request created but email notification failed. Request will proceed."
         );
       }
-
-      console.log(
-        `First Approver: ${firstApprover.full_name} (${
-          firstApprover.hrms_employee_department?.department_name || "No Dept"
-        })`
-      );
     }
+
+    console.log(
+      `First Approver: ${firstApprover?.full_name} (${
+        firstApprover?.hrms_employee_department?.department_name || "No Dept"
+      })`
+    );
 
     return {
       ...fullData,
@@ -749,7 +825,7 @@ const createRequest = async (data) => {
       request_created: true,
     };
   } catch (error) {
-    console.error(" Error creating request:", error);
+    console.error("Error creating request:", error);
     throw new CustomError(`Error creating request: ${error.message}`, 500);
   }
 };
@@ -1678,14 +1754,46 @@ const findRequestByRequestUsers = async (
                 status: kpiRequest.status,
                 revise_component_assignment:
                   kpiRequest.revise_component_assignment,
-                kpi_contents: kpiRequest.kpi_contents?.map((content) => ({
-                  kpi_name: content.kpi_name,
-                  target_point: content.target_point,
-                  achieved_point: content.achieved_point,
-                  weightage_percentage: content.weightage_percentage,
-                  achieved_percentage: content.achieved_percentage,
-                  remarks: content.kpi_remarks,
-                })),
+                kpi_contents:
+                  kpiRequest.kpi_contents?.map((content) => ({
+                    kpi_name: content.kpi_name || null,
+                    weight: content.weightage_percentage
+                      ? Number(content.weightage_percentage)
+                      : null,
+                    target: content.target_point
+                      ? Number(content.target_point)
+                      : null,
+                    achieved: content.achieved_point
+                      ? Number(content.achieved_point)
+                      : null,
+                    rating:
+                      content.achieved_percentage != null
+                        ? Math.min(
+                            5,
+                            Math.max(
+                              0,
+                              Number(content.achieved_percentage) / 20
+                            )
+                          )
+                        : content.target_point && content.achieved_point
+                        ? Math.min(
+                            5,
+                            Math.max(
+                              0,
+                              (Number(content.achieved_point) /
+                                Number(content.target_point)) *
+                                5
+                            )
+                          )
+                        : null,
+                    weightage_percentage: content.weightage_percentage
+                      ? Number(content.weightage_percentage)
+                      : null,
+                    achieved_percentage: content.achieved_percentage
+                      ? Number(content.achieved_percentage)
+                      : null,
+                    remarks: content.kpi_remarks || null,
+                  })) || [],
                 component_assignment: kpiRequest.kpi_component_assignment
                   ? {
                       header_payroll_rule:
@@ -1697,13 +1805,18 @@ const findRequestByRequestUsers = async (
                       change_percentage:
                         kpiRequest.kpi_component_assignment.change_percentage,
                       component_lines:
-                        kpiRequest.kpi_component_assignment.kpi_component_lines?.map(
-                          (line) => ({
+                        kpiRequest.kpi_component_assignment.kpi_component_lines
+                          ?.filter(
+                            (line) =>
+                              line.kpi_component_pay_component &&
+                              line.amount != null
+                          )
+                          .map((line) => ({
                             component_name:
-                              line.kpi_component_pay_component?.component_name,
-                            amount: line.amount,
-                          })
-                        ),
+                              line.kpi_component_pay_component
+                                ?.component_name || "N/A",
+                            amount: line.amount ? Number(line.amount) : 0,
+                          })) || [],
                     }
                   : null,
               },
@@ -2414,6 +2527,123 @@ const takeActionOnRequest = async ({
   }
 };
 
+const getWorkflowForJobPosting = async (
+  request_type,
+  job_department_id,
+  job_designation_id
+) => {
+  try {
+    let workflowSteps;
+    let workflowType = "NONE";
+
+    console.log(
+      ` Looking for job posting workflow: request_type=${request_type}, ` +
+        `department=${job_department_id}, designation=${job_designation_id}`
+    );
+
+    if (job_department_id && job_designation_id) {
+      console.log(
+        `Checking for exact match workflow (dept: ${job_department_id} + desig: ${job_designation_id})`
+      );
+
+      workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+        where: {
+          request_type,
+          department_id: job_department_id,
+          designation_id: job_designation_id,
+          is_active: "Y",
+        },
+        orderBy: { sequence: "asc" },
+        include: {
+          approval_work_approver: {
+            select: {
+              id: true,
+              full_name: true,
+              employee_code: true,
+              hrms_employee_department: {
+                select: { department_name: true },
+              },
+              hrms_employee_designation: {
+                select: { designation_name: true },
+              },
+            },
+          },
+          approval_work_department: {
+            select: { department_name: true },
+          },
+          approval_work_flow_designation: {
+            select: { designation_name: true },
+          },
+        },
+      });
+
+      if (workflowSteps && workflowSteps.length > 0) {
+        workflowType = "EXACT-MATCH";
+        console.log(
+          ` Found EXACT-MATCH workflow with ${workflowSteps.length} approvers`
+        );
+
+        console.log(`Returning workflow:`, {
+          count: workflowSteps.length,
+          approvers: workflowSteps.map((w) => w.approver_id),
+        });
+
+        return {
+          workflowSteps,
+          isGlobalWorkflow: false,
+          workflowType,
+        };
+      } else {
+        console.log(
+          ` No exact match found for dept ${job_department_id} + desig ${job_designation_id}`
+        );
+      }
+    }
+
+    console.log(
+      `No exact match found. Falling back to GLOBAL workflow for ${request_type}`
+    );
+
+    workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+      where: {
+        request_type,
+        department_id: null,
+        designation_id: null,
+        is_active: "Y",
+      },
+      orderBy: { sequence: "asc" },
+      include: {
+        approval_work_approver: {
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            hrms_employee_department: {
+              select: { department_name: true },
+            },
+          },
+        },
+      },
+    });
+
+    workflowType = "GLOBAL";
+    console.log(
+      `Found ${workflowType} workflow with ${workflowSteps.length} approvers`
+    );
+
+    return {
+      workflowSteps,
+      isGlobalWorkflow: workflowType === "GLOBAL",
+      workflowType,
+    };
+  } catch (error) {
+    throw new CustomError(
+      `Error resolving job posting workflow: ${error.message}`,
+      500
+    );
+  }
+};
+
 module.exports = {
   createRequest,
   deleteRequests,
@@ -2424,4 +2654,5 @@ module.exports = {
   findRequestByRequestUsers,
   findRequestByRequestTypeAndReferenceId,
   getWorkflowForRequest,
+  getWorkflowForJobPosting,
 };

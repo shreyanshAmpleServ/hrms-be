@@ -312,9 +312,9 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
     if (!data.gender) {
       throw new CustomError(`Gender is required`, 400);
     }
-    if (!data.employment_type) {
-      throw new CustomError(`Employment Type is required`, 400);
-    }
+    // if (!data.employment_type) {
+    //   throw new CustomError(`Employment Type is required`, 400);
+    // }
     if (!data.designation_id) {
       throw new CustomError(`Designation is required`, 400);
     }
@@ -1234,6 +1234,12 @@ const employeeOptions = async () => {
             department_name: true,
           },
         },
+        hrms_employee_designation: {
+          select: {
+            id: true,
+            designation_name: true,
+          },
+        },
       },
     });
     return employees.map(
@@ -1247,9 +1253,11 @@ const employeeOptions = async () => {
         email,
         profile_pic,
         hrms_employee_department,
+        hrms_employee_designation,
       }) => ({
         value: id,
         label: `${full_name} (${employee_code})`,
+        employee_code,
         meta: {
           department_id,
           designation_id,
@@ -1257,6 +1265,7 @@ const employeeOptions = async () => {
           email,
           profile_pic,
           department: hrms_employee_department?.department_name,
+          designation: hrms_employee_designation?.designation_name,
         },
       })
     );

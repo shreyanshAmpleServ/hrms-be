@@ -1231,6 +1231,7 @@ model hrms_m_employment_type {
   updatedby  Int?
   log_inst   Int?
   is_active  String?   @default("Y") @db.Char(1)
+  kpi_component_employment_type hrms_d_employee_kpi_component_assignment[]
 }
 
 model hrms_m_goal_category {
@@ -2472,7 +2473,7 @@ model hrms_m_projects {
   updatedby                           Int?
   log_inst                            Int?
   ValidFrom                           DateTime                                        @default(dbgenerated("sysutcdatetime()"), map: "DF__hrms_m_pr__Valid__670A40DB")
-  ValidTo                             DateTime                                        @default(dbgenerated("9999-12-31 23:59:59.9999999"), map: "DF__hrms_m_pr__Valid__67FE6514")
+  ValidTo                             DateTime                                        @default(dbgenerated("CAST('9999-12-31 23:59:59.9999999' AS DATETIME2)"), map: "DF__hrms_m_pr__Valid__67FE6514")
   is_active                           String?                                         @default("Y", map: "DF__hrms_m_pr__is_ac__69E6AD86") @db.Char(1)
   pay_component_line_project          hrms_d_employee_pay_component_assignment_line[]
   employee_payroll_adjustment_project hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentProject")
@@ -2743,6 +2744,8 @@ model hrms_d_employee_kpi_component_assignment {
   designation_id               Int?
   position                     String?   @db.NVarChar(100)
   successor_id                 Int?
+  employment_type_id           Int?
+  contract_expiry_date         DateTime? @db.Date
   createdate                   DateTime  @default(now()) @db.DateTime
   createdby                    Int
   updatedate                   DateTime? @db.DateTime
@@ -2754,6 +2757,7 @@ model hrms_d_employee_kpi_component_assignment {
   kpi_component_designation hrms_m_designation_master?            @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   kpi_component_successor   hrms_d_employee?                      @relation("KPISuccessor", fields: [successor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   kpi_component_lines       hrms_d_employee_kpi_component_lines[]
+  kpi_component_employment_type hrms_m_employment_type? @relation(fields: [employment_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_employee_kpi_component_lines {

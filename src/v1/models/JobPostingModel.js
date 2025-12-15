@@ -1549,6 +1549,16 @@ const createJobPosting = async (data) => {
         },
       },
     });
+    // await createRequest({
+    //   requester_id: data.reporting_manager_id || data.createdby || 1,
+    //   request_type: "job_posting",
+    //   reference_id: jobPosting.id,
+    //   request_data: `Job Posting: ${jobPosting.job_title} (${jobPosting.job_code})`,
+    //   status: "P",
+    //   createdby: data.createdby || 1,
+    //   log_inst: data.log_inst || 1,
+    // });
+
     await createRequest({
       requester_id: data.reporting_manager_id || data.createdby || 1,
       request_type: "job_posting",
@@ -1557,6 +1567,8 @@ const createJobPosting = async (data) => {
       status: "P",
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
+      workflow_department_id: data.department_id,
+      workflow_designation_id: data.designation_id,
     });
 
     console.log(`Job posting created with ID: ${jobPosting.id}`);
@@ -1788,7 +1800,7 @@ const getAllJobPosting = async (search, page, size, startDate, endDate) => {
           },
         },
       },
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      orderBy: [{ createdate: "desc" }, { updatedate: "desc" }],
     });
 
     const totalCount = await prisma.hrms_d_job_posting.count({
