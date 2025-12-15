@@ -2743,6 +2743,8 @@ model hrms_d_employee_kpi_component_assignment {
   designation_id               Int?
   position                     String?   @db.NVarChar(100)
   successor_id                 Int?
+  employment_type              String?   @db.VarChar(50)
+  contract_expiry_date         DateTime? @db.Date
   createdate                   DateTime  @default(now()) @db.DateTime
   createdby                    Int
   updatedate                   DateTime? @db.DateTime
