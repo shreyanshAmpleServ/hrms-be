@@ -2685,11 +2685,11 @@ model hrms_d_employee_kpi {
   employee_id                 Int
   reviewer_id                 Int
   review_date                 DateTime  @db.Date
+  employment_remarks          String?   @db.Text
   review_remarks              String?   @db.NVarChar(500)
   next_review_date            DateTime? @db.Date
   employment_type             String?   @db.VarChar(50)
   contract_expiry_date        DateTime? @db.Date
-  employment_remarks          String?   @db.NVarChar(500)
   rating                      Decimal?  @db.Decimal(19, 6)
   revise_component_assignment String?   @default("N") @db.Char(1)
   status                      String    @default("Pending") @db.VarChar(20)

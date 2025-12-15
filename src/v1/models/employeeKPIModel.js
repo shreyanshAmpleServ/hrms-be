@@ -36,8 +36,6 @@ const serializeEmployeeKPIData = (data, defaultEmploymentType = null) => {
 
 const createEmployeeKPI = async (data) => {
   try {
-    // ✅ ADD THIS AT THE VERY START
-    console.log("=== INCOMING REQUEST DATA ===");
     console.log(
       "revise_component_assignment:",
       data.revise_component_assignment
@@ -53,7 +51,6 @@ const createEmployeeKPI = async (data) => {
         data.component_assignment.component_lines?.length
       );
     }
-    console.log("=============================\n");
     const reviewer = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(data.reviewer_id) },
       select: {
@@ -535,7 +532,7 @@ const createEmployeeKPI = async (data) => {
     );
 
     if (!result.kpi_component_assignment && directCheck) {
-      console.error("⚠️ Component assignment exists in DB but not in result!");
+      console.error(" Component assignment exists in DB but not in result!");
     }
 
     return result;
@@ -1059,6 +1056,88 @@ const findPendingKPIForEmployee = async (employeeId) => {
   }
 };
 
+// const getAllEmployeeKPI = async (
+//   page,
+//   size,
+//   search,
+//   startDate,
+//   endDate,
+//   employee_id,
+//   status
+// ) => {
+//   try {
+//     page = page && page != 0 ? Number(page) : 1;
+//     size = size ? Number(size) : 10;
+//     const skip = (page - 1) * size;
+
+//     const filters = {};
+//     if (search && search.trim() !== "") {
+//       filters.OR = [
+//         {
+//           kpi_employee: {
+//             full_name: { contains: search, mode: "insensitive" },
+//           },
+//         },
+//         {
+//           kpi_employee: {
+//             employee_code: { contains: search, mode: "insensitive" },
+//           },
+//         },
+//       ];
+//     }
+//     if (employee_id) {
+//       filters.employee_id = Number(employee_id);
+//     }
+//     if (status) {
+//       filters.status = status;
+//     }
+//     if (startDate && endDate && startDate !== "" && endDate !== "") {
+//       try {
+//         const start = new Date(startDate);
+//         const end = new Date(endDate);
+//         if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//           filters.review_date = { gte: start, lte: end };
+//         }
+//       } catch (dateError) {
+//         console.error("Error parsing dates:", dateError);
+//       }
+//     }
+
+//     const data = await prisma.hrms_d_employee_kpi.findMany({
+//       where: filters,
+//       skip: skip,
+//       take: size,
+//       orderBy: [{ createdate: "desc" }],
+//       include: {
+//         kpi_employee: {
+//           select: { id: true, full_name: true, employee_code: true },
+//         },
+//         kpi_reviewer: {
+//           select: { id: true, full_name: true, employee_code: true },
+//         },
+//       },
+//     });
+
+//     const totalCount = await prisma.hrms_d_employee_kpi.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: data,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount: totalCount,
+//     };
+//   } catch (error) {
+//     console.error("Error retrieving Employee KPIs:", error);
+//     throw new CustomError(
+//       `Error retrieving Employee KPIs: ${error.message}`,
+//       503
+//     );
+//   }
+// };
+
 const getAllEmployeeKPI = async (
   page,
   size,
@@ -1078,12 +1157,12 @@ const getAllEmployeeKPI = async (
       filters.OR = [
         {
           kpi_employee: {
-            full_name: { contains: search, mode: "insensitive" },
+            full_name: { contains: search.toLowerCase() },
           },
         },
         {
           kpi_employee: {
-            employee_code: { contains: search, mode: "insensitive" },
+            employee_code: { contains: search.toLowerCase() },
           },
         },
       ];
@@ -1113,10 +1192,71 @@ const getAllEmployeeKPI = async (
       orderBy: [{ createdate: "desc" }],
       include: {
         kpi_employee: {
-          select: { id: true, full_name: true, employee_code: true },
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            department_id: true,
+            designation_id: true,
+            employment_type: true,
+            employment_type_id: true,
+          },
         },
         kpi_reviewer: {
-          select: { id: true, full_name: true, employee_code: true },
+          select: {
+            id: true,
+            full_name: true,
+            employee_code: true,
+            department_id: true,
+            designation_id: true,
+          },
+        },
+        kpi_contents: {
+          orderBy: { createdate: "asc" },
+        },
+        kpi_component_assignment: {
+          include: {
+            kpi_component_lines: {
+              include: {
+                kpi_component_pay_component: {
+                  select: {
+                    id: true,
+                    component_name: true,
+                    component_code: true,
+                    pay_or_deduct: true,
+                    component_type: true,
+                  },
+                },
+              },
+              orderBy: { createdate: "asc" },
+            },
+            kpi_component_department: {
+              select: {
+                id: true,
+                department_name: true,
+              },
+            },
+            kpi_component_designation: {
+              select: {
+                id: true,
+                designation_name: true,
+              },
+            },
+            kpi_component_successor: {
+              select: { id: true, full_name: true, employee_code: true },
+            },
+            kpi_component_employment_type: {
+              select: { id: true, type_name: true },
+            },
+          },
+        },
+        last_kpi: {
+          select: {
+            id: true,
+            review_date: true,
+            rating: true,
+            status: true,
+          },
         },
       },
     });

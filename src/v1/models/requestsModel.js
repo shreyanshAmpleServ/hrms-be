@@ -640,7 +640,11 @@ const createRequest = async (data) => {
       );
     }
 
-    const { workflowSteps, isGlobalWorkflow, workflowType } = workflowResult;
+    const {
+      workflow: workflowSteps,
+      isGlobalWorkflow,
+      workflowType,
+    } = workflowResult;
 
     if (!workflowSteps || workflowSteps.length === 0) {
       console.log(
