@@ -609,7 +609,6 @@ const uploadToBackblaze = async (
     }
 
     const fileUrl = `https://DCC-HRMS.s3.us-east-005.backblazeb2.com/${fileName}`;
-    console.log("=== UPLOAD SUCCESS ===");
     console.log("File URL:", fileUrl);
 
     return fileUrl;

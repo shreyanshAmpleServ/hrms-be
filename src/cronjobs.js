@@ -786,34 +786,130 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
               logger.warn(
                 `Skipping KPI component assignment ${kpiAssignment.id} - No component lines found`
               );
-              return;
+            } else {
+              let lineNum = 1;
+              for (const kpiLine of kpiAssignment.kpi_component_lines) {
+                if (!kpiLine || !kpiLine.pay_component_id) {
+                  logger.warn(
+                    `Skipping invalid component line in assignment ${kpiAssignment.id} - Missing pay_component_id`
+                  );
+                  continue;
+                }
+
+                const amount = Number(kpiLine.amount) || 0;
+
+                await tx.hrms_d_employee_pay_component_assignment_line.create({
+                  data: {
+                    parent_id: componentAssignment.id,
+                    line_num: lineNum++,
+                    pay_component_id: Number(kpiLine.pay_component_id),
+                    amount: amount,
+                    type_value: amount,
+                    is_taxable: "Y",
+                    is_recurring: "Y",
+                    component_type: "O",
+                    createdby: kpiAssignment.createdby || 1,
+                    createdate: new Date(),
+                  },
+                });
+              }
             }
 
-            let lineNum = 1;
-            for (const kpiLine of kpiAssignment.kpi_component_lines) {
-              if (!kpiLine || !kpiLine.pay_component_id) {
-                logger.warn(
-                  `Skipping invalid component line in assignment ${kpiAssignment.id} - Missing pay_component_id`
-                );
-                continue;
-              }
-
-              const amount = Number(kpiLine.amount) || 0;
-
-              await tx.hrms_d_employee_pay_component_assignment_line.create({
-                data: {
-                  parent_id: componentAssignment.id,
-                  line_num: lineNum++,
-                  pay_component_id: Number(kpiLine.pay_component_id),
-                  amount: amount,
-                  type_value: amount,
-                  is_taxable: "Y",
-                  is_recurring: "Y",
-                  component_type: "O",
-                  createdby: kpiAssignment.createdby || 1,
-                  createdate: new Date(),
+            try {
+              const employeeDetails = await tx.hrms_d_employee.findUnique({
+                where: { id: kpi.employee_id },
+                select: {
+                  id: true,
+                  first_name: true,
+                  last_name: true,
+                  employee_code: true,
                 },
               });
+
+              const employeeName = employeeDetails
+                ? `${employeeDetails.first_name || ""} ${
+                    employeeDetails.last_name || ""
+                  }`.trim()
+                : "Unknown Employee";
+
+              const contractEndDate = kpiAssignment.effective_to
+                ? new Date(
+                    moment
+                      .tz(kpiAssignment.effective_to, "Asia/Kolkata")
+                      .format("YYYY-MM-DD") + "T00:00:00.000Z"
+                  )
+                : null;
+
+              const existingContract =
+                await tx.hrms_d_employment_contract.findFirst({
+                  where: {
+                    employee_id: kpi.employee_id,
+                  },
+                  orderBy: { createdate: "desc" },
+                });
+
+              if (existingContract) {
+                const contractUpdateData = {
+                  employee_id: kpi.employee_id,
+                  hrms_d_employeeId: kpi.employee_id,
+                  updatedate: new Date(),
+                  updatedby: kpiAssignment.createdby || 1,
+                  description: `Updated from Employee KPI #${
+                    kpi.id
+                  } for ${employeeName} via automated system on ${moment
+                    .tz("Asia/Kolkata")
+                    .format("YYYY-MM-DD")}`,
+                };
+
+                if (kpiAssignment.effective_to) {
+                  contractUpdateData.contract_end_date = contractEndDate;
+                }
+
+                await tx.hrms_d_employment_contract.update({
+                  where: { id: existingContract.id },
+                  data: contractUpdateData,
+                });
+
+                logger.info(
+                  `Updated employment contract ${existingContract.id} for employee ${employeeName} (ID: ${kpi.employee_id}) - ` +
+                    `End Date: ${
+                      contractEndDate
+                        ? moment(contractEndDate).format("YYYY-MM-DD")
+                        : "No end date updated"
+                    }`
+                );
+              } else {
+                const newContractData = {
+                  employee_id: kpi.employee_id,
+                  hrms_d_employeeId: kpi.employee_id,
+                  contract_end_date: contractEndDate,
+                  createdate: new Date(),
+                  createdby: kpiAssignment.createdby || 1,
+                  description: `Contract created from Employee KPI #${
+                    kpi.id
+                  } for ${employeeName} via automated system on ${moment
+                    .tz("Asia/Kolkata")
+                    .format("YYYY-MM-DD")}`,
+                };
+
+                const newContract = await tx.hrms_d_employment_contract.create({
+                  data: newContractData,
+                });
+
+                logger.info(
+                  `Created new employment contract ${newContract.id} for employee ${employeeName} (ID: ${kpi.employee_id}) - ` +
+                    `End Date: ${
+                      contractEndDate
+                        ? moment(contractEndDate).format("YYYY-MM-DD")
+                        : "No end date"
+                    }`
+                );
+              }
+            } catch (contractError) {
+              logger.error(
+                `Error updating employment contract for employee ${kpi.employee_id}:`,
+                contractError
+              );
             }
 
             await tx.hrms_d_employee_kpi_component_assignment.update({
@@ -824,9 +920,6 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
               },
             });
 
-            // ======= UPDATED SECTION: Now includes employment_type_id =======
-            // Update employee department_id, designation_id, work_location, header_attendance_rule,
-            // and employment_type_id from KPI component assignment
             const updateEmployeeData = {};
 
             if (kpiAssignment.department_id) {
@@ -850,7 +943,6 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
                 kpiAssignment.header_payroll_rule;
             }
 
-            // ======= ADD: employment_type_id update =======
             if (kpiAssignment.employment_type_id) {
               updateEmployeeData.employment_type_id = Number(
                 kpiAssignment.employment_type_id
@@ -885,7 +977,6 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
                   }`
               );
             }
-            // ======= END OF UPDATED SECTION =======
 
             logger.info(
               `Successfully processed KPI component assignment ${kpiAssignment.id} for employee ${kpi.employee_id}`
@@ -981,4 +1072,4 @@ const initializeCronJobs = () => {
  * @exports
  * @description Exports the main initialization function for the HRMS cron job scheduler
  */
-module.exports = { initializeCronJobs };
+module.exports = { initializeCronJobs, processKPIComponentAssignments };
