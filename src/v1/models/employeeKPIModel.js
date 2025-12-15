@@ -1863,35 +1863,107 @@ const updateEmployeeKPI = async (id, data) => {
             });
           }
         }
-
-        await tx.hrms_d_employee_kpi_attachments.deleteMany({
+        const existing = await tx.hrms_d_employee_kpi_attachments.findMany({
           where: { employee_kpi_id: Number(id) },
         });
 
-        if (data.attachments && data.attachments.length > 0) {
-          for (const attachment of data.attachments) {
-            await tx.hrms_d_employee_kpi_attachments.create({
-              data: {
-                employee_kpi_id: updatedKPI.id,
-                document_type_id: attachment.document_type_id
-                  ? Number(attachment.document_type_id)
-                  : null,
-                document_name: attachment.document_name || "",
-                issue_date: attachment.issue_date
-                  ? new Date(attachment.issue_date)
-                  : new Date(),
-                expiry_date: attachment.expiry_date
-                  ? new Date(attachment.expiry_date)
-                  : null,
-                status: "P",
-                remarks: attachment.remarks || "",
-                attachment_url: attachment.attachment_url || "",
-                createdby: data.createdby || 1,
-                createdate: new Date(),
-              },
-            });
+        const existingMap = new Map(existing.map((a) => [a.id, a]));
+        const toCreate = [];
+        const toUpdate = [];
+        const incomingIds = new Set();
+
+        for (const attachment of data.attachments || []) {
+          if (attachment.id && existingMap.has(attachment.id)) {
+            incomingIds.add(attachment.id);
+
+            toUpdate.push(
+              tx.hrms_d_employee_kpi_attachments.update({
+                where: { id: attachment.id },
+                data: {
+                  document_type_id: attachment.document_type_id
+                    ? Number(attachment.document_type_id)
+                    : null,
+                  document_name: attachment.document_name || "",
+                  issue_date: attachment.issue_date
+                    ? new Date(attachment.issue_date)
+                    : new Date(),
+                  expiry_date: attachment.expiry_date
+                    ? new Date(attachment.expiry_date)
+                    : null,
+                  status: "P",
+                  remarks: attachment.remarks || "",
+                  attachment_url: attachment.attachment_url || "",
+                  updatedby: data.updatedby || 1,
+                  updatedate: new Date(),
+                },
+              })
+            );
+          } else {
+            toCreate.push(
+              tx.hrms_d_employee_kpi_attachments.create({
+                data: {
+                  employee_kpi_id: Number(id),
+                  document_type_id: attachment.document_type_id
+                    ? Number(attachment.document_type_id)
+                    : null,
+                  document_name: attachment.document_name || "",
+                  issue_date: attachment.issue_date
+                    ? new Date(attachment.issue_date)
+                    : new Date(),
+                  expiry_date: attachment.expiry_date
+                    ? new Date(attachment.expiry_date)
+                    : null,
+                  status: "P",
+                  remarks: attachment.remarks || "",
+                  attachment_url: attachment.attachment_url || "",
+                  createdby: data.createdby || 1,
+                  createdate: new Date(),
+                },
+              })
+            );
           }
         }
+
+        // Delete removed items
+        const toDeleteIds = existing
+          .filter((a) => !incomingIds.has(a.id))
+          .map((a) => a.id);
+
+        const toDelete = tx.hrms_d_employee_kpi_attachments.deleteMany({
+          where: { id: { in: toDeleteIds } },
+        });
+
+        // Run all operations
+        await Promise.all([...toCreate, ...toUpdate, toDelete]);
+
+        // await tx.hrms_d_employee_kpi_attachments.deleteMany({
+        //   where: { employee_kpi_id: Number(id) },
+        // });
+
+        // if (data.attachments && data.attachments.length > 0) {
+        //   for (const attachment of data.attachments) {
+        //     await tx.hrms_d_employee_kpi_attachments.create({
+        //       data: {
+        //         employee_kpi_id: updatedKPI.id,
+        //         document_type_id: attachment.document_type_id
+        //           ? Number(attachment.document_type_id)
+        //           : null,
+        //         document_name: attachment.document_name || "",
+        //         issue_date: attachment.issue_date
+        //           ? new Date(attachment.issue_date)
+        //           : new Date(),
+        //         expiry_date: attachment.expiry_date
+        //           ? new Date(attachment.expiry_date)
+        //           : null,
+        //         status: "P",
+        //         remarks: attachment.remarks || "",
+        //         attachment_url: attachment.attachment_url || "",
+        //         createdby: data.createdby || 1,
+        //         createdate: new Date(),
+        //       },
+        //     });
+        //   }
+        // }
 
         if (!needsWorkflow) {
           console.log(

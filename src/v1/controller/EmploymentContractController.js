@@ -114,14 +114,16 @@ const deleteEmploymentContract = async (req, res, next) => {
 
 const getAllEmploymentContract = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate, candidate_id } = req.query;
+    const { page, size, search, startDate, endDate, candidate_id, type } =
+      req.query;
     const data = await EmploymentContractService.getAllEmploymentContract(
       search,
       Number(page),
       Number(size),
       startDate && moment(startDate),
       endDate && moment(endDate),
-      candidate_id ? parseInt(candidate_id) : null
+      candidate_id ? parseInt(candidate_id) : null,
+      type
     );
     res.status(200).success(null, data);
   } catch (error) {

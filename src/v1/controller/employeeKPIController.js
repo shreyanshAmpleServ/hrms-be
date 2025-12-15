@@ -277,120 +277,88 @@ const updateEmployeeKPI = async (req, res, next) => {
     const { id } = req.params;
     let data = {};
 
-    if (req.body.employee_id) data.employee_id = req.body.employee_id;
-    if (req.body.reviewer_id) data.reviewer_id = req.body.reviewer_id;
-    if (req.body.review_date) data.review_date = req.body.review_date;
-    if (req.body.next_review_date)
-      data.next_review_date = req.body.next_review_date;
-    if (req.body.contract_expiry_date)
-      data.contract_expiry_date = req.body.contract_expiry_date;
-    if (req.body.review_remarks) data.review_remarks = req.body.review_remarks;
-    if (req.body.employment_type)
-      data.employment_type = req.body.employment_type;
-    if (req.body.employment_remarks)
-      data.employment_remarks = req.body.employment_remarks;
-    if (req.body.revise_component_assignment)
-      data.revise_component_assignment = req.body.revise_component_assignment;
+    // --- BASIC FIELDS ---
+    const simpleFields = [
+      "employee_id",
+      "reviewer_id",
+      "review_date",
+      "next_review_date",
+      "contract_expiry_date",
+      "review_remarks",
+      "employment_type",
+      "employment_remarks",
+      "revise_component_assignment",
+    ];
 
-    if (req.body.contents) {
-      try {
-        data.contents = JSON.parse(req.body.contents);
-      } catch (e) {
-        data.contents = [];
+    simpleFields.forEach((field) => {
+      if (req.body[field] !== undefined) {
+        data[field] = req.body[field];
       }
-    }
+    });
 
-    if (req.body.component_assignment) {
-      try {
-        data.component_assignment = JSON.parse(req.body.component_assignment);
-      } catch (e) {
-        data.component_assignment = null;
+    // --- JSON FIELDS ---
+    const jsonFields = ["contents", "component_assignment"];
+    jsonFields.forEach((field) => {
+      if (req.body[field]) {
+        try {
+          data[field] = JSON.parse(req.body[field]);
+        } catch {
+          data[field] = null;
+        }
       }
-    }
+    });
 
+    // --- ATTACHMENTS ---
     const attachments = [];
-    const filesMap = {};
-    const attachmentIndices = new Set();
+    const uploadedFiles = {}; // index → uploaded file
 
-    let attachmentsFromBody = [];
+    // 1. Files coming from frontend
+    if (req.files) {
+      req.files.forEach((file) => {
+        const m = file.fieldname.match(
+          /attachments\[(\d+)\]\[attachment_url\]/
+        );
+        if (m) {
+          const idx = parseInt(m[1], 10);
+          uploadedFiles[idx] = file; // this index has a new file
+        }
+      });
+    }
 
+    // 2. Attachments JSON coming from body
+    let rawAttachments = [];
     if (req.body.attachments) {
       try {
-        const parsedAttachments =
+        rawAttachments =
           typeof req.body.attachments === "string"
             ? JSON.parse(req.body.attachments)
             : req.body.attachments;
-        if (Array.isArray(parsedAttachments)) {
-          attachmentsFromBody = parsedAttachments;
-        }
-      } catch (e) {
-        attachmentsFromBody = [];
+      } catch {
+        rawAttachments = [];
       }
     }
-    if (req.files && req.files.length > 0) {
-      req.files.forEach((file) => {
-        const match = file.fieldname.match(
-          /attachments\[(\d+)\]\[attachment_url\]/
-        );
-        if (match) {
-          const index = parseInt(match[1]);
-          if (!filesMap[index]) {
-            filesMap[index] = {};
-          }
-          filesMap[index].file = file;
-          attachmentIndices.add(index);
-        }
-      });
-    }
 
-    const attachmentsKeys = Object.keys(req.body).filter(
-      (key) => key.startsWith("attachments[") && !key.includes("attachment_url")
-    );
+    // 3. Parse form-data attachments passed as fields
+    Object.keys(req.body).forEach((key) => {
+      const m = key.match(/attachments\[(\d+)\]\[(\w+)\]/);
+      if (m) {
+        const index = parseInt(m[1], 10);
+        const field = m[2];
 
-    if (attachmentsKeys.length > 0) {
-      attachmentsKeys.forEach((key) => {
-        const match = key.match(/attachments\[(\d+)\]\[(\w+)\]/);
-        if (match) {
-          const index = parseInt(match[1]);
-          const field = match[2];
-          attachmentIndices.add(index);
+        if (!rawAttachments[index]) rawAttachments[index] = {};
+        rawAttachments[index][field] = req.body[key];
+      }
+    });
 
-          if (!attachmentsFromBody[index]) {
-            attachmentsFromBody[index] = {};
-          }
-          const value = req.body[key];
-          attachmentsFromBody[index][field] = value !== undefined ? value : "";
-        }
-      });
-    }
+    // 4. Merge into proper attachment objects
+    for (let i = 0; i < rawAttachments.length; i++) {
+      const a = rawAttachments[i] || {};
 
-    if (attachmentsFromBody.length === 0 && Object.keys(filesMap).length > 0) {
-      Object.keys(filesMap).forEach((index) => {
-        const idx = parseInt(index);
-        if (!attachmentsFromBody[idx]) {
-          attachmentsFromBody[idx] = {};
-        }
-        attachmentIndices.add(idx);
-      });
-    }
+      let attachmentUrl = a.attachment_url || "";
 
-    attachmentsFromBody = Array.from(attachmentIndices).map(
-      (index) => attachmentsFromBody[index] || {}
-    );
-
-    const maxLength = Math.max(
-      attachmentsFromBody.length,
-      Object.keys(filesMap).length > 0
-        ? Math.max(...Object.keys(filesMap).map((k) => parseInt(k))) + 1
-        : 0
-    );
-
-    for (let i = 0; i < maxLength; i++) {
-      const attachment = attachmentsFromBody[i] || {};
-      let attachmentUrl = attachment.attachment_url || "";
-
-      if (filesMap[i] && filesMap[i].file) {
-        const file = filesMap[i].file;
+      // If new file uploaded → override URL
+      if (uploadedFiles[i]) {
+        const file = uploadedFiles[i];
         try {
           attachmentUrl = await uploadToBackblaze(
             file.buffer,
@@ -398,70 +366,241 @@ const updateEmployeeKPI = async (req, res, next) => {
             file.mimetype,
             "kpi-attachments"
           );
-        } catch (error) {
-          attachmentUrl = attachment.attachment_url || "";
+        } catch {
+          // fallback to old url if upload fails
+          attachmentUrl = a.attachment_url || "";
         }
-      } else if (
-        attachment.attachment_url &&
-        typeof attachment.attachment_url === "string" &&
-        attachment.attachment_url.startsWith("http")
-      ) {
-        attachmentUrl = attachment.attachment_url;
       }
 
-      const hasData =
-        (attachment.document_type_id &&
-          attachment.document_type_id !== "" &&
-          attachment.document_type_id !== null) ||
-        (attachment.document_name &&
-          attachment.document_name !== "" &&
-          attachment.document_name.trim() !== "") ||
-        (attachment.issue_date &&
-          attachment.issue_date !== "" &&
-          attachment.issue_date !== null) ||
-        (attachment.expiry_date &&
-          attachment.expiry_date !== "" &&
-          attachment.expiry_date !== null) ||
-        (attachment.remarks &&
-          attachment.remarks !== "" &&
-          attachment.remarks.trim() !== "") ||
-        (attachmentUrl && attachmentUrl !== "") ||
-        (filesMap[i] && filesMap[i].file);
+      // Include object if ANY field is filled
+      const hasAnyField =
+        Object.values(a).some(
+          (v) => v !== "" && v !== null && v !== "null" && v !== undefined
+        ) || attachmentUrl;
 
-      if (hasData) {
-        const attachmentData = {
-          document_type_id:
-            attachment.document_type_id &&
-            attachment.document_type_id !== "" &&
-            attachment.document_type_id !== null &&
-            attachment.document_type_id !== "null"
-              ? Number(attachment.document_type_id)
-              : null,
-          document_name: attachment.document_name || "",
-          issue_date: attachment.issue_date || new Date().toISOString(),
-          expiry_date:
-            attachment.expiry_date &&
-            attachment.expiry_date !== "" &&
-            attachment.expiry_date !== "null"
-              ? attachment.expiry_date
-              : null,
-          remarks: attachment.remarks || "",
-          attachment_url: attachmentUrl,
-        };
-        attachments.push(attachmentData);
-      }
+      if (!hasAnyField) continue;
+
+      attachments.push({
+        id: a.id ? Number(a.id) : null, // support update
+        document_type_id:
+          a.document_type_id && a.document_type_id !== "null"
+            ? Number(a.document_type_id)
+            : null,
+        document_name: a.document_name || "",
+        issue_date: a.issue_date ? new Date(a.issue_date) : new Date(),
+        expiry_date:
+          a.expiry_date && a.expiry_date !== "null"
+            ? new Date(a.expiry_date)
+            : null,
+        remarks: a.remarks || "",
+        attachment_url: attachmentUrl,
+      });
     }
 
     data.attachments = attachments;
-    data.createdby = req.user?.id || 1;
-    data.updatedby = req.user?.id || 1;
 
+    data.updatedby = req.user?.id || 1;
+    data.createdby = req.user?.id || 1;
+
+    // --- CALL MODEL ---
     const result = await employeeKPIModel.updateEmployeeKPI(id, data);
+
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);
   }
 };
+
+// const updateEmployeeKPI = async (req, res, next) => {
+//   try {
+//     const { id } = req.params;
+//     let data = {};
+
+//     if (req.body.employee_id) data.employee_id = req.body.employee_id;
+//     if (req.body.reviewer_id) data.reviewer_id = req.body.reviewer_id;
+//     if (req.body.review_date) data.review_date = req.body.review_date;
+//     if (req.body.next_review_date)
+//       data.next_review_date = req.body.next_review_date;
+//     if (req.body.contract_expiry_date)
+//       data.contract_expiry_date = req.body.contract_expiry_date;
+//     if (req.body.review_remarks) data.review_remarks = req.body.review_remarks;
+//     if (req.body.employment_type)
+//       data.employment_type = req.body.employment_type;
+//     if (req.body.employment_remarks)
+//       data.employment_remarks = req.body.employment_remarks;
+//     if (req.body.revise_component_assignment)
+//       data.revise_component_assignment = req.body.revise_component_assignment;
+
+//     if (req.body.contents) {
+//       try {
+//         data.contents = JSON.parse(req.body.contents);
+//       } catch (e) {
+//         data.contents = [];
+//       }
+//     }
+
+//     if (req.body.component_assignment) {
+//       try {
+//         data.component_assignment = JSON.parse(req.body.component_assignment);
+//       } catch (e) {
+//         data.component_assignment = null;
+//       }
+//     }
+
+//     const attachments = [];
+//     const filesMap = {};
+//     const attachmentIndices = new Set();
+
+//     let attachmentsFromBody = [];
+
+//     if (req.body.attachments) {
+//       try {
+//         const parsedAttachments =
+//           typeof req.body.attachments === "string"
+//             ? JSON.parse(req.body.attachments)
+//             : req.body.attachments;
+//         if (Array.isArray(parsedAttachments)) {
+//           attachmentsFromBody = parsedAttachments;
+//         }
+//       } catch (e) {
+//         attachmentsFromBody = [];
+//       }
+//     }
+//     if (req.files && req.files.length > 0) {
+//       req.files.forEach((file) => {
+//         const match = file.fieldname.match(
+//           /attachments\[(\d+)\]\[attachment_url\]/
+//         );
+//         if (match) {
+//           const index = parseInt(match[1]);
+//           if (!filesMap[index]) {
+//             filesMap[index] = {};
+//           }
+//           filesMap[index].file = file;
+//           attachmentIndices.add(index);
+//         }
+//       });
+//     }
+
+//     const attachmentsKeys = Object.keys(req.body).filter(
+//       (key) => key.startsWith("attachments[") && !key.includes("attachment_url")
+//     );
+
+//     if (attachmentsKeys.length > 0) {
+//       attachmentsKeys.forEach((key) => {
+//         const match = key.match(/attachments\[(\d+)\]\[(\w+)\]/);
+//         if (match) {
+//           const index = parseInt(match[1]);
+//           const field = match[2];
+//           attachmentIndices.add(index);
+
+//           if (!attachmentsFromBody[index]) {
+//             attachmentsFromBody[index] = {};
+//           }
+//           const value = req.body[key];
+//           attachmentsFromBody[index][field] = value !== undefined ? value : "";
+//         }
+//       });
+//     }
+
+//     if (attachmentsFromBody.length === 0 && Object.keys(filesMap).length > 0) {
+//       Object.keys(filesMap).forEach((index) => {
+//         const idx = parseInt(index);
+//         if (!attachmentsFromBody[idx]) {
+//           attachmentsFromBody[idx] = {};
+//         }
+//         attachmentIndices.add(idx);
+//       });
+//     }
+
+//     attachmentsFromBody = Array.from(attachmentIndices).map(
+//       (index) => attachmentsFromBody[index] || {}
+//     );
+
+//     const maxLength = Math.max(
+//       attachmentsFromBody.length,
+//       Object.keys(filesMap).length > 0
+//         ? Math.max(...Object.keys(filesMap).map((k) => parseInt(k))) + 1
+//         : 0
+//     );
+
+//     for (let i = 0; i < maxLength; i++) {
+//       const attachment = attachmentsFromBody[i] || {};
+//       let attachmentUrl = attachment.attachment_url || "";
+
+//       if (filesMap[i] && filesMap[i].file) {
+//         const file = filesMap[i].file;
+//         try {
+//           attachmentUrl = await uploadToBackblaze(
+//             file.buffer,
+//             file.originalname,
+//             file.mimetype,
+//             "kpi-attachments"
+//           );
+//         } catch (error) {
+//           attachmentUrl = attachment.attachment_url || "";
+//         }
+//       } else if (
+//         attachment.attachment_url &&
+//         typeof attachment.attachment_url === "string" &&
+//         attachment.attachment_url.startsWith("http")
+//       ) {
+//         attachmentUrl = attachment.attachment_url;
+//       }
+
+//       const hasData =
+//         (attachment.document_type_id &&
+//           attachment.document_type_id !== "" &&
+//           attachment.document_type_id !== null) ||
+//         (attachment.document_name &&
+//           attachment.document_name !== "" &&
+//           attachment.document_name.trim() !== "") ||
+//         (attachment.issue_date &&
+//           attachment.issue_date !== "" &&
+//           attachment.issue_date !== null) ||
+//         (attachment.expiry_date &&
+//           attachment.expiry_date !== "" &&
+//           attachment.expiry_date !== null) ||
+//         (attachment.remarks &&
+//           attachment.remarks !== "" &&
+//           attachment.remarks.trim() !== "") ||
+//         (attachmentUrl && attachmentUrl !== "") ||
+//         (filesMap[i] && filesMap[i].file);
+
+//       if (hasData) {
+//         const attachmentData = {
+//           document_type_id:
+//             attachment.document_type_id &&
+//             attachment.document_type_id !== "" &&
+//             attachment.document_type_id !== null &&
+//             attachment.document_type_id !== "null"
+//               ? Number(attachment.document_type_id)
+//               : null,
+//           document_name: attachment.document_name || "",
+//           issue_date: attachment.issue_date || new Date().toISOString(),
+//           expiry_date:
+//             attachment.expiry_date &&
+//             attachment.expiry_date !== "" &&
+//             attachment.expiry_date !== "null"
+//               ? attachment.expiry_date
+//               : null,
+//           remarks: attachment.remarks || "",
+//           attachment_url: attachmentUrl,
+//         };
+//         attachments.push(attachmentData);
+//       }
+//     }
+
+//     data.attachments = attachments;
+//     data.createdby = req.user?.id || 1;
+//     data.updatedby = req.user?.id || 1;
+
+//     const result = await employeeKPIModel.updateEmployeeKPI(id, data);
+//     res.status(200).json({ success: true, data: result });
+//   } catch (error) {
+//     next(error);
+//   }
+// };
 
 const deleteEmployeeKPI = async (req, res, next) => {
   try {
