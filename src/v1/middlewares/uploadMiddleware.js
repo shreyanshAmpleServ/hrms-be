@@ -41,16 +41,16 @@
 //   const store = asyncLocalStorage.getStore();
 
 //   if (!store || !store.tenantDb) {
-//     console.error("⚠️ Upload: No context before multer");
+//     console.error(" Upload: No context before multer");
 //     return middleware(req, res, next);
 //   }
 
-//   console.log(`✅ Upload: Starting with tenant ${store.tenantDb}`);
+//   console.log(`Upload: Starting with tenant ${store.tenantDb}`);
 
 //   // Execute multer and restore context after
 //   middleware(req, res, (err) => {
 //     if (err) {
-//       console.error("❌ Upload error:", err);
+//       console.error(" Upload error:", err);
 //       return next(err);
 //     }
 
@@ -86,7 +86,6 @@ const ensureDir = (dir) => {
   }
 };
 
-// Use MEMORY storage instead of disk storage to avoid context loss
 const storage = multer.memoryStorage();
 
 const allowedTypes = [
@@ -113,30 +112,29 @@ const multerUpload = multer({
   limits: { fileSize: 1024 * 1024 * 3 }, // 3MB
 });
 
-// Context-preserving wrapper
 const withContext = (middleware) => (req, res, next) => {
   const store = asyncLocalStorage.getStore();
 
   if (!store || !store.tenantDb) {
-    console.error("⚠️ Upload: No context before multer");
+    console.error("Upload: No context before multer");
     return middleware(req, res, next);
   }
 
-  console.log(`✅ Upload: Starting with tenant ${store.tenantDb}`);
+  console.log(`Upload: Starting with tenant ${store.tenantDb}`);
 
   // Execute multer and restore context after
   middleware(req, res, (err) => {
     if (err) {
-      console.error("❌ Upload error:", err);
+      console.error("Upload error:", err);
       return next(err);
     }
 
     // Restore context after multer
     const currentStore = asyncLocalStorage.getStore();
     if (!currentStore || !currentStore.tenantDb) {
-      console.log("⚠️ Context lost after multer, restoring...");
+      console.log("Context lost after multer, restoring...");
       asyncLocalStorage.run(store, () => {
-        console.log(`✅ Context restored: ${store.tenantDb}`);
+        console.log(`Context restored: ${store.tenantDb}`);
         next();
       });
     } else {
