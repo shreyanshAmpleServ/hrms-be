@@ -7,19 +7,46 @@ const {
 } = require("../../utils/uploadBackblaze");
 const fs = require("fs");
 
+// const createLeaveApplication = async (req, res, next) => {
+//   try {
+//     let imageUrl = null;
+
+//     if (req.file) {
+//       const fileBuffer = fs.readFileSync(req.file.path);
+//       imageUrl = await uploadToBackblaze(
+//         fileBuffer,
+//         req.file.originalname,
+//         req.file.mimetype,
+//         "document_attachment"
+//       );
+//       fs.unlinkSync(req.file.path);
+//     }
+
+//     const data = {
+//       ...req.body,
+//       createdby: req.user.id,
+//       document_attachment: imageUrl,
+//       log_inst: req.user.log_inst,
+//     };
+
+//     const reqData = await LeaveApplyService.createLeaveApplication(data);
+//     res.status(201).success("Leave application created successfully", reqData);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const createLeaveApplication = async (req, res, next) => {
   try {
     let imageUrl = null;
 
     if (req.file) {
-      const fileBuffer = fs.readFileSync(req.file.path);
       imageUrl = await uploadToBackblaze(
-        fileBuffer,
+        req.file.buffer,
         req.file.originalname,
         req.file.mimetype,
         "document_attachment"
       );
-      fs.unlinkSync(req.file.path);
     }
 
     const data = {
@@ -48,6 +75,48 @@ const findLeaveApplicationById = async (req, res, next) => {
   }
 };
 
+// const updateLeaveApplication = async (req, res, next) => {
+//   try {
+//     const existingData = await LeaveApplyService.findLeaveApplicationById(
+//       req.params.id
+//     );
+//     if (!existingData)
+//       throw new CustomError("Leave Application not found", 404);
+
+//     let imageUrl = existingData.document_attachment;
+
+//     if (req.file) {
+//       const fileBuffer = fs.readFileSync(req.file.path);
+//       imageUrl = await uploadToBackblaze(
+//         fileBuffer,
+//         req.file.originalname,
+//         req.file.mimetype,
+//         "document_attachment"
+//       );
+//       fs.unlinkSync(req.file.path);
+
+//       if (existingData.document_attachment) {
+//         await deleteFromBackblaze(existingData.document_attachment);
+//       }
+//     }
+
+//     const data = {
+//       ...req.body,
+//       document_attachment: imageUrl,
+//       updatedby: req.user.id,
+//       log_inst: req.user.log_inst,
+//     };
+
+//     const reqData = await LeaveApplyService.updateLeaveApplication(
+//       req.params.id,
+//       data
+//     );
+//     res.status(200).success("Leave application updated successfully", reqData);
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const updateLeaveApplication = async (req, res, next) => {
   try {
     const existingData = await LeaveApplyService.findLeaveApplicationById(
@@ -59,14 +128,12 @@ const updateLeaveApplication = async (req, res, next) => {
     let imageUrl = existingData.document_attachment;
 
     if (req.file) {
-      const fileBuffer = fs.readFileSync(req.file.path);
       imageUrl = await uploadToBackblaze(
-        fileBuffer,
+        req.file.buffer,
         req.file.originalname,
         req.file.mimetype,
         "document_attachment"
       );
-      fs.unlinkSync(req.file.path);
 
       if (existingData.document_attachment) {
         await deleteFromBackblaze(existingData.document_attachment);
@@ -89,7 +156,6 @@ const updateLeaveApplication = async (req, res, next) => {
     next(error);
   }
 };
-
 const deleteLeaveApplication = async (req, res, next) => {
   try {
     await LeaveApplyService.deleteLeaveApplication(req.params.id);

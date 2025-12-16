@@ -2,9 +2,7 @@ const express = require("express");
 const LeaveApplyController = require("../controller/LeaveApplyController");
 const { authenticateToken } = require("../middlewares/authMiddleware");
 const upload = require("../middlewares/uploadMiddleware.js");
-const {
-  setupNotificationMiddleware,
-} = require("../middlewares/notificationMiddleware.js");
+
 const router = express.Router();
 
 router.post(
