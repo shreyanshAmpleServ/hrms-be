@@ -53,15 +53,13 @@ const upload = require("../middlewares/UploadFileMiddleware");
 
 const router = express.Router();
 
-// Use upload.any() to allow all fields, or use a custom middleware
 router.post(
   "/employee",
   authenticateToken,
-  upload.any(), // Allow any fields
+  upload.any(),
   EmployeeController.createEmployee
 );
 
-// Route to get a specific employee by its ID
 router.get(
   "/employee/:id",
   authenticateToken,
@@ -71,21 +69,18 @@ router.get(
 router.put(
   "/employee/:id",
   authenticateToken,
-  upload.any(), // Allow any fields
+  upload.any(),
   EmployeeController.updateEmployee
 );
 
-// Route to delete a specific employee by its ID
 router.delete(
   "/employee/:id",
   authenticateToken,
   EmployeeController.deleteEmployee
 );
 
-// Route to get all employees
 router.get("/employee", authenticateToken, EmployeeController.getAllEmployee);
 
-// Route to get all employees options
 router.get(
   "/employee-options",
   authenticateToken,
