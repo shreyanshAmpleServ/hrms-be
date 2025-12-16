@@ -163,6 +163,16 @@ const createOrUpdateDefaultConfiguration = async (req, res, next) => {
     const isUpdate = id && !isNaN(Number(id));
     let existingData = null;
 
+    if (req.body?.company_name?.trim() === "") {
+      return res.status(400).error("Company name cannot be empty");
+    }
+    if (req.body?.street_address?.trim() === "") {
+      return res.status(400).error("Street address cannot be empty");
+    }
+    if (req.body?.city?.trim() === "") {
+      return res.status(400).error("City cannot be empty");
+    }
+
     const extractFileNameFromUrl = (url) => {
       if (!url) return null;
       try {

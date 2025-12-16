@@ -17,7 +17,12 @@ const createHiringStage = async (data) => {
     const existing = await prisma.hrms_d_hiring_stage.findFirst({
       where: { code: data.code },
     });
-
+    if (data.code?.trim() === "" || data.description?.trim() === "") {
+      throw new CustomError(
+        `Hiring stage  code/description can not be empty`,
+        400
+      );
+    }
     if (existing) {
       throw new CustomError(
         `Code '${data.code}' already exists. Please use a unique code.`,
@@ -66,6 +71,12 @@ const getHiringStageById = async (id) => {
 };
 const updateHiringStage = async (id, data) => {
   try {
+    if (data.code?.trim() === "" || data.description?.trim() === "") {
+      throw new CustomError(
+        `Hiring stage  code/description can not be empty`,
+        400
+      );
+    }
     if (data.code) {
       const existing = await prisma.hrms_d_hiring_stage.findFirst({
         where: {

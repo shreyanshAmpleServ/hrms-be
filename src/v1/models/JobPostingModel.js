@@ -1432,6 +1432,13 @@ const enrichMultipleWithHiringStages = async (jobPostings) => {
 
 const createJobPosting = async (data) => {
   try {
+    if (data.job_title.trim() === "") {
+      throw new CustomError("Job title cannot be empty", 400);
+    }
+    if (data.required_experience.trim() === "") {
+      throw new CustomError("Required experience cannot be empty", 400);
+    }
+
     const department = await prisma.hrms_m_department_master.findUnique({
       where: { id: data.department_id },
     });
@@ -1627,6 +1634,12 @@ const findJobPostingById = async (id) => {
 
 const updateJobPosting = async (id, data) => {
   try {
+    if (data.job_title.trim() === "") {
+      throw new CustomError("Job title cannot be empty", 400);
+    }
+    if (data.required_experience.trim() === "") {
+      throw new CustomError("Required experience cannot be empty", 400);
+    }
     if (
       data.hiring_stage_ids &&
       Array.isArray(data.hiring_stage_ids) &&

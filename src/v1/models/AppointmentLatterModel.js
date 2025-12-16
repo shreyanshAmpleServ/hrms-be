@@ -507,7 +507,7 @@ const getAppointmentLetterForPDF = async (id, tenantDb = null) => {
         appointmentLetter.appointment_candidate?.actual_joining_date ||
         appointmentLetter.appointment_candidate?.expected_joining_date,
       termsSummary: appointmentLetter.terms_summary || "",
-      status: appointmentLetter.appointment_candidate?.status || "P",
+      status: appointmentLetter.appointment_candidate?.status || "Pending",
     };
 
     console.log("Position:", pdfData.position);
