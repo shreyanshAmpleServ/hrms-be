@@ -3,23 +3,30 @@ const CustomError = require("../../utils/CustomError");
 
 // Serialize document upload data
 
-const serializeDocumentData = (data) => ({
-  employee_id: data.employee_id ? Number(data.employee_id) : null,
-  document_type: data.document_type || "",
-  document_path: data.document_path || "",
-  uploaded_on: data.uploaded_on ? new Date(data.uploaded_on) : null,
-  document_number: data.document_number || "",
-  issued_date: data.issued_date ? new Date(data.issued_date) : null,
-  expiry_date: data.expiry_date ? new Date(data.expiry_date) : null,
-  is_mandatory:
-    data.is_mandatory === "Y" || data.is_mandatory === "N"
-      ? data.is_mandatory
-      : "Y",
-  document_owner_type: data.document_owner_type || "employee",
-  document_owner_id: data.document_owner_id
-    ? Number(data.document_owner_id)
-    : null,
-});
+const serializeDocumentData = (data) => {
+  const result = {
+    employee_id: data.employee_id ? Number(data.employee_id) : null,
+    document_type: data.document_type || "",
+    // document_path: data.document_path || "",
+    uploaded_on: data.uploaded_on ? new Date(data.uploaded_on) : null,
+    document_number: data.document_number || "",
+    issued_date: data.issued_date ? new Date(data.issued_date) : null,
+    expiry_date: data.expiry_date ? new Date(data.expiry_date) : null,
+    is_mandatory:
+      data.is_mandatory === "Y" || data.is_mandatory === "N"
+        ? data.is_mandatory
+        : "Y",
+    document_owner_type: data.document_owner_type || "employee",
+    document_owner_id: data.document_owner_id
+      ? Number(data.document_owner_id)
+      : null,
+  };
+  if (data.document_path && data.document_path !== "") {
+    result.document_path = data.document_path;
+  }
+
+  return result;
+};
 
 // Create a new document upload
 const createDocumentUpload = async (data) => {

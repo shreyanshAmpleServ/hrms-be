@@ -618,8 +618,6 @@ const updateEmployee = async (
 
     const serializedData = serializeTags(updatedData);
 
-    console.log("header_attendance_rule value:", data.header_attendance_rule);
-
     const employee = await prisma.hrms_d_employee.update({
       where: { id: parseInt(id) },
       data: serializedData,
