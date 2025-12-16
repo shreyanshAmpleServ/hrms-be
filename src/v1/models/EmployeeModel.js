@@ -160,11 +160,23 @@ const serializeTags = (data) => {
   if ("spouse_name" in data) serialized.spouse_name = data.spouse_name;
   if ("marital_status" in data) serialized.marital_status = data.marital_status;
   if ("no_of_child" in data) serialized.no_of_child = Number(data.no_of_child);
+  // if ("social_medias" in data) {
+  //   serialized.social_medias = Array.isArray(data.social_medias)
+  //     ? JSON.stringify(data.social_medias)
+  //     : JSON.stringify([data.social_medias]);
+  // }
+
   if ("social_medias" in data) {
-    serialized.social_medias = Array.isArray(data.social_medias)
-      ? JSON.stringify(data.social_medias)
-      : JSON.stringify([data.social_medias]);
+    if (typeof data.social_medias === "string") {
+      serialized.social_medias = data.social_medias;
+    } else if (
+      typeof data.social_medias === "object" &&
+      data.social_medias !== null
+    ) {
+      serialized.social_medias = JSON.stringify(data.social_medias);
+    }
   }
+
   if ("header_attendance_rule" in data)
     serialized.header_attendance_rule = data.header_attendance_rule;
   if ("wcf" in data) serialized.wcf = data.wcf;
