@@ -138,7 +138,8 @@ const getAllEmploymentContract = async (
   size,
   startDate,
   endDate,
-  candidate_id
+  candidate_id,
+  type
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -172,6 +173,12 @@ const getAllEmploymentContract = async (
     }
     if (candidate_id) {
       filters.candidate_id = parseInt(candidate_id);
+    }
+    if (type === "Candidate") {
+      filters.candidate_id = { not: null };
+    }
+    if (type === "Employee") {
+      filters.employee_id = { not: null };
     }
     const datas = await prisma.hrms_d_employment_contract.findMany({
       where: filters,

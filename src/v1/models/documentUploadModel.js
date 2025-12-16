@@ -116,6 +116,102 @@ const deleteDocumentUpload = async (id) => {
 };
 
 // Get all document uploads
+// const getAllDocumentUpload = async (
+//   search,
+//   page,
+//   size,
+//   startDate,
+//   endDate,
+//   employeeId
+// ) => {
+//   try {
+//     page =
+//       !page || isNaN(parseInt(page)) || parseInt(page) <= 0
+//         ? 1
+//         : parseInt(page);
+//     size =
+//       !size || isNaN(parseInt(size)) || parseInt(size) <= 0
+//         ? 10
+//         : parseInt(size);
+//     const skip = (page - 1) * size;
+
+//     const filters = {};
+//     const andConditions = [];
+
+//     if (search) {
+//       andConditions.push({
+//         OR: [
+//           {
+//             document_upload_employee: {
+//               full_name: {
+//                 contains: search.toLowerCase(),
+//               },
+//             },
+//           },
+//           {
+//             document_type: {
+//               contains: search.toLowerCase(),
+//             },
+//           },
+//         ],
+//       });
+//     }
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         andConditions.push({
+//           createdate: {
+//             gte: start,
+//             lte: end,
+//           },
+//         });
+//       }
+//     }
+
+//     if (andConditions.length > 0) {
+//       filters.AND = andConditions;
+//     }
+
+//     if (employeeId) {
+//       filters.document_owner_id = parseInt(employeeId);
+//     }
+
+//     const datas = await prisma.hrms_d_document_upload.findMany({
+//       where: filters,
+//       skip,
+//       take: size,
+//       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+//       include: {
+//         document_upload_employee: {
+//           select: {
+//             id: true,
+//             employee_code: true,
+//             full_name: true,
+//           },
+//         },
+//       },
+//     });
+
+//     const totalCount = await prisma.hrms_d_document_upload.count({
+//       where: filters,
+//     });
+
+//     return {
+//       data: datas,
+//       currentPage: page,
+//       size,
+//       totalPages: Math.ceil(totalCount / size),
+//       totalCount,
+//     };
+//   } catch (error) {
+//     console.error("Error in getAllDocumentUpload:", error);
+//     throw new CustomError("Error retrieving document uploads", 503);
+//   }
+// };
+
+// Get all document uploads
 const getAllDocumentUpload = async (
   search,
   page,
@@ -137,6 +233,15 @@ const getAllDocumentUpload = async (
 
     const filters = {};
     const andConditions = [];
+
+    if (employeeId) {
+      andConditions.push({
+        OR: [
+          { employee_id: parseInt(employeeId) },
+          { document_owner_id: parseInt(employeeId) },
+        ],
+      });
+    }
 
     if (search) {
       andConditions.push({
@@ -174,9 +279,7 @@ const getAllDocumentUpload = async (
       filters.AND = andConditions;
     }
 
-    if (employeeId) {
-      filters.document_owner_id = parseInt(employeeId);
-    }
+    console.log("Filters being applied:", JSON.stringify(filters, null, 2));
 
     const datas = await prisma.hrms_d_document_upload.findMany({
       where: filters,
@@ -198,6 +301,8 @@ const getAllDocumentUpload = async (
       where: filters,
     });
 
+    console.log(`Found ${totalCount} documents for employee ${employeeId}`);
+
     return {
       data: datas,
       currentPage: page,
@@ -210,7 +315,6 @@ const getAllDocumentUpload = async (
     throw new CustomError("Error retrieving document uploads", 503);
   }
 };
-
 module.exports = {
   createDocumentUpload,
   getDocumentById,

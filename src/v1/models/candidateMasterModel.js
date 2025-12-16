@@ -651,7 +651,6 @@ const findCandidateMasterById = async (id) => {
             id: true,
             stage_name: true,
             description: true,
-            status: true,
           },
         });
 
@@ -1158,49 +1157,153 @@ const getAllCandidateMaster = async (
         datas.map(async (candidate) => {
           const hiringStages = await getCandidateHiringStages(candidate.id);
 
-          const isApprovedOrConverted =
-            candidate.status === "A" ||
-            candidate.status === "Approved" ||
-            candidate.status === "Converted";
+          let currentInterviewStatus = null;
+          let legacyInterviewStage = null;
+          let interviewStatusSummary = "No interview stages";
 
-          let interviewStageDetails = null;
-          if (!isApprovedOrConverted && candidate.interview_stage) {
-            try {
-              interviewStageDetails =
-                await prisma.hrms_m_interview_stage.findUnique({
-                  where: { id: parseInt(candidate.interview_stage) },
-                  select: {
-                    id: true,
-                    stage_name: true,
-                    description: true,
-                  },
-                });
+          if (candidate.status === "Converted") {
+            currentInterviewStatus = {
+              stage_id: null,
+              stage_name: "Converted to Employee",
+              stage_status: "converted",
+              description:
+                candidate.status_remarks ||
+                "Successfully converted to employee",
+              sequence_order: null,
+              started_date: candidate.updatedate,
+              completed_date: candidate.updatedate,
+              feedback: null,
+              source: "conversion_status",
+            };
+            interviewStatusSummary = "Converted to Employee";
+          } else {
+            if (hiringStages && hiringStages.length > 0) {
+              const currentStage = hiringStages.find(
+                (stage) => stage.stage_status === "in_progress"
+              );
 
-              console.log(
-                ` Fetched interview stage for candidate ${candidate.id}:`,
-                interviewStageDetails?.stage_name || "N/A"
-              );
-            } catch (error) {
-              console.warn(
-                ` Could not fetch interview stage for candidate ${candidate.id}:`,
-                error.message
-              );
-              interviewStageDetails = null;
+              if (currentStage) {
+                currentInterviewStatus = {
+                  stage_id: currentStage.stage_id,
+                  stage_name: currentStage.stage_name,
+                  stage_status: currentStage.stage_status,
+                  description: currentStage.description,
+                  sequence_order: currentStage.sequence_order,
+                  started_date: currentStage.started_date,
+                  feedback: currentStage.feedback,
+                  source: "hiring_stages",
+                };
+                interviewStatusSummary = `Currently in: ${currentStage.stage_name}`;
+              } else {
+                const completedStages = hiringStages.filter(
+                  (stage) => stage.stage_status === "completed"
+                );
+                const pendingStages = hiringStages.filter(
+                  (stage) => stage.stage_status === "pending"
+                );
+
+                if (pendingStages.length > 0) {
+                  const nextStage = pendingStages.sort(
+                    (a, b) => a.sequence_order - b.sequence_order
+                  )[0];
+                  currentInterviewStatus = {
+                    stage_id: nextStage.stage_id,
+                    stage_name: nextStage.stage_name,
+                    stage_status: "waiting",
+                    description: nextStage.description,
+                    sequence_order: nextStage.sequence_order,
+                    started_date: null,
+                    feedback: null,
+                    source: "hiring_stages",
+                  };
+                  interviewStatusSummary = `Waiting for: ${nextStage.stage_name}`;
+                } else if (completedStages.length > 0) {
+                  const lastStage = completedStages.sort(
+                    (a, b) => b.sequence_order - a.sequence_order
+                  )[0];
+                  currentInterviewStatus = {
+                    stage_id: lastStage.stage_id,
+                    stage_name: lastStage.stage_name,
+                    stage_status: "completed",
+                    description: lastStage.description,
+                    sequence_order: lastStage.sequence_order,
+                    started_date: lastStage.started_date,
+                    completed_date: lastStage.completed_date,
+                    feedback: lastStage.feedback,
+                    source: "hiring_stages",
+                  };
+                  interviewStatusSummary = `Last completed: ${lastStage.stage_name}`;
+                }
+              }
             }
-          } else if (isApprovedOrConverted) {
-            console.log(
-              `Skipping interview_stage for candidate ${candidate.id} - Status: ${candidate.status}`
-            );
+
+            if (candidate.interview_stage) {
+              try {
+                legacyInterviewStage =
+                  await prisma.hrms_m_interview_stage.findUnique({
+                    where: { id: parseInt(candidate.interview_stage) },
+                    select: {
+                      id: true,
+                      stage_name: true,
+                      description: true,
+                    },
+                  });
+              } catch (error) {
+                console.warn(
+                  `Could not fetch legacy interview stage for candidate ${candidate.id}:`,
+                  error.message
+                );
+              }
+            }
+          }
+
+          // ======= Enhanced progress calculation =======
+          let interviewProgress = null;
+          if (candidate.status === "Converted") {
+            // For converted candidates, show 100% progress
+            interviewProgress = {
+              total_stages: hiringStages ? hiringStages.length : 0,
+              completed_stages: hiringStages ? hiringStages.length : 0,
+              current_stage_number: hiringStages ? hiringStages.length : 0,
+              progress_percentage: 100,
+              status: "Conversion Complete",
+            };
+          } else if (hiringStages && hiringStages.length > 0) {
+            const completedCount = hiringStages.filter(
+              (s) => s.stage_status === "completed"
+            ).length;
+            interviewProgress = {
+              total_stages: hiringStages.length,
+              completed_stages: completedCount,
+              current_stage_number: currentInterviewStatus
+                ? currentInterviewStatus.sequence_order
+                : 0,
+              progress_percentage: Math.round(
+                (completedCount / hiringStages.length) * 100
+              ),
+              status: candidate.status,
+            };
           }
 
           return {
             ...candidate,
-            candidate_interview_stage: interviewStageDetails,
+            // Legacy field (for backward compatibility)
+            candidate_interview_stage: legacyInterviewStage,
+
+            // New enhanced current status
+            current_interview_status: currentInterviewStatus,
+
+            // All hiring stages
             hiring_stages: hiringStages,
+
+            // Summary for quick reference
+            interview_status_summary: interviewStatusSummary,
+
+            // Progress indicator
+            interview_progress: interviewProgress,
           };
         })
       );
-
       return {
         data: enrichedData,
         currentPage: page,

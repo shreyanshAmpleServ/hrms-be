@@ -26,7 +26,8 @@ const getAllEmploymentContract = async (
   size,
   startDate,
   endDate,
-  candidate_id
+  candidate_id,
+  type
 ) => {
   return await EmploymentContractModel.getAllEmploymentContract(
     search,
@@ -34,7 +35,8 @@ const getAllEmploymentContract = async (
     size,
     startDate,
     endDate,
-    candidate_id
+    candidate_id,
+    type
   );
 };
 
