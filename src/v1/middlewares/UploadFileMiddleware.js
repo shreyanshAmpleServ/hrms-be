@@ -43,6 +43,28 @@ const storage = multer.diskStorage({
     cb(null, `${timestamp}-${file.fieldname}${extension}`);
   },
 });
+/**
+ * Custom error handler for Multer
+ */
+const multerErrorHandler = (err, req, res, next) => {
+  if (err instanceof multer.MulterError) {
+    // File too large
+    if (err.code === "LIMIT_FILE_SIZE") {
+      return res.status(413).json({
+        success: false,
+        message: "File too large. Maximum allowed size is 5MB.",
+      });
+    }
+
+    // Other multer issues
+    return res.status(400).json({
+      success: false,
+      message: `File upload error: ${err.message}`,
+    });
+  }
+
+  next(err);
+};
 
 /**
  * Multer upload configuration using memory storage.
@@ -120,7 +142,10 @@ const upload = {
    * @param {string} fieldName - The field name for the file
    * @returns {Function} Middleware function
    */
-  single: (fieldName) => preserveContext(multerUpload.single(fieldName)),
+  single: (fieldName) => [
+    preserveContext(multerUpload.single(fieldName)),
+    multerErrorHandler,
+  ],
   /**
    * Upload multiple files as an array.
    * @param {string} fieldName - The field name for the files

@@ -142,7 +142,7 @@ const snapshotHiringStagesForCandidate = async (
     console.error(" Error snapshotting hiring stages:", error);
     throw new CustomError(
       `Error snapshotting hiring stages: ${error.message}`,
-      500
+      error.status || 500
     );
   }
 };
@@ -420,7 +420,7 @@ const createRequiredDocumentsForCandidate = async (
     console.error("Error creating required documents:", error);
     throw new CustomError(
       `Error creating required documents: ${error.message}`,
-      500
+      error?.status || 500
     );
   }
 };
@@ -429,7 +429,7 @@ const createCandidateMaster = async (data) => {
   try {
     const fullName = data.full_name?.trim();
 
-    if (!fullName) {
+    if (fullName === "" || !fullName) {
       throw new CustomError("Full name is required", 400);
     }
 
@@ -460,7 +460,7 @@ const createCandidateMaster = async (data) => {
       "0"
     )}`;
 
-    console.log(` Creating candidate: ${fullName} (${newCandidateCode})`);
+    // console.log(` Creating candidate: ${fullName} (${newCandidateCode})`);
 
     const reqData = await prisma.hrms_d_candidate_master.create({
       data: {
@@ -535,8 +535,8 @@ const createCandidateMaster = async (data) => {
   } catch (error) {
     console.error(" Error creating candidate master:", error);
     throw new CustomError(
-      `Error creating candidate master: ${error.message}`,
-      500
+      `Error creating candidate: ${error.message}`,
+      error?.status || 500
     );
   }
 };
@@ -699,6 +699,9 @@ const updateCandidateMaster = async (id, data) => {
     if (!existingCandidate) {
       throw new CustomError("Candidate not found", 404);
     }
+    if (data.full_name?.trim() === "" || !data.full_name?.trim()) {
+      throw new CustomError("Full name is required", 400);
+    }
 
     const updatedEntry = await prisma.hrms_d_candidate_master.update({
       where: { id: parseInt(id) },
@@ -794,7 +797,7 @@ const updateCandidateMaster = async (id, data) => {
     console.error("Error updating candidate master:", error);
     throw new CustomError(
       `Error updating candidate master: ${error.message}`,
-      500
+      error.status || 500
     );
   }
 };
@@ -1388,7 +1391,7 @@ const updateCandidateMasterStatus = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating candidate master status: ${error.message}`,
-      500
+      error?.status || 500
     );
   }
 };
@@ -1463,7 +1466,7 @@ const updateCandidateStageStatus = async (
     console.error(" Error updating candidate stage:", error);
     throw new CustomError(
       `Error updating candidate stage: ${error.message}`,
-      500
+      error?.status || 500
     );
   }
 };
@@ -2263,7 +2266,7 @@ const createEmployeeFromCandidate = async (
     }
     throw new CustomError(
       `Error creating employee from candidate: ${error.message}`,
-      500
+      error?.status || 500
     );
   }
 };

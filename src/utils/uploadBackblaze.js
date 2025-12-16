@@ -513,28 +513,28 @@ const uploadToBackblaze = async (
     const keyId = process.env.BACKBLAZE_B2_KEY_ID;
     const appKey = process.env.BACKBLAZE_B2_APPLICATION_KEY;
 
-    console.log("Step 1 - Env vars:");
-    console.log(
-      "  Bucket ID:",
-      bucketId ? `${bucketId.substring(0, 5)}...` : "MISSING!"
-    );
-    console.log(
-      "  Key ID:",
-      keyId ? `${keyId.substring(0, 5)}...` : "MISSING!"
-    );
-    console.log("  App Key:", appKey ? "EXISTS" : "MISSING!");
+    // console.log("Step 1 - Env vars:");
+    // console.log(
+    //   "  Bucket ID:",
+    //   bucketId ? `${bucketId.substring(0, 5)}...` : "MISSING!"
+    // );
+    // console.log(
+    //   "  Key ID:",
+    //   keyId ? `${keyId.substring(0, 5)}...` : "MISSING!"
+    // );
+    // console.log("  App Key:", appKey ? "EXISTS" : "MISSING!");
 
     if (!bucketId) throw new Error("BACKBLAZE_B2_BUCKET_ID is not set");
     if (!keyId) throw new Error("BACKBLAZE_B2_KEY_ID is not set");
     if (!appKey) throw new Error("BACKBLAZE_B2_APPLICATION_KEY is not set");
 
-    console.log("Step 2 - Authorizing...");
+    // console.log("Step 2 - Authorizing...");
     try {
       await b2.authorize();
-      console.log("  Authorization successful");
+      // console.log("  Authorization successful");
     } catch (authErr) {
-      console.error("  Authorization FAILED:", authErr.message);
-      console.error("  Auth error response:", authErr.response?.data);
+      // console.error("  Authorization FAILED:", authErr.message);
+      // console.error("  Auth error response:", authErr.response?.data);
       throw new Error(
         `Authorization failed: ${
           authErr.response?.data?.message || authErr.message
@@ -542,7 +542,7 @@ const uploadToBackblaze = async (
       );
     }
 
-    console.log("Step 3 - Processing buffer...");
+    // console.log("Step 3 - Processing buffer...");
     let finalBuffer = fileBuffer;
     if (processImage) {
       finalBuffer = await processImageToSquare(
@@ -551,14 +551,14 @@ const uploadToBackblaze = async (
         squareSize
       );
     }
-    console.log("  Original buffer size:", fileBuffer.length);
-    console.log("  Final buffer size:", finalBuffer.length);
+    // console.log("  Original buffer size:", fileBuffer.length);
+    // console.log("  Final buffer size:", finalBuffer.length);
 
     const ext = path.extname(originalName);
     const fileName = `${folder}/${uuidv4()}${ext}`;
-    console.log("Step 4 - Filename:", fileName);
+    // console.log("Step 4 - Filename:", fileName);
 
-    console.log("Step 5 - Getting upload URL...");
+    // console.log("Step 5 - Getting upload URL...");
     let uploadData;
     try {
       const response = await b2.getUploadUrl({ bucketId });

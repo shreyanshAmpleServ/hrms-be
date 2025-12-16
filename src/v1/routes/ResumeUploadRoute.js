@@ -5,7 +5,6 @@ const upload = require("../middlewares/UploadFileMiddleware");
 const {
   setupNotificationMiddleware,
 } = require("../middlewares/notificationMiddleware");
-
 const router = express.Router();
 
 router.post(

@@ -2,7 +2,7 @@ const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
 const serializeHiringStageValueData = (data) => ({
-  value: data.value || "",
+  value: data.value.trim() || "",
 });
 
 const checkDuplicateValue = async (value, excludeId = null) => {
@@ -28,6 +28,9 @@ const checkDuplicateValue = async (value, excludeId = null) => {
 };
 const createHiringStageValue = async (data) => {
   try {
+    if (data.value.trim() === "") {
+      throw new CustomError(`Hiring stage value cannot be empty`, 400);
+    }
     const duplicate = await checkDuplicateValue(data.value);
     if (duplicate) {
       throw new CustomError(`Hiring stage value already exists`, 409);
@@ -71,6 +74,9 @@ const getHiringStageValueById = async (id) => {
 
 const updateHiringStageValue = async (id, data) => {
   try {
+    if (data.value.trim() === "") {
+      throw new CustomError(`Hiring stage value cannot be empty`, 400);
+    }
     const existingRecord = await prisma.hrms_d_hiring_stage_value.findUnique({
       where: { id: parseInt(id) },
     });
