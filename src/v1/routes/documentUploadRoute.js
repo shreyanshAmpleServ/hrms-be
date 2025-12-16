@@ -9,14 +9,7 @@ router.post(
   "/document-upload",
   authenticateToken,
   upload.single("document_path"),
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Employee Attachments",
-      "create"
-    ),
+
   documentUploadController.createDocument
 );
 
@@ -39,14 +32,7 @@ router.put(
   "/document-upload/:id",
   authenticateToken,
   upload.single("document_path"),
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Employee Attachments",
-      "update"
-    ),
+
   documentUploadController.updateDocument
 );
 
@@ -54,14 +40,7 @@ router.put(
 router.delete(
   "/document-upload/:id",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(
-      req,
-      res,
-      next,
-      "Employee Attachments",
-      "delete"
-    ),
+
   documentUploadController.deleteDocument
 );
 
