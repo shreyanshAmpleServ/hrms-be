@@ -206,10 +206,26 @@ const serializeTags = (data) => {
       connect: { id: Number(data.department_id) },
     };
   }
+  // if ("bank_id" in data) {
+  //   serialized.hrms_employee_bank = {
+  //     connect: { id: Number(data.bank_id) },
+  //   };
+  // }
+
   if ("bank_id" in data) {
-    serialized.hrms_employee_bank = {
-      connect: { id: Number(data.bank_id) },
-    };
+    if (
+      data.bank_id === null ||
+      data.bank_id === "" ||
+      data.bank_id === undefined
+    ) {
+      serialized.hrms_employee_bank = {
+        disconnect: true,
+      };
+    } else {
+      serialized.hrms_employee_bank = {
+        connect: { id: Number(data.bank_id) },
+      };
+    }
   }
   if ("manager_id" in data) {
     serialized.hrms_manager = {
