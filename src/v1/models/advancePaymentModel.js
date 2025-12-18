@@ -63,38 +63,31 @@ const createAdvancePayment = async (data) => {
   try {
     const reqData = await prisma.hrms_d_advance_payment_entry.create({
       data: {
-        employee_id: data.employee_id, // keep if column exists
-        hrms_advance_payement_entry_employee: {
-          connect: {
-            id: Number(data.employee_id),
-          },
-        },
+        employee_id: Number(data.employee_id),
         request_date: new Date(data.request_date),
-        amount_requested: Number(data.amount_requested),
-        amount_approved: Number(data.amount_approved),
+        amount_requested: data.amount_requested,
+        amount_approved: data.amount_approved,
         approval_status: data.approval_status || "pending",
         approval_date: data.approval_date ? new Date(data.approval_date) : null,
         approved_by: data.approved_by || null,
         reason: data.reason || "",
-        repayment_schedule: data.repayment_schedule
-          ? new Date(data.repayment_schedule)
-          : null,
-        createdby: data.createdby || 1,
+        repayment_schedule: data.repayment_schedule || null,
+        createdby: data.createdby,
         createdate: new Date(),
-        log_inst: data.log_inst || 1,
+        log_inst: data.log_inst || null,
       },
       include: {
         hrms_advance_payement_entry_employee: {
-          select: {
-            id: true,
-            full_name: true,
-          },
+          select: { id: true, full_name: true },
+        },
+        hrms_advance_payement_entry_approvedBy: {
+          select: { id: true, full_name: true },
         },
       },
     });
 
     await createRequest({
-      requester_id: reqData.employee_id,
+      requester_id: reqData.hrms_advance_payement_entry_employee.id,
       request_type: "advance_request",
       reference_id: reqData.id,
       createdby: data.createdby || 1,
