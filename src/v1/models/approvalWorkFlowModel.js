@@ -273,88 +273,96 @@ const getAllApprovalWorkFlow = async (
         { sequence: "asc" },
       ],
       include: {
-        approval_work_approver: {
-          select: {
-            id: true,
-            full_name: true,
-            employee_code: true,
-            profile_pic: true,
-            hrms_employee_department: {
-              select: {
-                id: true,
-                department_name: true,
-              },
-            },
-          },
-        },
+        // approval_work_approver: {
+        //   select: {
+        //     id: true,
+        //     full_name: true,
+        //     employee_code: true,
+        //     profile_pic: true,
+        //     hrms_employee_department: {
+        //       select: {
+        //         id: true,
+        //         department_name: true,
+        //       },
+        //     },
+        //   },
+        // },
         approval_work_department: {
           select: {
             id: true,
             department_name: true,
           },
         },
+        approval_work_flow_designation: {
+          select: {
+            id: true,
+            designation_name: true,
+          },
+        },
       },
     });
 
-    const grouped = {};
-    for (const wf of workflows) {
-      const type = wf.request_type;
+    // const grouped = {};
+    // for (const wf of workflows) {
+    //   const type = wf.request_type;
 
-      if (!grouped[type]) {
-        grouped[type] = {
-          request_type: type,
-          departments: [],
-          no_of_approvers: 0,
-          is_active: wf.is_active,
-          request_approval_request: [],
-        };
-      }
+    //   if (!grouped[type]) {
+    //     grouped[type] = {
+    //       request_type: type,
+    //       departments: [],
+    //       no_of_approvers: 0,
+    //       is_active: wf.is_active,
+    //       request_approval_request: [],
+    //     };
+    //   }
 
-      const deptName =
-        wf.approval_work_department?.department_name ||
-        "Global (All Departments)";
+    //   const deptName =
+    //     wf.approval_work_department?.department_name ||
+    //     "Global (All Departments)";
 
-      if (!grouped[type].departments.some((d) => d.id === wf.department_id)) {
-        grouped[type].departments.push({
-          id: wf.department_id,
-          name: deptName,
-          is_global: wf.department_id === null,
-        });
-      }
+    //   if (!grouped[type].departments.some((d) => d.id === wf.department_id)) {
+    //     grouped[type].departments.push({
+    //       id: wf.department_id,
+    //       name: deptName,
+    //       is_global: wf.department_id === null,
+    //     });
+    //   }
 
-      grouped[type].request_approval_request.push({
-        id: wf.id,
-        sequence: wf.sequence,
-        approver_id: wf.approver_id,
-        department_id: wf.department_id,
-        is_active: wf.is_active,
-        createdate: wf.createdate,
-        createdby: wf.createdby,
-        updatedate: wf.updatedate,
-        updatedby: wf.updatedby,
-        log_inst: wf.log_inst,
-        approval_work_approver: {
-          id: wf.approval_work_approver?.id || null,
-          name: wf.approval_work_approver?.full_name || null,
-          employee_code: wf.approval_work_approver?.employee_code || null,
-          profile_pic: wf.approval_work_approver?.profile_pic || null,
-          department:
-            wf.approval_work_approver?.hrms_employee_department
-              ?.department_name || null,
-        },
-      });
+    //   grouped[type].request_approval_request.push({
+    //     id: wf.id,
+    //     sequence: wf.sequence,
+    //     approver_id: wf.approver_id,
+    //     department_id: wf.department_id,
+    //     is_active: wf.is_active,
+    //     createdate: wf.createdate,
+    //     createdby: wf.createdby,
+    //     updatedate: wf.updatedate,
+    //     updatedby: wf.updatedby,
+    //     log_inst: wf.log_inst,
+    //     approval_work_approver: {
+    //       id: wf.approval_work_approver?.id || null,
+    //       name: wf.approval_work_approver?.full_name || null,
+    //       employee_code: wf.approval_work_approver?.employee_code || null,
+    //       profile_pic: wf.approval_work_approver?.profile_pic || null,
+    //       department:
+    //         wf.approval_work_approver?.hrms_employee_department
+    //           ?.department_name || null,
+    //     },
+    //   });
 
-      grouped[type].no_of_approvers += 1;
-    }
+    //   grouped[type].no_of_approvers += 1;
+    // }
 
-    const groupedArray = Object.values(grouped);
+    // const groupedArray = Object.values(grouped);
 
-    const totalCount = groupedArray.length;
+    // const totalCount = groupedArray.length;
+    // const totalPages = Math.ceil(totalCount / size);
+    // const paginatedData = groupedArray.slice((page - 1) * size, page * size);
+
+    const totalCount = workflows.length;
     const totalPages = Math.ceil(totalCount / size);
-    const paginatedData = groupedArray.slice((page - 1) * size, page * size);
-
     return {
-      data: paginatedData,
+      data: workflows,
       currentPage: page,
       size,
       totalPages,
@@ -363,10 +371,143 @@ const getAllApprovalWorkFlow = async (
         total_workflows: totalCount,
       },
     };
+    // return {
+    //   data: paginatedData,
+    //   currentPage: page,
+    //   size,
+    //   totalPages,
+    //   totalCount,
+    //   summary: {
+    //     total_workflows: totalCount,
+    //   },
+    // };
   } catch (error) {
     throw new CustomError("Error retrieving approval workflows", 503);
   }
 };
+// const getAllApprovalWorkFlow = async (
+//   search,
+//   page,
+//   size,
+//   startDate,
+//   endDate
+// ) => {
+//   try {
+//     page = !page || page == 0 ? 1 : page;
+//     size = size || 10;
+
+//     const filters = {};
+
+//     if (startDate && endDate) {
+//       const start = new Date(startDate);
+//       const end = new Date(endDate);
+//       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
+//         filters.createdate = { gte: start, lte: end };
+//       }
+//     }
+
+//     const workflows = await prisma.hrms_d_approval_work_flow.findMany({
+//       where: filters,
+//       orderBy: [
+//         { request_type: "asc" },
+//         { department_id: "asc" },
+//         { sequence: "asc" },
+//       ],
+//       include: {
+//         approval_work_approver: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//             employee_code: true,
+//             profile_pic: true,
+//             hrms_employee_department: {
+//               select: {
+//                 id: true,
+//                 department_name: true,
+//               },
+//             },
+//           },
+//         },
+//         approval_work_department: {
+//           select: {
+//             id: true,
+//             department_name: true,
+//           },
+//         },
+//       },
+//     });
+
+//     const grouped = {};
+//     for (const wf of workflows) {
+//       const type = wf.request_type;
+
+//       if (!grouped[type]) {
+//         grouped[type] = {
+//           request_type: type,
+//           departments: [],
+//           no_of_approvers: 0,
+//           is_active: wf.is_active,
+//           request_approval_request: [],
+//         };
+//       }
+
+//       const deptName =
+//         wf.approval_work_department?.department_name ||
+//         "Global (All Departments)";
+
+//       if (!grouped[type].departments.some((d) => d.id === wf.department_id)) {
+//         grouped[type].departments.push({
+//           id: wf.department_id,
+//           name: deptName,
+//           is_global: wf.department_id === null,
+//         });
+//       }
+
+//       grouped[type].request_approval_request.push({
+//         id: wf.id,
+//         sequence: wf.sequence,
+//         approver_id: wf.approver_id,
+//         department_id: wf.department_id,
+//         is_active: wf.is_active,
+//         createdate: wf.createdate,
+//         createdby: wf.createdby,
+//         updatedate: wf.updatedate,
+//         updatedby: wf.updatedby,
+//         log_inst: wf.log_inst,
+//         approval_work_approver: {
+//           id: wf.approval_work_approver?.id || null,
+//           name: wf.approval_work_approver?.full_name || null,
+//           employee_code: wf.approval_work_approver?.employee_code || null,
+//           profile_pic: wf.approval_work_approver?.profile_pic || null,
+//           department:
+//             wf.approval_work_approver?.hrms_employee_department
+//               ?.department_name || null,
+//         },
+//       });
+
+//       grouped[type].no_of_approvers += 1;
+//     }
+
+//     const groupedArray = Object.values(grouped);
+
+//     const totalCount = groupedArray.length;
+//     const totalPages = Math.ceil(totalCount / size);
+//     const paginatedData = groupedArray.slice((page - 1) * size, page * size);
+
+//     return {
+//       data: paginatedData,
+//       currentPage: page,
+//       size,
+//       totalPages,
+//       totalCount,
+//       summary: {
+//         total_workflows: totalCount,
+//       },
+//     };
+//   } catch (error) {
+//     throw new CustomError("Error retrieving approval workflows", 503);
+//   }
+// };
 
 const getAllApprovalWorkFlowByRequest = async (
   request_type,

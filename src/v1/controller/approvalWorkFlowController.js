@@ -696,8 +696,6 @@ const getAllApproverWorkFlow = async (req, res) => {
       data,
       meta: {
         request_type,
-        department_id: normalizedDepartmentId,
-        designation_id: normalizedDesignationId,
         is_global_workflow: false,
         total_approvers: data.length,
       },
