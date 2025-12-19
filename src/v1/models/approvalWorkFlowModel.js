@@ -168,15 +168,15 @@ const updateApprovalWorkFlow = async (id, data) => {
         );
       }
 
-      if (
-        data.department_id &&
-        approver.department_id !== Number(data.department_id)
-      ) {
-        throw new CustomError(
-          `Approver ${approver.full_name} does not belong to the specified department`,
-          400
-        );
-      }
+      // if (
+      //   data.department_id &&
+      //   approver.department_id !== Number(data.department_id)
+      // ) {
+      //   throw new CustomError(
+      //     `Approver ${approver.full_name} does not belong to the specified department`,
+      //     400
+      //   );
+      // }
     }
 
     const updatedEntry = await prisma.hrms_d_approval_work_flow.update({
@@ -602,7 +602,7 @@ const getAllApprovalWorkFlowByRequest = async (
             request_type,
             department_id: normalizedDeptId,
             designation_id: normalizedDesignId,
-            is_active: "Y",
+            // is_active: "Y",
           },
           orderBy: { sequence: "asc" },
           include: includeConfig,
