@@ -302,88 +302,75 @@ const getAllApprovalWorkFlow = async (
       },
     });
 
-    const grouped = {};
-    for (const wf of workflows) {
-      const type = wf.request_type;
+    const uniqueByDesignation = Object.values(
+      workflows.reduce((acc, item) => {
+        const key = item.designation_id ?? "null"; // handle null designation
+        if (!acc[key]) acc[key] = item;
+        return acc;
+      }, {})
+    );
 
-      if (!grouped[type]) {
-        grouped[type] = {
-          request_type: type,
-          designation: [],
-          no_of_approvers: 0,
-          is_active: wf.is_active,
-          request_approval_request: [],
-        };
-      }
+    // const grouped = {};
+    // for (const wf of workflows) {
+    //   const type = wf.request_type;
 
-      const deptName =
-        wf.approval_work_flow_designation?.designation_name ||
-        "Global (All Departments)";
+    // if (!grouped[type]) {
+    //   grouped[type] = {
+    //     request_type: type,
+    //     departments: [],
+    //     no_of_approvers: 0,
+    //     is_active: wf.is_active,
+    //     request_approval_request: [],
+    //   };
+    // }
 
-      if (!grouped[type].designation.some((d) => d.id === wf.designation_id)) {
-        grouped[type].designation.push({
-          id: wf.designation_id,
-          name: deptName,
-          is_global: wf.designation_id === null,
-        });
-      }
-      // if (!grouped[type]) {
-      //   grouped[type] = {
-      //     request_type: type,
-      //     departments: [],
-      //     no_of_approvers: 0,
-      //     is_active: wf.is_active,
-      //     request_approval_request: [],
-      //   };
-      // }
+    // const deptName =
+    //   wf.approval_work_department?.department_name ||
+    //   "Global (All Departments)";
 
-      // const deptName =
-      //   wf.approval_work_department?.department_name ||
-      //   "Global (All Departments)";
+    // if (!grouped[type].departments.some((d) => d.id === wf.department_id)) {
+    //   grouped[type].departments.push({
+    //     id: wf.department_id,
+    //     name: deptName,
+    //     is_global: wf.department_id === null,
+    //   });
+    // }
 
-      // if (!grouped[type].departments.some((d) => d.id === wf.department_id)) {
-      //   grouped[type].departments.push({
-      //     id: wf.department_id,
-      //     name: deptName,
-      //     is_global: wf.department_id === null,
-      //   });
-      // }
+    //   grouped[type].request_approval_request.push({
+    //     id: wf.id,
+    //     sequence: wf.sequence,
+    //     approver_id: wf.approver_id,
+    //     department_id: wf.department_id,
+    //     is_active: wf.is_active,
+    //     createdate: wf.createdate,
+    //     createdby: wf.createdby,
+    //     updatedate: wf.updatedate,
+    //     updatedby: wf.updatedby,
+    //     log_inst: wf.log_inst,
+    //     approval_work_approver: {
+    //       id: wf.approval_work_approver?.id || null,
+    //       name: wf.approval_work_approver?.full_name || null,
+    //       employee_code: wf.approval_work_approver?.employee_code || null,
+    //       profile_pic: wf.approval_work_approver?.profile_pic || null,
+    //       department:
+    //         wf.approval_work_approver?.hrms_employee_department
+    //           ?.department_name || null,
+    //     },
+    //   });
 
-      grouped[type].request_approval_request.push({
-        id: wf.id,
-        sequence: wf.sequence,
-        approver_id: wf.approver_id,
-        department_id: wf.department_id,
-        is_active: wf.is_active,
-        createdate: wf.createdate,
-        createdby: wf.createdby,
-        updatedate: wf.updatedate,
-        updatedby: wf.updatedby,
-        log_inst: wf.log_inst,
-        approval_work_approver: {
-          id: wf.approval_work_approver?.id || null,
-          name: wf.approval_work_approver?.full_name || null,
-          employee_code: wf.approval_work_approver?.employee_code || null,
-          profile_pic: wf.approval_work_approver?.profile_pic || null,
-          department:
-            wf.approval_work_approver?.hrms_employee_department
-              ?.department_name || null,
-        },
-      });
+    //   grouped[type].no_of_approvers += 1;
+    // }
 
-      grouped[type].no_of_approvers += 1;
-    }
+    // const groupedArray = Object.values(grouped);
 
-    const groupedArray = Object.values(grouped);
-
-    const totalCount = groupedArray.length;
-    const totalPages = Math.ceil(totalCount / size);
-    const paginatedData = groupedArray.slice((page - 1) * size, page * size);
-
-    // const totalCount = workflows.length;
+    // const totalCount = groupedArray.length;
     // const totalPages = Math.ceil(totalCount / size);
+    // const paginatedData = groupedArray.slice((page - 1) * size, page * size);
+
+    const totalCount = uniqueByDesignation.length;
+    const totalPages = Math.ceil(totalCount / size);
     return {
-      data: paginatedData,
+      data: uniqueByDesignation,
       currentPage: page,
       size,
       totalPages,
