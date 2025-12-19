@@ -14,42 +14,86 @@ const { createRequest } = require("./requestsModel.js");
  * @returns {Promise<Object>} Created advance payment
  * @throws {CustomError} If database error occurs
  */
+// const createAdvancePayment = async (data) => {
+//   try {
+//     const reqData = await prisma.hrms_d_advance_payment_entry.create({
+//       data: {
+//         employee_id: data.employee_id,
+//         request_date: data.request_date,
+//         amount_requested: data.amount_requested,
+//         amount_approved: data.amount_approved,
+//         approval_status: data.approval_status || "pending",
+//         approval_date: data.approval_date,
+//         approved_by: data.approved_by,
+//         reason: data.reason,
+//         repayment_schedule: data.repayment_schedule,
+//         createdby: data.createdby,
+//         createdate: new Date(),
+//         log_inst: data.log_inst,
+//       },
+//       include: {
+//         hrms_advance_payement_entry_employee: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//           },
+//         },
+//       },
+//     });
+//     await createRequest({
+//       requester_id: reqData.employee_id,
+//       request_type: "advance_request",
+//       reference_id: reqData.id,
+//       // request_data:
+//       //   reqData.reason ||
+//       //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
+//       createdby: data.createdby || 1,
+//       log_inst: data.log_inst || 1,
+//     });
+//     return reqData;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error creating advance payment: ${error.message}`,
+//       500
+//     );
+//   }
+// };
+
 const createAdvancePayment = async (data) => {
   try {
     const reqData = await prisma.hrms_d_advance_payment_entry.create({
       data: {
-        employee_id: data.employee_id,
-        request_date: data.request_date,
+        employee_id: Number(data.employee_id),
+        request_date: new Date(data.request_date),
         amount_requested: data.amount_requested,
         amount_approved: data.amount_approved,
         approval_status: data.approval_status || "pending",
-        approval_date: data.approval_date,
-        approved_by: data.approved_by,
-        reason: data.reason,
-        repayment_schedule: data.repayment_schedule,
+        approval_date: data.approval_date ? new Date(data.approval_date) : null,
+        approved_by: data.approved_by || null,
+        reason: data.reason || "",
+        repayment_schedule: data.repayment_schedule || null,
         createdby: data.createdby,
         createdate: new Date(),
-        log_inst: data.log_inst,
+        log_inst: data.log_inst || null,
       },
       include: {
         hrms_advance_payement_entry_employee: {
-          select: {
-            id: true,
-            full_name: true,
-          },
+          select: { id: true, full_name: true },
+        },
+        hrms_advance_payement_entry_approvedBy: {
+          select: { id: true, full_name: true },
         },
       },
     });
+
     await createRequest({
-      requester_id: reqData.employee_id,
+      requester_id: reqData.hrms_advance_payement_entry_employee.id,
       request_type: "advance_request",
       reference_id: reqData.id,
-      // request_data:
-      //   reqData.reason ||
-      //   `Leave from ${reqData.start_date} to ${reqData.end_date}`,
       createdby: data.createdby || 1,
       log_inst: data.log_inst || 1,
     });
+
     return reqData;
   } catch (error) {
     throw new CustomError(
