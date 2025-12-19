@@ -301,11 +301,17 @@ const getAllApprovalWorkFlow = async (
         },
       },
     });
-
-    const uniqueByDesignation = Object.values(
+    // 🔥 Group by: request_type + department_id + designation_id
+    const grouped = Object.values(
       workflows.reduce((acc, item) => {
-        const key = item.designation_id ?? "null"; // handle null designation
-        if (!acc[key]) acc[key] = item;
+        const key = `${item.request_type}_${item.department_id ?? "null"}_${
+          item.designation_id ?? "null"
+        }`;
+
+        if (!acc[key]) {
+          acc[key] = item; // keep first row of the group
+        }
+
         return acc;
       }, {})
     );
@@ -367,10 +373,10 @@ const getAllApprovalWorkFlow = async (
     // const totalPages = Math.ceil(totalCount / size);
     // const paginatedData = groupedArray.slice((page - 1) * size, page * size);
 
-    const totalCount = uniqueByDesignation.length;
+    const totalCount = grouped.length;
     const totalPages = Math.ceil(totalCount / size);
     return {
-      data: uniqueByDesignation,
+      data: grouped,
       currentPage: page,
       size,
       totalPages,
