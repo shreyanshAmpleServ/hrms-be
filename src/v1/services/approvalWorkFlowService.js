@@ -66,8 +66,8 @@ const updateApprovalWorkFlow = async (id, data) => {
   return await approvalWorkFlowModel.updateApprovalWorkFlow(id, data);
 };
 
-const deleteApprovalWorkFlow = async (requestType) => {
-  return await approvalWorkFlowModel.deleteApprovalWorkFlow(requestType);
+const deleteApprovalWorkFlow = async (id) => {
+  return await approvalWorkFlowModel.deleteApprovalWorkFlow(id);
 };
 
 const deleteApprovalWorkFlows = async (ids) => {
