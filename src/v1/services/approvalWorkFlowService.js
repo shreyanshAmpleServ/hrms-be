@@ -91,14 +91,18 @@ const getAllApprovalWorkFlow = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  department_id,
+  designation_id
 ) => {
   return await approvalWorkFlowModel.getAllApprovalWorkFlow(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
+    department_id,
+    designation_id
   );
 };
 

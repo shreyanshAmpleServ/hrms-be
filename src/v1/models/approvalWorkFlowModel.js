@@ -246,7 +246,9 @@ const getAllApprovalWorkFlow = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  department_id,
+  designation_id
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -260,6 +262,12 @@ const getAllApprovalWorkFlow = async (
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
         filters.createdate = { gte: start, lte: end };
       }
+    }
+    if (department_id) {
+      filters.department_id = Number(department_id);
+    }
+    if (designation_id) {
+      filters.designation_id = Number(designation_id);
     }
 
     const workflows = await prisma.hrms_d_approval_work_flow.findMany({
