@@ -103,6 +103,11 @@ router.get(
   authenticateToken,
   approvalWorkFlowController.getAllApprovalWorkFlowByRequest
 );
+router.get(
+  "/approval/get-all-approvers-workflow",
+  authenticateToken,
+  approvalWorkFlowController.getAllApproverWorkFlow
+);
 
 router.get(
   "/department-workflows",
