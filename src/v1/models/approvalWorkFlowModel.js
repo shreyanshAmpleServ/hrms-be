@@ -593,6 +593,61 @@ const getAllApprovalWorkFlowByRequest = async (
     );
   }
 };
+const getAllApproverWorkFlow = async (request_type) => {
+  try {
+    const includeConfig = {
+      approval_work_approver: {
+        select: {
+          id: true,
+          full_name: true,
+          employee_code: true,
+          profile_pic: true,
+          hrms_employee_department: {
+            select: {
+              id: true,
+              department_name: true,
+            },
+          },
+          hrms_employee_designation: {
+            select: {
+              id: true,
+              designation_name: true,
+            },
+          },
+        },
+      },
+      approval_work_department: {
+        select: {
+          id: true,
+          department_name: true,
+        },
+      },
+      approval_work_flow_designation: {
+        select: {
+          id: true,
+          designation_name: true,
+        },
+      },
+    };
+
+    // No filters provided - return global workflows only
+    const workflows = await prisma.hrms_d_approval_work_flow.findMany({
+      where: {
+        request_type,
+        is_active: "Y",
+      },
+      orderBy: { sequence: "asc" },
+      include: includeConfig,
+    });
+
+    return workflows;
+  } catch (error) {
+    throw new CustomError(
+      `Error fetching workflows for request_type '${request_type}': ${error.message}`,
+      500
+    );
+  }
+};
 
 const getDepartmentsWithWorkflows = async (request_type) => {
   try {
@@ -671,4 +726,5 @@ module.exports = {
   getAllApprovalWorkFlowByRequest,
   getDepartmentsWithWorkflows,
   getDesignationsWithWorkflows,
+  getAllApproverWorkFlow,
 };

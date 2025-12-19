@@ -676,6 +676,39 @@ const getAllApprovalWorkFlowByRequest = async (req, res) => {
     });
   }
 };
+const getAllApproverWorkFlow = async (req, res) => {
+  try {
+    const { request_type } = req.query;
+
+    if (!request_type) {
+      return res.status(400).send({
+        success: false,
+        message: "Request type is required",
+      });
+    }
+
+    const data = await approvalWorkFlowModel.getAllApproverWorkFlow(
+      request_type
+    );
+
+    return res.status(200).send({
+      success: true,
+      data,
+      meta: {
+        request_type,
+        department_id: normalizedDepartmentId,
+        designation_id: normalizedDesignationId,
+        is_global_workflow: false,
+        total_approvers: data.length,
+      },
+    });
+  } catch (error) {
+    return res.status(error.status || 500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+};
 
 const getDepartmentWorkflows = async (req, res, next) => {
   try {
@@ -916,4 +949,5 @@ module.exports = {
   getWorkflowSummary,
   validateWorkflow,
   getDesignationsWithWorkflows,
+  getAllApproverWorkFlow,
 };
