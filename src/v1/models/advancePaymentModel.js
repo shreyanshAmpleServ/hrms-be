@@ -1,19 +1,7 @@
-/**
- * @fileoverview Advance payment model handling CRUD operations for advance payments
- * @module advancePaymentModel
- */
-
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 
 const { createRequest } = require("./requestsModel.js");
-
-/**
- * Creates a new advance payment
- * @param {Object} data - Advance payment data to create
- * @returns {Promise<Object>} Created advance payment
- * @throws {CustomError} If database error occurs
- */
 // const createAdvancePayment = async (data) => {
 //   try {
 //     const reqData = await prisma.hrms_d_advance_payment_entry.create({
@@ -59,23 +47,83 @@ const { createRequest } = require("./requestsModel.js");
 //   }
 // };
 
+const serializeAdvancePaymentInput = (data) => {
+  const payload = {};
+
+  if (data.request_date) {
+    payload.request_date = new Date(data.request_date);
+  }
+
+  if (data.amount_requested !== undefined && data.amount_requested !== null) {
+    payload.amount_requested = Number(data.amount_requested);
+  }
+
+  if (data.amount_approved !== undefined && data.amount_approved !== null) {
+    payload.amount_approved = Number(data.amount_approved);
+  }
+  payload.approval_status = data.approval_status || "pending";
+
+  if (data.approval_date) {
+    payload.approval_date = new Date(data.approval_date);
+  }
+  if (data.reason) {
+    payload.reason = data.reason;
+  }
+
+  if (data.repayment_schedule) {
+    payload.repayment_schedule = data.repayment_schedule;
+  }
+
+  if (data.id === undefined || data.id === null) {
+    payload.createdate = new Date();
+    payload.createdby = Number(data.createdby) || 1;
+  }
+  if (data.id) {
+    payload.updatedate = new Date();
+    payload.updatedby = Number(data.updatedby) || 1;
+  }
+
+  payload.log_inst = data.log_inst || 1;
+
+  // 🔗 EMPLOYEE RELATION (REQUIRED)
+  if (data.employee_id) {
+    payload.hrms_advance_payement_entry_employee = {
+      connect: {
+        id: Number(data.employee_id),
+      },
+    };
+  }
+
+  // 🔗 APPROVED BY RELATION (OPTIONAL)
+  if (data.approved_by) {
+    payload.hrms_advance_payement_entry_approvedBy = {
+      connect: {
+        id: Number(data.approved_by),
+      },
+    };
+  }
+
+  return payload;
+};
+
 const createAdvancePayment = async (data) => {
   try {
     const reqData = await prisma.hrms_d_advance_payment_entry.create({
-      data: {
-        employee_id: Number(data.employee_id),
-        request_date: new Date(data.request_date),
-        amount_requested: data.amount_requested,
-        amount_approved: data.amount_approved,
-        approval_status: data.approval_status || "pending",
-        approval_date: data.approval_date ? new Date(data.approval_date) : null,
-        approved_by: data.approved_by || null,
-        reason: data.reason || "",
-        repayment_schedule: data.repayment_schedule || null,
-        createdby: data.createdby,
-        createdate: new Date(),
-        log_inst: data.log_inst || null,
-      },
+      data: serializeAdvancePaymentInput(data),
+      // data: {
+      //   employee_id: Number(data.employee_id),
+      //   request_date: new Date(data.request_date),
+      //   amount_requested: data.amount_requested,
+      //   amount_approved: data.amount_approved,
+      //   approval_status: data.approval_status || "pending",
+      //   approval_date: data.approval_date ? new Date(data.approval_date) : null,
+      //   approved_by: data.approved_by || null,
+      //   reason: data.reason || "",
+      //   repayment_schedule: data.repayment_schedule || null,
+      //   createdby: data.createdby,
+      //   createdate: new Date(),
+      //   log_inst: data.log_inst || null,
+      // },
       include: {
         hrms_advance_payement_entry_employee: {
           select: { id: true, full_name: true },
@@ -160,7 +208,9 @@ const updateAdvancePayment = async (id, data) => {
     const updatedAdvancePayment =
       await prisma.hrms_d_advance_payment_entry.update({
         where: { id: parseInt(id) },
-        data: payload,
+        data: serializeAdvancePaymentInput({ id, ...data }),
+
+        // data: payload,
         include: {
           hrms_advance_payement_entry_employee: {
             select: {

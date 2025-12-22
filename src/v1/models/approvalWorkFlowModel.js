@@ -614,44 +614,44 @@ const getAllApprovalWorkFlowByRequest = async (
         });
       addWorkflows(exactMatchWorkflows);
 
-      const deptOnlyWorkflows = await prisma.hrms_d_approval_work_flow.findMany(
-        {
-          where: {
-            request_type,
-            department_id: normalizedDeptId,
-            designation_id: null,
-            // is_active: "Y",
-          },
-          orderBy: { sequence: "asc" },
-          include: includeConfig,
-        }
-      );
-      addWorkflows(deptOnlyWorkflows);
+      // const deptOnlyWorkflows = await prisma.hrms_d_approval_work_flow.findMany(
+      //   {
+      //     where: {
+      //       request_type,
+      //       department_id: normalizedDeptId,
+      //       designation_id: null,
+      //       // is_active: "Y",
+      //     },
+      //     orderBy: { sequence: "asc" },
+      //     include: includeConfig,
+      //   }
+      // );
+      // addWorkflows(deptOnlyWorkflows);
 
-      const designOnlyWorkflows =
-        await prisma.hrms_d_approval_work_flow.findMany({
-          where: {
-            request_type,
-            designation_id: normalizedDesignId,
-            department_id: null,
-            // is_active: "Y",
-          },
-          orderBy: { sequence: "asc" },
-          include: includeConfig,
-        });
-      addWorkflows(designOnlyWorkflows);
+      // const designOnlyWorkflows =
+      //   await prisma.hrms_d_approval_work_flow.findMany({
+      //     where: {
+      //       request_type,
+      //       designation_id: normalizedDesignId,
+      //       department_id: null,
+      //       // is_active: "Y",
+      //     },
+      //     orderBy: { sequence: "asc" },
+      //     include: includeConfig,
+      //   });
+      // addWorkflows(designOnlyWorkflows);
 
-      const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
-        where: {
-          request_type,
-          department_id: null,
-          designation_id: null,
-          // OR: [{ is_active: "Y" }, { is_active: null }],
-        },
-        orderBy: { sequence: "asc" },
-        include: includeConfig,
-      });
-      addWorkflows(globalWorkflows);
+      // const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
+      //   where: {
+      //     request_type,
+      //     department_id: null,
+      //     designation_id: null,
+      //     // OR: [{ is_active: "Y" }, { is_active: null }],
+      //   },
+      //   orderBy: { sequence: "asc" },
+      //   include: includeConfig,
+      // });
+      // addWorkflows(globalWorkflows);
 
       results.sort((a, b) => {
         if (a.sequence !== b.sequence) {
@@ -676,17 +676,17 @@ const getAllApprovalWorkFlowByRequest = async (
       });
       addWorkflows(deptWorkflows);
 
-      const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
-        where: {
-          request_type,
-          department_id: null,
-          designation_id: null,
-          // OR: [{ is_active: "Y" }, { is_active: null }],
-        },
-        orderBy: { sequence: "asc" },
-        include: includeConfig,
-      });
-      addWorkflows(globalWorkflows);
+      // const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
+      //   where: {
+      //     request_type,
+      //     department_id: null,
+      //     designation_id: null,
+      //     // OR: [{ is_active: "Y" }, { is_active: null }],
+      //   },
+      //   orderBy: { sequence: "asc" },
+      //   include: includeConfig,
+      // });
+      // addWorkflows(globalWorkflows);
 
       results.sort((a, b) => {
         if (a.sequence !== b.sequence) {
@@ -711,17 +711,17 @@ const getAllApprovalWorkFlowByRequest = async (
       });
       addWorkflows(designWorkflows);
 
-      const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
-        where: {
-          request_type,
-          department_id: null,
-          designation_id: null,
-          // OR: [{ is_active: "Y" }, { is_active: null }],
-        },
-        orderBy: { sequence: "asc" },
-        include: includeConfig,
-      });
-      addWorkflows(globalWorkflows);
+      // const globalWorkflows = await prisma.hrms_d_approval_work_flow.findMany({
+      //   where: {
+      //     request_type,
+      //     department_id: null,
+      //     designation_id: null,
+      //     // OR: [{ is_active: "Y" }, { is_active: null }],
+      //   },
+      //   orderBy: { sequence: "asc" },
+      //   include: includeConfig,
+      // });
+      // addWorkflows(globalWorkflows);
 
       results.sort((a, b) => {
         if (a.sequence !== b.sequence) {
