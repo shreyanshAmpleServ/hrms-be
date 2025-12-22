@@ -20,7 +20,6 @@ const createApprovalWorkFlow = async (dataArray) => {
     if (!Array.isArray(dataArray)) {
       throw new CustomError("Input must be an array of data objects", 400);
     }
-
     const serializedData = dataArray.map((data) => ({
       ...serializeApprovalWorkFlowData(data),
       createdby: data.createdby || 1,
@@ -148,7 +147,6 @@ const updateApprovalWorkFlow = async (id, data) => {
     if (!id || isNaN(Number(id))) {
       throw new CustomError("Invalid or missing ID for update", 400);
     }
-
     if (data.approver_id) {
       const approver = await prisma.hrms_d_employee.findUnique({
         where: { id: Number(data.approver_id) },
@@ -160,7 +158,6 @@ const updateApprovalWorkFlow = async (id, data) => {
           },
         },
       });
-
       if (!approver) {
         throw new CustomError(
           `Approver with ID ${data.approver_id} not found`,
@@ -168,15 +165,15 @@ const updateApprovalWorkFlow = async (id, data) => {
         );
       }
 
-      if (
-        data.department_id &&
-        approver.department_id !== Number(data.department_id)
-      ) {
-        throw new CustomError(
-          `Approver ${approver.full_name} does not belong to the specified department`,
-          400
-        );
-      }
+      // if (
+      //   data.department_id &&
+      //   approver.department_id !== Number(data.department_id)
+      // ) {
+      //   throw new CustomError(
+      //     `Approver ${approver.full_name} does not belong to the specified department`,
+      //     400
+      //   );
+      // }
     }
 
     const updatedEntry = await prisma.hrms_d_approval_work_flow.update({
@@ -249,7 +246,9 @@ const getAllApprovalWorkFlow = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
+  department_id,
+  designation_id
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -263,6 +262,12 @@ const getAllApprovalWorkFlow = async (
       if (!isNaN(start.getTime()) && !isNaN(end.getTime())) {
         filters.createdate = { gte: start, lte: end };
       }
+    }
+    if (department_id) {
+      filters.department_id = Number(department_id);
+    }
+    if (designation_id) {
+      filters.designation_id = Number(designation_id);
     }
 
     const workflows = await prisma.hrms_d_approval_work_flow.findMany({
@@ -602,7 +607,7 @@ const getAllApprovalWorkFlowByRequest = async (
             request_type,
             department_id: normalizedDeptId,
             designation_id: normalizedDesignId,
-            is_active: "Y",
+            // is_active: "Y",
           },
           orderBy: { sequence: "asc" },
           include: includeConfig,
@@ -615,7 +620,7 @@ const getAllApprovalWorkFlowByRequest = async (
             request_type,
             department_id: normalizedDeptId,
             designation_id: null,
-            is_active: "Y",
+            // is_active: "Y",
           },
           orderBy: { sequence: "asc" },
           include: includeConfig,
@@ -629,7 +634,7 @@ const getAllApprovalWorkFlowByRequest = async (
             request_type,
             designation_id: normalizedDesignId,
             department_id: null,
-            is_active: "Y",
+            // is_active: "Y",
           },
           orderBy: { sequence: "asc" },
           include: includeConfig,
@@ -641,7 +646,7 @@ const getAllApprovalWorkFlowByRequest = async (
           request_type,
           department_id: null,
           designation_id: null,
-          OR: [{ is_active: "Y" }, { is_active: null }],
+          // OR: [{ is_active: "Y" }, { is_active: null }],
         },
         orderBy: { sequence: "asc" },
         include: includeConfig,
@@ -664,7 +669,7 @@ const getAllApprovalWorkFlowByRequest = async (
         where: {
           request_type,
           department_id: normalizedDeptId,
-          is_active: "Y",
+          // is_active: "Y",
         },
         orderBy: { sequence: "asc" },
         include: includeConfig,
@@ -676,7 +681,7 @@ const getAllApprovalWorkFlowByRequest = async (
           request_type,
           department_id: null,
           designation_id: null,
-          OR: [{ is_active: "Y" }, { is_active: null }],
+          // OR: [{ is_active: "Y" }, { is_active: null }],
         },
         orderBy: { sequence: "asc" },
         include: includeConfig,
@@ -699,7 +704,7 @@ const getAllApprovalWorkFlowByRequest = async (
         where: {
           request_type,
           designation_id: normalizedDesignId,
-          is_active: "Y",
+          // is_active: "Y",
         },
         orderBy: { sequence: "asc" },
         include: includeConfig,
@@ -711,7 +716,7 @@ const getAllApprovalWorkFlowByRequest = async (
           request_type,
           department_id: null,
           designation_id: null,
-          OR: [{ is_active: "Y" }, { is_active: null }],
+          // OR: [{ is_active: "Y" }, { is_active: null }],
         },
         orderBy: { sequence: "asc" },
         include: includeConfig,
@@ -734,7 +739,7 @@ const getAllApprovalWorkFlowByRequest = async (
         request_type,
         department_id: null,
         designation_id: null,
-        OR: [{ is_active: "Y" }, { is_active: null }],
+        // OR: [{ is_active: "Y" }, { is_active: null }],
       },
       orderBy: { sequence: "asc" },
       include: includeConfig,

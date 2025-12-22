@@ -570,6 +570,7 @@ const updateApprovalWorkFlow = async (req, res, next) => {
 
     const idsToDelete = [...existingIds].filter((id) => !incomingIds.has(id));
 
+    console.log("IDs to delete:", idsToDelete, existingIds, incomingIds);
     if (idsToDelete.length > 0) {
       await approvalWorkFlowService.deleteApprovalWorkFlows(idsToDelete);
       console.log(` Deleted ${idsToDelete.length} obsolete workflows`);
