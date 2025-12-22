@@ -92,8 +92,13 @@ router.post(
   approvalWorkFlowController.updateApprovalWorkFlow
 );
 
+// router.delete(
+//   "/approval-workflow/:requestType",
+//   authenticateToken,
+//   approvalWorkFlowController.deleteApprovalWorkFlow
+// );
 router.delete(
-  "/approval-workflow/:requestType",
+  "/approval-workflow/:id",
   authenticateToken,
   approvalWorkFlowController.deleteApprovalWorkFlow
 );
