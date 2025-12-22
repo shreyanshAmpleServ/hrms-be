@@ -1521,7 +1521,7 @@ const createJobPosting = async (data) => {
 
     const newJobCode = `${prefix}${String(nextNumber).padStart(3, "0")}`;
 
-    const jobPosting = await prisma.hrms_d_job_posting.create({
+    let jobPosting = await prisma.hrms_d_job_posting.create({
       data: {
         ...serializeJobData(data),
         job_code: newJobCode,
@@ -1566,7 +1566,7 @@ const createJobPosting = async (data) => {
     //   log_inst: data.log_inst || 1,
     // });
 
-    await createRequest({
+    const requesterWorkFlow = await createRequest({
       requester_id: data.reporting_manager_id || data.createdby || 1,
       request_type: "job_posting",
       reference_id: jobPosting.id,
@@ -1577,7 +1577,39 @@ const createJobPosting = async (data) => {
       workflow_department_id: data.department_id,
       workflow_designation_id: data.designation_id,
     });
-
+    console.log("requesterWorkFlow", requesterWorkFlow);
+    if (!requesterWorkFlow?.workflow_required) {
+      jobPosting = await prisma.hrms_d_job_posting.update({
+        where: { id: jobPosting.id },
+        data: { status: "A" },
+        include: {
+          hrms_job_department: {
+            select: {
+              department_name: true,
+              id: true,
+            },
+          },
+          hrms_job_designation: {
+            select: {
+              designation_name: true,
+              id: true,
+            },
+          },
+          job_posting_currency: {
+            select: {
+              currency_name: true,
+              id: true,
+            },
+          },
+          job_posting_reporting_manager: {
+            select: {
+              full_name: true,
+              id: true,
+            },
+          },
+        },
+      });
+    }
     console.log(`Job posting created with ID: ${jobPosting.id}`);
     console.log(`Approval request created for job posting`);
 
@@ -1841,4 +1873,5 @@ module.exports = {
   updateJobPosting,
   deleteJobPosting,
   getAllJobPosting,
+  enrichJobPosting,
 };

@@ -646,6 +646,10 @@ const createRequest = async (data) => {
       workflowType,
     } = workflowResult;
 
+    console.log(
+      ` Workflow Type Resolved: ${JSON.stringify(workflowResult)}`,
+      workflowSteps
+    );
     if (!workflowSteps || workflowSteps.length === 0) {
       console.log(
         ` No approval workflow found for ${request_type}. Continuing without approval workflow.`
@@ -1074,6 +1078,60 @@ const findRequests = async (request_id) => {
   } catch (error) {
     throw new CustomError(` ${error.message}`, 503);
   }
+};
+const parseDocumentTypeIds = (documentTypeId) => {
+  if (!documentTypeId || documentTypeId.trim() === "") {
+    return [];
+  }
+
+  return documentTypeId
+    .split(",")
+    .map((id) => parseInt(id.trim()))
+    .filter((id) => !isNaN(id) && id > 0);
+};
+
+const enrichWithDocumentTypes = async (jobPosting) => {
+  if (!jobPosting) return null;
+
+  const docTypeIds = parseDocumentTypeIds(jobPosting.document_type_id);
+
+  if (docTypeIds.length === 0) {
+    return {
+      ...jobPosting,
+      document_types: [],
+      document_type_ids: [],
+    };
+  }
+
+  const documentTypes = await prisma.hrms_m_document_type.findMany({
+    where: {
+      id: { in: docTypeIds },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  const docTypeMap = new Map(documentTypes.map((doc) => [doc.id, doc]));
+
+  const orderedDocTypes = docTypeIds
+    .map((id) => docTypeMap.get(id))
+    .filter(Boolean);
+
+  return {
+    ...jobPosting,
+    document_types: orderedDocTypes,
+    document_type_ids: docTypeIds,
+  };
+};
+
+const enrichJobPosting = async (jobPosting) => {
+  if (!jobPosting) return null;
+
+  let enriched = await enrichWithDocumentTypes(jobPosting);
+
+  return enriched;
 };
 
 const findRequestByRequestTypeAndReferenceId = async (request) => {
@@ -1538,6 +1596,7 @@ const findRequestByRequestUsers = async (
               closing_date: true,
               status: true,
               is_internal: true,
+              document_type_id: true,
               hrms_job_department: {
                 select: {
                   id: true,
@@ -1559,9 +1618,12 @@ const findRequestByRequestUsers = async (
               },
             },
           });
-          if (jobPostingRequest) {
+          console.log("Job Posting Request:", jobPostingRequest);
+          const jobPostingWithDoc = await enrichJobPosting(jobPostingRequest);
+          if (jobPostingRequest || jobPostingWithDoc) {
             data.push({
               ...request,
+              document_types: jobPostingWithDoc.document_types,
               createdate: request.createdate,
               reference: jobPostingRequest,
             });
@@ -2593,7 +2655,7 @@ const getWorkflowForJobPosting = async (
         });
 
         return {
-          workflowSteps,
+          workflow: workflowSteps,
           isGlobalWorkflow: false,
           workflowType,
         };
@@ -2636,7 +2698,7 @@ const getWorkflowForJobPosting = async (
     );
 
     return {
-      workflowSteps,
+      workflow: workflowSteps,
       isGlobalWorkflow: workflowType === "GLOBAL",
       workflowType,
     };
