@@ -232,7 +232,8 @@ const createEmployeeKPI = async (req, res, next) => {
 const getEmployeeKPIById = async (req, res, next) => {
   try {
     const { id } = req.params;
-    const result = await employeeKPIModel.findEmployeeKPIById(id);
+    const employee_id = req.query.employee_id || null;
+    const result = await employeeKPIModel.findEmployeeKPIById(id, employee_id);
     res.status(200).json({ success: true, data: result });
   } catch (error) {
     next(error);
