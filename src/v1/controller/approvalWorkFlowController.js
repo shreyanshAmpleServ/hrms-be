@@ -609,9 +609,36 @@ const updateApprovalWorkFlow = async (req, res, next) => {
   }
 };
 
+// const deleteApprovalWorkFlow = async (req, res, next) => {
+//   try {
+//     await approvalWorkFlowService.deleteApprovalWorkFlow(req.params.id);
+//     res.status(200).success("Approval workflow deleted successfully");
+//   } catch (error) {
+//     next(error);
+//   }
+// };
+
 const deleteApprovalWorkFlow = async (req, res, next) => {
   try {
-    await approvalWorkFlowService.deleteApprovalWorkFlow(req.params.id);
+    const { id } = req.params;
+
+    if (!id) {
+      return res.status(400).json({
+        success: false,
+        message: "Workflow ID is required for deletion",
+      });
+    }
+
+    const workflowId = parseInt(id, 10);
+
+    if (isNaN(workflowId)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid workflow ID format",
+      });
+    }
+
+    await approvalWorkFlowService.deleteApprovalWorkFlow(workflowId);
     res.status(200).success("Approval workflow deleted successfully");
   } catch (error) {
     next(error);
