@@ -808,6 +808,7 @@ const deleteCandidateMaster = async (id) => {
       where: { id: parseInt(id) },
     });
   } catch (error) {
+    console.log("Error deleting candidate master:", error);
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
