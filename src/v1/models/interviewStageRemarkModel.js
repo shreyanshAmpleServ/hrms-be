@@ -348,8 +348,8 @@ const createInterviewStageRemark = async (data) => {
     console.log("Interview stage remark created, creating request...");
 
     const requestResult = await createRequest({
-      requester_id: data.employee_id || data.createdby || 1,
       request_type: "interview_stage",
+      requester_id: data.employee_id || data.createdby || 1,
       reference_id: result.id,
       stage_name:
         result.interview_stage_remark_hiring_stage.hiring_stage_hiring_value
