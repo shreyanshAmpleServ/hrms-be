@@ -269,6 +269,13 @@ const getAllApprovalWorkFlow = async (
     if (designation_id) {
       filters.designation_id = Number(designation_id);
     }
+    if (search) {
+      filters.OR = [
+        {
+          request_type: { contains: search.toLowerCase() },
+        },
+      ];
+    }
 
     const workflows = await prisma.hrms_d_approval_work_flow.findMany({
       where: filters,
