@@ -1618,7 +1618,6 @@ const findRequestByRequestUsers = async (
               },
             },
           });
-          console.log("Job Posting Request:", jobPostingRequest);
           const jobPostingWithDoc = await enrichJobPosting(jobPostingRequest);
           if (jobPostingRequest || jobPostingWithDoc) {
             data.push({
