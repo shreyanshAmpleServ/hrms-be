@@ -154,6 +154,157 @@ const serializeRequestsData = (data) => ({
 //   }
 // };
 
+// const getWorkflowForRequest = async (
+//   request_type,
+//   requester_department_id,
+//   requester_designation_id
+// ) => {
+//   try {
+//     let workflowSteps;
+//     let workflowType = "NONE";
+
+//     if (requester_department_id) {
+//       console.log(
+//         `Looking for workflow: ${request_type} for department: ${requester_department_id}`
+//       );
+
+//       workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+//         where: {
+//           request_type,
+//           department_id: requester_department_id,
+//           designation_id: null,
+//           is_active: "Y",
+//         },
+//         orderBy: { sequence: "asc" },
+//         include: {
+//           approval_work_approver: {
+//             select: {
+//               id: true,
+//               full_name: true,
+//               employee_code: true,
+//               hrms_employee_department: {
+//                 select: { department_name: true },
+//               },
+//             },
+//           },
+//           approval_work_department: {
+//             select: { department_name: true },
+//           },
+//         },
+//       });
+
+//       if (workflowSteps && workflowSteps.length > 0) {
+//         workflowType = "DEPARTMENT-SPECIFIC";
+//         console.log(
+//           `Found DEPARTMENT-SPECIFIC workflow with ${workflowSteps.length} approvers`
+//         );
+//         return {
+//           workflow: workflowSteps,
+//           isGlobalWorkflow: false,
+//           workflowType,
+//         };
+//       } else {
+//         console.log(
+//           ` No department-specific workflow found for ${request_type}`
+//         );
+//       }
+//     }
+//     if (requester_designation_id) {
+//       console.log(
+//         `Looking for workflow: ${request_type} for designation: ${requester_designation_id}`
+//       );
+
+//       workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+//         where: {
+//           request_type,
+//           designation_id: requester_designation_id,
+//           department_id: null,
+//           is_active: "Y",
+//         },
+//         orderBy: { sequence: "asc" },
+//         include: {
+//           approval_work_approver: {
+//             select: {
+//               id: true,
+//               full_name: true,
+//               employee_code: true,
+//               hrms_employee_department: {
+//                 select: { department_name: true },
+//               },
+//             },
+//           },
+//           approval_work_flow_designation: {
+//             select: {
+//               id: true,
+//               designation_name: true,
+//             },
+//           },
+//         },
+//       });
+
+//       if (workflowSteps && workflowSteps.length > 0) {
+//         workflowType = "DESIGNATION-SPECIFIC";
+//         console.log(
+//           `Found DESIGNATION-SPECIFIC workflow with ${workflowSteps.length} approvers`
+//         );
+//         return {
+//           workflow: workflowSteps,
+//           isGlobalWorkflow: false,
+//           workflowType,
+//         };
+//       } else {
+//         console.log(
+//           ` No designation-specific workflow found for ${request_type}`
+//         );
+//       }
+//     } else if (!requester_department_id) {
+//       console.log(
+//         ` Requester has no designation, skipping designation workflow check`
+//       );
+//     }
+
+//     console.log(
+//       ` No department-specific or designation-specific workflow found for ${request_type}, falling back to global workflow`
+//     );
+
+//     workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+//       where: {
+//         request_type,
+//         department_id: null,
+//         designation_id: null,
+//         is_active: "Y",
+//       },
+//       orderBy: { sequence: "asc" },
+//       include: {
+//         approval_work_approver: {
+//           select: {
+//             id: true,
+//             full_name: true,
+//             employee_code: true,
+//             hrms_employee_department: {
+//               select: { department_name: true },
+//             },
+//           },
+//         },
+//       },
+//     });
+
+//     workflowType = "GLOBAL";
+
+//     console.log(
+//       `Found ${workflowType} workflow with ${workflowSteps.length} approvers`
+//     );
+
+//     return {
+//       workflow: workflowSteps,
+//       isGlobalWorkflow: workflowType === "GLOBAL",
+//       workflowType,
+//     };
+//   } catch (error) {
+//     throw new CustomError(`Error resolving workflow: ${error.message}`, 500);
+//   }
+// };
+
 const getWorkflowForRequest = async (
   request_type,
   requester_department_id,
@@ -162,6 +313,59 @@ const getWorkflowForRequest = async (
   try {
     let workflowSteps;
     let workflowType = "NONE";
+
+    if (requester_department_id && requester_designation_id) {
+      console.log(
+        `Looking for workflow: ${request_type} for dept: ${requester_department_id} + desig: ${requester_designation_id}`
+      );
+
+      workflowSteps = await prisma.hrms_d_approval_work_flow.findMany({
+        where: {
+          request_type,
+          department_id: requester_department_id,
+          designation_id: requester_designation_id,
+          is_active: "Y",
+        },
+        orderBy: { sequence: "asc" },
+        include: {
+          approval_work_approver: {
+            select: {
+              id: true,
+              full_name: true,
+              employee_code: true,
+              hrms_employee_department: {
+                select: { department_name: true },
+              },
+            },
+          },
+          approval_work_department: {
+            select: { department_name: true },
+          },
+          approval_work_flow_designation: {
+            select: {
+              id: true,
+              designation_name: true,
+            },
+          },
+        },
+      });
+
+      if (workflowSteps && workflowSteps.length > 0) {
+        workflowType = "DEPT+DESIG-SPECIFIC";
+        console.log(
+          ` Found DEPT+DESIG-SPECIFIC workflow with ${workflowSteps.length} approvers`
+        );
+        return {
+          workflow: workflowSteps,
+          isGlobalWorkflow: false,
+          workflowType,
+        };
+      } else {
+        console.log(
+          ` No dept+desig combination workflow found for ${request_type}`
+        );
+      }
+    }
 
     if (requester_department_id) {
       console.log(
@@ -196,7 +400,7 @@ const getWorkflowForRequest = async (
       if (workflowSteps && workflowSteps.length > 0) {
         workflowType = "DEPARTMENT-SPECIFIC";
         console.log(
-          `Found DEPARTMENT-SPECIFIC workflow with ${workflowSteps.length} approvers`
+          ` Found DEPARTMENT-SPECIFIC workflow with ${workflowSteps.length} approvers`
         );
         return {
           workflow: workflowSteps,
@@ -209,6 +413,7 @@ const getWorkflowForRequest = async (
         );
       }
     }
+
     if (requester_designation_id) {
       console.log(
         `Looking for workflow: ${request_type} for designation: ${requester_designation_id}`
@@ -245,7 +450,7 @@ const getWorkflowForRequest = async (
       if (workflowSteps && workflowSteps.length > 0) {
         workflowType = "DESIGNATION-SPECIFIC";
         console.log(
-          `Found DESIGNATION-SPECIFIC workflow with ${workflowSteps.length} approvers`
+          ` Found DESIGNATION-SPECIFIC workflow with ${workflowSteps.length} approvers`
         );
         return {
           workflow: workflowSteps,
@@ -304,252 +509,6 @@ const getWorkflowForRequest = async (
     throw new CustomError(`Error resolving workflow: ${error.message}`, 500);
   }
 };
-
-// const createRequest = async (data) => {
-//   const { request_type, ...parentData } = data;
-
-//   try {
-//     if (!request_type) throw new CustomError("request_type is required", 400);
-
-//     const requester = await prisma.hrms_d_employee.findUnique({
-//       where: { id: parentData.requester_id },
-//       select: {
-//         id: true,
-//         full_name: true,
-//         department_id: true,
-//         designation_id: true,
-//         hrms_employee_department: {
-//           select: {
-//             id: true,
-//             department_name: true,
-//           },
-//         },
-//         hrms_employee_designation: {
-//           select: {
-//             id: true,
-//             designation_name: true,
-//           },
-//         },
-//       },
-//     });
-
-//     if (!requester) {
-//       throw new CustomError("Requester not found", 404);
-//     }
-
-//     console.log(
-//       ` Requester: ${requester.full_name} from ${
-//         requester.hrms_employee_department?.department_name || "No Department"
-//       }, Designation: ${
-//         requester.hrms_employee_designation?.designation_name ||
-//         "No Designation"
-//       }`
-//     );
-
-//     const {
-//       workflow: workflowSteps,
-//       isGlobalWorkflow,
-//       workflowType,
-//     } = await getWorkflowForRequest(
-//       request_type,
-//       requester.department_id,
-//       requester.designation_id
-//     );
-
-//     if (!workflowSteps || workflowSteps.length === 0) {
-//       console.log(
-//         `No approval workflow found for '${request_type}'${
-//           requester.department_id
-//             ? ` in '${requester.hrms_employee_department?.department_name}' department`
-//             : requester.designation_id
-//             ? ` for '${requester.hrms_employee_designation?.designation_name}' designation`
-//             : ""
-//         }. Continuing without approval workflow.`
-//       );
-//       return {
-//         message: "Operation completed without approval workflow",
-//         workflow_required: false,
-//         request_created: false,
-//       };
-//     }
-
-//     const reqData = await prisma.hrms_d_requests.create({
-//       data: {
-//         ...serializeRequestsData({ request_type, ...parentData }),
-//         createdby: parentData.createdby || 1,
-//         createdate: new Date(),
-//         log_inst: parentData.log_inst || 1,
-//       },
-//     });
-
-//     console.log(` Using ${workflowType} workflow for ${request_type}`);
-//     if (!isGlobalWorkflow && requester.hrms_employee_department) {
-//       console.log(
-//         ` Department: ${requester.hrms_employee_department.department_name}`
-//       );
-//     }
-//     if (!isGlobalWorkflow && requester.hrms_employee_designation) {
-//       console.log(
-//         ` Designation: ${requester.hrms_employee_designation.designation_name}`
-//       );
-//     }
-
-//     const approvalsToInsert = workflowSteps.map((step, index) => ({
-//       request_id: Number(reqData.id),
-//       approver_id: Number(step.approver_id),
-//       sequence: Number(step.sequence) || index + 1,
-//       status: "P",
-//       createdby: Number(parentData.createdby) || 1,
-//       createdate: new Date(),
-//       log_inst: Number(parentData.log_inst) || 1,
-//     }));
-
-//     if (
-//       approvalsToInsert.some((a) => isNaN(a.request_id) || isNaN(a.approver_id))
-//     ) {
-//       throw new CustomError("Approval step has invalid data (NaN values)", 400);
-//     }
-
-//     await prisma.hrms_d_requests_approval.createMany({
-//       data: approvalsToInsert,
-//     });
-
-//     console.log(` Created ${approvalsToInsert.length} approval steps`);
-
-//     const fullData = await prisma.hrms_d_requests.findUnique({
-//       where: { id: reqData.id },
-//       include: {
-//         requests_employee: {
-//           select: {
-//             id: true,
-//             full_name: true,
-//             employee_code: true,
-//             hrms_employee_department: {
-//               select: {
-//                 id: true,
-//                 department_name: true,
-//               },
-//             },
-//           },
-//         },
-//         request_approval_request: {
-//           select: {
-//             id: true,
-//             request_id: true,
-//             approver_id: true,
-//             sequence: true,
-//             status: true,
-//             action_at: true,
-//             createdate: true,
-//             createdby: true,
-//             updatedate: true,
-//             updatedby: true,
-//             log_inst: true,
-//             request_approval_approver: {
-//               select: {
-//                 id: true,
-//                 full_name: true,
-//                 employee_code: true,
-//                 hrms_employee_department: {
-//                   select: {
-//                     id: true,
-//                     department_name: true,
-//                   },
-//                 },
-//               },
-//             },
-//           },
-//           orderBy: { sequence: "asc" },
-//         },
-//       },
-//     });
-
-//     const firstApproverId = approvalsToInsert[0]?.approver_id;
-//     const firstApprover = await prisma.hrms_d_employee.findUnique({
-//       where: { id: firstApproverId },
-//       select: {
-//         email: true,
-//         full_name: true,
-//         hrms_employee_department: {
-//           select: { department_name: true },
-//         },
-//       },
-//     });
-
-//     const company = await prisma.hrms_d_default_configurations.findUnique({
-//       where: { id: parentData.log_inst },
-//       select: { company_name: true },
-//     });
-//     const company_name = company?.company_name || "HRMS System";
-
-//     if (firstApprover?.email && requester?.full_name) {
-//       const request_detail = await getRequestDetailsByType(
-//         request_type,
-//         reqData.reference_id
-//       );
-
-//       const template = await generateEmailContent(
-//         request_type === "interview_stage"
-//           ? templateKeyMap.interviewRemark
-//           : templateKeyMap.notifyApprover,
-//         {
-//           employee_name: firstApprover.full_name,
-//           approver_name: firstApprover.full_name,
-//           requester_name: requester.full_name,
-//           request_type: request_type,
-//           action: "created",
-//           company_name,
-//           request_detail,
-//           stage_name: parentData.stage_name,
-//           workflow_info: isGlobalWorkflow
-//             ? "(Global Workflow)"
-//             : workflowType === "designation-specific"
-//             ? `(${requester.hrms_employee_designation?.designation_name} Designation Workflow)`
-//             : `(${requester.hrms_employee_department?.department_name} Department Workflow)`,
-//           approver_department:
-//             firstApprover.hrms_employee_department?.department_name,
-//         }
-//       );
-
-//       try {
-//         await sendEmail({
-//           to: firstApprover.email,
-//           subject: template.subject,
-//           html: template.body,
-//           createdby: parentData.createdby,
-//           log_inst: parentData.log_inst,
-//         });
-
-//         console.log(
-//           ` [Email Sent] ${workflowType} workflow → ${firstApprover.email}`
-//         );
-//       } catch (emailError) {
-//         console.error(
-//           ` [Email Failed] Failed to send email to ${firstApprover.email}:`,
-//           emailError.message
-//         );
-//         console.log(
-//           ` [Warning] Request created but email notification failed. Request will proceed.`
-//         );
-//       }
-
-//       console.log(
-//         `First Approver: ${firstApprover.full_name} (${
-//           firstApprover.hrms_employee_department?.department_name || "No Dept"
-//         })`
-//       );
-//     }
-
-//     return {
-//       ...fullData,
-//       workflow_required: true,
-//       request_created: true,
-//     };
-//   } catch (error) {
-//     console.error(" Error creating request:", error);
-//     throw new CustomError(`Error creating request: ${error.message}`, 500);
-//   }
-// };
 
 const createRequest = async (data) => {
   const {
@@ -646,6 +605,10 @@ const createRequest = async (data) => {
       workflowType,
     } = workflowResult;
 
+    console.log(
+      ` Workflow Type Resolved: ${JSON.stringify(workflowResult)}`,
+      workflowSteps
+    );
     if (!workflowSteps || workflowSteps.length === 0) {
       console.log(
         ` No approval workflow found for ${request_type}. Continuing without approval workflow.`
@@ -1074,6 +1037,60 @@ const findRequests = async (request_id) => {
   } catch (error) {
     throw new CustomError(` ${error.message}`, 503);
   }
+};
+const parseDocumentTypeIds = (documentTypeId) => {
+  if (!documentTypeId || documentTypeId.trim() === "") {
+    return [];
+  }
+
+  return documentTypeId
+    .split(",")
+    .map((id) => parseInt(id.trim()))
+    .filter((id) => !isNaN(id) && id > 0);
+};
+
+const enrichWithDocumentTypes = async (jobPosting) => {
+  if (!jobPosting) return null;
+
+  const docTypeIds = parseDocumentTypeIds(jobPosting.document_type_id);
+
+  if (docTypeIds.length === 0) {
+    return {
+      ...jobPosting,
+      document_types: [],
+      document_type_ids: [],
+    };
+  }
+
+  const documentTypes = await prisma.hrms_m_document_type.findMany({
+    where: {
+      id: { in: docTypeIds },
+    },
+    select: {
+      id: true,
+      name: true,
+    },
+  });
+
+  const docTypeMap = new Map(documentTypes.map((doc) => [doc.id, doc]));
+
+  const orderedDocTypes = docTypeIds
+    .map((id) => docTypeMap.get(id))
+    .filter(Boolean);
+
+  return {
+    ...jobPosting,
+    document_types: orderedDocTypes,
+    document_type_ids: docTypeIds,
+  };
+};
+
+const enrichJobPosting = async (jobPosting) => {
+  if (!jobPosting) return null;
+
+  let enriched = await enrichWithDocumentTypes(jobPosting);
+
+  return enriched;
 };
 
 const findRequestByRequestTypeAndReferenceId = async (request) => {
@@ -1538,6 +1555,7 @@ const findRequestByRequestUsers = async (
               closing_date: true,
               status: true,
               is_internal: true,
+              document_type_id: true,
               hrms_job_department: {
                 select: {
                   id: true,
@@ -1559,9 +1577,11 @@ const findRequestByRequestUsers = async (
               },
             },
           });
-          if (jobPostingRequest) {
+          const jobPostingWithDoc = await enrichJobPosting(jobPostingRequest);
+          if (jobPostingRequest || jobPostingWithDoc) {
             data.push({
               ...request,
+              document_types: jobPostingWithDoc.document_types,
               createdate: request.createdate,
               reference: jobPostingRequest,
             });
@@ -2593,7 +2613,7 @@ const getWorkflowForJobPosting = async (
         });
 
         return {
-          workflowSteps,
+          workflow: workflowSteps,
           isGlobalWorkflow: false,
           workflowType,
         };
@@ -2636,7 +2656,7 @@ const getWorkflowForJobPosting = async (
     );
 
     return {
-      workflowSteps,
+      workflow: workflowSteps,
       isGlobalWorkflow: workflowType === "GLOBAL",
       workflowType,
     };

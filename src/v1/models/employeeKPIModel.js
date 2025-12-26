@@ -871,10 +871,25 @@ const approveEmployeeKPI = async (kpiId, approverId) => {
 //   }
 // };
 
-const findEmployeeKPIById = async (id) => {
+const findEmployeeKPIById = async (id, employee_id) => {
   try {
+    let kpiCheck = null;
+    if (employee_id) {
+      kpiCheck = await prisma.hrms_d_employee_kpi.findFirst({
+        where: {
+          employee_id: Number(employee_id),
+        },
+        orderBy: {
+          review_date: "desc", // or createdate
+        },
+        select: {
+          id: true,
+        },
+      });
+      kpiCheck = kpiCheck ? kpiCheck.id : null;
+    }
     const kpi = await prisma.hrms_d_employee_kpi.findUnique({
-      where: { id: parseInt(id) },
+      where: { id: employee_id ? parseInt(kpiCheck) : parseInt(id) },
       include: {
         kpi_employee: {
           select: { id: true, full_name: true, employee_code: true },

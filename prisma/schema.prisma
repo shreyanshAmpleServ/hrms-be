@@ -106,7 +106,7 @@ model hrms_d_appointment_letter {
   status                   String?                    @default("Draft", map: "DF__hrms_d_ap__statu__4EA8A765") @db.NVarChar(50)
   remarks                  String?                    @db.NVarChar(500)
   candidate_id             Int?
-  appointment_candidate    hrms_d_candidate_master?   @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  appointment_candidate    hrms_d_candidate_master?   @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   appointment_designation  hrms_m_designation_master? @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
@@ -381,7 +381,7 @@ model hrms_d_employee {
 model hrms_d_employee_address {
   id                    Int                    @id(map: "PK__hrms_d_e__3213E83F2523D35F") @default(autoincrement())
   employee_id           Int
-  address_name          String                 @db.NVarChar(100) @default("Home")
+  address_name          String                 @default("Home") @db.NVarChar(100)
   address_type          String?                @db.VarChar(50)
   street                String?                @db.NVarChar(255)
   street_no             String?                @db.NVarChar(50)
@@ -429,7 +429,7 @@ model hrms_d_employment_contract {
   description            String?
   candidate_id           Int?
   hrms_d_employeeId      Int?
-  contracted_candidate   hrms_d_candidate_master?        @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  contracted_candidate   hrms_d_candidate_master?        @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   hrms_d_employee        hrms_d_employee?                @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_contract hrms_d_pay_component_contract[]
 }
@@ -706,7 +706,7 @@ model hrms_d_offer_letter {
   updatedby                Int?
   log_inst                 Int?
   candidate_id             Int?
-  offered_candidate        hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
+  offered_candidate        hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   offer_letter_currencyId  hrms_m_currency_master?  @relation("OfferLetterCurrency", fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_m_currency_master   hrms_m_currency_master?  @relation(fields: [hrms_m_currency_masterId], references: [id])
   hrms_m_currency_masterId Int?
@@ -828,7 +828,7 @@ model hrms_d_resume {
   updatedby        Int?
   log_inst         Int?
   candidate_id     Int?
-  resume_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  resume_candidate hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
 }
 
 model hrms_d_succession_plan {
@@ -1223,14 +1223,14 @@ model hrms_m_employee_category {
 }
 
 model hrms_m_employment_type {
-  id         Int       @id(map: "PK__hrms_m_e__3213E83F11B66B00") @default(autoincrement())
-  type_name  String?   @db.NVarChar(100)
-  createdate DateTime? @default(now(), map: "DF__hrms_m_em__creat__22751F6C") @db.DateTime
-  createdby  Int
-  updatedate DateTime? @db.DateTime
-  updatedby  Int?
-  log_inst   Int?
-  is_active  String?   @default("Y") @db.Char(1)
+  id                            Int                                        @id(map: "PK__hrms_m_e__3213E83F11B66B00") @default(autoincrement())
+  type_name                     String?                                    @db.NVarChar(100)
+  createdate                    DateTime?                                  @default(now(), map: "DF__hrms_m_em__creat__22751F6C") @db.DateTime
+  createdby                     Int
+  updatedate                    DateTime?                                  @db.DateTime
+  updatedby                     Int?
+  log_inst                      Int?
+  is_active                     String?                                    @default("Y") @db.Char(1)
   kpi_component_employment_type hrms_d_employee_kpi_component_assignment[]
 }
 
@@ -2345,7 +2345,7 @@ model hrms_d_candidate_master {
   appointment_candidate                   hrms_d_appointment_letter[]
   candidate_application_source            hrms_m_application_source?      @relation(fields: [application_source], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_master_applied_position       hrms_m_designation_master?      @relation(fields: [applied_position_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  candidate_interview_stage               hrms_m_interview_stage?         @relation("CandidateInterviewStage", fields: [interview_stage], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  candidate_interview_stage               hrms_m_interview_stage?         @relation("CandidateInterviewStage", fields: [interview_stage], references: [id], onDelete: Cascade, onUpdate: NoAction)
   candidate_job_posting                   hrms_d_job_posting?             @relation(fields: [job_posting], references: [id], onDelete: NoAction)
   contracted_candidate                    hrms_d_employment_contract[]
   offered_candidate                       hrms_d_offer_letter[]
@@ -2414,7 +2414,7 @@ model hrms_m_interview_stage_remark {
   status                              String?                 @db.NVarChar(50)
   employee_id                         Int?
   interview_date                      DateTime?
-  interview_stage_candidate           hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onUpdate: NoAction)
+  interview_stage_candidate           hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   interview_stage_employee_id         hrms_d_employee?        @relation(fields: [employee_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   interview_stage_remark_hiring_stage hrms_d_hiring_stage     @relation(fields: [stage_id], references: [id], onUpdate: NoAction, onDelete: Cascade)
 }
@@ -2752,12 +2752,12 @@ model hrms_d_employee_kpi_component_assignment {
   updatedby                    Int?
   log_inst                     Int?      @default(1)
 
-  employee_kpi_header       hrms_d_employee_kpi                   @relation(fields: [employee_kpi_id], references: [id], onUpdate: NoAction)
-  kpi_component_department  hrms_m_department_master?             @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  kpi_component_designation hrms_m_designation_master?            @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  kpi_component_successor   hrms_d_employee?                      @relation("KPISuccessor", fields: [successor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  kpi_component_lines       hrms_d_employee_kpi_component_lines[]
-  kpi_component_employment_type hrms_m_employment_type? @relation(fields: [employment_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  employee_kpi_header           hrms_d_employee_kpi                   @relation(fields: [employee_kpi_id], references: [id], onUpdate: NoAction)
+  kpi_component_department      hrms_m_department_master?             @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kpi_component_designation     hrms_m_designation_master?            @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kpi_component_successor       hrms_d_employee?                      @relation("KPISuccessor", fields: [successor_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  kpi_component_lines           hrms_d_employee_kpi_component_lines[]
+  kpi_component_employment_type hrms_m_employment_type?               @relation(fields: [employment_type_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_employee_kpi_component_lines {
