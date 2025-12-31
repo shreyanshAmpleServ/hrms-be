@@ -8,6 +8,10 @@ const serializeCandidateMasterData = (data) => {
     full_name: data.full_name || "",
     email: data.email || "",
     phone: data.phone || "",
+    expected_ctc: data.expected_ctc || "",
+    current_ctc: data.current_ctc || "",
+    notice_period: Number(data.notice_period) || "",
+    currency_id: Number(data.currency_id) || "",
     date_of_birth: data.date_of_birth ? new Date(data.date_of_birth) : null,
     gender: data.gender || "",
     date_of_application: data.date_of_application

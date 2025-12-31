@@ -349,6 +349,7 @@ const getWorkflowForRequest = async (
           },
         },
       });
+      console.log("WorkFlow Steps : ", workflowSteps);
 
       if (workflowSteps && workflowSteps.length > 0) {
         workflowType = "DEPT+DESIG-SPECIFIC";
@@ -569,7 +570,7 @@ const createRequest = async (data) => {
 
     let workflowResult;
 
-    if (request_type === "job_posting") {
+    if (request_type === "job_posting" || request_type === "interview_stage") {
       const workflowDeptId = workflow_department_id;
       const workflowDesigId = workflow_designation_id;
 
@@ -605,10 +606,6 @@ const createRequest = async (data) => {
       workflowType,
     } = workflowResult;
 
-    console.log(
-      ` Workflow Type Resolved: ${JSON.stringify(workflowResult)}`,
-      workflowSteps
-    );
     if (!workflowSteps || workflowSteps.length === 0) {
       console.log(
         ` No approval workflow found for ${request_type}. Continuing without approval workflow.`
