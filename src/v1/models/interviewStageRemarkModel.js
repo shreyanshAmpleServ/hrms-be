@@ -309,6 +309,10 @@ const createInterviewStageRemark = async (data) => {
       throw new CustomError(canProceed.message, 400);
     }
 
+    const totalSteps = canProceed?.candidateStages?.length - 1 || 0;
+    const isLastStage =
+      canProceed?.candidateStages[totalSteps]?.stage_id == actualStageId;
+
     let rating = data.rating ? Number(data.rating) : null;
     logger.info(`Rating: ${rating} for candidate ${data.rating}`);
     let result = null;
@@ -322,6 +326,8 @@ const createInterviewStageRemark = async (data) => {
             ...datas,
             stage_id: actualStageId,
           }),
+          status:
+            isLastStage && data.status === "A" ? "P" : data.status || "Pending",
           createdby: data.createdby || 1,
           createdate: new Date(),
           log_inst: data.log_inst || 1,
@@ -363,6 +369,8 @@ const createInterviewStageRemark = async (data) => {
             ...data,
             stage_id: actualStageId,
           }),
+          status:
+            isLastStage && data.status === "A" ? "P" : data.status || "Pending",
           createdby: data.createdby || 1,
           createdate: new Date(),
           log_inst: data.log_inst || 1,
@@ -402,9 +410,7 @@ const createInterviewStageRemark = async (data) => {
     console.log("Interview stage remark created, creating request...");
 
     let requestResult = null;
-    const totalSteps = canProceed?.candidateStages?.length - 1 || 0;
-    const isLastStage =
-      canProceed?.candidateStages[totalSteps]?.stage_id == actualStageId;
+
     console.log("Final Check :????", data, canProceed, isLastStage);
     if (isLastStage && data?.status === "A") {
       requestResult = await createRequest({
