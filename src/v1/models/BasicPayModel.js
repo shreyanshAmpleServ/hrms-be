@@ -46,7 +46,7 @@ const serializePayLine = (data) => {
     pay_component_id: Number(data?.pay_component_id),
     amount: Number(data?.amount) || 0,
     type_value: Number(data?.type_value) || 0,
-    currency_id: Number(data?.currency_id) || 0,
+    // currency_id: Number(data?.currency_id) || 0,
 
     is_taxable: data?.is_taxable || "Y",
     is_recurring: data?.is_recurring || "Y",
