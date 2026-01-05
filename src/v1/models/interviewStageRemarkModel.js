@@ -66,6 +66,8 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
     if (candidateStages.length === 0) {
       return {
         allowed: true,
+        candidate: candidate,
+        candidateStages: candidateStages,
         message: "No hiring stages defined for this candidate",
       };
     }
@@ -102,6 +104,8 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
       console.log("This is the first stage - allowed");
       return {
         allowed: true,
+        candidate: candidate,
+        candidateStages: candidateStages,
         message: "First stage - allowed",
       };
     }
@@ -217,6 +221,8 @@ const checkIfPreviousStagesApproved = async (currentStageId, candidateId) => {
 
     return {
       allowed: true,
+      candidate: candidate,
+      candidateStages: candidateStages,
       message: "All previous stages approved",
     };
   } catch (error) {
@@ -283,6 +289,7 @@ const convertSnapshotIdToStageId = async (candidateId, possibleSnapshotId) => {
 };
 
 const createInterviewStageRemark = async (data) => {
+  const { id, ...datas } = data;
   try {
     const actualStageId = await convertSnapshotIdToStageId(
       Number(data.candidate_id),
@@ -302,81 +309,151 @@ const createInterviewStageRemark = async (data) => {
       throw new CustomError(canProceed.message, 400);
     }
 
+    const totalSteps = canProceed?.candidateStages?.length - 1 || 0;
+    const isLastStage =
+      canProceed?.candidateStages[totalSteps]?.stage_id == actualStageId;
+
     let rating = data.rating ? Number(data.rating) : null;
     logger.info(`Rating: ${rating} for candidate ${data.rating}`);
-    const result = await prisma.hrms_m_interview_stage_remark.create({
-      data: {
-        ...serializeRemarkData({
-          ...data,
-          stage_id: actualStageId,
-        }),
-        createdby: data.createdby || 1,
-        createdate: new Date(),
-        log_inst: data.log_inst || 1,
-      },
-      include: {
-        interview_stage_candidate: {
-          select: {
-            id: true,
-            full_name: true,
-            candidate_code: true,
-          },
+    let result = null;
+    if (id) {
+      result = await prisma.hrms_m_interview_stage_remark.update({
+        where: {
+          id: Number(id),
         },
-        interview_stage_remark_hiring_stage: {
-          select: {
-            id: true,
-            code: true,
-            hiring_stage_hiring_value: {
-              select: {
-                id: true,
-                value: true,
+        data: {
+          ...serializeRemarkData({
+            ...datas,
+            stage_id: actualStageId,
+          }),
+          status:
+            isLastStage && data.status === "A" ? "P" : data.status || "Pending",
+          createdby: data.createdby || 1,
+          createdate: new Date(),
+          log_inst: data.log_inst || 1,
+        },
+        include: {
+          interview_stage_candidate: {
+            select: {
+              id: true,
+              full_name: true,
+              candidate_code: true,
+            },
+          },
+          interview_stage_remark_hiring_stage: {
+            select: {
+              id: true,
+              code: true,
+              hiring_stage_hiring_value: {
+                select: {
+                  id: true,
+                  value: true,
+                },
               },
             },
           },
-        },
-        interview_stage_employee_id: {
-          select: {
-            id: true,
-            full_name: true,
-            employee_code: true,
-            profile_pic: true,
+          interview_stage_employee_id: {
+            select: {
+              id: true,
+              full_name: true,
+              employee_code: true,
+              profile_pic: true,
+            },
           },
         },
-      },
-    });
+      });
+    } else {
+      result = await prisma.hrms_m_interview_stage_remark.create({
+        data: {
+          ...serializeRemarkData({
+            ...data,
+            stage_id: actualStageId,
+          }),
+          status:
+            isLastStage && data.status === "A" ? "P" : data.status || "Pending",
+          createdby: data.createdby || 1,
+          createdate: new Date(),
+          log_inst: data.log_inst || 1,
+        },
+        include: {
+          interview_stage_candidate: {
+            select: {
+              id: true,
+              full_name: true,
+              candidate_code: true,
+            },
+          },
+          interview_stage_remark_hiring_stage: {
+            select: {
+              id: true,
+              code: true,
+              hiring_stage_hiring_value: {
+                select: {
+                  id: true,
+                  value: true,
+                },
+              },
+            },
+          },
+          interview_stage_employee_id: {
+            select: {
+              id: true,
+              full_name: true,
+              employee_code: true,
+              profile_pic: true,
+            },
+          },
+        },
+      });
+    }
 
     console.log("Interview stage remark created, creating request...");
 
-    const requestResult = await createRequest({
-      request_type: "interview_stage",
-      requester_id: data.employee_id || data.createdby || 1,
-      reference_id: result.id,
-      stage_name:
-        result.interview_stage_remark_hiring_stage.hiring_stage_hiring_value
-          .value,
-      request_data: JSON.stringify({
-        candidate_id: data.candidate_id,
-        hiring_stage_id: actualStageId,
-      }),
-      createdby: data.createdby || 1,
-      log_inst: data.log_inst || 1,
-    });
+    let requestResult = null;
 
-    if (!requestResult?.request_created) {
+    console.log("Final Check :????", data, canProceed, isLastStage);
+    if (isLastStage && data?.status === "A") {
+      requestResult = await createRequest({
+        request_type: "interview_stage",
+        requester_id: data.employee_id || data.createdby || 1,
+        workflow_department_id: canProceed?.candidate?.department_id,
+        workflow_designation_id: canProceed?.candidate?.applied_position_id,
+        reference_id: result.id,
+        stage_name:
+          result.interview_stage_remark_hiring_stage.hiring_stage_hiring_value
+            .value,
+        request_data: JSON.stringify({
+          candidate_id: data.candidate_id,
+          hiring_stage_id: actualStageId,
+        }),
+        createdby: data.createdby || 1,
+        log_inst: data.log_inst || 1,
+      });
+    }
+
+    if (!requestResult || !requestResult?.request_created) {
       console.log("No workflow found, auto-approving interview stage remark");
       await prisma.hrms_m_interview_stage_remark.update({
         where: { id: result.id },
-        data: { status: "A" },
+        data: { status: data?.status || "A" },
       });
       console.log("Interview stage remark auto-approved");
 
+      const statuss =
+        data?.status === "A"
+          ? "completed"
+          : data?.status === "R"
+          ? "rejected"
+          : data?.status === "Hold"
+          ? "hold"
+          : "pending";
       await prisma.hrms_d_candidate_hiring_stage.updateMany({
         where: {
           candidate_id: parseInt(data.candidate_id),
           stage_id: actualStageId,
         },
         data: {
-          stage_status: "completed",
+          stage_status: statuss,
           started_date: new Date(),
           completed_date: new Date(),
           updatedate: new Date(),
