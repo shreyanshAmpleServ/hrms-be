@@ -10,6 +10,7 @@ const serializeJobData = (data) => {
     issue_date: data.issue_date ? new Date(data.issue_date) : new Date(),
     status: data.status || "P",
     designation_id: Number(data.designation_id) || null,
+    department_id: Number(data.department_id) || null,
     terms_summary: data.terms_summary || "",
   };
 };
@@ -87,6 +88,7 @@ const createAppointmentLatter = async (data) => {
             full_name: true,
             id: true,
             applied_position_id: true,
+            department_id: true,
           },
         },
         appointment_designation: {
@@ -113,10 +115,12 @@ const createAppointmentLatter = async (data) => {
       );
     }
 
-    await createRequest({
+    const requestResult = await createRequest({
       requester_id: data.createdby || 1,
       request_type: "appointment_letter",
       reference_id: reqData.id,
+      workflow_department_id: reqData?.appointment_candidate?.department_id,
+      workflow_designation_id: reqData?.designation_id,
       request_data: `Appointment Letter for ${reqData.appointment_candidate?.full_name} - ${reqData.appointment_designation?.designation_name}`,
       status: "P",
       createdby: data.createdby || 1,
@@ -128,6 +132,29 @@ const createAppointmentLatter = async (data) => {
     );
     console.log(`Approval request initiated for appointment letter`);
 
+    if (!requestResult || !requestResult?.request_created) {
+      console.log("No workflow found, auto-approving interview stage remark");
+      return await prisma.hrms_d_appointment_letter.update({
+        where: { id: reqData.id },
+        data: { status: "A" },
+        include: {
+          appointment_candidate: {
+            select: {
+              full_name: true,
+              id: true,
+              applied_position_id: true,
+              department_id: true,
+            },
+          },
+          appointment_designation: {
+            select: {
+              designation_name: true,
+              id: true,
+            },
+          },
+        },
+      });
+    }
     return reqData;
   } catch (error) {
     throw new CustomError(
@@ -327,7 +354,14 @@ const getAllAppointmentLatter = async (
           },
         },
       },
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      orderBy: [
+        {
+          updatedate: { sort: "desc", nulls: "last" },
+        },
+        {
+          createdate: "desc",
+        },
+      ],
     });
     const totalCount = await prisma.hrms_d_appointment_letter.count({
       where: filters,

@@ -10,6 +10,8 @@ const serializeJobData = (data) => {
     currency_id: Number(data.currency_id) || null,
     offer_date: data.offer_date || new Date(),
     position: data.position || "",
+    designation_id: Number(data.designation_id) || "",
+    department_id: Number(data.department_id) || "",
     status: data.status || "P",
     offered_salary: Number(data.offered_salary) || 0,
     valid_until: data.valid_until || new Date(),
@@ -84,15 +86,43 @@ const createOfferLetter = async (data) => {
         },
       },
     });
-    if (reqData.status === "P") {
-      await createRequest({
+    let requestResult = null;
+
+    if (reqData.status === "P" || reqData?.status === "Pending") {
+      requestResult = await createRequest({
         request_type: "offer_letter",
         reference_id: reqData.id,
         status: "P",
+        workflow_department_id: data?.department_id,
+        workflow_designation_id: data?.designation_id,
         requester_id: data.createdby || 1,
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
+      });
+    }
+
+    if (!requestResult || !requestResult?.request_created) {
+      console.log("No workflow found, auto-approving interview stage remark");
+      return await prisma.hrms_d_offer_letter.update({
+        where: { id: reqData.id },
+        data: { status: "Approved" },
+        include: {
+          offered_candidate: {
+            select: {
+              full_name: true,
+              id: true,
+              candidate_code: true,
+            },
+          },
+          offer_letter_currencyId: {
+            select: {
+              id: true,
+              currency_code: true,
+              currency_name: true,
+            },
+          },
+        },
       });
     }
     return reqData;

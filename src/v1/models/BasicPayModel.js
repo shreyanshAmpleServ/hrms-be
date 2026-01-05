@@ -41,25 +41,30 @@ const serializeHeaders = (data) => {
 };
 
 const serializePayLine = (data) => {
-  return {
+  const serialized = {
     line_num: Number(data?.line_num) || 0,
     pay_component_id: Number(data?.pay_component_id),
     amount: Number(data?.amount) || 0,
     type_value: Number(data?.type_value) || 0,
-    currency_id: data?.currency_id ? Number(data.currency_id) : null,
+    currency_id: Number(data?.currency_id) || 0,
+
     is_taxable: data?.is_taxable || "Y",
     is_recurring: data?.is_recurring || "Y",
     is_worklife_related: data?.is_worklife_related || "N",
     is_grossable: data?.is_grossable || "N",
+
     remarks: data?.remarks || null,
     tax_code_id: data?.tax_code_id ? Number(data.tax_code_id) : null,
     gl_account_id: data?.gl_account_id ? Number(data.gl_account_id) : null,
     factor: data?.factor ? Number(data.factor) : null,
+
     payable_glaccount_id: data?.payable_glaccount_id
       ? Number(data.payable_glaccount_id)
       : null,
+
     component_type: data?.component_type || "O",
     project_id: data?.project_id ? Number(data.project_id) : null,
+
     cost_center1_id: data?.cost_center1_id
       ? Number(data.cost_center1_id)
       : null,
@@ -75,8 +80,17 @@ const serializePayLine = (data) => {
     cost_center5_id: data?.cost_center5_id
       ? Number(data.cost_center5_id)
       : null,
+
     column_order: data?.column_order ? Number(data.column_order) : null,
   };
+
+  // if (data?.currency_id) {
+  //   serialized.pay_component_line_currency = {
+  //     connect: { id: Number(data.currency_id) },
+  //   };
+  // }
+
+  return serialized;
 };
 
 const parseData = (data) => {
@@ -545,6 +559,9 @@ const createBasicPay = async (data) => {
       line_num: index + 1,
       createdate: new Date(),
       createdby: data.createdby || 1,
+      pay_component_line_currency: {
+        connect: { id: Number(line.currency_id) },
+      },
     }));
 
     await prisma.hrms_d_employee_pay_component_assignment_line.createMany({

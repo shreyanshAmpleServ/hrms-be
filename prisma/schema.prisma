@@ -693,22 +693,26 @@ model hrms_d_notification_log {
 }
 
 model hrms_d_offer_letter {
-  id                       Int                      @id(map: "PK__hrms_d_o__3213E83F3C2A08B8") @default(autoincrement())
-  offer_date               DateTime?                @db.Date
+  id                       Int                        @id(map: "PK__hrms_d_o__3213E83F3C2A08B8") @default(autoincrement())
+  offer_date               DateTime?                  @db.Date
   currency_id              Int
-  position                 String?                  @db.NVarChar(100)
-  offered_salary           Decimal?                 @db.Decimal(10, 2)
-  valid_until              DateTime?                @db.Date
-  status                   String?                  @db.VarChar(20)
-  createdate               DateTime?                @default(now(), map: "DF__hrms_d_of__creat__65370702") @db.DateTime
+  position                 String?                    @db.NVarChar(100)
+  designation_id           Int?
+  department_id            Int?
+  offered_salary           Decimal?                   @db.Decimal(10, 2)
+  valid_until              DateTime?                  @db.Date
+  status                   String?                    @db.VarChar(20)
+  createdate               DateTime?                  @default(now(), map: "DF__hrms_d_of__creat__65370702") @db.DateTime
   createdby                Int
-  updatedate               DateTime?                @db.DateTime
+  updatedate               DateTime?                  @db.DateTime
   updatedby                Int?
   log_inst                 Int?
   candidate_id             Int?
-  offered_candidate        hrms_d_candidate_master? @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
-  offer_letter_currencyId  hrms_m_currency_master?  @relation("OfferLetterCurrency", fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
-  hrms_m_currency_master   hrms_m_currency_master?  @relation(fields: [hrms_m_currency_masterId], references: [id])
+  offered_candidate        hrms_d_candidate_master?   @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+  offer_letter_currencyId  hrms_m_currency_master?    @relation("OfferLetterCurrency", fields: [currency_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
+  hrms_m_currency_master   hrms_m_currency_master?    @relation(fields: [hrms_m_currency_masterId], references: [id])
+  offer_letter_designation hrms_m_designation_master? @relation(fields: [designation_id], references: [id])
+  offer_letter_department  hrms_m_department_master?  @relation(fields: [department_id], references: [id])
   hrms_m_currency_masterId Int?
 }
 
@@ -1163,6 +1167,7 @@ model hrms_m_department_master {
   approval_work_department      hrms_d_approval_work_flow[]
   candidate_department          hrms_d_candidate_master[]
   kpi_component_department      hrms_d_employee_kpi_component_assignment[]
+  offer_letter_departmnet       hrms_d_offer_letter[]
 }
 
 model hrms_m_designation_master {
@@ -1180,6 +1185,7 @@ model hrms_m_designation_master {
   hrms_job_designation              hrms_d_job_posting[]
   approval_work_flow_designation    hrms_d_approval_work_flow[]
   kpi_component_designation         hrms_d_employee_kpi_component_assignment[]
+  offer_letter_designation          hrms_d_offer_letter[]
 }
 
 model hrms_m_disciplinary_penalty {

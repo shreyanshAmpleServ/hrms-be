@@ -1015,6 +1015,8 @@ const deleteCandidateMaster = async (id) => {
 
 const getAllCandidateMaster = async (
   search,
+  status,
+  appointmentData,
   page,
   size,
   startDate,
@@ -1032,6 +1034,17 @@ const getAllCandidateMaster = async (
           { candidate_code: { contains: searchTerm } },
         ];
       }
+      if (status && status === "A") {
+        filters.OR = [
+          { status: { equals: status } },
+          { status: { equals: "Approved" } },
+        ];
+      }
+      if (appointmentData === "Y") {
+        filters.offer_accepted_date = {
+          not: null,
+        };
+      }
 
       const datas = await prisma.hrms_d_candidate_master.findMany({
         where: filters,
@@ -1039,6 +1052,13 @@ const getAllCandidateMaster = async (
           id: true,
           full_name: true,
           candidate_code: true,
+          department_id: true,
+          applied_position_id: true,
+          candidate_master_applied_position: {
+            select: {
+              designation_name: true,
+            },
+          },
         },
         orderBy: [{ id: "asc" }],
       });

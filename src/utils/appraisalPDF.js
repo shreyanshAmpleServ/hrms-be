@@ -245,11 +245,6 @@ const appraisalTemplate = `<!DOCTYPE html>
             <div class="comments-text">{{managerComments}}</div>
         </div>
 
-        <div class="section-title">Employee's Comments</div>
-        <div class="comments-section">
-            <div class="comments-text">{{employeeComments}}</div>
-        </div>
-
         <div class="signature-box">
             <div class="signature-block">
                 {{companySignature}}
@@ -271,6 +266,11 @@ const appraisalTemplate = `<!DOCTYPE html>
     </div>
 </body>
 </html>`;
+
+// <div class="section-title">Employee's Comments</div>
+// <div class="comments-section">
+//     <div class="comments-text">{{employeeComments}}</div>
+// </div>
 
 const generateAppraisalHTML = (data) => {
   return new Promise((resolve, reject) => {

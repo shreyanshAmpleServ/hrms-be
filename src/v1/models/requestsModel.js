@@ -570,7 +570,9 @@ const createRequest = async (data) => {
 
     let workflowResult;
 
-    if (request_type === "job_posting" || request_type === "interview_stage") {
+    const containedData = ["offer_letter", "job_posting", "interview_stage"];
+
+    if (containedData.includes(request_type)) {
       const workflowDeptId = workflow_department_id;
       const workflowDesigId = workflow_designation_id;
 
@@ -605,7 +607,7 @@ const createRequest = async (data) => {
       isGlobalWorkflow,
       workflowType,
     } = workflowResult;
-
+    console.log("Steps : ", workflowResult, workflowSteps);
     if (!workflowSteps || workflowSteps.length === 0) {
       console.log(
         ` No approval workflow found for ${request_type}. Continuing without approval workflow.`
@@ -2192,7 +2194,7 @@ const takeActionOnRequest = async ({
           await prisma.hrms_d_offer_letter.update({
             where: { id: request.reference_id },
             data: {
-              status: "R",
+              status: "Rejected",
               updatedby: acted_by,
               updatedate: new Date(),
             },
@@ -2395,7 +2397,7 @@ const takeActionOnRequest = async ({
           await prisma.hrms_d_offer_letter.update({
             where: { id: request.reference_id },
             data: {
-              status: "A",
+              status: "Approved",
               updatedby: acted_by,
               updatedate: new Date(),
             },

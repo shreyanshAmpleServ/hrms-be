@@ -511,9 +511,20 @@ const deleteCandidateMaster = async (req, res, next) => {
 
 const getAllCandidateMaster = async (req, res, next) => {
   try {
-    const { search, page, size, startDate, endDate, is_active } = req.query;
+    const {
+      search,
+      status,
+      appointmentData,
+      page,
+      size,
+      startDate,
+      endDate,
+      is_active,
+    } = req.query;
     const data = await candidateMasterService.getAllCandidateMaster(
       search,
+      status,
+      appointmentData,
       Number(page),
       Number(size),
       startDate && moment(startDate),
