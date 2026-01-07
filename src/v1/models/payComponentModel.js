@@ -1042,7 +1042,7 @@ const getPayComponentOptions = async (isAdvance, isOvertimeRelated) => {
         pay_component_cost_center3: true,
         pay_component_cost_center4: true,
         pay_component_cost_center5: true,
-        pay_component_for_line: true,
+        // pay_component_for_line: true,
         hrms_m_pay_component_formula: true,
       },
     });

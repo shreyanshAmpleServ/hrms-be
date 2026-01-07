@@ -797,13 +797,17 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
                 }
 
                 const amount = Number(kpiLine.amount) || 0;
-
+                const gl_account_id = Number(kpiLine.gl_account_id) || 0;
+                const payable_glaccount_id =
+                  Number(kpiLine.payable_glaccount_id) || 0;
                 await tx.hrms_d_employee_pay_component_assignment_line.create({
                   data: {
                     parent_id: componentAssignment.id,
                     line_num: lineNum++,
                     pay_component_id: Number(kpiLine.pay_component_id),
+                    payable_glaccount_id: payable_glaccount_id,
                     amount: amount,
+                    gl_account_id: gl_account_id,
                     type_value: amount,
                     is_taxable: "Y",
                     is_recurring: "Y",
@@ -1015,8 +1019,10 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
  */
 const processKPIComponentAssignments = async () => {
   const tenants = process.env.CRON_TENANT_DBS
-    ? process.env.CRON_TENANT_DBS.split(",").map((t) => t.trim())
-    : ["DCC_HRMS_DEV"];
+    ? process.env.CRON_TENANT_DBS.split(",")
+        .map((t) => t.trim())
+        .filter(Boolean)
+    : ["DCC_HRMS_HESU"];
 
   for (const tenantDb of tenants) {
     try {
@@ -1058,7 +1064,8 @@ const initializeCronJobs = () => {
       name: "Daily Attendance Initializer",
     });
 
-    cron.schedule("0 0 * * *", processKPIComponentAssignments, {
+    // cron.schedule("0 0 * * *", processKPIComponentAssignments, {
+    cron.schedule("* * * * *", processKPIComponentAssignments, {
       scheduled: true,
       name: "KPI Component Assignment Processor",
       timezone: "Asia/Kolkata",

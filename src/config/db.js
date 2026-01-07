@@ -75,7 +75,6 @@ function getPrismaClient(dbName) {
   if (!urlParts) {
     throw new Error("Invalid DATABASE_URL format");
   }
-
   const [, server, port, , user, password, options] = urlParts;
   const clientDbUrl = `sqlserver://${server}:${port};initial catalog=${dbName};user=${user};password=${password};${options}`;
   const prisma = new PrismaClient({
@@ -83,6 +82,7 @@ function getPrismaClient(dbName) {
   });
 
   prismaInstances.set(dbName, prisma);
+
   return prisma;
 }
 

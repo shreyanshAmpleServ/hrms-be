@@ -1287,7 +1287,7 @@ const employeeOptions = async () => {
         meta: {
           department_id,
           designation_id,
-          currency_id: currency_id || 23,
+          currency_id: currency_id || null,
           email,
           profile_pic,
           department: hrms_employee_department?.department_name,

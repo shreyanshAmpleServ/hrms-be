@@ -270,8 +270,29 @@ const createEmployeeKPI = async (data) => {
                   .contract_expiry_date
                   ? new Date(data.component_assignment.contract_expiry_date)
                   : null,
+                set_GL_Account:
+                  data.component_assignment?.set_GL_Account || "P",
                 createdby: data.createdby || 1,
                 createdate: new Date(),
+                // ...(data.component_assignment.department_id
+                //   ? {
+                //       kpi_component_department: {
+                //         connect: {
+                //           id: Number(data.component_assignment.department_id),
+                //         },
+                //       },
+                //     }
+                //   : {}),
+
+                // ...(data.component_assignment.designation_id
+                //   ? {
+                //       kpi_component_designation: {
+                //         connect: {
+                //           id: Number(data.component_assignment.designation_id),
+                //         },
+                //       },
+                //     }
+                //   : {}),
               },
             });
 
@@ -290,7 +311,29 @@ const createEmployeeKPI = async (data) => {
 
           for (const line of linesToProcess) {
             let amount = Number(line.amount) || 0;
+            let gl_account_id = Number(line.gl_account_id) || null;
+            let payable_glaccount_id =
+              Number(line.payable_glaccount_id) || null;
 
+            if (!line.gl_account_id && lastComponentAssignment) {
+              const lastLine =
+                lastComponentAssignment.hrms_d_employee_pay_component_assignment_line.find(
+                  (l) => l.pay_component_id === Number(line.pay_component_id)
+                );
+              if (lastLine) {
+                gl_account_id = Number(lastLine.gl_account_id) || null;
+              }
+            }
+            if (!line.payable_glaccount_id && lastComponentAssignment) {
+              const lastLine =
+                lastComponentAssignment.hrms_d_employee_pay_component_assignment_line.find(
+                  (l) => l.pay_component_id === Number(line.pay_component_id)
+                );
+              if (lastLine) {
+                payable_glaccount_id =
+                  Number(lastLine.payable_glaccount_id) || null;
+              }
+            }
             if (!line.amount && lastComponentAssignment) {
               const lastLine =
                 lastComponentAssignment.hrms_d_employee_pay_component_assignment_line.find(
@@ -306,6 +349,8 @@ const createEmployeeKPI = async (data) => {
                 component_assignment_id: componentAssignment.id,
                 pay_component_id: Number(line.pay_component_id),
                 amount: amount,
+                payable_glaccount_id: payable_glaccount_id,
+                gl_account_id: gl_account_id,
                 createdby: data.createdby || 1,
                 createdate: new Date(),
               },
@@ -364,15 +409,29 @@ const createEmployeeKPI = async (data) => {
             data.revise_component_assignment === "Y" &&
             data.component_assignment
           ) {
+            // if (data.component_assignment.department_id) {
+            //   updateEmployeeData.department_id = Number(
+            //     data.component_assignment.department_id
+            //   );
+            // }
+            // if (data.component_assignment.designation_id) {
+            //   updateEmployeeData.designation_id = Number(
+            //     data.component_assignment.designation_id
+            //   );
+            // }
             if (data.component_assignment.department_id) {
-              updateEmployeeData.department_id = Number(
-                data.component_assignment.department_id
-              );
+              updateEmployeeData.hrms_employee_department = {
+                connect: {
+                  id: Number(data.component_assignment.department_id),
+                },
+              };
             }
             if (data.component_assignment.designation_id) {
-              updateEmployeeData.designation_id = Number(
-                data.component_assignment.designation_id
-              );
+              updateEmployeeData.hrms_employee_designation = {
+                connect: {
+                  id: Number(data.component_assignment.designation_id),
+                },
+              };
             }
             if (data.component_assignment.position) {
               updateEmployeeData.work_location =
@@ -383,18 +442,35 @@ const createEmployeeKPI = async (data) => {
                 data.component_assignment.employment_type_id
               );
             }
-            if (data.component_assignment.contract_expiry_date) {
-              updateEmployeeData.contract_expiry_date = new Date(
-                data.component_assignment.contract_expiry_date
-              );
-            }
+            // if (data.component_assignment.contract_expiry_date) {
+            //   updateEmployeeData.contract_expiry_date = new Date(
+            //     data.component_assignment.contract_expiry_date
+            //   );
+            // }
           }
 
-          if (Object.keys(updateEmployeeData).length > 0) {
-            await tx.hrms_d_employee.update({
-              where: { id: Number(data.employee_id) },
-              data: updateEmployeeData,
-            });
+          if (
+            Object.keys(updateEmployeeData).length > 0 &&
+            data.component_assignment?.effective_from
+          ) {
+            const effectiveFrom = new Date(
+              data.component_assignment.effective_from
+            );
+            const effectiveTo = new Date(
+              data.component_assignment.effective_to
+            );
+            effectiveFrom.setHours(0, 0, 0, 0);
+            effectiveTo.setHours(0, 0, 0, 0);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (effectiveFrom < today && effectiveTo > today) {
+              await tx.hrms_d_employee.update({
+                where: { id: Number(data.employee_id) },
+                data: updateEmployeeData,
+              });
+            }
           }
 
           if (
@@ -1976,6 +2052,8 @@ const updateEmployeeKPI = async (id, data) => {
                   .contract_expiry_date
                   ? new Date(data.component_assignment.contract_expiry_date)
                   : null,
+                set_GL_Account:
+                  data.component_assignment?.set_GL_Account || "P",
                 createdby: data.createdby || 1,
                 createdate: new Date(),
               },
@@ -1996,7 +2074,29 @@ const updateEmployeeKPI = async (id, data) => {
 
           for (const line of linesToProcess) {
             let amount = Number(line.amount) || 0;
+            let gl_account_id = Number(line.gl_account_id) || null;
+            let payable_glaccount_id =
+              Number(line.payable_glaccount_id) || null;
 
+            if (!line.gl_account_id && lastComponentAssignment) {
+              const lastLine =
+                lastComponentAssignment.hrms_d_employee_pay_component_assignment_line.find(
+                  (l) => l.pay_component_id === Number(line.pay_component_id)
+                );
+              if (lastLine) {
+                gl_account_id = Number(lastLine.gl_account_id) || null;
+              }
+            }
+            if (!line.payable_glaccount_id && lastComponentAssignment) {
+              const lastLine =
+                lastComponentAssignment.hrms_d_employee_pay_component_assignment_line.find(
+                  (l) => l.pay_component_id === Number(line.pay_component_id)
+                );
+              if (lastLine) {
+                payable_glaccount_id =
+                  Number(lastLine.payable_glaccount_id) || null;
+              }
+            }
             if (!line.amount && lastComponentAssignment) {
               const lastLine =
                 lastComponentAssignment.hrms_d_employee_pay_component_assignment_line.find(
@@ -2012,6 +2112,8 @@ const updateEmployeeKPI = async (id, data) => {
                 component_assignment_id: componentAssignment.id,
                 pay_component_id: Number(line.pay_component_id),
                 amount: amount,
+                payable_glaccount_id: payable_glaccount_id,
+                gl_account_id: gl_account_id,
                 createdby: data.createdby || 1,
                 createdate: new Date(),
               },
@@ -2147,14 +2249,21 @@ const updateEmployeeKPI = async (id, data) => {
             data.component_assignment
           ) {
             if (data.component_assignment.department_id) {
-              updateEmployeeData.department_id = Number(
-                data.component_assignment.department_id
-              );
+              updateEmployeeData.hrms_employee_department = {
+                connect: {
+                  id: Number(data.component_assignment.department_id),
+                },
+              };
             }
             if (data.component_assignment.designation_id) {
-              updateEmployeeData.designation_id = Number(
-                data.component_assignment.designation_id
-              );
+              updateEmployeeData.hrms_employee_designation = {
+                connect: {
+                  id: Number(data.component_assignment.designation_id),
+                },
+              };
+              // updateEmployeeData.designation_id = Number(
+              //   data.component_assignment.designation_id
+              // );
             }
             if (data.component_assignment.position) {
               updateEmployeeData.work_location =
@@ -2165,19 +2274,41 @@ const updateEmployeeKPI = async (id, data) => {
                 data.component_assignment.employment_type_id
               );
             }
-            if (data.component_assignment.contract_expiry_date) {
-              updateEmployeeData.contract_expiry_date = new Date(
-                data.component_assignment.contract_expiry_date
-              );
+            // if (data.component_assignment.contract_expiry_date) {
+            //   updateEmployeeData.contract_expiry_date = new Date(
+            //     data.component_assignment.contract_expiry_date
+            //   );
+            // }
+          }
+          if (
+            Object.keys(updateEmployeeData).length > 0 &&
+            data.component_assignment?.effective_from
+          ) {
+            const effectiveFrom = new Date(
+              data.component_assignment.effective_from
+            );
+            const effectiveTo = new Date(
+              data.component_assignment.effective_to
+            );
+            effectiveFrom.setHours(0, 0, 0, 0);
+            effectiveTo.setHours(0, 0, 0, 0);
+
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+
+            if (effectiveFrom < today && effectiveTo > today) {
+              await tx.hrms_d_employee.update({
+                where: { id: Number(data.employee_id) },
+                data: updateEmployeeData,
+              });
             }
           }
-
-          if (Object.keys(updateEmployeeData).length > 0) {
-            await tx.hrms_d_employee.update({
-              where: { id: Number(data.employee_id) },
-              data: updateEmployeeData,
-            });
-          }
+          // if (Object.keys(updateEmployeeData).length > 0) {
+          //   await tx.hrms_d_employee.update({
+          //     where: { id: Number(data.employee_id) },
+          //     data: updateEmployeeData,
+          //   });
+          // }
 
           if (
             data.revise_component_assignment === "Y" &&

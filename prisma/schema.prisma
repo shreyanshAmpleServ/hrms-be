@@ -2015,6 +2015,7 @@ model hrms_d_employee_pay_component_assignment_header {
   work_life_entry                               Int?
   status                                        String                                          @default("Active", map: "DF__hrms_d_em__statu__2B2A60FE") @db.VarChar(20)
   remarks                                       String?                                         @db.NVarChar(500)
+  set_GL_Account                                String?                                         @default("P") @db.NVarChar(50)
   createdate                                    DateTime?                                       @default(now(), map: "DF__hrms_d_em__creat__2C1E8537") @db.DateTime
   createdby                                     Int
   updatedate                                    DateTime?                                       @db.DateTime
@@ -2755,6 +2756,7 @@ model hrms_d_employee_kpi_component_assignment {
   department_id                Int?
   designation_id               Int?
   position                     String?   @db.NVarChar(100)
+  set_GL_Account               String?   @default("P") @db.NVarChar(50)
   successor_id                 Int?
   employment_type_id           Int?
   contract_expiry_date         DateTime? @db.Date
@@ -2777,6 +2779,8 @@ model hrms_d_employee_kpi_component_lines {
   component_assignment_id Int
   pay_component_id        Int
   amount                  Decimal  @db.Decimal(19, 6)
+  gl_account_id           Int?
+  payable_glaccount_id    Int?
   createdate              DateTime @default(now()) @db.DateTime
   createdby               Int
   log_inst                Int?     @default(1)
