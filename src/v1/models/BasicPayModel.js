@@ -37,6 +37,48 @@ const serializeHeaders = (data) => {
   if ("status" in data) serialized.status = data.status;
   if ("remarks" in data) serialized.remarks = data.remarks;
   if ("set_GL_Account" in data) serialized.set_GL_Account = data.set_GL_Account;
+  if ("header_payroll_rule" in data)
+    serialized.header_payroll_rule = data.header_payroll_rule;
+
+  return serialized;
+};
+const serializeHeadersUpdate = (data) => {
+  const serialized = {};
+
+  // Required fields
+  // if ("employee_id" in data) serialized.employee_id = Number(data.employee_id);
+  if ("department_id" in data)
+    serialized.department_id = Number(data.department_id);
+  // if ("branch_id" in data) serialized.branch_id = Number(data.branch_id);
+  if ("position_id" in data) serialized.position_id = Number(data.position_id);
+  if ("pay_grade_id" in data)
+    serialized.pay_grade_id = Number(data.pay_grade_id);
+  if ("pay_grade_level" in data)
+    serialized.pay_grade_level = Number(data.pay_grade_level);
+  if ("allowance_group" in data)
+    serialized.allowance_group = data.allowance_group;
+  // if ("work_life_entry" in data)
+  //   serialized.work_life_entry = Number(data.work_life_entry);
+  if ("status" in data) serialized.status = data.status;
+  if ("remarks" in data) serialized.remarks = data.remarks;
+  if ("set_GL_Account" in data) serialized.set_GL_Account = data.set_GL_Account;
+  if ("header_payroll_rule" in data)
+    serialized.header_payroll_rule = data.header_payroll_rule;
+  if ("employee_id" in data) {
+    serialized.hrms_d_employee = {
+      connect: { id: Number(data.employee_id) },
+    };
+  }
+  if ("branch_id" in data) {
+    serialized.branch_pay_component_header = {
+      connect: { id: Number(data.branch_id) },
+    };
+  }
+  if ("work_life_entry" in data) {
+    serialized.work_life_entry_pay_header = {
+      connect: { id: Number(data.work_life_entry) },
+    };
+  }
 
   return serialized;
 };
@@ -47,7 +89,7 @@ const serializePayLine = (data) => {
     pay_component_id: Number(data?.pay_component_id),
     amount: Number(data?.amount) || 0,
     type_value: Number(data?.type_value) || 0,
-    // currency_id: Number(data?.currency_id) || 0,
+    currency_id: Number(data?.currency_id) || 0,
 
     is_taxable: data?.is_taxable || "Y",
     is_recurring: data?.is_recurring || "Y",
@@ -84,48 +126,6 @@ const serializePayLine = (data) => {
 
     column_order: data?.column_order ? Number(data.column_order) : null,
   };
-
-  if (data?.currency_id) {
-    serialized.pay_component_line_currency = {
-      connect: { id: Number(data.currency_id) },
-    };
-  }
-  // if (data?.pay_component_id) {
-  //   serialized.pay_component_for_line = {
-  //     connect: { id: Number(data.pay_component_id) },
-  //   };
-  // }
-  // if (data?.project_id) {
-  //   serialized.pay_component_line_project = {
-  //     connect: { id: Number(data.project_id) },
-  //   };
-  // }
-  // if (data?.cost_center1_id) {
-  //   serialized.pay_component_line_cost_center1 = {
-  //     connect: { id: Number(data.cost_center1_id) },
-  //   };
-  // }
-  // if (data?.cost_center2_id) {
-  //   serialized.pay_component_line_cost_center2 = {
-  //     connect: { id: Number(data.cost_center2_id) },
-  //   };
-  // }
-  // if (data?.cost_center3_id) {
-  //   serialized.pay_component_line_cost_center3 = {
-  //     connect: { id: Number(data.cost_center3_id) },
-  //   };
-  // }
-  // if (data?.cost_center4_id) {
-  //   serialized.pay_component_line_cost_center4 = {
-  //     connect: { id: Number(data.cost_center4_id) },
-  //   };
-  // }
-  // if (data?.cost_center5_id) {
-  //   serialized.pay_component_line_cost_center5 = {
-  //     connect: { id: Number(data.cost_center5_id) },
-  //   };
-  // }
-
   return serialized;
 };
 const serializePayLineUpdate = (data) => {
@@ -149,7 +149,6 @@ const serializePayLineUpdate = (data) => {
     payable_glaccount_id: data?.payable_glaccount_id
       ? Number(data.payable_glaccount_id)
       : null,
-
     component_type: data?.component_type || "O",
     // project_id: data?.project_id ? Number(data.project_id) : null,
 
@@ -787,7 +786,7 @@ const updateBasicPay = async (id, data) => {
     const updatedData = {
       ...headerDatas,
     };
-    const serializedData = serializeHeaders(updatedData);
+    const serializedData = serializeHeadersUpdate(updatedData);
 
     const newAddresses = payLineData?.filter((addr) => !addr.id) || [];
     const existingAddresses = payLineData?.filter((addr) => addr.id) || [];

@@ -2016,6 +2016,7 @@ model hrms_d_employee_pay_component_assignment_header {
   status                                        String                                          @default("Active", map: "DF__hrms_d_em__statu__2B2A60FE") @db.VarChar(20)
   remarks                                       String?                                         @db.NVarChar(500)
   set_GL_Account                                String?                                         @default("P") @db.NVarChar(50)
+  header_payroll_rule                           String?                                         @default("Standard")
   createdate                                    DateTime?                                       @default(now(), map: "DF__hrms_d_em__creat__2C1E8537") @db.DateTime
   createdby                                     Int
   updatedate                                    DateTime?                                       @db.DateTime
