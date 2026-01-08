@@ -214,6 +214,92 @@ const serializePayLineUpdate = (data) => {
 
   return serialized;
 };
+const serializePayLineNew = (data) => {
+  const serialized = {
+    line_num: Number(data?.line_num) || 0,
+    pay_component_id: Number(data?.pay_component_id),
+    amount: Number(data?.amount) || 0,
+    type_value: Number(data?.type_value) || 0,
+    // currency_id: Number(data?.currency_id) || 0,
+
+    is_taxable: data?.is_taxable || "Y",
+    is_recurring: data?.is_recurring || "Y",
+    is_worklife_related: data?.is_worklife_related || "N",
+    is_grossable: data?.is_grossable || "N",
+
+    remarks: data?.remarks || null,
+    tax_code_id: data?.tax_code_id ? Number(data.tax_code_id) : null,
+    gl_account_id: data?.gl_account_id ? Number(data.gl_account_id) : null,
+    factor: data?.factor ? Number(data.factor) : null,
+
+    payable_glaccount_id: data?.payable_glaccount_id
+      ? Number(data.payable_glaccount_id)
+      : null,
+    component_type: data?.component_type || "O",
+    project_id: data?.project_id ? Number(data.project_id) : null,
+
+    cost_center1_id: data?.cost_center1_id
+      ? Number(data.cost_center1_id)
+      : null,
+    cost_center2_id: data?.cost_center2_id
+      ? Number(data.cost_center2_id)
+      : null,
+    cost_center3_id: data?.cost_center3_id
+      ? Number(data.cost_center3_id)
+      : null,
+    cost_center4_id: data?.cost_center4_id
+      ? Number(data.cost_center4_id)
+      : null,
+    cost_center5_id: data?.cost_center5_id
+      ? Number(data.cost_center5_id)
+      : null,
+
+    column_order: data?.column_order ? Number(data.column_order) : null,
+  };
+
+  if (data?.currency_id) {
+    serialized.pay_component_line_currency = {
+      connect: { id: Number(data.currency_id) },
+    };
+  }
+  // if (data?.pay_component_id) {
+  //   serialized.pay_component_for_line = {
+  //     connect: { id: Number(data.pay_component_id) },
+  //   };
+  // }
+  // if (data?.project_id) {
+  //   serialized.pay_component_line_project = {
+  //     connect: { id: Number(data.project_id) },
+  //   };
+  // }
+  // if (data?.cost_center1_id) {
+  //   serialized.pay_component_line_cost_center1 = {
+  //     connect: { id: Number(data.cost_center1_id) },
+  //   };
+  // }
+  // if (data?.cost_center2_id) {
+  //   serialized.pay_component_line_cost_center2 = {
+  //     connect: { id: Number(data.cost_center2_id) },
+  //   };
+  // }
+  // if (data?.cost_center3_id) {
+  //   serialized.pay_component_line_cost_center3 = {
+  //     connect: { id: Number(data.cost_center3_id) },
+  //   };
+  // }
+  // if (data?.cost_center4_id) {
+  //   serialized.pay_component_line_cost_center4 = {
+  //     connect: { id: Number(data.cost_center4_id) },
+  //   };
+  // }
+  // if (data?.cost_center5_id) {
+  //   serialized.pay_component_line_cost_center5 = {
+  //     connect: { id: Number(data.cost_center5_id) },
+  //   };
+  // }
+
+  return serialized;
+};
 
 const parseData = (data) => {
   if (data && data.social_medias) {
@@ -802,8 +888,9 @@ const updateBasicPay = async (id, data) => {
     }
 
     const newSerialized =
-      newAddresses?.map((addr) => ({
-        ...serializePayLine(addr),
+      newAddresses?.map((addr, ind) => ({
+        ...serializePayLineNew(addr),
+        line_num: payLineData.length + ind + 1,
         parent_id: parseInt(id),
         createdate: new Date(),
         createdby: data.createdby || 1,
