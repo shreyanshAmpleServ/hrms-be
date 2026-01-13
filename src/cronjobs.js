@@ -13,6 +13,7 @@ const {
   contractExpiryAlertFn,
   getAllEmploymentContract,
 } = require("./v1/models/employmentContractModel");
+const { gt } = require("zod/v4");
 
 const dateISO = (d = 0) =>
   moment.tz("Asia/Kolkata").add(d, "day").format("YYYY-MM-DD");
@@ -589,13 +590,19 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
       await tenantPrisma.hrms_d_employee_kpi_component_assignment.findMany({
         where: {
           effective_from: {
-            // gte: todayDateStart,
-            lte: todayDateEnd,
+            lte: moment().tz("Asia/Kolkata").endOf("day").toDate(),
           },
-          createdate: {
-            gte: todayDateStart,
-            lte: todayDateEnd,
+          effective_from: {
+            gt: moment().tz("Asia/Kolkata").endOf("day").toDate(),
           },
+          // effective_from: {
+          //   gte: todayDateStart,
+          //   lte: todayDateEnd,
+          // },
+          // createdate: {
+          //   gte: todayDateStart,
+          //   lte: todayDateEnd,
+          // },
           status: "P",
         },
         include: {
