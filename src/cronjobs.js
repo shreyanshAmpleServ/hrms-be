@@ -589,6 +589,10 @@ const processKPIComponentAssignmentsForTenant = async (tenantDb) => {
       await tenantPrisma.hrms_d_employee_kpi_component_assignment.findMany({
         where: {
           effective_from: {
+            // gte: todayDateStart,
+            lte: todayDateEnd,
+          },
+          createdate: {
             gte: todayDateStart,
             lte: todayDateEnd,
           },
