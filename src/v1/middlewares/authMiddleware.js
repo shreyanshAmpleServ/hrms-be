@@ -26,7 +26,6 @@ const authenticateToken = async (req, res, next) => {
         message: "Invalid token. No tenant database found.",
       });
     }
-
     req.user = decoded;
     req.tenantDb = tenantDb;
 
