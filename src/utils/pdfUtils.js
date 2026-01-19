@@ -397,9 +397,16 @@ const payslipTemplate = `<!DOCTYPE html>
  * @param {string} filePath - Output file path (optional)
  * @returns {Promise<string>} - Generated HTML content or file path
  */
-const formatAmount = (value, currencyCode = "INR") => {
+// const formatAmount = (value, currencyCode = "INR") => {
+//   const number = parseFloat(value || 0);
+//   return number.toLocaleString("en-IN", {
+//     minimumFractionDigits: 2,
+//     maximumFractionDigits: 2,
+//   });
+// };
+const formatAmount = (value) => {
   const number = parseFloat(value || 0);
-  return number.toLocaleString("en-IN", {
+  return number.toLocaleString("en-TZ", {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
