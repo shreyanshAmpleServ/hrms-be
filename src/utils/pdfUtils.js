@@ -397,16 +397,38 @@ const payslipTemplate = `<!DOCTYPE html>
  * @param {string} filePath - Output file path (optional)
  * @returns {Promise<string>} - Generated HTML content or file path
  */
+const formatAmount = (value, currencyCode = "INR") => {
+  const number = parseFloat(value || 0);
+  return number.toLocaleString("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
 const generatePayslipHTML = (data, filePath = null) => {
   return new Promise((resolve, reject) => {
     try {
       // Calculate totals
-      const grossEarning = (data.earnings || [])
-        .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0)
-        .toFixed(2);
-      const grossDeduction = (data.deductions || [])
-        .reduce((sum, d) => sum + parseFloat(d.amount || 0), 0)
-        .toFixed(2);
+      // const grossEarning = (data.earnings || [])
+      //   .reduce((sum, e) => sum + parseFloat(e.amount || 0), 0)
+      //   .toFixed(2);
+      // const grossDeduction = (data.deductions || [])
+      //   .reduce((sum, d) => sum + parseFloat(d.amount || 0), 0)
+      //   .toFixed(2);
+
+      const grossEarning = formatAmount(
+        (data.earnings || []).reduce(
+          (sum, e) => sum + parseFloat(e.amount || 0),
+          0
+        )
+      );
+
+      const grossDeduction = formatAmount(
+        (data.deductions || []).reduce(
+          (sum, d) => sum + parseFloat(d.amount || 0),
+          0
+        )
+      );
 
       // Generate earnings rows
       const earningsRows = (data.earnings || [])
@@ -414,7 +436,9 @@ const generatePayslipHTML = (data, filePath = null) => {
           (earning) =>
             `<div class="amount-row">
           <span>${earning.label || ""}</span>
-          <span>${parseFloat(earning.amount || 0).toFixed(2)}</span>
+          <span>${formatAmount(
+            parseFloat(earning.amount || 0).toFixed(2)
+          )}</span>
         </div>`
         )
         .join("");
@@ -425,21 +449,32 @@ const generatePayslipHTML = (data, filePath = null) => {
           (deduction) =>
             `<div class="amount-row">
           <span>${deduction.label || ""}</span>
-          <span>${parseFloat(deduction.amount || 0).toFixed(2)}</span>
+          <span>${formatAmount(
+            parseFloat(deduction.amount || 0).toFixed(2)
+          )}</span>
         </div>`
         )
         .join("");
 
       // Find basic pay from earnings
-      const basicPayEarning = (data.earnings || []).find(
-        (e) => e.label && e.label.toLowerCase().includes("basic")
-      );
-      const basicPay = basicPayEarning
-        ? parseFloat(basicPayEarning.amount).toFixed(2)
-        : "0.00";
+      // const basicPayEarning = (data.earnings || []).find(
+      //   (e) => e.label && e.label.toLowerCase().includes("basic")
+      // );
+      // const basicPay = basicPayEarning
+      //   ? parseFloat(basicPayEarning.amount).toFixed(2)
+      //   : "0.00";
 
       // Use tax_amount from data for PAYE
-      const paye = parseFloat(data.tax_amount || 0).toFixed(2);
+      // const paye = parseFloat(data.tax_amount || 0).toFixed(2);
+
+      const basicPay = basicPayEarning
+        ? formatAmount(basicPayEarning.amount)
+        : formatAmount(0);
+
+      const paye = formatAmount(data.tax_amount);
+      const netPay = formatAmount(data.net_pay);
+      const taxablePayYtd = formatAmount(data.taxable_earnings);
+      const taxYearToDate = formatAmount(data.tax_amount);
 
       // Prepare template data
       const templateData = {
@@ -454,7 +489,7 @@ const generatePayslipHTML = (data, filePath = null) => {
         location: data.location || "N/A",
         costCenter: data.cost_center || "N/A",
         napsaNo: data.napsa_no || "N/A",
-        taxablePayYtd: parseFloat(data.taxable_earnings || 0).toFixed(2),
+        taxablePayYtd: taxablePayYtd,
         basicPay,
         tpinNo: data.tpin_no || "N/A",
         nrcNo: data.nrc_no || "N/A",
@@ -462,10 +497,10 @@ const generatePayslipHTML = (data, filePath = null) => {
         leaveDays: data.leave_days || "0",
         leaveValue: data.leave_value || "0.00",
         engDate: formatDate(data.engagement_date) || "",
-        taxYearToDate: parseFloat(data.tax_amount || 0).toFixed(2),
+        taxYearToDate: taxYearToDate,
         earningsRows,
         deductionsRows,
-        netPay: parseFloat(data.net_pay || 0).toFixed(2),
+        netPay: netPay,
         paye,
         bankName: data.bank_name || "N/A",
         payPoint: data.pay_point || "Direct Transfer",
