@@ -2,7 +2,7 @@ const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
-const mockPayComponents = require("../../mock/payComponent.mock.js");
+// const mockPayComponents = require("../../mock/payComponent.mock.js");
 
 // const serializePayComponentData = (data) => ({
 //   component_name: data.component_name || "",
@@ -303,7 +303,6 @@ const mockPayComponents = require("../../mock/payComponent.mock.js");
 //   }
 // };
 
-// ===== simplified serialize function (no duplicate keys) =====
 const serializePayComponentData = (data) => {
   const SMALLINT_MIN = -32768;
   const SMALLINT_MAX = 32767;
@@ -829,19 +828,20 @@ const getAllPayComponent = async (
   is_advance
 ) => {
   try {
-    const totalCountCheck = await prisma.hrms_m_pay_component.count();
-    if (totalCountCheck === 0) {
-      for (const payComponentData of mockPayComponents) {
-        await prisma.hrms_m_pay_component.create({
-          data: {
-            ...serializePayComponentData(payComponentData),
-            createdby: 1,
-            createdate: new Date(),
-            log_inst: 1,
-          },
-        });
-      }
-    }
+    // AUTO-CREATION DISABLED
+    // const totalCountCheck = await prisma.hrms_m_pay_component.count();
+    // if (totalCountCheck === 0) {
+    //   for (const payComponentData of mockPayComponents) {
+    //     await prisma.hrms_m_pay_component.create({
+    //       data: {
+    //         ...serializePayComponentData(payComponentData),
+    //         createdby: 1,
+    //         createdate: new Date(),
+    //         log_inst: 1,
+    //       },
+    //     });
+    //   }
+    // }
 
     page = typeof page === "number" && page > 0 ? page : 1;
     size = size || 10;
