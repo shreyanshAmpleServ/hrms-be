@@ -207,6 +207,7 @@ const downloadContractPDF = async (req, res, next) => {
 
     res.json({ url: fileUrl, contractId: contract.id });
   } catch (error) {
+    console.log("Error in downloadContractPDF:", error);
     next(error);
   }
 };
