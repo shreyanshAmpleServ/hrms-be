@@ -1067,8 +1067,8 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
       bank_name: record.bank_name || "NMB",
       earnings,
       deductions,
-      company_logo: reqData.company_logo || "",
-      company_signature: reqData.company_signature || "",
+      company_logo: reqData?.company_logo || "",
+      company_signature: reqData?.company_signature || "",
     };
   } catch (error) {
     console.error("Raw payslip fetch error:", error);
