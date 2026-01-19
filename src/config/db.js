@@ -59,11 +59,7 @@ const { PrismaClient } = require("@prisma/client");
 const logger = require("../Comman/logger");
 
 const prismaInstances = new Map();
-
-async function getPrismaClient(dbName) {
-  if (!dbName) {
-    throw new Error("Database name is required");
-  }
+function getPrismaClient(dbName) {
   if (prismaInstances.has(dbName)) {
     return prismaInstances.get(dbName);
   }
@@ -78,7 +74,6 @@ async function getPrismaClient(dbName) {
   if (!urlParts) {
     throw new Error("Invalid DATABASE_URL format");
   }
-
   const [, server, port, , user, password, options] = urlParts;
   const clientDbUrl = `sqlserver://${server}:${port};initial catalog=${dbName};user=${user};password=${password};${options}`;
   const prisma = new PrismaClient({
@@ -87,10 +82,40 @@ async function getPrismaClient(dbName) {
 
   prismaInstances.set(dbName, prisma);
 
-  console.log(`Prisma client created for database: ${dbName}`, clientDbUrl);
-
   return prisma;
 }
+
+// async function getPrismaClient(dbName) {
+//   if (!dbName) {
+//     throw new Error("Database name is required");
+//   }
+//   if (prismaInstances.has(dbName)) {
+//     return prismaInstances.get(dbName);
+//   }
+
+//   logger.info(`Creating Prisma client for: ${dbName}`);
+
+//   const baseUrl = process.env.DATABASE_URL;
+//   const regex =
+//     /sqlserver:\/\/([^:]+):(\d+);initial catalog=([^;]+);user=([^;]+);password=([^;]+);(.*)$/;
+//   const urlParts = baseUrl.match(regex);
+
+//   if (!urlParts) {
+//     throw new Error("Invalid DATABASE_URL format");
+//   }
+
+//   const [, server, port, , user, password, options] = urlParts;
+//   const clientDbUrl = `sqlserver://${server}:${port};initial catalog=${dbName};user=${user};password=${password};${options}`;
+//   const prisma = new PrismaClient({
+//     datasources: { db: { url: clientDbUrl } },
+//   });
+
+//   prismaInstances.set(dbName, prisma);
+
+//   console.log(`Prisma client created for database: ${dbName}`, clientDbUrl);
+
+//   return prisma;
+// }
 
 async function disconnectAll() {
   const promises = Array.from(prismaInstances.values()).map((c) =>
