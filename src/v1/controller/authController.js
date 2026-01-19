@@ -4,12 +4,21 @@ const register = async (req, res, next) => {
   try {
     const { email, password, full_name = null, role_id } = req.body;
 
+    const tenantDb = req.headers["x-tenant-db"] || req.body.dbName;
+
+    if (!tenantDb) {
+      return res.status(400).json({
+        success: false,
+        message: "Please provide tenant database name (x-tenant-db header)",
+      });
+    }
+
     const user = await registerUser(
-      req.prisma,
       email,
       password,
       full_name,
-      role_id
+      role_id,
+      tenantDb
     );
     res.status(201).success("User registered successfully", user);
   } catch (error) {

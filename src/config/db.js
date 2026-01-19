@@ -60,7 +60,10 @@ const logger = require("../Comman/logger");
 
 const prismaInstances = new Map();
 
-function getPrismaClient(dbName) {
+async function getPrismaClient(dbName) {
+  if (!dbName) {
+    throw new Error("Database name is required");
+  }
   if (prismaInstances.has(dbName)) {
     return prismaInstances.get(dbName);
   }
@@ -75,6 +78,7 @@ function getPrismaClient(dbName) {
   if (!urlParts) {
     throw new Error("Invalid DATABASE_URL format");
   }
+
   const [, server, port, , user, password, options] = urlParts;
   const clientDbUrl = `sqlserver://${server}:${port};initial catalog=${dbName};user=${user};password=${password};${options}`;
   const prisma = new PrismaClient({
@@ -82,6 +86,8 @@ function getPrismaClient(dbName) {
   });
 
   prismaInstances.set(dbName, prisma);
+
+  console.log(`Prisma client created for database: ${dbName}`, clientDbUrl);
 
   return prisma;
 }
