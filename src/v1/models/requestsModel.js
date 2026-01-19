@@ -546,18 +546,18 @@ const createRequest = async (data) => {
       },
     });
 
-    if (!requester) {
+    if (!workflow_department_id && !workflow_designation_id && !requester) {
       throw new CustomError("Requester not found", 404);
     }
 
-    console.log(
-      `Requester: ${requester.full_name} from ${
-        requester.hrms_employee_department?.department_name || "No Department"
-      }, Designation: ${
-        requester.hrms_employee_designation?.designation_name ||
-        "No Designation"
-      }`
-    );
+    // console.log(
+    //   `Requester: ${requester.full_name} from ${
+    //     requester.hrms_employee_department?.department_name || "No Department"
+    //   }, Designation: ${
+    //     requester.hrms_employee_designation?.designation_name ||
+    //     "No Designation"
+    //   }`
+    // );
 
     const reqData = await prisma.hrms_d_requests.create({
       data: {

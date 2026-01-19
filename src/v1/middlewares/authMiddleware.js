@@ -28,8 +28,9 @@ const authenticateToken = async (req, res, next) => {
     }
     req.user = decoded;
     req.tenantDb = tenantDb;
+    // console.log("Authenticated Tenant DB:", decoded);
 
-    console.log(`Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
+    // console.log(`Auth: User ${decoded.userId} | Tenant: ${tenantDb}`);
 
     if (!schedulerInitializedTenants.has(tenantDb)) {
       try {
