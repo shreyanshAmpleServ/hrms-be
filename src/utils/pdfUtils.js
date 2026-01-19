@@ -457,9 +457,9 @@ const generatePayslipHTML = (data, filePath = null) => {
         .join("");
 
       // Find basic pay from earnings
-      // const basicPayEarning = (data.earnings || []).find(
-      //   (e) => e.label && e.label.toLowerCase().includes("basic")
-      // );
+      const basicPayEarning = (data.earnings || []).find(
+        (e) => e.label && e.label.toLowerCase().includes("basic")
+      );
       // const basicPay = basicPayEarning
       //   ? parseFloat(basicPayEarning.amount).toFixed(2)
       //   : "0.00";
@@ -598,6 +598,7 @@ const generatePayslipPDF = async (data, filePath) => {
 
     return filePath;
   } catch (error) {
+    console.log("PDF generation error:", error);
     throw new Error(`PDF generation failed: ${error.message}`);
   } finally {
     if (browser) {
