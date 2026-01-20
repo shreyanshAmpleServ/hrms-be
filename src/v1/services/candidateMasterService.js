@@ -47,6 +47,8 @@ const createEmployeeFromCandidate = async (
 
 const getAllCandidateMaster = async (
   search,
+  status,
+  appointmentData,
   page,
   size,
   startDate,
@@ -55,6 +57,8 @@ const getAllCandidateMaster = async (
 ) => {
   return await candidateMasterModel.getAllCandidateMaster(
     search,
+    status,
+    appointmentData,
     page,
     size,
     startDate,

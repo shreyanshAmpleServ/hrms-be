@@ -1777,7 +1777,15 @@ const deleteJobPosting = async (id) => {
   }
 };
 
-const getAllJobPosting = async (search, page, size, startDate, endDate) => {
+const getAllJobPosting = async (
+  search,
+  status,
+  openTill,
+  page,
+  size,
+  startDate,
+  endDate
+) => {
   try {
     page = !page || page == 0 ? 1 : page;
     size = size || 10;
@@ -1802,7 +1810,15 @@ const getAllJobPosting = async (search, page, size, startDate, endDate) => {
         },
       ];
     }
-
+    if (status && status === "A") {
+      filters.status = status;
+    }
+    if (openTill) {
+      const start = new Date(openTill);
+      filters.closing_date = {
+        gte: start,
+      };
+    }
     if (startDate && endDate) {
       const start = new Date(startDate);
       const end = new Date(endDate);

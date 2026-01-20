@@ -53,9 +53,12 @@ const deleteJobPosting = async (req, res, next) => {
 
 const getAllJobPosting = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate } = req.query;
+    const { page, status, openTill, size, search, startDate, endDate } =
+      req.query;
     const data = await JobPostingService.getAllJobPosting(
       search,
+      status,
+      openTill,
       Number(page),
       Number(size),
       startDate && moment(startDate),

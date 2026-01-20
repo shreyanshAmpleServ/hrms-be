@@ -334,7 +334,7 @@ const downloadPayslipPDF = async (req, res, next) => {
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting temp file:", err);
     });
-
+    res.json({ url: fileUrl });
     setTimeout(async () => {
       try {
         await deleteFromBackblaze(fileUrl);
@@ -343,8 +343,6 @@ const downloadPayslipPDF = async (req, res, next) => {
         console.error("Error auto-deleting file from Backblaze:", error);
       }
     }, 10000);
-
-    res.json({ url: fileUrl });
   } catch (error) {
     next(error);
   }

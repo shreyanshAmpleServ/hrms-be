@@ -9,7 +9,6 @@ const moment = require("moment");
 const previewAnniversaryEmail = async (req, res, next) => {
   try {
     const { employeeId } = req.params;
-
     const employee = await prisma.hrms_d_employee.findUnique({
       where: { id: Number(employeeId) },
       select: {
@@ -47,47 +46,46 @@ const previewAnniversaryEmail = async (req, res, next) => {
         400
       );
     }
-
-    const sender = await prisma.hrms_d_employee.findUnique({
-      where: { id: req.user.employee_id },
-      select: {
-        full_name: true,
-        hrms_employee_department: {
-          select: { department_name: true },
+    let sender = null;
+    if (req.user.employee_id) {
+      sender = await prisma.hrms_d_employee.findUnique({
+        where: { id: req.user.employee_id },
+        select: {
+          full_name: true,
+          hrms_employee_department: {
+            select: { department_name: true },
+          },
         },
-      },
-    });
+      });
+    }
 
     const emailContent = await generateEmailContent("work_anniversary", {
       employee_name: employee.full_name,
       department_name:
         employee.hrms_employee_department?.department_name || "Department",
       years: String(years),
-      sender_name: sender?.full_name || "HR Team",
+      sender_name: sender ? sender?.full_name : "HR Team",
       sender_department_name:
         sender?.hrms_employee_department?.department_name || "HR Department",
     });
 
     res.json({
       success: true,
-      data: {
-        to: employee.email,
-        subject: emailContent.subject,
-        body: emailContent.body,
-        years_of_service: years,
-        join_date: joinDate.format("YYYY-MM-DD"),
-        next_anniversary: joinDate
-          .clone()
-          .year(today.year())
-          .add(
-            today.isAfter(joinDate.clone().year(today.year())) ? 1 : 0,
-            "year"
-          )
-          .format("YYYY-MM-DD"),
-      },
+      to: employee.email,
+      subject: emailContent.subject,
+      body: emailContent.body,
+      years_of_service: years,
+      join_date: joinDate.format("YYYY-MM-DD"),
+      next_anniversary: joinDate
+        .clone()
+        .year(today.year())
+        .add(today.isAfter(joinDate.clone().year(today.year())) ? 1 : 0, "year")
+        .format("YYYY-MM-DD"),
+
       message: `Anniversary email preview for ${years} year(s) of service`,
     });
   } catch (error) {
+    console.log("Print ing error : ", error);
     next(error);
   }
 };
