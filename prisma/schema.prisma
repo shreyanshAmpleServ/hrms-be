@@ -1337,17 +1337,19 @@ model hrms_m_letter_type {
 }
 
 model hrms_m_loan_type {
-  id                    Int                   @id(map: "PK__hrms_m_l__3213E83F83117D15") @default(autoincrement())
-  loan_name             String?               @db.NVarChar(100)
-  interest_rate         Decimal?              @db.Decimal(5, 2)
-  createdate            DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
-  createdby             Int
-  updatedate            DateTime?             @db.DateTime
-  updatedby             Int?
-  log_inst              Int?
-  is_active             String?               @default("Y") @db.Char(1)
-  loan_types            hrms_d_loan_request[]
-  loan_master_loan_type hrms_m_loan_master[]
+  id                      Int                   @id(map: "PK__hrms_m_l__3213E83F83117D15") @default(autoincrement())
+  loan_name               String?               @db.NVarChar(100)
+  interest_rate           Decimal?              @db.Decimal(5, 2)
+  pay_component_id        Int?
+  createdate              DateTime?             @default(now(), map: "DF__hrms_m_lo__creat__4D5F7D71") @db.DateTime
+  createdby               Int
+  updatedate              DateTime?             @db.DateTime
+  updatedby               Int?
+  log_inst                Int?
+  is_active               String?               @default("Y") @db.Char(1)
+  loan_types              hrms_d_loan_request[]
+  loan_master_loan_type   hrms_m_loan_master[]
+  loan_type_pay_component hrms_m_pay_component? @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
 }
 
 model hrms_m_pay_component {
@@ -1414,6 +1416,7 @@ model hrms_m_pay_component {
   tax_slab_pay_component                hrms_m_tax_slab_rule[]
   pay_component_for_contract            hrms_d_pay_component_contract[]
   kpi_component_pay_component           hrms_d_employee_kpi_component_lines[]
+  loan_type_pay_component               hrms_m_loan_type[]
 }
 
 model hrms_m_provident_fund {

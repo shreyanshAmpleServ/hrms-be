@@ -5,6 +5,7 @@ const serializeData = (data) => {
   return {
     loan_name: data.loan_name || "",
     interest_rate: Number(data.interest_rate) || 0,
+    pay_component_id: Number(data.pay_component_id) || 0,
     is_active: data.is_active || "Y",
   };
 };
@@ -26,6 +27,9 @@ const createLoanType = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+      include: {
+        loan_type_pay_component: true,
+      },
     });
     return reqData;
   } catch (error) {
@@ -38,6 +42,9 @@ const findLoanTypeById = async (id) => {
   try {
     const reqData = await prisma.hrms_m_loan_type.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        loan_type_pay_component: true,
+      },
     });
     if (!reqData) {
       throw new CustomError("loan type not found", 404);
@@ -70,6 +77,9 @@ const updateLoanType = async (id, data) => {
         ...serializeData(data),
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
+      },
+      include: {
+        loan_type_pay_component: true,
       },
     });
 
@@ -129,6 +139,9 @@ const getAllLoanType = async (
       where: filters,
       skip: skip,
       take: size,
+      include: {
+        loan_type_pay_component: true,
+      },
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
     const totalCount = await prisma.hrms_m_loan_type.count({

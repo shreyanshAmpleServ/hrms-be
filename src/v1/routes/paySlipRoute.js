@@ -11,8 +11,8 @@ const router = express.Router();
 router.post(
   "/payslip",
   authenticateToken,
-  (req, res, next) =>
-    setupNotificationMiddleware(req, res, next, "Payslip Viewer", "create"),
+  // (req, res, next) =>
+  //   setupNotificationMiddleware(req, res, next, "Payslip Viewer", "create"),
   upload.single("pdf_path"),
   paySlipController.createPaySlip
 );

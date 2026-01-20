@@ -22,11 +22,11 @@ router.put(
   payComponentController.updatePayComponent
 );
 
-// router.put(
-//   "/update-all",
-//   authenticateToken,
-//   payComponentController.updatePayComponent
-// );
+router.put(
+  "/update-all",
+  authenticateToken,
+  payComponentController.updatePayOneTimeForColumnComponent
+);
 
 router.delete(
   "/pay-component/:id",

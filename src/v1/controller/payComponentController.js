@@ -44,18 +44,19 @@ const updatePayComponent = async (req, res, next) => {
 };
 
 // update all pay component -New made for emergengency(Test by shivang)
-// const updatePayComponent = async (req, res, next) => {
-//   try {
-//     const result = await payComponentService.updatePayComponent();
-//     res.status(200).json({
-//       success: true,
-//       message: "All pay components updated successfully",
-//       data: result,
-//     });
-//   } catch (error) {
-//     next(error);
-//   }
-// };
+const updatePayOneTimeForColumnComponent = async (req, res, next) => {
+  try {
+    const result =
+      await payComponentService.updatePayOneTimeForColumnComponent();
+    res.status(200).json({
+      success: true,
+      message: "All pay components updated successfully",
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
 
 const deletePayComponent = async (req, res, next) => {
   try {
@@ -87,11 +88,15 @@ const getAllPayComponent = async (req, res, next) => {
 
 const getPayComponentOptions = async (req, res, next) => {
   try {
-    const { is_advance: isAdvance, is_overtime_related: isOvertimeRelated } =
-      req.query;
+    const {
+      is_advance: isAdvance,
+      is_overtime_related: isOvertimeRelated,
+      is_loan,
+    } = req.query;
     const payComponent = await payComponentService.getPayComponentOptions(
       isAdvance,
-      isOvertimeRelated
+      isOvertimeRelated,
+      is_loan
     );
     res.status(200).success(null, payComponent);
   } catch (error) {
@@ -106,4 +111,5 @@ module.exports = {
   deletePayComponent,
   getAllPayComponent,
   getPayComponentOptions,
+  updatePayOneTimeForColumnComponent,
 };

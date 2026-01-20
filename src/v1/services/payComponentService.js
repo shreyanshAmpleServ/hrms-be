@@ -17,6 +17,9 @@ const findPayComponentById = async (id) => {
 const updatePayComponent = async (id, data) => {
   return await payComponentModel.updatePayComponent(id, data);
 };
+const updatePayOneTimeForColumnComponent = async (id, data) => {
+  return await payComponentModel.updatePayOneTimeForColumnComponent(id, data);
+};
 
 const deletePayComponent = async (id) => {
   return await payComponentModel.deletePayComponent(id);
@@ -42,10 +45,15 @@ const getAllPayComponent = async (
   );
 };
 
-const getPayComponentOptions = async (isAdvance, isOvertimeRelated) => {
+const getPayComponentOptions = async (
+  isAdvance,
+  isOvertimeRelated,
+  is_loan
+) => {
   return await payComponentModel.getPayComponentOptions(
     isAdvance,
-    isOvertimeRelated
+    isOvertimeRelated,
+    is_loan
   );
 };
 module.exports = {
@@ -55,4 +63,5 @@ module.exports = {
   deletePayComponent,
   getAllPayComponent,
   getPayComponentOptions,
+  updatePayOneTimeForColumnComponent,
 };
