@@ -1,5 +1,6 @@
 const payComponentService = require("../services/payComponentService");
 const payComponentModel = require("../models/payComponentModel");
+const payRollReportModel = require("../models/payRollReportModal");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const path = require("path");
@@ -11,7 +12,7 @@ const createPayComponent = async (req, res, next) => {
     let departmentData = { ...req.body };
     const department = await payComponentService.createPayComponent(
       departmentData,
-      createdBy,
+      createdBy
     );
     res.status(201).success("Pay component created successfully", department);
   } catch (error) {
@@ -22,7 +23,7 @@ const createPayComponent = async (req, res, next) => {
 const findPayComponentById = async (req, res, next) => {
   try {
     const department = await payComponentService.findPayComponentById(
-      req.params.id,
+      req.params.id
     );
     if (!department) throw new CustomError("Pay component not found", 404);
 
@@ -38,7 +39,7 @@ const updatePayComponent = async (req, res, next) => {
     let departmentData = { ...req.body };
     const department = await payComponentService.updatePayComponent(
       req.params.id,
-      departmentData,
+      departmentData
     );
     res.status(200).success("Pay component updated successfully", department);
   } catch (error) {
@@ -80,7 +81,7 @@ const getAllPayComponent = async (req, res, next) => {
       startDate && moment(startDate),
       endDate && moment(endDate),
       is_active,
-      is_advance,
+      is_advance
     );
     res.status(200).success(null, departments);
   } catch (error) {
@@ -98,7 +99,7 @@ const getPayComponentOptions = async (req, res, next) => {
     const payComponent = await payComponentService.getPayComponentOptions(
       isAdvance,
       isOvertimeRelated,
-      is_loan,
+      is_loan
     );
     res.status(200).success(null, payComponent);
   } catch (error) {
@@ -118,7 +119,7 @@ const generateSDLReport = async (req, res) => {
     console.log("SDL Report - Request received:", { fromDate, toDate });
     const reportData = await payComponentModel.getSDLReportData(
       fromDate,
-      toDate,
+      toDate
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -129,7 +130,7 @@ const generateSDLReport = async (req, res) => {
       "public",
       "reports",
       "sdl",
-      fileName,
+      fileName
     );
 
     const pdfPath = await payComponentModel.generateSDLReportPDF(
@@ -137,7 +138,7 @@ const generateSDLReport = async (req, res) => {
       companySettings,
       filePath,
       fromDate,
-      toDate,
+      toDate
     );
 
     console.log("SDL Report - PDF generated successfully:", pdfPath);
@@ -176,7 +177,7 @@ const generateP10Report = async (req, res) => {
 
     const reportData = await payComponentModel.getP10ReportData(
       fromDate,
-      toDate,
+      toDate
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -187,7 +188,7 @@ const generateP10Report = async (req, res) => {
       "public",
       "reports",
       "p10",
-      fileName,
+      fileName
     );
 
     const pdfPath = await payComponentModel.generateP10ReportPDF(
@@ -195,7 +196,7 @@ const generateP10Report = async (req, res) => {
       companySettings,
       filePath,
       fromDate,
-      toDate,
+      toDate
     );
 
     console.log("P10 Report - PDF generated successfully:", pdfPath);
@@ -229,7 +230,7 @@ const generateP09Report = async (req, res, next) => {
 
     const reportData = await payComponentModel.getP09ReportData(
       fromDate,
-      toDate,
+      toDate
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -242,7 +243,52 @@ const generateP09Report = async (req, res, next) => {
       companySettings,
       filePath,
       fromDate,
-      toDate,
+      toDate
+    );
+
+    const pdfBuffer = fs.readFileSync(filePath);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Length", pdfBuffer.length);
+
+    res.send(pdfBuffer);
+
+    setTimeout(() => {
+      try {
+        fs.unlinkSync(filePath);
+      } catch (error) {
+        console.error("Error cleaning up temporary file:", error);
+      }
+    }, 5000);
+  } catch (error) {
+    next(error);
+  }
+};
+const generatePayRollSummaryReport = async (req, res, next) => {
+  try {
+    const { fromDate, toDate } = req.query;
+
+    if (!fromDate || !toDate) {
+      throw new CustomError("FromDate and ToDate are required", 400);
+    }
+
+    const reportData = await payRollReportModel.generatePayRollSummaryReport(
+      fromDate,
+      toDate
+    );
+
+    const companySettings = await payComponentModel.getCompanySettings();
+
+    const fileName = `P09_Report_${fromDate}_to_${toDate}_${Date.now()}.pdf`;
+    const filePath = path.join(__dirname, "../../../temp", fileName);
+
+    await payRollReportModel.generatePayRollSummaryReportPDF(
+      reportData,
+      companySettings,
+      filePath,
+      fromDate,
+      toDate
     );
 
     const pdfBuffer = fs.readFileSync(filePath);
@@ -276,4 +322,5 @@ module.exports = {
   generateP09Report,
   generateSDLReport,
   generateP10Report,
+  generatePayRollSummaryReport,
 };
