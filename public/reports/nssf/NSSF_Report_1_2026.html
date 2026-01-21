@@ -6,32 +6,44 @@
     <title>NSSF Report</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logo { font-weight: bold; font-size: 14px; }
-        .title { text-align: center; font-weight: bold; font-size: 18px; }
+        .main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .header-left { display: flex; align-items: center; flex: 1; }
+        .company-logo { margin-right: 20px; }
+        .header-right { text-align: right; font-weight: bold; font-size: 20px; color: #0066cc; }
+        .title-section { text-align: center; margin: 15px 0; }
+        .title-row { display: flex; justify-content: space-between; align-items: center; }
+        .company-logo { margin-right: 20px; }
+        .title-center { flex: 1; text-align: center; }
+        .nssf-title { font-weight: bold; font-size: 20px; color: #0066cc; }
+        .title-section h3 { margin: 5px 0; font-size: 16px; }
         .info { margin: 20px 0; }
-        .info-row { margin: 5px 0; }
+        .info-row { margin: 5px 0; font-size: 14px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-        th { background-color: #f0f0f0; font-weight: bold; }
-        .total-row { font-weight: bold; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #0066cc; color: white; font-weight: bold; }
+        .total-row { font-weight: bold; background-color: #f0f0f0; }
         .text-right { text-align: right; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">BOARD OF TRUSTEES NSSF<br>NATIONAL SOCIAL SECURITY FUND</div>
-        <div class="title">NSSF Report</div>
+    <div class="title-section">
+        <div class="title-row">
+            <div class="company-logo">
+                <img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">
+            </div>
+            <div class="title-center">
+                <h3>THE UNITED REPUBLIC OF TANZANIA</h3>
+                <h3>NATIONAL SOCIAL SECURITY FUND</h3>
+                <h3>INSURED PERSON'S CONTRIBUTION RECORD</h3>
+            </div>
+            <div class="nssf-title">NSSF Report</div>
+        </div>
     </div>
     
     <div class="info">
-        <div class="info-row"><strong>THE UNITED REPUBLIC OF TANZANIA</strong></div>
-        <div class="info-row"><strong>NATIONAL SOCIAL SECURITY FUND</strong></div>
-        <div class="info-row"><strong>INSURED PERSON'S CONTRIBUTION RECORD</strong></div>
-        <br>
-        <div class="info-row"><strong>Employer Name:</strong> BOARD OF TRUSTEES NSSF NATIONAL SOCIAL SECURITY FUND</div>
+        <div class="info-row"><strong>Employer Name:</strong> DOUBLE CLICK CONSULTING LIMITED</div>
         <div class="info-row"><strong>Employer No.:</strong> 720240</div>
-        <div class="info-row"><strong>Address:</strong> THE UNITED REPUBLIC OF TANZANIA NATIONAL SOCIAL SECURITY FUND</div>
+        <div class="info-row"><strong>Address:</strong> Double Click Consulting Limited IT PLAZA 5th Floor, Ohio Street/Garden Avenue Dar es Salaam, Tanzania, P.O.Box 20419</div>
         <div class="info-row"><strong>MONTH OF CONTRIBUTION:</strong> January</div>
     </div>
     
@@ -113,8 +125,8 @@
             
             <tr class="total-row">
                 <td colspan="4">Grand Total :</td>
-                <td class="text-right">0600000160000030000075000024000002800000</td>
-                <td class="text-right">14,02,000</td>
+                <td class="text-right">7010000</td>
+                <td class="text-right">1402000</td>
             </tr>
         </tbody>
     </table>

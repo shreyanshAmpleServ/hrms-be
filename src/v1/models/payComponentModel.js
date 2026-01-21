@@ -495,7 +495,6 @@ const createPayComponent = async (data) => {
 
     return result;
   } catch (error) {
-    // Prisma unique violation or custom messages
     if (
       error.code === "23505" ||
       (error.message && error.message.includes("already exists"))
@@ -993,57 +992,7 @@ const getPayComponentOptions = async (
 
     const payComponent = await prisma.hrms_m_pay_component.findMany({
       where: whereClause,
-      // include: {
-      //   pay_component_tax: {
-      //     select: {
-      //       id: true,
-      //       pay_component_id: true,
-      //       rule_type: true,
-      //     },
-      //   },
-      //   pay_component_project: {
-      //     select: {
-      //       id: true,
-      //       code: true,
-      //       name: true,
-      //     },
-      //   },
-      //   pay_component_cost_center1: {
-      //     select: {
-      //       id: true,
-      //       name: true,
-      //       dimension_id: true,
-      //     },
-      //   },
-      //   pay_component_cost_center2: {
-      //     select: {
-      //       id: true,
-      //       name: true,
-      //       dimension_id: true,
-      //     },
-      //   },
-      //   pay_component_cost_center3: {
-      //     select: {
-      //       id: true,
-      //       name: true,
-      //       dimension_id: true,
-      //     },
-      //   },
-      //   pay_component_cost_center4: {
-      //     select: {
-      //       id: true,
-      //       name: true,
-      //       dimension_id: true,
-      //     },
-      //   },
-      //   pay_component_cost_center5: {
-      //     select: {
-      //       id: true,
-      //       name: true,
-      //       dimension_id: true,
-      //     },
-      //   },
-      // },
+
       include: {
         pay_component_tax: true,
         pay_component_project: true,
@@ -1052,7 +1001,6 @@ const getPayComponentOptions = async (
         pay_component_cost_center3: true,
         pay_component_cost_center4: true,
         pay_component_cost_center5: true,
-        // pay_component_for_line: true,
         hrms_m_pay_component_formula: true,
       },
     });
@@ -1102,7 +1050,6 @@ const getP10ReportData = async (fromDate, toDate) => {
         "P10 Report - Stored procedure returned empty, using sample data",
       );
 
-      // Sample P10 data with tax amounts for testing
       const sampleData = [
         {
           1001: 50000,
@@ -1125,7 +1072,7 @@ const getP10ReportData = async (fromDate, toDate) => {
           pay_currency: 23,
           total_earnings: 69100,
           taxable_earnings: 69100,
-          tax_amount: 398000, // Non-zero tax amount
+          tax_amount: 398000,
           total_deductions: 398000,
           net_pay: -328900,
           status: "Pending",
@@ -1571,7 +1518,6 @@ const getSDLReportData = async (fromDate, toDate) => {
         "SDL Report - Stored procedure returned empty, using sample data",
       );
 
-      // Sample SDL data for testing
       const sampleData = [
         {
           1001: 0,
@@ -1669,7 +1615,6 @@ const generateSDLReportHTML = (
           const year = parseInt(row.payroll_year) || new Date().getFullYear();
           const monthKey = `${year}-${String(month).padStart(2, "0")}`;
 
-          // SDL is typically calculated as 4.5% of gross salary or a fixed amount
           const grossSalary =
             parseFloat(row["1001"] || 0) +
             parseFloat(row["1002"] || 0) +
@@ -1681,7 +1626,6 @@ const generateSDLReportHTML = (
             parseFloat(row["1008"] || 0) +
             parseFloat(row["1009"] || 0);
 
-          // For SDL, we'll use a simplified calculation - 4.5% of gross or fixed deduction amount
           const sdlAmount =
             parseFloat(row.total_deductions || 0) || grossSalary * 0.045;
 
@@ -2097,7 +2041,7 @@ const generateP10ReportHTML = (
             <td class="text-right">${formatAmount(range.tax)}</td>
           </tr>
         `;
-      }); // Close the forEach loop here
+      });
 
       console.log("P10 HTML - Monthly data:", monthlyData);
       const templateData = {
@@ -2596,7 +2540,6 @@ const getNSSFReportData = async (paymonth, payyear) => {
       payyear,
     });
 
-    // Direct query instead of using the problematic stored procedure
     const result = await prisma.$queryRaw`
       SELECT 
         T0.employee_id,
@@ -2619,7 +2562,6 @@ const getNSSFReportData = async (paymonth, payyear) => {
     if (!result || result.length === 0) {
       console.log("NSSF Report - Query returned empty, using sample data");
 
-      // Sample NSSF data for testing
       const sampleData = [
         {
           employee_id: 62,
@@ -2659,7 +2601,8 @@ const generateNSSFReportPDF = async (
       },
     );
 
-    // Transform data for NSSF report format
+    const companySettings = await getCompanySettings();
+
     const transformedData = reportData.map((item, index) => ({
       "S No": index + 1,
       "INSURED PERSON'S NAME": item.EmpName || "",
@@ -2670,17 +2613,20 @@ const generateNSSFReportPDF = async (
         Math.round((item.taxable_earnings || 0) * 0.2 * 100) / 100,
     }));
 
-    // Calculate grand totals
     const grandTotal = {
       "BASIC PAY": transformedData.reduce(
-        (sum, item) => sum + (item["BASIC PAY"] || 0),
+        (sum, item) => sum + (parseFloat(item["BASIC PAY"]) || 0),
         0,
       ),
       "Contribution (20%)": transformedData.reduce(
-        (sum, item) => sum + (item["Contribution (20%)"] || 0),
+        (sum, item) => sum + (parseFloat(item["Contribution (20%)"]) || 0),
         0,
       ),
     };
+
+    const companyLogo = companySettings.company_logo
+      ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
+      : "";
 
     const htmlContent = `
 <!DOCTYPE html>
@@ -2690,32 +2636,44 @@ const generateNSSFReportPDF = async (
     <title>NSSF Report</title>
     <style>
         body { font-family: Arial, sans-serif; margin: 20px; }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
-        .logo { font-weight: bold; font-size: 14px; }
-        .title { text-align: center; font-weight: bold; font-size: 18px; }
+        .main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .header-left { display: flex; align-items: center; flex: 1; }
+        .company-logo { margin-right: 20px; }
+        .header-right { text-align: right; font-weight: bold; font-size: 20px; color: #0066cc; }
+        .title-section { text-align: center; margin: 15px 0; }
+        .title-row { display: flex; justify-content: space-between; align-items: center; }
+        .company-logo { margin-right: 20px; }
+        .title-center { flex: 1; text-align: center; }
+        .nssf-title { font-weight: bold; font-size: 20px; color: #0066cc; }
+        .title-section h3 { margin: 5px 0; font-size: 16px; }
         .info { margin: 20px 0; }
-        .info-row { margin: 5px 0; }
+        .info-row { margin: 5px 0; font-size: 14px; }
         table { width: 100%; border-collapse: collapse; margin-top: 20px; }
-        th, td { border: 1px solid #000; padding: 8px; text-align: left; }
-        th { background-color: #f0f0f0; font-weight: bold; }
-        .total-row { font-weight: bold; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #0066cc; color: white; font-weight: bold; }
+        .total-row { font-weight: bold; background-color: #f0f0f0; }
         .text-right { text-align: right; }
     </style>
 </head>
 <body>
-    <div class="header">
-        <div class="logo">BOARD OF TRUSTEES NSSF<br>NATIONAL SOCIAL SECURITY FUND</div>
-        <div class="title">NSSF Report</div>
+    <div class="title-section">
+        <div class="title-row">
+            <div class="company-logo">
+                ${companyLogo}
+            </div>
+            <div class="title-center">
+                <h3>THE UNITED REPUBLIC OF TANZANIA</h3>
+                <h3>NATIONAL SOCIAL SECURITY FUND</h3>
+                <h3>INSURED PERSON'S CONTRIBUTION RECORD</h3>
+            </div>
+            <div class="nssf-title">NSSF Report</div>
+        </div>
     </div>
     
     <div class="info">
-        <div class="info-row"><strong>THE UNITED REPUBLIC OF TANZANIA</strong></div>
-        <div class="info-row"><strong>NATIONAL SOCIAL SECURITY FUND</strong></div>
-        <div class="info-row"><strong>INSURED PERSON'S CONTRIBUTION RECORD</strong></div>
-        <br>
-        <div class="info-row"><strong>Employer Name:</strong> BOARD OF TRUSTEES NSSF NATIONAL SOCIAL SECURITY FUND</div>
+        <div class="info-row"><strong>Employer Name:</strong> ${companySettings.company_name || "BOARD OF TRUSTEES NSSF NATIONAL SOCIAL SECURITY FUND"}</div>
         <div class="info-row"><strong>Employer No.:</strong> 720240</div>
-        <div class="info-row"><strong>Address:</strong> THE UNITED REPUBLIC OF TANZANIA NATIONAL SOCIAL SECURITY FUND</div>
+        <div class="info-row"><strong>Address:</strong> ${companySettings.street_address || "THE UNITED REPUBLIC OF TANZANIA NATIONAL SOCIAL SECURITY FUND"}</div>
         <div class="info-row"><strong>MONTH OF CONTRIBUTION:</strong> ${monthName}</div>
     </div>
     
@@ -2747,8 +2705,8 @@ const generateNSSFReportPDF = async (
               .join("")}
             <tr class="total-row">
                 <td colspan="4">Grand Total :</td>
-                <td class="text-right">${grandTotal["BASIC PAY"].toLocaleString()}</td>
-                <td class="text-right">${grandTotal["Contribution (20%)"].toLocaleString()}</td>
+                <td class="text-right">${grandTotal["BASIC PAY"].toLocaleString("en-US", { useGrouping: false })}</td>
+                <td class="text-right">${grandTotal["Contribution (20%)"].toLocaleString("en-US", { useGrouping: false })}</td>
             </tr>
         </tbody>
     </table>
@@ -2756,14 +2714,11 @@ const generateNSSFReportPDF = async (
 </html>
     `;
 
-    // Ensure directory exists
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    // Generate PDF using puppeteer or similar library
-    // For now, we'll save as HTML (you can integrate with puppeteer later)
     fs.writeFileSync(filePath.replace(".pdf", ".html"), htmlContent);
 
     console.log(
@@ -2771,17 +2726,7 @@ const generateNSSFReportPDF = async (
       filePath.replace(".pdf", ".html"),
     );
 
-    // For PDF generation, you would typically use puppeteer:
-    /*
-    const puppeteer = require('puppeteer');
-    const browser = await puppeteer.launch();
-    const page = await browser.newPage();
-    await page.setContent(htmlContent);
-    await page.pdf({ path: filePath, format: 'A4' });
-    await browser.close();
-    */
-
-    return filePath;
+    return filePath.replace(".pdf", ".html");
   } catch (error) {
     console.error("NSSF Report - Error generating PDF:", error);
     throw error;
