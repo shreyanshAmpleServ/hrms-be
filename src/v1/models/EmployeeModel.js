@@ -93,9 +93,8 @@ const serializeTags = (data) => {
   if ("first_name" in data) serialized.first_name = data.first_name;
   if ("last_name" in data) serialized.last_name = data.last_name;
   if ("first_name" in data || "last_name" in data)
-    serialized.full_name = `${data.first_name || ""} ${
-      data.last_name || ""
-    }`.trim();
+    serialized.full_name = `${data.first_name || ""} ${data.last_name || ""
+      }`.trim();
   if ("shift_id" in data) {
     serialized.employee_shift_id = {
       connect: { id: Number(data.shift_id) },
