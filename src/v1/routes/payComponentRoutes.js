@@ -63,4 +63,10 @@ router.get(
   payComponentController.generateP10Report,
 );
 
+router.get(
+  "/nssf-report",
+  authenticateToken,
+  payComponentController.generateNSSFReport,
+);
+
 module.exports = router;
