@@ -265,6 +265,62 @@ const generateP09Report = async (req, res, next) => {
   }
 };
 
+const generateNSSFReport = async (req, res) => {
+  try {
+    const { paymonth, payyear } = req.query;
+
+    if (!paymonth || !payyear) {
+      return res.status(400).json({
+        success: false,
+        message: "paymonth and payyear are required",
+      });
+    }
+
+    console.log("NSSF Report - Request received:", { paymonth, payyear });
+
+    const reportData = await payComponentModel.getNSSFReportData(
+      paymonth,
+      payyear,
+    );
+
+    const fileName = `NSSF_Report_${paymonth}_${payyear}.html`;
+    const filePath = path.join(
+      process.cwd(),
+      "public",
+      "reports",
+      "nssf",
+      fileName,
+    );
+
+    const generatedPath = await payComponentModel.generateNSSFReportPDF(
+      reportData,
+      filePath,
+      paymonth,
+      payyear,
+    );
+
+    console.log("NSSF Report - HTML generated successfully:", generatedPath);
+
+    // Download the HTML file (since PDF generation is not implemented yet)
+    res.download(generatedPath, fileName, (err) => {
+      if (err) {
+        console.error("NSSF Report - Error downloading file:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Error generating NSSF report",
+        });
+      }
+      console.log("NSSF Report - File downloaded successfully");
+    });
+  } catch (error) {
+    console.error("NSSF Report - Controller error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error generating NSSF report",
+    });
+  }
+};
+
 module.exports = {
   createPayComponent,
   findPayComponentById,
@@ -276,4 +332,5 @@ module.exports = {
   generateP09Report,
   generateSDLReport,
   generateP10Report,
+  generateNSSFReport,
 };
