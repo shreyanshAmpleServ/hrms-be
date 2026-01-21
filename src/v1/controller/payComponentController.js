@@ -106,6 +106,61 @@ const getPayComponentOptions = async (req, res, next) => {
   }
 };
 
+const generateSDLReport = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+    if (!fromDate || !toDate) {
+      return res.status(400).json({
+        success: false,
+        message: "fromDate and toDate are required",
+      });
+    }
+    console.log("SDL Report - Request received:", { fromDate, toDate });
+    const reportData = await payComponentModel.getSDLReportData(
+      fromDate,
+      toDate,
+    );
+
+    const companySettings = await payComponentModel.getCompanySettings();
+
+    const fileName = `SDL_Report_${fromDate}_to_${toDate}.pdf`;
+    const filePath = path.join(
+      process.cwd(),
+      "public",
+      "reports",
+      "sdl",
+      fileName,
+    );
+
+    const pdfPath = await payComponentModel.generateSDLReportPDF(
+      reportData,
+      companySettings,
+      filePath,
+      fromDate,
+      toDate,
+    );
+
+    console.log("SDL Report - PDF generated successfully:", pdfPath);
+
+    res.download(pdfPath, fileName, (err) => {
+      if (err) {
+        console.error("SDL Report - Error downloading file:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Error generating SDL report",
+        });
+      }
+      console.log("SDL Report - File downloaded successfully");
+    });
+  } catch (error) {
+    console.error("SDL Report - Controller error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error generating SDL report",
+    });
+  }
+};
+
 const generateP10Report = async (req, res) => {
   try {
     const { fromDate, toDate } = req.query;
@@ -219,5 +274,6 @@ module.exports = {
   getPayComponentOptions,
   updatePayOneTimeForColumnComponent,
   generateP09Report,
+  generateSDLReport,
   generateP10Report,
 };

@@ -52,6 +52,12 @@ router.get(
 );
 
 router.get(
+  "/sdl-report",
+  authenticateToken,
+  payComponentController.generateSDLReport,
+);
+
+router.get(
   "/p10-report",
   authenticateToken,
   payComponentController.generateP10Report,
