@@ -8,7 +8,7 @@ const puppeteer = require("puppeteer");
 
 const generatePayRollSummaryReport = async (fromDate, toDate) => {
   try {
-    console.log("P10 Report - Fetching data for:", { fromDate, toDate });
+    console.log("Payroll Report - Fetching data for:", { fromDate, toDate });
 
     const checkData = await prisma.$queryRaw`
       SELECT 
@@ -18,7 +18,7 @@ const generatePayRollSummaryReport = async (fromDate, toDate) => {
       FROM hrms_d_monthly_payroll_processing 
       WHERE doc_date >= ${fromDate} AND doc_date <= ${toDate}
     `;
-    console.log("P10 Report - Monthly payroll data check:", checkData);
+    console.log("Payroll Report - Monthly payroll data check:", checkData);
 
     const sampleData = await prisma.$queryRaw`
       SELECT TOP 5 *, 
@@ -29,32 +29,32 @@ const generatePayRollSummaryReport = async (fromDate, toDate) => {
       FROM hrms_d_monthly_payroll_processing 
       WHERE doc_date >= ${fromDate} AND doc_date <= ${toDate}
     `;
-    console.log("P10 Report - Sample monthly payroll data:", sampleData);
+    console.log("Payroll Report - Sample monthly payroll data:", sampleData);
 
     const result = await prisma.$queryRaw`
-      EXEC [dbo].[sp_hrms_p10_report] 
+      EXEC [dbo].[sp_hrms_payroll_summary_report] 
         @FromDate = ${fromDate}, 
         @ToDate = ${toDate}
     `;
-    console.log("P10 Report - Raw result:", result);
-    console.log("P10 Report - Result length:", result?.length || 0);
+    console.log("Payroll Report Report - Raw result:", result);
+    console.log("Payroll Report Report - Result length:", result?.length || 0);
 
     if (!result || result.length === 0) {
       console.log(
-        "P10 Report - Stored procedure returned empty, using sample data"
+        "Payroll Report Report - Stored procedure returned empty, using sample data"
       );
       return sampleData;
     }
 
     if (result && result.length > 0) {
-      console.log("P10 Report - First row sample:", result[0]);
+      console.log("Payroll Report Report - First row sample:", result[0]);
     }
 
     return result;
   } catch (error) {
-    console.error("P10 Report - Error:", error);
+    console.error("Payroll Report Report - Error:", error);
     throw new CustomError(
-      `Error executing P10 report stored procedure: ${error.message}`,
+      `Error executing Payroll Report report stored procedure: ${error.message}`,
       500
     );
   }
@@ -64,7 +64,7 @@ const p10ReportTemplate = `<!DOCTYPE html>
 <html>
 <head>
 <meta charset="UTF-8" />
-<title>P10 Report</title>
+<title>Payroll Report</title>
 <style>
 body {
   font-family: Arial, sans-serif;
@@ -214,8 +214,8 @@ const generateP10ReportHTML = (
 ) => {
   return new Promise((resolve, reject) => {
     try {
-      console.log("P10 HTML - Processing reportData:", reportData);
-      console.log("P10 HTML - ReportData length:", reportData?.length || 0);
+      console.log("Payroll HTML - Processing reportData:", reportData);
+      console.log("Payroll HTML - ReportData length:", reportData?.length || 0);
 
       const formatAmount = (value) => {
         const number = parseFloat(value || 0);
@@ -247,9 +247,9 @@ const generateP10ReportHTML = (
             parseFloat(row["1008"] || 0) +
             parseFloat(row["1009"] || 0);
 
-          console.log(
-            `P10 HTML - Processing row: month=${month}, year=${year}, tax=${taxAmount}, gross=${grossSalary}`
-          );
+          // console.log(
+          //   `Payroll HTML - Processing row: month=${month}, year=${year}, tax=${taxAmount}, gross=${grossSalary}`
+          // );
 
           if (!monthlyData[monthKey]) {
             monthlyData[monthKey] = 0;
@@ -261,9 +261,9 @@ const generateP10ReportHTML = (
         });
       }
 
-      console.log("P10 HTML - Monthly data summary:", monthlyData);
-      console.log("P10 HTML - Total tax calculated:", totalTax);
-      console.log("P10 HTML - Total gross calculated:", totalGross);
+      console.log("Payroll HTML - Monthly data summary:", monthlyData);
+      console.log("Payroll HTML - Total tax calculated:", totalTax);
+      console.log("Payroll HTML - Total gross calculated:", totalGross);
 
       let monthlyRows = "";
       const monthNames = [

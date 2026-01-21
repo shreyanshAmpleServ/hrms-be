@@ -269,9 +269,9 @@ const generatePayRollSummaryReport = async (req, res, next) => {
   try {
     const { fromDate, toDate } = req.query;
 
-    if (!fromDate || !toDate) {
-      throw new CustomError("FromDate and ToDate are required", 400);
-    }
+    // if (!fromDate || !toDate) {
+    //   throw new CustomError("FromDate and ToDate are required", 400);
+    // }
 
     const reportData = await payRollReportModel.generatePayRollSummaryReport(
       fromDate,
