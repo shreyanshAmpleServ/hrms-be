@@ -2951,6 +2951,8 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
       "records",
     );
 
+    const companySettings = await getCompanySettings();
+
     const monthNames = [
       "January",
       "February",
@@ -2969,6 +2971,10 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
     const fromDateObj = new Date(fromDate);
     const month = monthNames[fromDateObj.getMonth()];
     const year = fromDateObj.getFullYear();
+
+    const companyLogo = companySettings.company_logo
+      ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
+      : '<img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
 
     let htmlContent = `
 <!DOCTYPE html>
@@ -3001,7 +3007,7 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
     <div class="title-section">
         <div class="title-row">
             <div class="company-logo">
-                <img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">
+                ${companyLogo}
             </div>
             <div class="title-center">
                 <h3>WORKER'S COMPENSATION FUND (WCF)</h3>
@@ -3012,9 +3018,9 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
     </div>
     
     <div class="info">
-        <div class="info-row"><strong>Employer Name:</strong> USANGU LOGISTICS LIMITED</div>
-        <div class="info-row"><strong>MONTH:</strong> ${month}</div>
-        <div class="info-row"><strong>YEAR:</strong> ${year}</div>
+        <div class="info-row"><strong>Employer Name:</strong> ${companySettings.company_name || "USANGU LOGISTICS LIMITED"}</div>
+        <div class="info-row"><strong>Applicable Month:</strong> ${month}</div>
+        <div class="info-row"><strong> Year:</strong> ${year}</div>
     </div>
     
     <table>
@@ -3042,8 +3048,8 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
                     <td>${employee["S No"] || ""}</td>
                     <td>${employee["EmpId"] || ""}</td>
                     <td>${employee["Employee Name"] || ""}</td>
-                    <td class="text-right">${(employee["Employee Basic Pay"] || 0).toLocaleString()}</td>
-                    <td class="text-right">${(employee["Employee Gross Salary"] || 0).toLocaleString()}</td>
+                    <td class="text-right">${employee["Employee Basic Pay"] || 0}</td>
+                    <td class="text-right">${employee["Employee Gross Salary"] || 0}</td>
                 </tr>
       `;
     });
@@ -3051,14 +3057,19 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
     htmlContent += `
             <tr class="total-row">
                 <td colspan="3">Grand Total :</td>
-                <td class="text-right">${totalBasicPay.toLocaleString()}</td>
-                <td class="text-right">${totalGrossSalary.toLocaleString()}</td>
+                <td class="text-right">${totalBasicPay}</td>
+                <td class="text-right">${totalGrossSalary}</td>
             </tr>
         </tbody>
     </table>
 </body>
 </html>
     `;
+
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
 
     fs.writeFileSync(filePath.replace(".pdf", ".html"), htmlContent);
 
