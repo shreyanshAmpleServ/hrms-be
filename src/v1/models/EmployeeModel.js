@@ -150,11 +150,11 @@ const serializeTags = (data) => {
   if ("profile_pic" in data && data.profile_pic !== undefined) {
     serialized.profile_pic = data.profile_pic;
   }
-  if ("nssf_file" in data && data.nssf_file !== undefined) {
-    serialized.nssf_file = data.nssf_file;
+  if ("column_one" in data && data.column_one !== undefined) {
+    serialized.column_one = data.column_one;
   }
-  if ("nida_file" in data && data.nida_file !== undefined) {
-    serialized.nida_file = data.nida_file;
+  if ("column_two" in data && data.column_two !== undefined) {
+    serialized.column_two = data.column_two;
   }
 
   if ("spouse_name" in data) serialized.spouse_name = data.spouse_name;
@@ -179,8 +179,9 @@ const serializeTags = (data) => {
 
   if ("header_attendance_rule" in data)
     serialized.header_attendance_rule = data.header_attendance_rule;
-  if ("wcf" in data) serialized.wcf = data.wcf;
-  if ("nhif" in data) serialized.nhif = data.nhif;
+  if ("column_three" in data) serialized.column_three = data.column_three;
+  if ("column_four" in data) serialized.column_four = data.column_four;
+  if ("branch_id" in data) serialized.branch_id = data.branch_id;
   if ("father_name" in data) serialized.father_name = data.father_name;
   if ("mother_name" in data) serialized.mother_name = data.mother_name;
   if ("primary_contact_number" in data)
