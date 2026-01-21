@@ -540,10 +540,10 @@ const updateLoanReqStatus = async (id, data) => {
     } else {
       updateData.status = data.status;
     }
-    const updatedEntry = await prisma.hrms_d_goal_sheet_assignment.update({
-      where: { id: goalSheetId },
-      data: updateData,
-    });
+    // const updatedEntry = await prisma.hrms_d_goal_sheet_assignment.update({
+    //   where: { id: goalSheetId },
+    //   data: updateData,
+    // });
     return updatedEntry;
   } catch (error) {
     console.error("Error updating loan request status:", error);
