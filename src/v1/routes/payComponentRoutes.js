@@ -8,40 +8,47 @@ const router = express.Router();
 router.post(
   "/pay-component",
   authenticateToken,
-  payComponentController.createPayComponent
+  payComponentController.createPayComponent,
 );
 router.get(
   "/pay-component/:id",
   authenticateToken,
-  payComponentController.findPayComponentById
+  payComponentController.findPayComponentById,
 );
 
 router.put(
   "/pay-component/:id",
   authenticateToken,
-  payComponentController.updatePayComponent
+  payComponentController.updatePayComponent,
 );
 
 router.put(
   "/update-all",
   authenticateToken,
-  payComponentController.updatePayOneTimeForColumnComponent
+  payComponentController.updatePayOneTimeForColumnComponent,
 );
 
 router.delete(
   "/pay-component/:id",
   authenticateToken,
-  payComponentController.deletePayComponent
+  payComponentController.deletePayComponent,
 );
 router.get(
   "/pay-component",
   authenticateToken,
-  payComponentController.getAllPayComponent
+  payComponentController.getAllPayComponent,
 );
 
 router.get(
   "/pay-component-options",
   authenticateToken,
-  payComponentController.getPayComponentOptions
+  payComponentController.getPayComponentOptions,
 );
+
+router.get(
+  "/p09-report",
+  authenticateToken,
+  payComponentController.generateP09Report,
+);
+
 module.exports = router;

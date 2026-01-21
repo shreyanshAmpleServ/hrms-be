@@ -2,6 +2,9 @@ const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
+const fs = require("fs");
+const path = require("path");
+const puppeteer = require("puppeteer");
 // const mockPayComponents = require("../../mock/payComponent.mock.js");
 
 // const serializePayComponentData = (data) => ({
@@ -313,7 +316,7 @@ const serializePayComponentData = (data) => {
     if (factorNum < SMALLINT_MIN || factorNum > SMALLINT_MAX) {
       throw new CustomError(
         `Factor value ${factorNum} is out of range. Must be between ${SMALLINT_MIN} and ${SMALLINT_MAX}.`,
-        400
+        400,
       );
     }
     factor = factorNum;
@@ -329,7 +332,7 @@ const serializePayComponentData = (data) => {
     if (columnOrderNum < SMALLINT_MIN || columnOrderNum > SMALLINT_MAX) {
       throw new CustomError(
         `Column order value ${columnOrderNum} is out of range. Must be between ${SMALLINT_MIN} and ${SMALLINT_MAX}.`,
-        400
+        400,
       );
     }
     columnOrder = columnOrderNum;
@@ -384,7 +387,7 @@ const createPayComponent = async (data) => {
     if (!data.component_name || !data.component_code) {
       throw new CustomError(
         "component_name and component_code are required",
-        400
+        400,
       );
     }
 
@@ -408,7 +411,7 @@ const createPayComponent = async (data) => {
     if (!requesterExists) {
       throw new CustomError(
         `Cannot create pay component: User ID ${requesterId} is not a valid employee.`,
-        403
+        403,
       );
     }
 
@@ -429,12 +432,12 @@ const createPayComponent = async (data) => {
       ) {
         throw new CustomError(
           "Pay component with the same code already exists",
-          400
+          400,
         );
       } else {
         throw new CustomError(
           "Pay component with the same name already exists",
-          400
+          400,
         );
       }
     }
@@ -475,7 +478,7 @@ const createPayComponent = async (data) => {
               ADD [${data.component_code}] DECIMAL(18,4) NULL
             `);
             console.log(
-              `Column [${data.component_code}] added to payroll table`
+              `Column [${data.component_code}] added to payroll table`,
             );
           } catch (sqlErr) {
             console.error("ALTER TABLE failed:", sqlErr.message);
@@ -487,7 +490,7 @@ const createPayComponent = async (data) => {
 
         return created;
       },
-      { maxWait: 10000, timeout: 30000 }
+      { maxWait: 10000, timeout: 30000 },
     );
 
     return result;
@@ -504,7 +507,7 @@ const createPayComponent = async (data) => {
 
     throw new CustomError(
       `Error creating pay component: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -521,7 +524,7 @@ const findPayComponentById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding pay component by ID: ${error.message}`,
-      503
+      503,
     );
   }
 };
@@ -539,7 +542,7 @@ const updatePayComponent = async (id, data) => {
     if (totalCount > 0) {
       throw new CustomError(
         "Pay component with the same name or code already exists",
-        400
+        400,
       );
     }
     const updatedEntry = await prisma.hrms_m_pay_component.update({
@@ -566,7 +569,7 @@ const updatePayComponent = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating pay component: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -736,7 +739,7 @@ const updatePayOneTimeForColumnComponent = async () => {
         } catch (sqlError) {
           throw new CustomError(
             `Failed to alter table for component ${componentId}: ${sqlError.message}`,
-            500
+            500,
           );
         }
       } else {
@@ -758,7 +761,7 @@ const updatePayOneTimeForColumnComponent = async () => {
           if (duplicateCount > 0) {
             throw new CustomError(
               `Duplicate found for component ID ${componentId}`,
-              400
+              400,
             );
           }
 
@@ -786,7 +789,7 @@ const updatePayOneTimeForColumnComponent = async () => {
         updatedComponents.push(updated);
       } catch (updateError) {
         console.error(
-          `Failed to update component ID ${componentId}: ${updateError.message}`
+          `Failed to update component ID ${componentId}: ${updateError.message}`,
         );
       }
     }
@@ -810,7 +813,7 @@ const deletePayComponent = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -825,7 +828,7 @@ const getAllPayComponent = async (
   startDate,
   endDate,
   is_active,
-  is_advance
+  is_advance,
 ) => {
   try {
     // AUTO-CREATION DISABLED
@@ -972,7 +975,7 @@ const getAllPayComponent = async (
 const getPayComponentOptions = async (
   isAdvance,
   isOvertimeRelated,
-  is_loan
+  is_loan,
 ) => {
   try {
     const whereClause = {};
@@ -1061,6 +1064,426 @@ const getPayComponentOptions = async (
   }
 };
 
+const getP09ReportData = async (fromDate, toDate) => {
+  try {
+    const result = await prisma.$queryRaw`
+      EXEC [dbo].[sp_hrms_p09_report] 
+        @FromDate = ${fromDate}, 
+        @ToDate = ${toDate}
+    `;
+
+    return result;
+  } catch (error) {
+    throw new CustomError(
+      `Error executing P09 report stored procedure: ${error.message}`,
+      500,
+    );
+  }
+};
+
+const getCompanySettings = async () => {
+  try {
+    const company = await prisma.hrms_d_default_configurations.findFirst({
+      select: {
+        company_name: true,
+        company_logo: true,
+        street_address: true,
+        phone_number: true,
+        email: true,
+        website: true,
+      },
+    });
+
+    return (
+      company || {
+        company_name: "Company Name",
+        company_logo: null,
+        street_address: "Company Address",
+        phone_number: "Company Phone",
+        email: "company@example.com",
+        website: "www.example.com",
+      }
+    );
+  } catch (error) {
+    throw new CustomError(
+      `Error fetching company settings: ${error.message}`,
+      500,
+    );
+  }
+};
+
+const p09ReportTemplate = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P09 Tax Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .report-container {
+            width: 21cm;
+            min-height: 29.7cm;
+            background: white;
+            margin: 0 auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+
+        .company-info {
+            text-align: left;
+        }
+
+        .company-logo {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 5px;
+        }
+
+        .company-address {
+            font-size: 10px;
+            color: #555;
+        }
+
+        .report-title {
+            flex-grow: 1;
+            text-align: left;
+            width: 70%;
+        }
+
+        .report-title h1 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .report-title h2 {
+            font-size: 14px;
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
+        .report-title h3 {
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        th {
+            background-color: #e0e7ff;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .total-row {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .signature-section {
+            margin-top: 80px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            margin-bottom: 5px;
+            height: 40px;
+        }
+
+        .signature-label {
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .report-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="header">
+            <div class="company-info">
+                {{companyLogo}}
+                <div class="company-address">{{companyAddress}}</div>
+            </div>
+            <div class="report-title">
+                <h1>TANZANIA REVENUE AUTHORITY - INCOME TAX DEPARTMENT</h1>
+                <h2>PAYE DETAILS OF PAYMENT OF TAX WITHHELD</h2>
+                <h3>FOR TO {{fromDate}} TO {{toDate}}</h3>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>S No</th>
+                    <th>PCF No</th>
+                    <th>Name</th>
+                    <th>TIN No.</th>
+                    <th>BASIC PAY</th>
+                    <th>ALL & BEN</th>
+                    <th>GROSS PAY</th>
+                    <th>DEDUCTION</th>
+                    <th>AMOUNT TAXABLE</th>
+                    <th>Tax PAY</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{tableRows}}
+                <tr class="total-row">
+                    <td colspan="4">Grand Total</td>
+                    <td>{{totalBasicPay}}</td>
+                    <td>{{totalAllowances}}</td>
+                    <td>{{totalGrossPay}}</td>
+                    <td>{{totalDeductions}}</td>
+                    <td>{{totalTaxableIncome}}</td>
+                    <td>{{totalTax}}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Managing Director Sign</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+const generateP09ReportHTML = (
+  reportData,
+  companySettings,
+  fromDate,
+  toDate,
+) => {
+  return new Promise((resolve, reject) => {
+    try {
+      const formatAmount = (value) => {
+        const number = parseFloat(value || 0);
+        return number.toLocaleString("en-TZ", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      };
+
+      let tableRows = "";
+      let totals = {
+        basicPay: 0,
+        allowances: 0,
+        grossPay: 0,
+        deductions: 0,
+        taxableIncome: 0,
+        tax: 0,
+      };
+
+      reportData.forEach((row, index) => {
+        const basicPay = parseFloat(row["1001"] || 0);
+        const allowances =
+          parseFloat(row["1002"] || 0) +
+          parseFloat(row["1003"] || 0) +
+          parseFloat(row["1004"] || 0) +
+          parseFloat(row["1005"] || 0) +
+          parseFloat(row["1006"] || 0) +
+          parseFloat(row["1007"] || 0) +
+          parseFloat(row["1008"] || 0) +
+          parseFloat(row["1009"] || 0);
+        const grossPay = basicPay + allowances;
+        const deductions = 0;
+        const taxableIncome = parseFloat(row.TaxableIncome || 0);
+        const tax = parseFloat(row.TotalPayee || 0);
+
+        totals.basicPay += basicPay;
+        totals.allowances += allowances;
+        totals.grossPay += grossPay;
+        totals.deductions += deductions;
+        totals.taxableIncome += taxableIncome;
+        totals.tax += tax;
+
+        tableRows += `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${row.PCFId || ""}</td>
+            <td style="text-align: left;">${row.EmpName || ""}</td>
+            <td></td>
+            <td>${formatAmount(basicPay)}</td>
+            <td>${formatAmount(allowances)}</td>
+            <td>${formatAmount(grossPay)}</td>
+            <td>${formatAmount(deductions)}</td>
+            <td>${formatAmount(taxableIncome)}</td>
+            <td>${formatAmount(tax)}</td>
+          </tr>
+        `;
+      });
+
+      const companyLogo = companySettings.company_logo
+        ? `<img src="${companySettings.company_logo}" alt="Company Logo" class="company-logo">`
+        : "";
+
+      const templateData = {
+        companyLogo,
+        companyName: companySettings.company_name || "Company Name",
+        companyAddress: companySettings.street_address || "Company Address",
+        companyPhone: companySettings.phone_number || "Company Phone",
+        companyEmail: companySettings.email || "company@example.com",
+        fromDate: formatDate(fromDate),
+        toDate: formatDate(toDate),
+        tableRows,
+        totalBasicPay: formatAmount(totals.basicPay),
+        totalAllowances: formatAmount(totals.allowances),
+        totalGrossPay: formatAmount(totals.grossPay),
+        totalDeductions: formatAmount(totals.deductions),
+        totalTaxableIncome: formatAmount(totals.taxableIncome),
+        totalTax: formatAmount(totals.tax),
+      };
+
+      let htmlContent = p09ReportTemplate;
+      Object.keys(templateData).forEach((key) => {
+        const placeholder = new RegExp(`{{${key}}}`, "g");
+        htmlContent = htmlContent.replace(placeholder, templateData[key]);
+      });
+
+      resolve(htmlContent);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const generateP09ReportPDF = async (
+  reportData,
+  companySettings,
+  filePath,
+  fromDate,
+  toDate,
+) => {
+  let browser = null;
+  try {
+    const htmlContent = await generateP09ReportHTML(
+      reportData,
+      companySettings,
+      fromDate,
+      toDate,
+    );
+
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
+
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
+  } catch (error) {
+    console.log("P09 PDF generation error:", error);
+    throw new Error(`P09 PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
 module.exports = {
   createPayComponent,
   findPayComponentById,
@@ -1069,4 +1492,7 @@ module.exports = {
   getAllPayComponent,
   getPayComponentOptions,
   updatePayOneTimeForColumnComponent,
+  getP09ReportData,
+  getCompanySettings,
+  generateP09ReportPDF,
 };
