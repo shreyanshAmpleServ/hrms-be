@@ -485,6 +485,13 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
             designation_name: true,
           },
         },
+        employee_branch: {
+          select: {
+            id: true,
+            branch_name: true,
+            location: true,
+          },
+        },
         hrms_employee_department: {
           select: {
             id: true,
@@ -721,6 +728,13 @@ const updateEmployee = async (
           select: {
             id: true,
             bank_name: true,
+          },
+        },
+        employee_branch: {
+          select: {
+            id: true,
+            branch_name: true,
+            location: true,
           },
         },
         employee_shift_id: {
