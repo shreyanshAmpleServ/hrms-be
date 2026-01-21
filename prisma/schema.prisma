@@ -366,7 +366,7 @@ model hrms_d_employee {
   column_two                                      String?                                           @db.VarChar(255)
   column_three                                    String?                                           @db.VarChar(255)
   column_four                                     String?                                           @db.VarChar(255)
-  branch_id                                       String?                                           @db.VarChar(255)
+  branch_id                                       Int?
   alert_workflow_actions_recipient                hrms_d_alert_workflow_action[]                    @relation("AlertActionRecipients")
   alert_workflow_actions_alert_recipient          hrms_d_alert_workflow_action[]                    @relation("AlertActionAlertRecipients")
   early_leave_requests                            hrms_d_early_leave[]
@@ -377,6 +377,7 @@ model hrms_d_employee {
   employee_kpi                                    hrms_d_employee_kpi[]                             @relation("EmployeeKPI")
   kpi_reviewer                                    hrms_d_employee_kpi[]                             @relation("KPIReviewer")
   kpi_successor                                   hrms_d_employee_kpi_component_assignment[]        @relation("KPISuccessor")
+  employee_branch                                 hrms_m_branch_master?                             @relation(fields: [branch_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
 }
 
 model hrms_d_employee_address {
@@ -1101,6 +1102,7 @@ model hrms_m_branch_master {
   log_inst                    Int?
   is_active                   String?                                           @default("Y") @db.Char(1)
   branch_pay_component_header hrms_d_employee_pay_component_assignment_header[]
+  employee_branch             hrms_d_employee[]
   branch_company              hrms_m_company_master                             @relation(fields: [company_id], references: [id], onUpdate: NoAction)
 }
 
@@ -2174,7 +2176,7 @@ model hrms_d_loan_emi_schedule {
   id                    Int                 @id(map: "PK__hrms_d_l__3213E83F89B3FAA3") @default(autoincrement())
   loan_request_id       Int
   employee_id           Int
-  due_month             String              @db.VarChar(50)
+  due_month             Int
   emi_amount            Decimal             @db.Decimal(18, 2)
   status                String?             @default("U", map: "DF__hrms_d_lo__statu__53385258") @db.VarChar(1)
   payslip_id            Int?

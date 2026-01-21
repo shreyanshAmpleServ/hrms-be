@@ -1194,6 +1194,13 @@ const getAllEmployee = async (
             shift_name: true,
           },
         },
+        employee_branch: {
+          select: {
+            id: true,
+            branch_name: true,
+            location: true,
+          },
+        },
         hrms_employee_bank: {
           select: { id: true, bank_name: true },
         },
@@ -1265,6 +1272,13 @@ const employeeOptions = async () => {
           select: {
             id: true,
             designation_name: true,
+          },
+        },
+        employee_branch: {
+          select: {
+            id: true,
+            branch_name: true,
+            location: true,
           },
         },
       },
