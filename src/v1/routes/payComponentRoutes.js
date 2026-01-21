@@ -51,4 +51,10 @@ router.get(
   payComponentController.generateP09Report,
 );
 
+router.get(
+  "/p10-report",
+  authenticateToken,
+  payComponentController.generateP10Report,
+);
+
 module.exports = router;

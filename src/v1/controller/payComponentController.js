@@ -106,6 +106,64 @@ const getPayComponentOptions = async (req, res, next) => {
   }
 };
 
+const generateP10Report = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+
+    if (!fromDate || !toDate) {
+      return res.status(400).json({
+        success: false,
+        message: "fromDate and toDate are required",
+      });
+    }
+
+    console.log("P10 Report - Request received:", { fromDate, toDate });
+
+    const reportData = await payComponentModel.getP10ReportData(
+      fromDate,
+      toDate,
+    );
+
+    const companySettings = await payComponentModel.getCompanySettings();
+
+    const fileName = `P10_Report_${fromDate}_to_${toDate}.pdf`;
+    const filePath = path.join(
+      process.cwd(),
+      "public",
+      "reports",
+      "p10",
+      fileName,
+    );
+
+    const pdfPath = await payComponentModel.generateP10ReportPDF(
+      reportData,
+      companySettings,
+      filePath,
+      fromDate,
+      toDate,
+    );
+
+    console.log("P10 Report - PDF generated successfully:", pdfPath);
+
+    res.download(pdfPath, fileName, (err) => {
+      if (err) {
+        console.error("P10 Report - Error downloading file:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Error generating P10 report",
+        });
+      }
+      console.log("P10 Report - File downloaded successfully");
+    });
+  } catch (error) {
+    console.error("P10 Report - Controller error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error generating P10 report",
+    });
+  }
+};
+
 const generateP09Report = async (req, res, next) => {
   try {
     const { fromDate, toDate } = req.query;
@@ -161,4 +219,5 @@ module.exports = {
   getPayComponentOptions,
   updatePayOneTimeForColumnComponent,
   generateP09Report,
+  generateP10Report,
 };
