@@ -912,7 +912,6 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
               amount: paymentAmount,
               balance_amount: previousPending,
               pending_amount: newPending,
-              // due_month: payroll_month?.toString(),
               due_year: payroll_year?.toString(),
               log_inst: user?.log_inst || 1,
               createdby: user?.id || 1,

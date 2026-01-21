@@ -362,10 +362,11 @@ model hrms_d_employee {
   approval_work_approver                          hrms_d_approval_work_flow[]
   request_approval_approver                       hrms_d_requests_approval[]
   assigned_employee                               hrms_d_notification_assigned_user[]
-  nida_file                                       String?                                           @db.VarChar(255)
-  nssf_file                                       String?                                           @db.VarChar(255)
-  wcf                                             String?                                           @db.VarChar(255)
-  nhif                                            String?                                           @db.VarChar(255)
+  column_one                                      String?                                           @db.VarChar(255)
+  column_two                                      String?                                           @db.VarChar(255)
+  column_three                                    String?                                           @db.VarChar(255)
+  column_four                                     String?                                           @db.VarChar(255)
+  branch_is                                       String?                                           @db.VarChar(255)
   alert_workflow_actions_recipient                hrms_d_alert_workflow_action[]                    @relation("AlertActionRecipients")
   alert_workflow_actions_alert_recipient          hrms_d_alert_workflow_action[]                    @relation("AlertActionAlertRecipients")
   early_leave_requests                            hrms_d_early_leave[]
@@ -2630,6 +2631,7 @@ model hrms_d_default_configurations {
   column_two                      String?                @db.VarChar(255)
   column_three                    String?                @db.VarChar(255)
   column_four                     String?                @db.VarChar(255)
+  company_nature                  String?                @db.VarChar(255)
   full_day_working_hours          Int?
   half_day_working_hours          Int?
   working_days                    Int?
