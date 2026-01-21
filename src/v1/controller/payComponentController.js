@@ -12,7 +12,7 @@ const createPayComponent = async (req, res, next) => {
     let departmentData = { ...req.body };
     const department = await payComponentService.createPayComponent(
       departmentData,
-      createdBy
+      createdBy,
     );
     res.status(201).success("Pay component created successfully", department);
   } catch (error) {
@@ -23,7 +23,7 @@ const createPayComponent = async (req, res, next) => {
 const findPayComponentById = async (req, res, next) => {
   try {
     const department = await payComponentService.findPayComponentById(
-      req.params.id
+      req.params.id,
     );
     if (!department) throw new CustomError("Pay component not found", 404);
 
@@ -39,7 +39,7 @@ const updatePayComponent = async (req, res, next) => {
     let departmentData = { ...req.body };
     const department = await payComponentService.updatePayComponent(
       req.params.id,
-      departmentData
+      departmentData,
     );
     res.status(200).success("Pay component updated successfully", department);
   } catch (error) {
@@ -81,7 +81,7 @@ const getAllPayComponent = async (req, res, next) => {
       startDate && moment(startDate),
       endDate && moment(endDate),
       is_active,
-      is_advance
+      is_advance,
     );
     res.status(200).success(null, departments);
   } catch (error) {
@@ -99,7 +99,7 @@ const getPayComponentOptions = async (req, res, next) => {
     const payComponent = await payComponentService.getPayComponentOptions(
       isAdvance,
       isOvertimeRelated,
-      is_loan
+      is_loan,
     );
     res.status(200).success(null, payComponent);
   } catch (error) {
@@ -119,7 +119,7 @@ const generateSDLReport = async (req, res) => {
     console.log("SDL Report - Request received:", { fromDate, toDate });
     const reportData = await payComponentModel.getSDLReportData(
       fromDate,
-      toDate
+      toDate,
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -130,7 +130,7 @@ const generateSDLReport = async (req, res) => {
       "public",
       "reports",
       "sdl",
-      fileName
+      fileName,
     );
 
     const pdfPath = await payComponentModel.generateSDLReportPDF(
@@ -138,7 +138,7 @@ const generateSDLReport = async (req, res) => {
       companySettings,
       filePath,
       fromDate,
-      toDate
+      toDate,
     );
 
     console.log("SDL Report - PDF generated successfully:", pdfPath);
@@ -177,7 +177,7 @@ const generateP10Report = async (req, res) => {
 
     const reportData = await payComponentModel.getP10ReportData(
       fromDate,
-      toDate
+      toDate,
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -188,7 +188,7 @@ const generateP10Report = async (req, res) => {
       "public",
       "reports",
       "p10",
-      fileName
+      fileName,
     );
 
     const pdfPath = await payComponentModel.generateP10ReportPDF(
@@ -196,7 +196,7 @@ const generateP10Report = async (req, res) => {
       companySettings,
       filePath,
       fromDate,
-      toDate
+      toDate,
     );
 
     console.log("P10 Report - PDF generated successfully:", pdfPath);
@@ -230,7 +230,7 @@ const generateP09Report = async (req, res, next) => {
 
     const reportData = await payComponentModel.getP09ReportData(
       fromDate,
-      toDate
+      toDate,
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -243,7 +243,7 @@ const generateP09Report = async (req, res, next) => {
       companySettings,
       filePath,
       fromDate,
-      toDate
+      toDate,
     );
 
     const pdfBuffer = fs.readFileSync(filePath);
@@ -275,7 +275,7 @@ const generatePayRollSummaryReport = async (req, res, next) => {
 
     const reportData = await payRollReportModel.generatePayRollSummaryReport(
       fromDate,
-      toDate
+      toDate,
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -288,7 +288,7 @@ const generatePayRollSummaryReport = async (req, res, next) => {
       companySettings,
       filePath,
       fromDate,
-      toDate
+      toDate,
     );
 
     const pdfBuffer = fs.readFileSync(filePath);
@@ -326,7 +326,7 @@ const generateNSSFReport = async (req, res) => {
 
     const reportData = await payComponentModel.getNSSFReportData(
       paymonth,
-      payyear
+      payyear,
     );
 
     const fileName = `NSSF_Report_${paymonth}_${payyear}.html`;
@@ -335,14 +335,14 @@ const generateNSSFReport = async (req, res) => {
       "public",
       "reports",
       "nssf",
-      fileName
+      fileName,
     );
 
     const generatedPath = await payComponentModel.generateNSSFReportPDF(
       reportData,
       filePath,
       paymonth,
-      payyear
+      payyear,
     );
 
     console.log("NSSF Report - HTML generated successfully:", generatedPath);
@@ -367,6 +367,61 @@ const generateNSSFReport = async (req, res) => {
   }
 };
 
+const generateWCFReport = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+
+    if (!fromDate || !toDate) {
+      return res.status(400).json({
+        success: false,
+        message: "fromDate and toDate are required",
+      });
+    }
+
+    console.log("WCF Report - Request received:", { fromDate, toDate });
+
+    const reportData = await payComponentModel.getWCFReportData(
+      fromDate,
+      toDate,
+    );
+
+    const fileName = `WCF_Report_${fromDate}_to_${toDate}.html`;
+    const filePath = path.join(
+      process.cwd(),
+      "public",
+      "reports",
+      "wcf",
+      fileName,
+    );
+
+    const generatedPath = await payComponentModel.generateWCFReportPDF(
+      reportData,
+      filePath,
+      fromDate,
+      toDate,
+    );
+
+    console.log("WCF Report - HTML generated successfully:", generatedPath);
+
+    res.download(generatedPath, fileName, (err) => {
+      if (err) {
+        console.error("WCF Report - Error downloading file:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Error generating WCF report",
+        });
+      }
+      console.log("WCF Report - File downloaded successfully");
+    });
+  } catch (error) {
+    console.error("WCF Report - Controller error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error generating WCF report",
+    });
+  }
+};
+
 module.exports = {
   createPayComponent,
   findPayComponentById,
@@ -375,9 +430,10 @@ module.exports = {
   getAllPayComponent,
   getPayComponentOptions,
   updatePayOneTimeForColumnComponent,
+  generatePayRollSummaryReport,
   generateP09Report,
   generateSDLReport,
   generateP10Report,
   generateNSSFReport,
-  generatePayRollSummaryReport,
+  generateWCFReport,
 };

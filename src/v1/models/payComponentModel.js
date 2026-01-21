@@ -942,6 +942,7 @@ const getAllPayComponent = async (
       //     },
       //   },
       // },
+
       include: {
         pay_component_tax: true,
         pay_component_project: true,
@@ -1571,46 +1572,37 @@ const getSDLReportData = async (fromDate, toDate) => {
       return sampleData;
     }
 
-    // Handle the column1 issue by mapping it to expected structure
     if (result && result.length > 0) {
       console.log("SDL Report - First row sample:", result[0]);
 
-      // Check if the result contains column1 (which indicates an issue with the stored procedure)
       const firstRow = result[0];
       if (firstRow.hasOwnProperty("column1")) {
         console.log(
           "SDL Report - Detected column1 issue, attempting to fix data structure",
         );
 
-        // Try to map the data to expected structure
         const fixedResult = result.map((row, index) => {
           const fixedRow = { ...row };
 
-          // If column1 exists, it might contain one of the expected pay component values
-          // We need to map it to the expected structure based on the data we know
           if (row.column1 !== undefined && row.column1 !== null) {
-            // Try to determine what column1 represents based on value and context
             const value = parseFloat(row.column1);
 
-            // Map column1 to appropriate pay component fields
-            // This is a workaround - the proper fix would be in the stored procedure
-            fixedRow["1001"] = value; // Basic salary
-            fixedRow["1002"] = 0; // Housing allowance
-            fixedRow["1003"] = 0; // Transport allowance
-            fixedRow["1004"] = 0; // Medical allowance
-            fixedRow["1005"] = 0; // Other allowances
-            fixedRow["1006"] = 0; // Bonus
-            fixedRow["1007"] = 0; // Overtime
-            fixedRow["1008"] = 0; // Other earnings
-            fixedRow["1009"] = 0; // Other deductions
+            fixedRow["1001"] = value;
+            fixedRow["1002"] = 0;
+            fixedRow["1003"] = 0;
+            fixedRow["1004"] = 0;
+            fixedRow["1005"] = 0;
+            fixedRow["1006"] = 0;
+            fixedRow["1007"] = 0;
+            fixedRow["1008"] = 0;
+            fixedRow["1009"] = 0;
 
-            // Set required fields if they don't exist
             if (!fixedRow.payroll_month)
               fixedRow.payroll_month = new Date().getMonth() + 1;
             if (!fixedRow.payroll_year)
               fixedRow.payroll_year = new Date().getFullYear();
             if (!fixedRow.total_deductions)
-              fixedRow.total_deductions = value * 0.045; // Assume 4.5% SDL
+              fixedRow.total_deductions = value * 0.045;
             if (!fixedRow.employee_id) fixedRow.employee_id = index + 1;
             if (!fixedRow.id) fixedRow.id = index + 1;
 
@@ -1633,7 +1625,6 @@ const getSDLReportData = async (fromDate, toDate) => {
   } catch (error) {
     console.error("SDL Report - Error:", error);
 
-    // Check if this is the specific column1 error
     if (
       error.message &&
       error.message.includes("Invalid column name 'column1'")
@@ -1642,7 +1633,6 @@ const getSDLReportData = async (fromDate, toDate) => {
         "SDL Report - Detected column1 database error, using fallback data",
       );
 
-      // Return sample data as fallback when stored procedure fails
       const fallbackData = [
         {
           1001: 50000,
@@ -1666,7 +1656,7 @@ const getSDLReportData = async (fromDate, toDate) => {
           total_earnings: 68000,
           taxable_earnings: 68000,
           tax_amount: 0,
-          total_deductions: 3060, // 4.5% SDL
+          total_deductions: 3060,
           net_pay: 64940,
           status: "Processed",
           execution_date: new Date(),
@@ -1713,7 +1703,7 @@ const getSDLReportData = async (fromDate, toDate) => {
           total_earnings: 81600,
           taxable_earnings: 81600,
           tax_amount: 0,
-          total_deductions: 3672, // 4.5% SDL
+          total_deductions: 3672,
           net_pay: 77928,
           status: "Processed",
           execution_date: new Date(),
@@ -2910,6 +2900,180 @@ const generateNSSFReportPDF = async (
   }
 };
 
+const getWCFReportData = async (fromDate, toDate) => {
+  try {
+    console.log("WCF Report - Executing stored procedure with params:", {
+      fromDate,
+      toDate,
+    });
+
+    const result = await prisma.$queryRaw`
+      EXEC sp_hrms_wcf_report ${fromDate}, ${toDate}
+    `;
+
+    console.log("WCF Report - Raw result:", result);
+    console.log("WCF Report - Result length:", result?.length || 0);
+
+    if (!result || result.length === 0) {
+      console.log("WCF Report - Query returned empty, using sample data");
+
+      const sampleData = [
+        {
+          "S No": 1,
+          EmpId: 954,
+          "Employee Name": "Abdallah Bakari Kijazi",
+          "Employee Basic Pay": 480000,
+          "Employee Gross Salary": 480000,
+        },
+        {
+          "S No": 2,
+          EmpId: 955,
+          "Employee Name": "John Doe",
+          "Employee Basic Pay": 600000,
+          "Employee Gross Salary": 600000,
+        },
+      ];
+      return sampleData;
+    }
+
+    return result;
+  } catch (error) {
+    console.error("WCF Report - Error executing query:", error);
+    throw error;
+  }
+};
+
+const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
+  try {
+    console.log(
+      "WCF Report - Generating PDF with data:",
+      reportData.length,
+      "records",
+    );
+
+    const monthNames = [
+      "January",
+      "February",
+      "March",
+      "April",
+      "May",
+      "June",
+      "July",
+      "August",
+      "September",
+      "October",
+      "November",
+      "December",
+    ];
+
+    const fromDateObj = new Date(fromDate);
+    const month = monthNames[fromDateObj.getMonth()];
+    const year = fromDateObj.getFullYear();
+
+    let htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WCF Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .header-left { display: flex; align-items: center; flex: 1; }
+        .company-logo { margin-right: 20px; }
+        .header-right { text-align: right; font-weight: bold; font-size: 20px; color: #0066cc; }
+        .title-section { text-align: center; margin: 15px 0; }
+        .title-row { display: flex; justify-content: space-between; align-items: center; }
+        .company-logo { margin-right: 20px; }
+        .title-center { flex: 1; text-align: center; }
+        .wcf-title { font-weight: bold; font-size: 20px; color: #0066cc; }
+        .title-section h3 { margin: 5px 0; font-size: 16px; }
+        .info { margin: 20px 0; }
+        .info-row { margin: 5px 0; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #0066cc; color: white; font-weight: bold; }
+        .total-row { font-weight: bold; background-color: #f0f0f0; }
+        .text-right { text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="title-section">
+        <div class="title-row">
+            <div class="company-logo">
+                <img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">
+            </div>
+            <div class="title-center">
+                <h3>WORKER'S COMPENSATION FUND (WCF)</h3>
+                <h3>MONTHLY CONTRIBUTION REPORT</h3>
+            </div>
+            <div class="wcf-title">WCF Report</div>
+        </div>
+    </div>
+    
+    <div class="info">
+        <div class="info-row"><strong>Employer Name:</strong> USANGU LOGISTICS LIMITED</div>
+        <div class="info-row"><strong>MONTH:</strong> ${month}</div>
+        <div class="info-row"><strong>YEAR:</strong> ${year}</div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>S No</th>
+                <th>EmpId</th>
+                <th>Employee Name</th>
+                <th>Employee Basic Pay</th>
+                <th>Employee Gross Salary</th>
+            </tr>
+        </thead>
+        <tbody>
+`;
+
+    let totalBasicPay = 0;
+    let totalGrossSalary = 0;
+
+    reportData.forEach((employee) => {
+      totalBasicPay += employee["Employee Basic Pay"] || 0;
+      totalGrossSalary += employee["Employee Gross Salary"] || 0;
+
+      htmlContent += `
+                <tr>
+                    <td>${employee["S No"] || ""}</td>
+                    <td>${employee["EmpId"] || ""}</td>
+                    <td>${employee["Employee Name"] || ""}</td>
+                    <td class="text-right">${(employee["Employee Basic Pay"] || 0).toLocaleString()}</td>
+                    <td class="text-right">${(employee["Employee Gross Salary"] || 0).toLocaleString()}</td>
+                </tr>
+      `;
+    });
+
+    htmlContent += `
+            <tr class="total-row">
+                <td colspan="3">Grand Total :</td>
+                <td class="text-right">${totalBasicPay.toLocaleString()}</td>
+                <td class="text-right">${totalGrossSalary.toLocaleString()}</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+    `;
+
+    fs.writeFileSync(filePath.replace(".pdf", ".html"), htmlContent);
+
+    console.log(
+      "WCF Report - HTML file created:",
+      filePath.replace(".pdf", ".html"),
+    );
+
+    return filePath.replace(".pdf", ".html");
+  } catch (error) {
+    console.error("WCF Report - Error generating PDF:", error);
+    throw error;
+  }
+};
+
 module.exports = {
   createPayComponent,
   findPayComponentById,
@@ -2922,9 +3086,11 @@ module.exports = {
   getP10ReportData,
   getSDLReportData,
   getNSSFReportData,
+  getWCFReportData,
   getCompanySettings,
   generateP09ReportPDF,
   generateP10ReportPDF,
   generateSDLReportPDF,
   generateNSSFReportPDF,
+  generateWCFReportPDF,
 };

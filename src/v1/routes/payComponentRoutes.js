@@ -69,4 +69,10 @@ router.get(
   payComponentController.generateNSSFReport,
 );
 
+router.get(
+  "/wcf-report",
+  authenticateToken,
+  payComponentController.generateWCFReport,
+);
+
 module.exports = router;
