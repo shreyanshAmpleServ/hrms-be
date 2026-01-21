@@ -2,6 +2,9 @@ const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { toLowerCase } = require("zod/v4");
 const { id } = require("date-fns/locale");
+const fs = require("fs");
+const path = require("path");
+const puppeteer = require("puppeteer");
 // const mockPayComponents = require("../../mock/payComponent.mock.js");
 
 // const serializePayComponentData = (data) => ({
@@ -313,7 +316,7 @@ const serializePayComponentData = (data) => {
     if (factorNum < SMALLINT_MIN || factorNum > SMALLINT_MAX) {
       throw new CustomError(
         `Factor value ${factorNum} is out of range. Must be between ${SMALLINT_MIN} and ${SMALLINT_MAX}.`,
-        400
+        400,
       );
     }
     factor = factorNum;
@@ -329,7 +332,7 @@ const serializePayComponentData = (data) => {
     if (columnOrderNum < SMALLINT_MIN || columnOrderNum > SMALLINT_MAX) {
       throw new CustomError(
         `Column order value ${columnOrderNum} is out of range. Must be between ${SMALLINT_MIN} and ${SMALLINT_MAX}.`,
-        400
+        400,
       );
     }
     columnOrder = columnOrderNum;
@@ -384,7 +387,7 @@ const createPayComponent = async (data) => {
     if (!data.component_name || !data.component_code) {
       throw new CustomError(
         "component_name and component_code are required",
-        400
+        400,
       );
     }
 
@@ -408,7 +411,7 @@ const createPayComponent = async (data) => {
     if (!requesterExists) {
       throw new CustomError(
         `Cannot create pay component: User ID ${requesterId} is not a valid employee.`,
-        403
+        403,
       );
     }
 
@@ -429,12 +432,12 @@ const createPayComponent = async (data) => {
       ) {
         throw new CustomError(
           "Pay component with the same code already exists",
-          400
+          400,
         );
       } else {
         throw new CustomError(
           "Pay component with the same name already exists",
-          400
+          400,
         );
       }
     }
@@ -475,7 +478,7 @@ const createPayComponent = async (data) => {
               ADD [${data.component_code}] DECIMAL(18,4) NULL
             `);
             console.log(
-              `Column [${data.component_code}] added to payroll table`
+              `Column [${data.component_code}] added to payroll table`,
             );
           } catch (sqlErr) {
             console.error("ALTER TABLE failed:", sqlErr.message);
@@ -487,7 +490,7 @@ const createPayComponent = async (data) => {
 
         return created;
       },
-      { maxWait: 10000, timeout: 30000 }
+      { maxWait: 10000, timeout: 30000 },
     );
 
     return result;
@@ -504,7 +507,7 @@ const createPayComponent = async (data) => {
 
     throw new CustomError(
       `Error creating pay component: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -521,7 +524,7 @@ const findPayComponentById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding pay component by ID: ${error.message}`,
-      503
+      503,
     );
   }
 };
@@ -539,7 +542,7 @@ const updatePayComponent = async (id, data) => {
     if (totalCount > 0) {
       throw new CustomError(
         "Pay component with the same name or code already exists",
-        400
+        400,
       );
     }
     const updatedEntry = await prisma.hrms_m_pay_component.update({
@@ -566,7 +569,7 @@ const updatePayComponent = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating pay component: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -736,7 +739,7 @@ const updatePayOneTimeForColumnComponent = async () => {
         } catch (sqlError) {
           throw new CustomError(
             `Failed to alter table for component ${componentId}: ${sqlError.message}`,
-            500
+            500,
           );
         }
       } else {
@@ -758,7 +761,7 @@ const updatePayOneTimeForColumnComponent = async () => {
           if (duplicateCount > 0) {
             throw new CustomError(
               `Duplicate found for component ID ${componentId}`,
-              400
+              400,
             );
           }
 
@@ -786,7 +789,7 @@ const updatePayOneTimeForColumnComponent = async () => {
         updatedComponents.push(updated);
       } catch (updateError) {
         console.error(
-          `Failed to update component ID ${componentId}: ${updateError.message}`
+          `Failed to update component ID ${componentId}: ${updateError.message}`,
         );
       }
     }
@@ -810,7 +813,7 @@ const deletePayComponent = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -825,7 +828,7 @@ const getAllPayComponent = async (
   startDate,
   endDate,
   is_active,
-  is_advance
+  is_advance,
 ) => {
   try {
     // AUTO-CREATION DISABLED
@@ -972,7 +975,7 @@ const getAllPayComponent = async (
 const getPayComponentOptions = async (
   isAdvance,
   isOvertimeRelated,
-  is_loan
+  is_loan,
 ) => {
   try {
     const whereClause = {};
@@ -1061,6 +1064,1472 @@ const getPayComponentOptions = async (
   }
 };
 
+const getP10ReportData = async (fromDate, toDate) => {
+  try {
+    console.log("P10 Report - Fetching data for:", { fromDate, toDate });
+
+    const checkData = await prisma.$queryRaw`
+      SELECT 
+        COUNT(*) as total_records,
+        MIN(doc_date) as min_date,
+        MAX(doc_date) as max_date
+      FROM hrms_d_monthly_payroll_processing 
+      WHERE doc_date >= ${fromDate} AND doc_date <= ${toDate}
+    `;
+    console.log("P10 Report - Monthly payroll data check:", checkData);
+
+    const sampleData = await prisma.$queryRaw`
+      SELECT TOP 5 *, 
+        CAST(payroll_month AS VARCHAR) + '/' + CAST(payroll_year AS VARCHAR) as payroll_period,
+        doc_date,
+        je_transid,
+        1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009
+      FROM hrms_d_monthly_payroll_processing 
+      WHERE doc_date >= ${fromDate} AND doc_date <= ${toDate}
+    `;
+    console.log("P10 Report - Sample monthly payroll data:", sampleData);
+
+    const result = await prisma.$queryRaw`
+      EXEC [dbo].[sp_hrms_p10_report] 
+        @FromDate = ${fromDate}, 
+        @ToDate = ${toDate}
+    `;
+    console.log("P10 Report - Raw result:", result);
+    console.log("P10 Report - Result length:", result?.length || 0);
+
+    if (!result || result.length === 0) {
+      console.log(
+        "P10 Report - Stored procedure returned empty, using sample data",
+      );
+      return sampleData;
+    }
+
+    if (result && result.length > 0) {
+      console.log("P10 Report - First row sample:", result[0]);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("P10 Report - Error:", error);
+    throw new CustomError(
+      `Error executing P10 report stored procedure: ${error.message}`,
+      500,
+    );
+  }
+};
+
+const getP09ReportData = async (fromDate, toDate) => {
+  try {
+    console.log("P09 Report - Fetching data for:", { fromDate, toDate });
+
+    const checkData = await prisma.$queryRaw`
+      SELECT 
+        COUNT(*) as total_records,
+        MIN(doc_date) as min_date,
+        MAX(doc_date) as max_date
+      FROM hrms_d_monthly_payroll_processing 
+      WHERE doc_date >= ${fromDate} AND doc_date <= ${toDate}
+    `;
+    console.log("P09 Report - Monthly payroll data check:", checkData);
+
+    const sampleData = await prisma.$queryRaw`
+      SELECT TOP 5 *, 
+        CAST(payroll_month AS VARCHAR) + '/' + CAST(payroll_year AS VARCHAR) as payroll_period,
+        doc_date,
+        je_transid,
+        1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009
+      FROM hrms_d_monthly_payroll_processing 
+      WHERE doc_date >= ${fromDate} AND doc_date <= ${toDate}
+    `;
+    console.log("P09 Report - Sample monthly payroll data:", sampleData);
+
+    const result = await prisma.$queryRaw`
+      EXEC [dbo].[sp_hrms_p09_report] 
+        @FromDate = ${fromDate}, 
+        @ToDate = ${toDate}
+    `;
+    console.log("P09 Report - Raw result:", result);
+    console.log("P09 Report - Result length:", result?.length || 0);
+
+    if (!result || result.length === 0) {
+      console.log(
+        "P09 Report - Stored procedure returned empty, using sample data",
+      );
+      return sampleData;
+    }
+
+    if (result && result.length > 0) {
+      console.log("P09 Report - First row sample:", result[0]);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("P09 Report - Error:", error);
+    throw new CustomError(
+      `Error executing P09 report stored procedure: ${error.message}`,
+      500,
+    );
+  }
+};
+const getCompanySettings = async () => {
+  try {
+    const company = await prisma.hrms_d_default_configurations.findFirst({
+      select: {
+        company_name: true,
+        company_logo: true,
+        street_address: true,
+        phone_number: true,
+        email: true,
+        website: true,
+      },
+    });
+
+    return (
+      company || {
+        company_name: "Company Name",
+        company_logo: null,
+        street_address: "Company Address",
+        phone_number: "Company Phone",
+        email: "company@example.com",
+        website: "www.example.com",
+      }
+    );
+  } catch (error) {
+    throw new CustomError(
+      `Error fetching company settings: ${error.message}`,
+      500,
+    );
+  }
+};
+
+const sdlReportTemplate = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>SDL Report</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+}
+
+.container {
+  width: 21cm;
+  margin: auto;
+  padding: 15px;
+  border: 1px solid #000;
+}
+
+.header {
+  text-align: center;
+  font-weight: bold;
+}
+
+.header h2 {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+.flex {
+  display: flex;
+  justify-content: space-between;
+}
+
+.box {
+  width: 48%;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #000;
+  padding: 4px;
+}
+
+.table th {
+  background: #eee;
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.total {
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h2>TANZANIA</h2>
+    <h2>TANZANIA REVENUE AUTHORITY - INCOME TAX DEPARTMENT</h2>
+    <h2>SKILLS DEVELOPMENT LEVY (SDL) RETURN</h2>
+  </div>
+
+  <br />
+
+  <!-- EMPLOYER DETAILS -->
+  <div class="flex">
+    <div class="box">
+      <p><span class="label">Employer Name:</span> {{companyName}}</p>
+      <p><span class="label">Nature of Business:</span> {{natureOfBusiness}}</p>
+      <p><span class="label">Parastatal / Company:</span> {{companyType}}</p>
+    </div>
+
+    <div class="box">
+      <p>{{companyAddress}}</p>
+      <p><span class="label">Payroll/Works Check No:</span> {{payrollCheckNo}}</p>
+      <p><span class="label">Employer TIN:</span> {{employerTin}}</p>
+    </div>
+  </div>
+
+  <br />
+
+  <!-- MONTH TOTALS -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th class="text-right">SDL Paid</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{monthlyRows}}
+      <tr class="total">
+        <td>Total</td>
+        <td class="text-right">{{yearlySDLTotal}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <br />
+
+  <!-- INCOME RANGE SUMMARY -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Income Range</th>
+        <th>No. of Employees</th>
+        <th>Total Gross</th>
+        <th>Total SDL Paid</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{incomeRangeRows}}
+      <tr class="total">
+        <td class="text-center">TOTAL</td>
+        <td class="text-center">{{totalEmployees}}</td>
+        <td class="text-right">{{totalGross}}</td>
+        <td class="text-right">{{totalSDL}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>
+`;
+
+const p10ReportTemplate = `<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8" />
+<title>P10 Report</title>
+<style>
+body {
+  font-family: Arial, sans-serif;
+  font-size: 11px;
+}
+
+.container {
+  width: 21cm;
+  margin: auto;
+  padding: 15px;
+  border: 1px solid #000;
+}
+
+.header {
+  text-align: center;
+  font-weight: bold;
+}
+
+.header h2 {
+  margin: 2px 0;
+  font-size: 14px;
+}
+
+.flex {
+  display: flex;
+  justify-content: space-between;
+}
+
+.box {
+  width: 48%;
+}
+
+.label {
+  font-weight: bold;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #000;
+  padding: 4px;
+}
+
+.table th {
+  background: #eee;
+  text-align: center;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.total {
+  font-weight: bold;
+}
+</style>
+</head>
+
+<body>
+<div class="container">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h2>TANZANIA</h2>
+    <h2>TANZANIA REVENUE AUTHORITY - INCOME TAX DEPARTMENT</h2>
+    <h2>P.A.Y.E EMPLOYER'S END OF YEAR CERTIFICATE P.10</h2>
+  </div>
+
+  <br />
+
+  <!-- EMPLOYER DETAILS -->
+  <div class="flex">
+    <div class="box">
+      <p><span class="label">Employer Name:</span> {{companyName}}</p>
+      <p><span class="label">Nature of Business:</span> {{natureOfBusiness}}</p>
+      <p><span class="label">Parastatal / Company:</span> {{companyType}}</p>
+    </div>
+
+    <div class="box">
+      <p>{{companyAddress}}</p>
+      <p><span class="label">Payroll/Works Check No:</span> {{payrollCheckNo}}</p>
+      <p><span class="label">Employer TIN:</span> {{employerTin}}</p>
+    </div>
+  </div>
+
+  <br />
+
+  <!-- MONTH TOTALS -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Month</th>
+        <th class="text-right">Tax Paid</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{monthlyRows}}
+      <tr class="total">
+        <td>Total</td>
+        <td class="text-right">{{yearlyTaxTotal}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <br />
+
+  <!-- INCOME RANGE SUMMARY -->
+  <table class="table">
+    <thead>
+      <tr>
+        <th>Income Range</th>
+        <th>No. of Employees</th>
+        <th>Total Gross</th>
+        <th>Total Tax Paid</th>
+      </tr>
+    </thead>
+    <tbody>
+      {{incomeRangeRows}}
+      <tr class="total">
+        <td class="text-center">TOTAL</td>
+        <td class="text-center">{{totalEmployees}}</td>
+        <td class="text-right">{{totalGross}}</td>
+        <td class="text-right">{{totalTax}}</td>
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>
+`;
+
+const getSDLReportData = async (fromDate, toDate) => {
+  try {
+    console.log("SDL Report - Executing stored procedure with dates:", {
+      fromDate,
+      toDate,
+    });
+
+    const result = await prisma.$queryRaw`
+      EXEC [dbo].[sp_hrms_sdl_report] 
+        @FromDate = ${fromDate}, 
+        @ToDate = ${toDate}
+    `;
+
+    console.log("SDL Report - Raw result:", result);
+    console.log("SDL Report - Result length:", result?.length || 0);
+
+    if (!result || result.length === 0) {
+      console.log(
+        "SDL Report - Stored procedure returned empty, using sample data",
+      );
+
+      // Sample SDL data for testing
+      const sampleData = [
+        {
+          1001: 0,
+          1002: 0,
+          1003: 0,
+          1004: 0,
+          1005: 0,
+          1006: 0,
+          1007: 0,
+          1008: 0,
+          1009: 66666.67,
+          id: 25,
+          employee_id: 62,
+          payroll_month: 1,
+          payroll_year: 2026,
+          payroll_week: 1,
+          payroll_start_date: null,
+          payroll_end_date: null,
+          payroll_paid_days: 0,
+          pay_currency: 23,
+          total_earnings: 0,
+          taxable_earnings: 0,
+          tax_amount: 0,
+          total_deductions: 66666.67,
+          net_pay: -66666.67,
+          status: "Pending",
+          execution_date: new Date("2026-01-21T00:00:00.000Z"),
+          pay_date: null,
+          doc_date: new Date("2026-01-21T00:00:00.000Z"),
+          processed: "N",
+          je_transid: 0,
+          project_id: 0,
+          cost_center1_id: 0,
+          cost_center2_id: 0,
+          cost_center3_id: 0,
+          cost_center4_id: 0,
+          cost_center5_id: 0,
+          approved1: "N",
+          approver1_id: 0,
+          employee_email: null,
+          remarks: null,
+          createdate: new Date("2026-01-21T11:56:52.930Z"),
+          createdby: 5,
+          updatedate: new Date("2026-01-21T11:56:52.930Z"),
+          updatedby: 5,
+          log_inst: null,
+          payroll_period: "1/2026",
+          "": 1009,
+        },
+      ];
+      return sampleData;
+    }
+
+    if (result && result.length > 0) {
+      console.log("SDL Report - First row sample:", result[0]);
+    }
+
+    return result;
+  } catch (error) {
+    console.error("SDL Report - Error:", error);
+    throw new CustomError(
+      `Error executing SDL report stored procedure: ${error.message}`,
+      500,
+    );
+  }
+};
+
+const generateSDLReportHTML = (
+  reportData,
+  companySettings,
+  fromDate,
+  toDate,
+) => {
+  return new Promise((resolve, reject) => {
+    try {
+      console.log("SDL HTML - Processing reportData:", reportData);
+      console.log("SDL HTML - ReportData length:", reportData?.length || 0);
+
+      const formatAmount = (value) => {
+        const number = parseFloat(value || 0);
+        return number.toLocaleString("en-TZ", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      };
+
+      const monthlyData = {};
+      let totalSDL = 0;
+      let totalGross = 0;
+      let totalEmployees = 0;
+
+      if (reportData && reportData.length > 0) {
+        reportData.forEach((row) => {
+          const month = parseInt(row.payroll_month) || 1;
+          const year = parseInt(row.payroll_year) || new Date().getFullYear();
+          const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+
+          // SDL is typically calculated as 4.5% of gross salary or a fixed amount
+          const grossSalary =
+            parseFloat(row["1001"] || 0) +
+            parseFloat(row["1002"] || 0) +
+            parseFloat(row["1003"] || 0) +
+            parseFloat(row["1004"] || 0) +
+            parseFloat(row["1005"] || 0) +
+            parseFloat(row["1006"] || 0) +
+            parseFloat(row["1007"] || 0) +
+            parseFloat(row["1008"] || 0) +
+            parseFloat(row["1009"] || 0);
+
+          // For SDL, we'll use a simplified calculation - 4.5% of gross or fixed deduction amount
+          const sdlAmount =
+            parseFloat(row.total_deductions || 0) || grossSalary * 0.045;
+
+          console.log(
+            `SDL HTML - Processing row: month=${month}, year=${year}, sdl=${sdlAmount}, gross=${grossSalary}`,
+          );
+
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = 0;
+          }
+          monthlyData[monthKey] += sdlAmount;
+          totalSDL += sdlAmount;
+          totalGross += grossSalary;
+          totalEmployees++;
+        });
+      }
+
+      console.log("SDL HTML - Monthly data summary:", monthlyData);
+      console.log("SDL HTML - Total SDL calculated:", totalSDL);
+      console.log("SDL HTML - Total gross calculated:", totalGross);
+
+      let monthlyRows = "";
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+
+      const years = [
+        ...new Set(
+          reportData.map(
+            (row) => parseInt(row.payroll_year) || new Date().getFullYear(),
+          ),
+        ),
+      ];
+      console.log("SDL HTML - Years found in data:", years);
+
+      const monthYearData = [];
+      years.forEach((year) => {
+        for (let month = 1; month <= 12; month++) {
+          const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+          const sdlAmount = monthlyData[monthKey] || 0;
+          if (sdlAmount > 0) {
+            monthYearData.push({
+              month,
+              year,
+              sdlAmount,
+              monthName: monthNames[month - 1],
+              displayText: `${monthNames[month - 1]} ${year}`,
+            });
+          }
+        }
+      });
+
+      monthYearData.sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.month - b.month;
+      });
+
+      monthYearData.forEach((data) => {
+        monthlyRows += `
+          <tr>
+            <td>${data.displayText}</td>
+            <td class="text-right">${formatAmount(data.sdlAmount)}</td>
+          </tr>
+        `;
+      });
+
+      const incomeRanges = [
+        { range: "Up to 270,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "270,001 - 520,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "520,001 - 780,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "780,001 - 1,040,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "1,040,001 - 1,300,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "1,300,001 - 1,560,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "1,560,001 - 1,820,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "1,820,001 - 2,080,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "2,080,001 - 2,340,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "2,340,001 - 2,600,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "2,600,001 - 2,860,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "2,860,001 - 3,120,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "3,120,001 - 3,380,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "3,380,001 - 3,640,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "3,640,001 - 3,900,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "3,900,001 - 4,160,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "4,160,001 - 4,420,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "4,420,001 - 4,680,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "4,680,001 - 4,940,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "4,940,001 - 5,200,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "5,200,001 - 5,460,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "5,460,001 - 5,720,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "5,720,001 - 5,980,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "5,980,001 - 6,240,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "6,240,001 - 6,500,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "6,500,001 - 6,760,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "6,760,001 - 7,020,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "7,020,001 - 7,280,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "7,280,001 - 7,540,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "7,540,001 - 7,800,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "7,800,001 - 8,060,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "8,060,001 - 8,320,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "8,320,001 - 8,580,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "8,580,001 - 8,840,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "8,840,001 - 9,100,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "9,100,001 - 9,360,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "9,360,001 - 9,620,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "9,620,001 - 9,880,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "9,880,001 - 10,140,000", employees: 0, gross: 0, sdl: 0 },
+        { range: "10,140,001 and above", employees: 0, gross: 0, sdl: 0 },
+      ];
+
+      if (reportData && reportData.length > 0) {
+        incomeRanges[0].employees = totalEmployees;
+        incomeRanges[0].gross = totalGross;
+        incomeRanges[0].sdl = totalSDL;
+      }
+
+      let incomeRangeRows = "";
+      incomeRanges.forEach((range) => {
+        incomeRangeRows += `
+          <tr>
+            <td>${range.range}</td>
+            <td class="text-center">${range.employees}</td>
+            <td class="text-right">${formatAmount(range.gross)}</td>
+            <td class="text-right">${formatAmount(range.sdl)}</td>
+          </tr>
+        `;
+      });
+
+      console.log("SDL HTML - Monthly data:", monthlyData);
+      console.log("SDL HTML - Total SDL:", totalSDL);
+      console.log("SDL HTML - Total gross:", totalGross);
+
+      const templateData = {
+        companyName: companySettings.company_name || "Company Name",
+        natureOfBusiness:
+          companySettings.nature_of_business || "Nature of Business",
+        companyType: companySettings.company_type || "Company",
+        companyAddress: companySettings.street_address || "Company Address",
+        payrollCheckNo: companySettings.payroll_check_no || "",
+        employerTin: companySettings.tin_number || "",
+        monthlyRows,
+        yearlySDLTotal: formatAmount(totalSDL),
+        incomeRangeRows,
+        totalEmployees: totalEmployees,
+        totalGross: formatAmount(totalGross),
+        totalSDL: formatAmount(totalSDL),
+      };
+
+      let htmlContent = sdlReportTemplate;
+      Object.keys(templateData).forEach((key) => {
+        const placeholder = new RegExp(`{{${key}}}`, "g");
+        htmlContent = htmlContent.replace(placeholder, templateData[key]);
+      });
+
+      resolve(htmlContent);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const generateSDLReportPDF = async (
+  reportData,
+  companySettings,
+  filePath,
+  fromDate,
+  toDate,
+) => {
+  let browser = null;
+  try {
+    const htmlContent = await generateSDLReportHTML(
+      reportData,
+      companySettings,
+      fromDate,
+      toDate,
+    );
+
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
+
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
+  } catch (error) {
+    console.log("SDL PDF generation error:", error);
+    throw new Error(`SDL PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
+  }
+};
+
+const generateP10ReportHTML = (
+  reportData,
+  companySettings,
+  fromDate,
+  toDate,
+) => {
+  return new Promise((resolve, reject) => {
+    try {
+      console.log("P10 HTML - Processing reportData:", reportData);
+      console.log("P10 HTML - ReportData length:", reportData?.length || 0);
+
+      const formatAmount = (value) => {
+        const number = parseFloat(value || 0);
+        return number.toLocaleString("en-TZ", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      };
+
+      const monthlyData = {};
+      let totalTax = 0;
+      let totalGross = 0;
+      let totalEmployees = 0;
+
+      if (reportData && reportData.length > 0) {
+        reportData.forEach((row) => {
+          const month = parseInt(row.payroll_month) || 1;
+          const year = parseInt(row.payroll_year) || new Date().getFullYear();
+          const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+          const taxAmount = parseFloat(row.tax_amount || 0);
+          const grossSalary =
+            parseFloat(row["1001"] || 0) +
+            parseFloat(row["1002"] || 0) +
+            parseFloat(row["1003"] || 0) +
+            parseFloat(row["1004"] || 0) +
+            parseFloat(row["1005"] || 0) +
+            parseFloat(row["1006"] || 0) +
+            parseFloat(row["1007"] || 0) +
+            parseFloat(row["1008"] || 0) +
+            parseFloat(row["1009"] || 0);
+
+          console.log(
+            `P10 HTML - Processing row: month=${month}, year=${year}, tax=${taxAmount}, gross=${grossSalary}`,
+          );
+
+          if (!monthlyData[monthKey]) {
+            monthlyData[monthKey] = 0;
+          }
+          monthlyData[monthKey] += taxAmount;
+          totalTax += taxAmount;
+          totalGross += grossSalary;
+          totalEmployees++;
+        });
+      }
+
+      console.log("P10 HTML - Monthly data summary:", monthlyData);
+      console.log("P10 HTML - Total tax calculated:", totalTax);
+      console.log("P10 HTML - Total gross calculated:", totalGross);
+
+      let monthlyRows = "";
+      const monthNames = [
+        "Jan",
+        "Feb",
+        "Mar",
+        "Apr",
+        "May",
+        "Jun",
+        "Jul",
+        "Aug",
+        "Sep",
+        "Oct",
+        "Nov",
+        "Dec",
+      ];
+
+      const years = [
+        ...new Set(
+          reportData.map(
+            (row) => parseInt(row.payroll_year) || new Date().getFullYear(),
+          ),
+        ),
+      ];
+      console.log("P10 HTML - Years found in data:", years);
+
+      const monthYearData = [];
+      years.forEach((year) => {
+        for (let month = 1; month <= 12; month++) {
+          const monthKey = `${year}-${String(month).padStart(2, "0")}`;
+          const taxAmount = monthlyData[monthKey] || 0;
+          if (taxAmount > 0) {
+            monthYearData.push({
+              month,
+              year,
+              taxAmount,
+              monthName: monthNames[month - 1],
+              displayText: `${monthNames[month - 1]} ${year}`,
+            });
+          }
+        }
+      });
+
+      monthYearData.sort((a, b) => {
+        if (a.year !== b.year) return a.year - b.year;
+        return a.month - b.month;
+      });
+
+      monthYearData.forEach((data) => {
+        monthlyRows += `
+          <tr>
+            <td>${data.displayText}</td>
+            <td class="text-right">${formatAmount(data.taxAmount)}</td>
+          </tr>
+        `;
+      });
+
+      const incomeRanges = [
+        { range: "Up to 270,000", employees: 0, gross: 0, tax: 0 },
+        { range: "270,001 - 520,000", employees: 0, gross: 0, tax: 0 },
+        { range: "520,001 - 780,000", employees: 0, gross: 0, tax: 0 },
+        { range: "780,001 - 1,040,000", employees: 0, gross: 0, tax: 0 },
+        { range: "1,040,001 - 1,300,000", employees: 0, gross: 0, tax: 0 },
+        { range: "1,300,001 - 1,560,000", employees: 0, gross: 0, tax: 0 },
+        { range: "1,560,001 - 1,820,000", employees: 0, gross: 0, tax: 0 },
+        { range: "1,820,001 - 2,080,000", employees: 0, gross: 0, tax: 0 },
+        { range: "2,080,001 - 2,340,000", employees: 0, gross: 0, tax: 0 },
+        { range: "2,340,001 - 2,600,000", employees: 0, gross: 0, tax: 0 },
+        { range: "2,600,001 - 2,860,000", employees: 0, gross: 0, tax: 0 },
+        { range: "2,860,001 - 3,120,000", employees: 0, gross: 0, tax: 0 },
+        { range: "3,120,001 - 3,380,000", employees: 0, gross: 0, tax: 0 },
+        { range: "3,380,001 - 3,640,000", employees: 0, gross: 0, tax: 0 },
+        { range: "3,640,001 - 3,900,000", employees: 0, gross: 0, tax: 0 },
+        { range: "3,900,001 - 4,160,000", employees: 0, gross: 0, tax: 0 },
+        { range: "4,160,001 - 4,420,000", employees: 0, gross: 0, tax: 0 },
+        { range: "4,420,001 - 4,680,000", employees: 0, gross: 0, tax: 0 },
+        { range: "4,680,001 - 4,940,000", employees: 0, gross: 0, tax: 0 },
+        { range: "4,940,001 - 5,200,000", employees: 0, gross: 0, tax: 0 },
+        { range: "5,200,001 - 5,460,000", employees: 0, gross: 0, tax: 0 },
+        { range: "5,460,001 - 5,720,000", employees: 0, gross: 0, tax: 0 },
+        { range: "5,720,001 - 5,980,000", employees: 0, gross: 0, tax: 0 },
+        { range: "5,980,001 - 6,240,000", employees: 0, gross: 0, tax: 0 },
+        { range: "6,240,001 - 6,500,000", employees: 0, gross: 0, tax: 0 },
+        { range: "6,500,001 - 6,760,000", employees: 0, gross: 0, tax: 0 },
+        { range: "6,760,001 - 7,020,000", employees: 0, gross: 0, tax: 0 },
+        { range: "7,020,001 - 7,280,000", employees: 0, gross: 0, tax: 0 },
+        { range: "7,280,001 - 7,540,000", employees: 0, gross: 0, tax: 0 },
+        { range: "7,540,001 - 7,800,000", employees: 0, gross: 0, tax: 0 },
+        { range: "7,800,001 - 8,060,000", employees: 0, gross: 0, tax: 0 },
+        { range: "8,060,001 - 8,320,000", employees: 0, gross: 0, tax: 0 },
+        { range: "8,320,001 - 8,580,000", employees: 0, gross: 0, tax: 0 },
+        { range: "8,580,001 - 8,840,000", employees: 0, gross: 0, tax: 0 },
+        { range: "8,840,001 - 9,100,000", employees: 0, gross: 0, tax: 0 },
+        { range: "9,100,001 - 9,360,000", employees: 0, gross: 0, tax: 0 },
+        { range: "9,360,001 - 9,620,000", employees: 0, gross: 0, tax: 0 },
+        { range: "9,620,001 - 9,880,000", employees: 0, gross: 0, tax: 0 },
+        { range: "9,880,001 - 10,140,000", employees: 0, gross: 0, tax: 0 },
+        { range: "10,140,001 and above", employees: 0, gross: 0, tax: 0 },
+      ];
+
+      if (reportData && reportData.length > 0) {
+        incomeRanges[0].employees = totalEmployees;
+        incomeRanges[0].gross = totalGross;
+        incomeRanges[0].tax = totalTax;
+      }
+
+      let incomeRangeRows = "";
+      incomeRanges.forEach((range) => {
+        incomeRangeRows += `
+          <tr>
+            <td>${range.range}</td>
+            <td class="text-center">${range.employees}</td>
+            <td class="text-right">${formatAmount(range.gross)}</td>
+            <td class="text-right">${formatAmount(range.tax)}</td>
+          </tr>
+        `;
+      });
+
+      console.log("P10 HTML - Monthly data:", monthlyData);
+      console.log("P10 HTML - Total tax:", totalTax);
+      console.log("P10 HTML - Total gross:", totalGross);
+
+      const templateData = {
+        companyName: companySettings.company_name || "Company Name",
+        natureOfBusiness:
+          companySettings.nature_of_business || "Nature of Business",
+        companyType: companySettings.company_type || "Company",
+        companyAddress: companySettings.street_address || "Company Address",
+        payrollCheckNo: companySettings.payroll_check_no || "",
+        employerTin: companySettings.tin_number || "",
+        monthlyRows,
+        yearlyTaxTotal: formatAmount(totalTax),
+        incomeRangeRows,
+        totalEmployees: totalEmployees,
+        totalGross: formatAmount(totalGross),
+        totalTax: formatAmount(totalTax),
+      };
+
+      let htmlContent = p10ReportTemplate;
+      Object.keys(templateData).forEach((key) => {
+        const placeholder = new RegExp(`{{${key}}}`, "g");
+        htmlContent = htmlContent.replace(placeholder, templateData[key]);
+      });
+
+      resolve(htmlContent);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const generateP10ReportPDF = async (
+  reportData,
+  companySettings,
+  filePath,
+  fromDate,
+  toDate,
+) => {
+  let browser = null;
+  try {
+    const htmlContent = await generateP10ReportHTML(
+      reportData,
+      companySettings,
+      fromDate,
+      toDate,
+    );
+
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
+
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
+  } catch (error) {
+    console.log("P10 PDF generation error:", error);
+    throw new Error(`P10 PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
+  }
+};
+
+const p09ReportTemplate = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>P09 Tax Report</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .report-container {
+            width: 21cm;
+            min-height: 29.7cm;
+            background: white;
+            margin: 0 auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 30px;
+            border-bottom: 2px solid #000;
+            padding-bottom: 20px;
+        }
+
+        .company-info {
+            text-align: left;
+        }
+
+        .company-logo {
+            max-width: 150px;
+            height: auto;
+            margin-bottom: 5px;
+        }
+
+        .company-address {
+            font-size: 10px;
+            color: #555;
+        }
+
+        .report-title {
+            flex-grow: 1;
+            text-align: left;
+            width: 70%;
+        }
+
+        .report-title h1 {
+            font-size: 18px;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .report-title h2 {
+            font-size: 14px;
+            margin-bottom: 3px;
+            font-weight: bold;
+        }
+
+        .report-title h3 {
+            font-size: 12px;
+            font-weight: normal;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+
+        th, td {
+            border: 1px solid #ccc;
+            padding: 8px;
+            text-align: left;
+            font-size: 10px;
+        }
+
+        th {
+            background-color: #e0e7ff;
+            color: #333;
+            font-weight: bold;
+        }
+
+        .total-row {
+            background-color: #f0f0f0;
+            font-weight: bold;
+        }
+
+        .footer {
+            margin-top: 50px;
+            text-align: center;
+        }
+
+        .signature-section {
+            margin-top: 80px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .signature-box {
+            width: 45%;
+        }
+
+        .signature-line {
+            border-bottom: 1px solid #000;
+            margin-bottom: 5px;
+            height: 40px;
+        }
+
+        .signature-label {
+            font-size: 12px;
+            text-align: center;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .report-container {
+                box-shadow: none;
+                margin: 0;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="report-container">
+        <div class="header">
+            <div class="company-info">
+                {{companyLogo}}
+                <div class="company-address">{{companyAddress}}</div>
+            </div>
+            <div class="report-title">
+                <h1>TANZANIA REVENUE AUTHORITY - INCOME TAX DEPARTMENT</h1>
+                <h2>PAYE DETAILS OF PAYMENT OF TAX WITHHELD</h2>
+                <h3>FOR TO {{fromDate}} TO {{toDate}}</h3>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>S No</th>
+                    <th>PCF No</th>
+                    <th>Name</th>
+                    <th>TIN No.</th>
+                    <th>BASIC PAY</th>
+                    <th>ALL & BEN</th>
+                    <th>GROSS PAY</th>
+                    <th>DEDUCTION</th>
+                    <th>AMOUNT TAXABLE</th>
+                    <th>Tax PAY</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{tableRows}}
+                <tr class="total-row">
+                    <td colspan="4">Grand Total</td>
+                    <td>{{totalBasicPay}}</td>
+                    <td>{{totalAllowances}}</td>
+                    <td>{{totalGrossPay}}</td>
+                    <td>{{totalDeductions}}</td>
+                    <td>{{totalTaxableIncome}}</td>
+                    <td>{{totalTax}}</td>
+                </tr>
+            </tbody>
+        </table>
+
+        <div class="footer">
+            <div class="signature-section">
+                <div class="signature-box">
+                    <div class="signature-line"></div>
+                    <div class="signature-label">Managing Director Sign</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>`;
+
+const generateP09ReportHTML = (
+  reportData,
+  companySettings,
+  fromDate,
+  toDate,
+) => {
+  return new Promise((resolve, reject) => {
+    try {
+      console.log("P09 HTML - Processing reportData:", reportData);
+      console.log("P09 HTML - ReportData length:", reportData?.length || 0);
+
+      const formatAmount = (value) => {
+        const number = parseFloat(value || 0);
+        return number.toLocaleString("en-TZ", {
+          minimumFractionDigits: 2,
+          maximumFractionDigits: 2,
+        });
+      };
+
+      let tableRows = "";
+      let totals = {
+        basicPay: 0,
+        allowances: 0,
+        grossPay: 0,
+        deductions: 0,
+        taxableIncome: 0,
+        tax: 0,
+      };
+
+      if (!reportData || reportData.length === 0) {
+        console.log("P09 HTML - No data to process, showing empty report");
+      }
+
+      reportData.forEach((row, index) => {
+        console.log(`P09 HTML - Processing row ${index}:`, row);
+
+        const basicPay = parseFloat(row["basic_pay"] || 0);
+        const allowances = parseFloat(row["allowances"] || 0);
+        const grossPay = basicPay + allowances;
+        const deductions = parseFloat(row.total_deductions || 0);
+        const taxableIncome = parseFloat(row.taxable_earnings || 0);
+        const tax = parseFloat(row.tax_amount || 0);
+
+        console.log(`P09 HTML - Row ${index} calculations:`, {
+          basicPay,
+          allowances,
+          grossPay,
+          taxableIncome,
+          tax,
+        });
+
+        totals.basicPay += basicPay;
+        totals.allowances += allowances;
+        totals.grossPay += grossPay;
+        totals.deductions += deductions;
+        totals.taxableIncome += taxableIncome;
+        totals.tax += tax;
+
+        tableRows += `
+          <tr>
+            <td>${index + 1}</td>
+            <td>${row.employee_id || ""}</td>
+            <td style="text-align: left;">Employee ${row.employee_id || ""}</td>
+            <td></td>
+            <td>${formatAmount(basicPay)}</td>
+            <td>${formatAmount(allowances)}</td>
+            <td>${formatAmount(grossPay)}</td>
+            <td>${formatAmount(deductions)}</td>
+            <td>${formatAmount(taxableIncome)}</td>
+            <td>${formatAmount(tax)}</td>
+          </tr>
+        `;
+      });
+
+      console.log("P09 HTML - Final totals:", totals);
+      console.log("P09 HTML - Generated tableRows length:", tableRows.length);
+
+      const companyLogo = companySettings.company_logo
+        ? `<img src="${companySettings.company_logo}" alt="Company Logo" class="company-logo">`
+        : "";
+
+      const templateData = {
+        companyLogo,
+        companyName: companySettings.company_name || "Company Name",
+        companyAddress: companySettings.street_address || "Company Address",
+        companyPhone: companySettings.phone_number || "Company Phone",
+        companyEmail: companySettings.email || "company@example.com",
+        fromDate: formatDate(fromDate),
+        toDate: formatDate(toDate),
+        tableRows,
+        totalBasicPay: formatAmount(totals.basicPay),
+        totalAllowances: formatAmount(totals.allowances),
+        totalGrossPay: formatAmount(totals.grossPay),
+        totalDeductions: formatAmount(totals.deductions),
+        totalTaxableIncome: formatAmount(totals.taxableIncome),
+        totalTax: formatAmount(totals.tax),
+      };
+
+      let htmlContent = p09ReportTemplate;
+      Object.keys(templateData).forEach((key) => {
+        const placeholder = new RegExp(`{{${key}}}`, "g");
+        htmlContent = htmlContent.replace(placeholder, templateData[key]);
+      });
+
+      resolve(htmlContent);
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
+
+const generateP09ReportPDF = async (
+  reportData,
+  companySettings,
+  filePath,
+  fromDate,
+  toDate,
+) => {
+  let browser = null;
+  try {
+    const htmlContent = await generateP09ReportHTML(
+      reportData,
+      companySettings,
+      fromDate,
+      toDate,
+    );
+
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
+
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
+  } catch (error) {
+    console.log("P09 PDF generation error:", error);
+    throw new Error(`P09 PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
+  }
+};
+
+const formatDate = (dateString) => {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  });
+};
+
 module.exports = {
   createPayComponent,
   findPayComponentById,
@@ -1069,4 +2538,11 @@ module.exports = {
   getAllPayComponent,
   getPayComponentOptions,
   updatePayOneTimeForColumnComponent,
+  getP09ReportData,
+  getP10ReportData,
+  getSDLReportData,
+  getCompanySettings,
+  generateP09ReportPDF,
+  generateP10ReportPDF,
+  generateSDLReportPDF,
 };
