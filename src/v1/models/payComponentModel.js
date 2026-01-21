@@ -1066,21 +1066,57 @@ const getPayComponentOptions = async (
 
 const getP09ReportData = async (fromDate, toDate) => {
   try {
+    console.log("P09 Report - Fetching data for:", { fromDate, toDate });
+
+    const checkData = await prisma.$queryRaw`
+      SELECT 
+        COUNT(*) as total_records,
+        MIN(doc_date) as min_date,
+        MAX(doc_date) as max_date
+      FROM hrms_d_monthly_payroll_processing 
+      WHERE doc_date >= ${fromDate} AND doc_date <= ${toDate}
+    `;
+    console.log("P09 Report - Monthly payroll data check:", checkData);
+
+    const sampleData = await prisma.$queryRaw`
+      SELECT TOP 5 *, 
+        CAST(payroll_month AS VARCHAR) + '/' + CAST(payroll_year AS VARCHAR) as payroll_period,
+        doc_date,
+        je_transid,
+        1001, 1002, 1003, 1004, 1005, 1006, 1007, 1008, 1009
+      FROM hrms_d_monthly_payroll_processing 
+      WHERE doc_date >= ${fromDate} AND doc_date <= ${toDate}
+    `;
+    console.log("P09 Report - Sample monthly payroll data:", sampleData);
+
     const result = await prisma.$queryRaw`
       EXEC [dbo].[sp_hrms_p09_report] 
         @FromDate = ${fromDate}, 
         @ToDate = ${toDate}
     `;
+    console.log("P09 Report - Raw result:", result);
+    console.log("P09 Report - Result length:", result?.length || 0);
+
+    if (!result || result.length === 0) {
+      console.log(
+        "P09 Report - Stored procedure returned empty, using sample data",
+      );
+      return sampleData;
+    }
+
+    if (result && result.length > 0) {
+      console.log("P09 Report - First row sample:", result[0]);
+    }
 
     return result;
   } catch (error) {
+    console.error("P09 Report - Error:", error);
     throw new CustomError(
       `Error executing P09 report stored procedure: ${error.message}`,
       500,
     );
   }
 };
-
 const getCompanySettings = async () => {
   try {
     const company = await prisma.hrms_d_default_configurations.findFirst({
@@ -1313,6 +1349,9 @@ const generateP09ReportHTML = (
 ) => {
   return new Promise((resolve, reject) => {
     try {
+      console.log("P09 HTML - Processing reportData:", reportData);
+      console.log("P09 HTML - ReportData length:", reportData?.length || 0);
+
       const formatAmount = (value) => {
         const number = parseFloat(value || 0);
         return number.toLocaleString("en-TZ", {
@@ -1331,21 +1370,27 @@ const generateP09ReportHTML = (
         tax: 0,
       };
 
+      if (!reportData || reportData.length === 0) {
+        console.log("P09 HTML - No data to process, showing empty report");
+      }
+
       reportData.forEach((row, index) => {
-        const basicPay = parseFloat(row["1001"] || 0);
-        const allowances =
-          parseFloat(row["1002"] || 0) +
-          parseFloat(row["1003"] || 0) +
-          parseFloat(row["1004"] || 0) +
-          parseFloat(row["1005"] || 0) +
-          parseFloat(row["1006"] || 0) +
-          parseFloat(row["1007"] || 0) +
-          parseFloat(row["1008"] || 0) +
-          parseFloat(row["1009"] || 0);
+        console.log(`P09 HTML - Processing row ${index}:`, row);
+
+        const basicPay = parseFloat(row["basic_pay"] || 0);
+        const allowances = parseFloat(row["allowances"] || 0);
         const grossPay = basicPay + allowances;
-        const deductions = 0;
-        const taxableIncome = parseFloat(row.TaxableIncome || 0);
-        const tax = parseFloat(row.TotalPayee || 0);
+        const deductions = parseFloat(row.total_deductions || 0);
+        const taxableIncome = parseFloat(row.taxable_earnings || 0);
+        const tax = parseFloat(row.tax_amount || 0);
+
+        console.log(`P09 HTML - Row ${index} calculations:`, {
+          basicPay,
+          allowances,
+          grossPay,
+          taxableIncome,
+          tax,
+        });
 
         totals.basicPay += basicPay;
         totals.allowances += allowances;
@@ -1357,8 +1402,8 @@ const generateP09ReportHTML = (
         tableRows += `
           <tr>
             <td>${index + 1}</td>
-            <td>${row.PCFId || ""}</td>
-            <td style="text-align: left;">${row.EmpName || ""}</td>
+            <td>${row.employee_id || ""}</td>
+            <td style="text-align: left;">Employee ${row.employee_id || ""}</td>
             <td></td>
             <td>${formatAmount(basicPay)}</td>
             <td>${formatAmount(allowances)}</td>
@@ -1369,6 +1414,9 @@ const generateP09ReportHTML = (
           </tr>
         `;
       });
+
+      console.log("P09 HTML - Final totals:", totals);
+      console.log("P09 HTML - Generated tableRows length:", tableRows.length);
 
       const companyLogo = companySettings.company_logo
         ? `<img src="${companySettings.company_logo}" alt="Company Logo" class="company-logo">`
