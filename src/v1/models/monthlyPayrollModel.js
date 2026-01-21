@@ -815,7 +815,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
       }
 
       // Log SQL for debugging (remove in production if sensitive)
-      console.log("Generated SQL:", sql.substring(0, 500) + "...");
+      // console.log("Generated SQL:", sql.substring(0, 500) + "...");
 
       await prisma.$executeRawUnsafe(sql);
 
@@ -833,6 +833,186 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         action,
         record: fullRecord || null,
       });
+      const unpaidLoanEmis = await prisma.hrms_d_loan_emi_schedule.findMany({
+        where: {
+          employee_id: employee_id,
+          due_month: payroll_month?.toString(),
+          due_year: payroll_year?.toString(),
+          status: "U",
+        },
+        include: {
+          loan_emi_loan_request: {
+            include: {
+              loan_types: {
+                select: {
+                  pay_component_id: true,
+                  loan_type_pay_component: {
+                    select: {
+                      component_code: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      for (const unpaidLoanEmi of unpaidLoanEmis) {
+        const componentCode =
+          unpaidLoanEmi?.loan_emi_loan_request?.loan_types
+            ?.loan_type_pay_component?.component_code;
+
+        if (!componentCode) continue;
+
+        // ✅ Amount coming from payroll row (1009, etc.)
+        let remainingComponentAmount = Number(row?.[componentCode] || 0);
+
+        if (remainingComponentAmount <= 0) continue;
+
+        await prisma.$transaction(async (tx) => {
+          // 🔹 Get last cash payment
+          const lastPayment = await tx.hrms_d_loan_cash_payment.findFirst({
+            where: {
+              loan_request_id: unpaidLoanEmi.loan_request_id,
+            },
+            orderBy: {
+              id: "desc",
+            },
+          });
+
+          const previousPending =
+            lastPayment?.pending_amount ?? unpaidLoanEmi.emi_amount;
+
+          // 🔹 Determine payment for this EMI
+          const paymentAmount = Math.min(
+            remainingComponentAmount,
+            unpaidLoanEmi.emi_amount
+          );
+
+          const newPending = Math.max(previousPending - paymentAmount, 0);
+
+          // 🔹 Update EMI
+          await tx.hrms_d_loan_emi_schedule.update({
+            where: { id: unpaidLoanEmi.id },
+            data: {
+              status: paymentAmount >= unpaidLoanEmi.emi_amount ? "P" : "U",
+              emi_amount:
+                paymentAmount >= unpaidLoanEmi.emi_amount
+                  ? unpaidLoanEmi.emi_amount
+                  : unpaidLoanEmi.emi_amount - paymentAmount,
+              updatedate: new Date(),
+            },
+          });
+
+          // 🔹 Insert cash payment
+          await tx.hrms_d_loan_cash_payment.create({
+            data: {
+              loan_request_id: unpaidLoanEmi.loan_request_id,
+              amount: paymentAmount,
+              balance_amount: previousPending,
+              pending_amount: newPending,
+              // due_month: payroll_month?.toString(),
+              due_year: payroll_year?.toString(),
+              log_inst: user?.log_inst || 1,
+              createdby: user?.id || 1,
+              createdate: new Date(),
+            },
+          });
+
+          // 🔹 Reduce remaining component amount
+          remainingComponentAmount -= paymentAmount;
+        });
+      }
+
+      // const unpaidLoanEmi = await prisma.hrms_d_loan_emi_schedule.findFirst({
+      //   where: {
+      //     employee_id: employee_id,
+      //     due_month: payroll_month?.toString(),
+      //     due_year: payroll_year?.toString(),
+      //     status: "U",
+      //   },
+      //   include: {
+      //     loan_emi_loan_request: {
+      //       include: {
+      //         loan_types: {
+      //           select: {
+      //             pay_component_id: true,
+      //             loan_type_pay_component: {
+      //               select: {
+      //                 component_code: true,
+      //               },
+      //             },
+      //           },
+      //         },
+      //       },
+      //     },
+      //   },
+      // });
+      // console.log("Unpaid Loan EMI:", unpaidLoanEmi);
+
+      // if (unpaidLoanEmi) {
+      //   const componentCode =
+      //     unpaidLoanEmi?.loan_emi_loan_request?.loan_types
+      //       ?.loan_type_pay_component?.component_code;
+
+      //   const loanAmount = componentCode
+      //     ? Number(row?.[componentCode] || 0)
+      //     : 0;
+      //   // console.log(
+      //   //   "222222222222Unpaid Loan EMI:",
+      //   //   componentCode,
+      //   //   Number(row?.[componentCode]),
+      //   //   loanAmount,
+      //   //   unpaidLoanEmi?.loan_emi_loan_request?.loan_types
+      //   // );
+
+      //   if (loanAmount > 0) {
+      //     await prisma.$transaction(async (tx) => {
+      //       const updateEmi = await tx.hrms_d_loan_emi_schedule.update({
+      //         where: { id: unpaidLoanEmi.id },
+      //         data: {
+      //           status: loanAmount >= unpaidLoanEmi.emi_amount ? "P" : "U",
+      //           emi_amount:
+      //             loanAmount >= unpaidLoanEmi.emi_amount
+      //               ? unpaidLoanEmi.emi_amount
+      //               : unpaidLoanEmi.emi_amount - loanAmount,
+      //           updatedate: new Date(),
+      //         },
+      //       });
+
+      //       // ✅ 2. GET LAST CASH PAYMENT (FOR BALANCE)
+      //       const lastPayment = await tx.hrms_d_loan_cash_payment.findFirst({
+      //         where: {
+      //           loan_request_id: updateEmi.loan_request_id,
+      //         },
+      //         orderBy: {
+      //           id: "desc",
+      //         },
+      //       });
+
+      //       const previousPending =
+      //         lastPayment?.pending_amount ?? updateEmi.emi_amount;
+
+      //       const newPending = Math.max(previousPending - loanAmount, 0);
+
+      //       // ✅ 3. INSERT LOAN CASH PAYMENT USING COMPONENT VALUE
+      //       await tx.hrms_d_loan_cash_payment.create({
+      //         data: {
+      //           loan_request_id: updateEmi.loan_request_id,
+      //           amount: loanAmount, // 🔥 FROM PAY COMPONENT (1009)
+      //           balance_amount: previousPending,
+      //           pending_amount: newPending,
+      //           // due_month: payroll_month,
+      //           due_year: payroll_year?.toString(),
+      //           log_inst: user?.log_inst || 1,
+      //           createdby: user?.id || 1,
+      //           createdate: new Date(),
+      //         },
+      //       });
+      //     });
+      //   }
+      // }
     }
 
     return processed;

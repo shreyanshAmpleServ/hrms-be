@@ -82,7 +82,7 @@ const getAllMonthlyPayroll = async (req, res, next) => {
 const triggerMonthlyPayrollSP = async (req, res, next) => {
   try {
     const result = await monthlyPayrollService.callMonthlyPayrollSP(req.query);
-    console.log("Result", result);
+    // console.log("Result", result);
 
     res.status(200).json({
       success: true,
@@ -158,7 +158,7 @@ const triggerMonthlyPayrollCalculationSP = async (req, res, next) => {
   try {
     const result =
       await monthlyPayrollService.triggerMonthlyPayrollCalculationSP(req.query);
-    console.log("Result", result);
+    // console.log("Result", result);
     res.status(200).json({
       success: true,
       message: result.message,
