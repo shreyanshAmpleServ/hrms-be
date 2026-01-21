@@ -1314,6 +1314,7 @@ const employeeOptions = async () => {
         profile_pic,
         hrms_employee_department,
         hrms_employee_designation,
+        employee_branch,
       }) => ({
         value: id,
         label: `${full_name} (${employee_code})`,
@@ -1326,6 +1327,7 @@ const employeeOptions = async () => {
           profile_pic,
           department: hrms_employee_department?.department_name,
           designation: hrms_employee_designation?.designation_name,
+          branch: employee_branch,
         },
       })
     );
