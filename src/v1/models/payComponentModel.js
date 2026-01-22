@@ -2993,9 +2993,9 @@ const generateWCFReportHTML = async (reportData, fromDate, toDate) => {
   //   ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
   //   : '<img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
 
-  const companyLogo = companySettings.company_logo
-    ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
-    : '<img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
+  const companyLogo = "https://i.ibb.co/qFJGz0xv/images.png"
+    ? `<img src="https://i.ibb.co/qFJGz0xv/images.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';`
+    : '<img src="https://i.ibb.co/qFJGz0xv/images.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
 
   let htmlContent = `
 <!DOCTYPE html>
