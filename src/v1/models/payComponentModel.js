@@ -342,6 +342,7 @@ const serializePayComponentData = (data) => {
     component_name: data.component_name || "",
     component_code: data.component_code || "",
     component_type: data.component_type || "",
+    type_value: data.type_value || "",
     is_taxable: data.is_taxable ?? "Y",
     is_statutory: data.is_statutory ?? "N",
     is_active: data.is_active ?? "Y",
