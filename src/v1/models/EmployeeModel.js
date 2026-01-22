@@ -180,7 +180,7 @@ const serializeTags = (data) => {
     serialized.header_attendance_rule = data.header_attendance_rule;
   if ("column_three" in data) serialized.column_three = data.column_three;
   if ("column_four" in data) serialized.column_four = data.column_four;
-  if ("branch_id" in data) serialized.branch_id = data.branch_id;
+  // if ("branch_id" in data) serialized.branch_id = data.branch_id;
   if ("father_name" in data) serialized.father_name = data.father_name;
   if ("mother_name" in data) serialized.mother_name = data.mother_name;
   if ("primary_contact_number" in data)
@@ -204,6 +204,11 @@ const serializeTags = (data) => {
   if ("department_id" in data) {
     serialized.hrms_employee_department = {
       connect: { id: Number(data.department_id) },
+    };
+  }
+  if ("branch_id" in data) {
+    serialized.employee_branch = {
+      connect: { id: Number(data.branch_id) },
     };
   }
   // if ("bank_id" in data) {
@@ -1308,6 +1313,7 @@ const employeeOptions = async () => {
         profile_pic,
         hrms_employee_department,
         hrms_employee_designation,
+        employee_branch,
       }) => ({
         value: id,
         label: `${full_name} (${employee_code})`,
@@ -1320,6 +1326,7 @@ const employeeOptions = async () => {
           profile_pic,
           department: hrms_employee_department?.department_name,
           designation: hrms_employee_designation?.designation_name,
+          branch: employee_branch,
         },
       })
     );

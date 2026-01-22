@@ -76,14 +76,14 @@ app.use(
     verify: (req, res, buf) => {
       console.log(` Request size: ${buf.length} bytes`);
     },
-  })
+  }),
 );
 
 app.use(
   express.urlencoded({
     extended: true,
     limit: "10mb",
-  })
+  }),
 );
 app.use(cookieParser());
 app.use(
@@ -102,11 +102,12 @@ app.use(
       "http://10.160.5.101:3001",
     ],
     credentials: true,
-  })
+  }),
 );
 
 app.use(responseHandler);
 app.use("/uploads", express.static("uploads"));
+app.use("/public", express.static("public"));
 app.use("/api", optionalTenantMiddleware);
 app.use("/api", routes);
 

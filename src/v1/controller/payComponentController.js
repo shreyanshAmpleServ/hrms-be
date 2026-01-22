@@ -1,6 +1,7 @@
 const payComponentService = require("../services/payComponentService");
 const payComponentModel = require("../models/payComponentModel");
 const payRollReportModel = require("../models/payRollReportModal");
+const defaultConfigurationModel = require("../models/defaultConfigurationModel");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const path = require("path");
@@ -12,7 +13,7 @@ const createPayComponent = async (req, res, next) => {
     let departmentData = { ...req.body };
     const department = await payComponentService.createPayComponent(
       departmentData,
-      createdBy
+      createdBy,
     );
     res.status(201).success("Pay component created successfully", department);
   } catch (error) {
@@ -23,7 +24,7 @@ const createPayComponent = async (req, res, next) => {
 const findPayComponentById = async (req, res, next) => {
   try {
     const department = await payComponentService.findPayComponentById(
-      req.params.id
+      req.params.id,
     );
     if (!department) throw new CustomError("Pay component not found", 404);
 
@@ -33,13 +34,12 @@ const findPayComponentById = async (req, res, next) => {
   }
 };
 
-// update all pay component
 const updatePayComponent = async (req, res, next) => {
   try {
     let departmentData = { ...req.body };
     const department = await payComponentService.updatePayComponent(
       req.params.id,
-      departmentData
+      departmentData,
     );
     res.status(200).success("Pay component updated successfully", department);
   } catch (error) {
@@ -81,7 +81,7 @@ const getAllPayComponent = async (req, res, next) => {
       startDate && moment(startDate),
       endDate && moment(endDate),
       is_active,
-      is_advance
+      is_advance,
     );
     res.status(200).success(null, departments);
   } catch (error) {
@@ -99,7 +99,7 @@ const getPayComponentOptions = async (req, res, next) => {
     const payComponent = await payComponentService.getPayComponentOptions(
       isAdvance,
       isOvertimeRelated,
-      is_loan
+      is_loan,
     );
     res.status(200).success(null, payComponent);
   } catch (error) {
@@ -119,7 +119,7 @@ const generateSDLReport = async (req, res) => {
     console.log("SDL Report - Request received:", { fromDate, toDate });
     const reportData = await payComponentModel.getSDLReportData(
       fromDate,
-      toDate
+      toDate,
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -130,7 +130,7 @@ const generateSDLReport = async (req, res) => {
       "public",
       "reports",
       "sdl",
-      fileName
+      fileName,
     );
 
     const pdfPath = await payComponentModel.generateSDLReportPDF(
@@ -138,7 +138,7 @@ const generateSDLReport = async (req, res) => {
       companySettings,
       filePath,
       fromDate,
-      toDate
+      toDate,
     );
 
     console.log("SDL Report - PDF generated successfully:", pdfPath);
@@ -153,6 +153,20 @@ const generateSDLReport = async (req, res) => {
       }
       console.log("SDL Report - File downloaded successfully");
     });
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath);
+            console.log("SDL Report - PDF file auto-cleaned:", pdfPath);
+          }
+        } catch (error) {
+          console.error("SDL Report - Error auto-cleaning file:", error);
+        }
+      },
+      5 * 60 * 1000,
+    ); // 5 minutes
   } catch (error) {
     console.error("SDL Report - Controller error:", error);
     res.status(500).json({
@@ -177,7 +191,7 @@ const generateP10Report = async (req, res) => {
 
     const reportData = await payComponentModel.getP10ReportData(
       fromDate,
-      toDate
+      toDate,
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -188,7 +202,7 @@ const generateP10Report = async (req, res) => {
       "public",
       "reports",
       "p10",
-      fileName
+      fileName,
     );
 
     const pdfPath = await payComponentModel.generateP10ReportPDF(
@@ -196,7 +210,7 @@ const generateP10Report = async (req, res) => {
       companySettings,
       filePath,
       fromDate,
-      toDate
+      toDate,
     );
 
     console.log("P10 Report - PDF generated successfully:", pdfPath);
@@ -211,6 +225,20 @@ const generateP10Report = async (req, res) => {
       }
       console.log("P10 Report - File downloaded successfully");
     });
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath);
+            console.log("P10 Report - PDF file auto-cleaned:", pdfPath);
+          }
+        } catch (error) {
+          console.error("P10 Report - Error auto-cleaning file:", error);
+        }
+      },
+      5 * 60 * 1000,
+    );
   } catch (error) {
     console.error("P10 Report - Controller error:", error);
     res.status(500).json({
@@ -230,7 +258,7 @@ const generateP09Report = async (req, res, next) => {
 
     const reportData = await payComponentModel.getP09ReportData(
       fromDate,
-      toDate
+      toDate,
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -243,7 +271,7 @@ const generateP09Report = async (req, res, next) => {
       companySettings,
       filePath,
       fromDate,
-      toDate
+      toDate,
     );
 
     const pdfBuffer = fs.readFileSync(filePath);
@@ -269,13 +297,13 @@ const generatePayRollSummaryReport = async (req, res, next) => {
   try {
     const { fromDate, toDate } = req.query;
 
-    if (!fromDate || !toDate) {
-      throw new CustomError("FromDate and ToDate are required", 400);
-    }
+    // if (!fromDate || !toDate) {
+    //   throw new CustomError("FromDate and ToDate are required", 400);
+    // }
 
     const reportData = await payRollReportModel.generatePayRollSummaryReport(
       fromDate,
-      toDate
+      toDate,
     );
 
     const companySettings = await payComponentModel.getCompanySettings();
@@ -288,7 +316,7 @@ const generatePayRollSummaryReport = async (req, res, next) => {
       companySettings,
       filePath,
       fromDate,
-      toDate
+      toDate,
     );
 
     const pdfBuffer = fs.readFileSync(filePath);
@@ -326,28 +354,27 @@ const generateNSSFReport = async (req, res) => {
 
     const reportData = await payComponentModel.getNSSFReportData(
       paymonth,
-      payyear
+      payyear,
     );
 
-    const fileName = `NSSF_Report_${paymonth}_${payyear}.html`;
+    const fileName = `NSSF_Report_${paymonth}_${payyear}.pdf`;
     const filePath = path.join(
       process.cwd(),
       "public",
       "reports",
       "nssf",
-      fileName
+      fileName,
     );
 
     const generatedPath = await payComponentModel.generateNSSFReportPDF(
       reportData,
       filePath,
       paymonth,
-      payyear
+      payyear,
     );
 
-    console.log("NSSF Report - HTML generated successfully:", generatedPath);
+    console.log("NSSF Report - PDF generated successfully:", generatedPath);
 
-    // Download the HTML file (since PDF generation is not implemented yet)
     res.download(generatedPath, fileName, (err) => {
       if (err) {
         console.error("NSSF Report - Error downloading file:", err);
@@ -358,12 +385,161 @@ const generateNSSFReport = async (req, res) => {
       }
       console.log("NSSF Report - File downloaded successfully");
     });
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(generatedPath)) {
+            fs.unlinkSync(generatedPath);
+            console.log("NSSF Report - PDF file auto-cleaned:", generatedPath);
+          }
+        } catch (error) {
+          console.error("NSSF Report - Error auto-cleaning file:", error);
+        }
+      },
+      5 * 60 * 1000,
+    );
   } catch (error) {
     console.error("NSSF Report - Controller error:", error);
     res.status(500).json({
       success: false,
       message: error.message || "Error generating NSSF report",
     });
+  }
+};
+
+const generateWCFReport = async (req, res) => {
+  try {
+    const { fromDate, toDate } = req.query;
+
+    if (!fromDate || !toDate) {
+      return res.status(400).json({
+        success: false,
+        message: "fromDate and toDate are required",
+      });
+    }
+
+    console.log("WCF Report - Request received:", { fromDate, toDate });
+
+    const reportData = await payComponentModel.getWCFReportData(
+      fromDate,
+      toDate,
+    );
+
+    const fileName = `WCF_Report_${fromDate}_to_${toDate}.pdf`;
+    const filePath = path.join(
+      process.cwd(),
+      "public",
+      "reports",
+      "wcf",
+      fileName,
+    );
+
+    const generatedPath = await payComponentModel.generateWCFReportPDF(
+      reportData,
+      filePath,
+      fromDate,
+      toDate,
+    );
+
+    console.log("WCF Report - PDF generated successfully:", generatedPath);
+
+    res.download(generatedPath, fileName, (err) => {
+      if (err) {
+        console.error("WCF Report - Error downloading file:", err);
+        return res.status(500).json({
+          success: false,
+          message: "Error generating WCF report",
+        });
+      }
+      console.log("WCF Report - File downloaded successfully");
+    });
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(generatedPath)) {
+            fs.unlinkSync(generatedPath);
+            console.log("WCF Report - PDF file auto-cleaned:", generatedPath);
+          }
+        } catch (error) {
+          console.error("WCF Report - Error auto-cleaning file:", error);
+        }
+      },
+      5 * 60 * 1000,
+    );
+  } catch (error) {
+    console.error("WCF Report - Controller error:", error);
+    res.status(500).json({
+      success: false,
+      message: error.message || "Error generating WCF report",
+    });
+  }
+};
+
+const generatePayrollSummaryReport = async (req, res, next) => {
+  try {
+    const { paymonth, payyear } = req.query;
+
+    if (!paymonth || !payyear) {
+      throw new CustomError("Paymonth and Payyear are required", 400);
+    }
+
+    console.log("Payroll Summary Report - Request received:", {
+      paymonth,
+      payyear,
+    });
+
+    const companyConfigResult =
+      await defaultConfigurationModel.getAllDefaultConfiguration();
+    const companySettings = companyConfigResult?.data || {};
+
+    const reportData = await payRollReportModel.generatePayRollSummaryReport(
+      parseInt(paymonth),
+      parseInt(payyear),
+    );
+
+    const fileName = `Payroll_Summary_Report_${paymonth}_${payyear}_${Date.now()}.pdf`;
+    const filePath = path.join(__dirname, "../../../temp", fileName);
+
+    await payRollReportModel.generatePayrollSummaryReportPDF(
+      reportData,
+      companySettings,
+      filePath,
+      parseInt(paymonth),
+      parseInt(payyear),
+    );
+
+    const pdfBuffer = fs.readFileSync(filePath);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Length", pdfBuffer.length);
+
+    res.send(pdfBuffer);
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(
+              "Payroll Summary Report - PDF file auto-cleaned:",
+              filePath,
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Payroll Summary Report - Error auto-cleaning file:",
+            error,
+          );
+        }
+      },
+      5 * 60 * 1000,
+    ); // 5 minutes
+  } catch (error) {
+    console.error("Payroll Summary Report - Controller error:", error);
+    next(error);
   }
 };
 
@@ -375,9 +551,11 @@ module.exports = {
   getAllPayComponent,
   getPayComponentOptions,
   updatePayOneTimeForColumnComponent,
+  generatePayRollSummaryReport,
   generateP09Report,
   generateSDLReport,
   generateP10Report,
   generateNSSFReport,
-  generatePayRollSummaryReport,
+  generateWCFReport,
+  generatePayrollSummaryReport,
 };

@@ -1,0 +1,31 @@
+<svg width="120" height="80" xmlns="http://www.w3.org/2000/svg">
+  <!-- Yellow background -->
+  <rect width="120" height="80" fill="#FFD700"/>
+  
+  <!-- White circular border -->
+  <circle cx="60" cy="40" r="35" fill="white" stroke="#FFD700" stroke-width="3"/>
+  
+  <!-- Inner yellow circle -->
+  <circle cx="60" cy="40" r="30" fill="#FFD700"/>
+  
+  <!-- NSSF Text in green -->
+  <text x="60" y="45" font-family="Arial, sans-serif" font-size="14" font-weight="bold" fill="#006633" text-anchor="middle">NSSF</text>
+  
+  <!-- Board of Trustees text (top arc) -->
+  <path d="M 30 20 Q 60 10, 90 20" fill="none" stroke="white" stroke-width="0.5"/>
+  <text x="60" y="18" font-family="Arial, sans-serif" font-size="4" fill="white" text-anchor="middle" font-weight="bold">BOARD OF TRUSTEES</text>
+  
+  <!-- National Social Security Fund text (bottom) -->
+  <text x="60" y="65" font-family="Arial, sans-serif" font-size="3" fill="white" text-anchor="middle">NATIONAL SOCIAL SECURITY FUND</text>
+  
+  <!-- Simple family icon -->
+  <g transform="translate(60, 30)">
+    <!-- Tent structure -->
+    <path d="M -8 3 L 0 -5 L 8 3 Z" fill="white" stroke="#006633" stroke-width="0.5"/>
+    <!-- Family figures -->
+    <circle cx="-2" cy="6" r="1.5" fill="white"/>
+    <rect x="-3" y="7.5" width="2" height="2" fill="white"/>
+    <circle cx="2" cy="6" r="1.5" fill="white"/>
+    <rect x="1" y="7.5" width="2" height="2" fill="white"/>
+  </g>
+</svg>

@@ -62,11 +62,28 @@ router.get(
   authenticateToken,
   payComponentController.generateP10Report,
 );
+router.get(
+  "/payroll-report",
+  authenticateToken,
+  payComponentController.generatePayrollSummaryReport,
+);
+
+router.get(
+  "/payroll-summary-report",
+  authenticateToken,
+  payComponentController.generatePayrollSummaryReport,
+);
 
 router.get(
   "/nssf-report",
   authenticateToken,
   payComponentController.generateNSSFReport,
+);
+
+router.get(
+  "/wcf-report",
+  authenticateToken,
+  payComponentController.generateWCFReport,
 );
 
 module.exports = router;

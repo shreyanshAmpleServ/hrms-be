@@ -942,6 +942,7 @@ const getAllPayComponent = async (
       //     },
       //   },
       // },
+
       include: {
         pay_component_tax: true,
         pay_component_project: true,
@@ -1571,46 +1572,37 @@ const getSDLReportData = async (fromDate, toDate) => {
       return sampleData;
     }
 
-    // Handle the column1 issue by mapping it to expected structure
     if (result && result.length > 0) {
       console.log("SDL Report - First row sample:", result[0]);
 
-      // Check if the result contains column1 (which indicates an issue with the stored procedure)
       const firstRow = result[0];
       if (firstRow.hasOwnProperty("column1")) {
         console.log(
           "SDL Report - Detected column1 issue, attempting to fix data structure",
         );
 
-        // Try to map the data to expected structure
         const fixedResult = result.map((row, index) => {
           const fixedRow = { ...row };
 
-          // If column1 exists, it might contain one of the expected pay component values
-          // We need to map it to the expected structure based on the data we know
           if (row.column1 !== undefined && row.column1 !== null) {
-            // Try to determine what column1 represents based on value and context
             const value = parseFloat(row.column1);
 
-            // Map column1 to appropriate pay component fields
-            // This is a workaround - the proper fix would be in the stored procedure
-            fixedRow["1001"] = value; // Basic salary
-            fixedRow["1002"] = 0; // Housing allowance
-            fixedRow["1003"] = 0; // Transport allowance
-            fixedRow["1004"] = 0; // Medical allowance
-            fixedRow["1005"] = 0; // Other allowances
-            fixedRow["1006"] = 0; // Bonus
-            fixedRow["1007"] = 0; // Overtime
-            fixedRow["1008"] = 0; // Other earnings
-            fixedRow["1009"] = 0; // Other deductions
+            fixedRow["1001"] = value;
+            fixedRow["1002"] = 0;
+            fixedRow["1003"] = 0;
+            fixedRow["1004"] = 0;
+            fixedRow["1005"] = 0;
+            fixedRow["1006"] = 0;
+            fixedRow["1007"] = 0;
+            fixedRow["1008"] = 0;
+            fixedRow["1009"] = 0;
 
-            // Set required fields if they don't exist
             if (!fixedRow.payroll_month)
               fixedRow.payroll_month = new Date().getMonth() + 1;
             if (!fixedRow.payroll_year)
               fixedRow.payroll_year = new Date().getFullYear();
             if (!fixedRow.total_deductions)
-              fixedRow.total_deductions = value * 0.045; // Assume 4.5% SDL
+              fixedRow.total_deductions = value * 0.045;
             if (!fixedRow.employee_id) fixedRow.employee_id = index + 1;
             if (!fixedRow.id) fixedRow.id = index + 1;
 
@@ -1633,7 +1625,6 @@ const getSDLReportData = async (fromDate, toDate) => {
   } catch (error) {
     console.error("SDL Report - Error:", error);
 
-    // Check if this is the specific column1 error
     if (
       error.message &&
       error.message.includes("Invalid column name 'column1'")
@@ -1642,7 +1633,6 @@ const getSDLReportData = async (fromDate, toDate) => {
         "SDL Report - Detected column1 database error, using fallback data",
       );
 
-      // Return sample data as fallback when stored procedure fails
       const fallbackData = [
         {
           1001: 50000,
@@ -1666,7 +1656,7 @@ const getSDLReportData = async (fromDate, toDate) => {
           total_earnings: 68000,
           taxable_earnings: 68000,
           tax_amount: 0,
-          total_deductions: 3060, // 4.5% SDL
+          total_deductions: 3060,
           net_pay: 64940,
           status: "Processed",
           execution_date: new Date(),
@@ -1713,7 +1703,7 @@ const getSDLReportData = async (fromDate, toDate) => {
           total_earnings: 81600,
           taxable_earnings: 81600,
           tax_amount: 0,
-          total_deductions: 3672, // 4.5% SDL
+          total_deductions: 3672,
           net_pay: 77928,
           status: "Processed",
           execution_date: new Date(),
@@ -2424,6 +2414,9 @@ const p09ReportTemplate = `<!DOCTYPE html>
             margin-top: 50px;
             text-align: center;
         }
+.no-border td {
+  border-bottom: none !important;
+}
 
         .signature-section {
             margin-top: 80px;
@@ -2433,12 +2426,6 @@ const p09ReportTemplate = `<!DOCTYPE html>
 
         .signature-box {
             width: 45%;
-        }
-
-        .signature-line {
-            border-bottom: 1px solid #000;
-            margin-bottom: 5px;
-            height: 40px;
         }
 
         .signature-label {
@@ -2759,54 +2746,38 @@ const getNSSFReportData = async (paymonth, payyear) => {
   }
 };
 
-const generateNSSFReportPDF = async (
-  reportData,
-  filePath,
-  paymonth,
-  payyear,
-) => {
-  try {
-    console.log(
-      "NSSF Report - Generating PDF with data:",
-      reportData.length,
-      "records",
-    );
+const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
+  const monthName = new Date(payyear, paymonth - 1).toLocaleString("default", {
+    month: "long",
+  });
 
-    const monthName = new Date(payyear, paymonth - 1).toLocaleString(
-      "default",
-      {
-        month: "long",
-      },
-    );
+  const companySettings = await getCompanySettings();
 
-    const companySettings = await getCompanySettings();
+  const transformedData = reportData.map((item, index) => ({
+    "S No": index + 1,
+    "INSURED PERSON'S NAME": item.EmpName || "",
+    EmpId: item.employee_id || "",
+    "Membership No.": item.nssf_no || "",
+    "BASIC PAY": item.taxable_earnings || 0,
+    "Contribution (20%)":
+      Math.round((item.taxable_earnings || 0) * 0.2 * 100) / 100,
+  }));
 
-    const transformedData = reportData.map((item, index) => ({
-      "S No": index + 1,
-      "INSURED PERSON'S NAME": item.EmpName || "",
-      EmpId: item.employee_id || "",
-      "Membership No.": item.nssf_no || "",
-      "BASIC PAY": item.taxable_earnings || 0,
-      "Contribution (20%)":
-        Math.round((item.taxable_earnings || 0) * 0.2 * 100) / 100,
-    }));
+  const grandTotal = {
+    "BASIC PAY": transformedData.reduce(
+      (sum, item) => sum + (parseFloat(item["BASIC PAY"]) || 0),
+      0,
+    ),
+    "Contribution (20%)": transformedData.reduce(
+      (sum, item) => sum + (parseFloat(item["Contribution (20%)"]) || 0),
+      0,
+    ),
+  };
 
-    const grandTotal = {
-      "BASIC PAY": transformedData.reduce(
-        (sum, item) => sum + (parseFloat(item["BASIC PAY"]) || 0),
-        0,
-      ),
-      "Contribution (20%)": transformedData.reduce(
-        (sum, item) => sum + (parseFloat(item["Contribution (20%)"]) || 0),
-        0,
-      ),
-    };
+  const companyLogo =
+    "https://sgastanford.com/wp-content/uploads/2024/08/National_Social_Security_Fund_Tanzania_Logo.png";
 
-    const companyLogo = companySettings.company_logo
-      ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
-      : "";
-
-    const htmlContent = `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -2837,7 +2808,7 @@ const generateNSSFReportPDF = async (
     <div class="title-section">
         <div class="title-row">
             <div class="company-logo">
-                ${companyLogo}
+                <img src="${companyLogo}" alt="NSSF Logo" style="max-width: 120px; max-height: 80px;">
             </div>
             <div class="title-center">
                 <h3>THE UNITED REPUBLIC OF TANZANIA</h3>
@@ -2880,7 +2851,7 @@ const generateNSSFReportPDF = async (
             `,
               )
               .join("")}
-            <tr class="total-row">
+<tr class="total-row no-border">
                 <td colspan="4">Grand Total :</td>
                 <td class="text-right">${grandTotal["BASIC PAY"].toLocaleString("en-US", { useGrouping: false })}</td>
                 <td class="text-right">${grandTotal["Contribution (20%)"].toLocaleString("en-US", { useGrouping: false })}</td>
@@ -2890,23 +2861,569 @@ const generateNSSFReportPDF = async (
 </body>
 </html>
     `;
+};
+
+const generateNSSFReportPDF = async (
+  reportData,
+  filePath,
+  paymonth,
+  payyear,
+) => {
+  let browser = null;
+  try {
+    const htmlContent = await generateNSSFReportHTML(
+      reportData,
+      paymonth,
+      payyear,
+    );
 
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(filePath.replace(".pdf", ".html"), htmlContent);
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
 
-    console.log(
-      "NSSF Report - HTML file created:",
-      filePath.replace(".pdf", ".html"),
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
+
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
+  } catch (error) {
+    console.log("NSSF PDF generation error:", error);
+    throw new Error(`NSSF PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
+  }
+};
+
+const getWCFReportData = async (fromDate, toDate) => {
+  try {
+    console.log("WCF Report - Executing stored procedure with params:", {
+      fromDate,
+      toDate,
+    });
+
+    const result = await prisma.$queryRaw`
+      EXEC sp_hrms_wcf_report ${fromDate}, ${toDate}
+    `;
+
+    console.log("WCF Report - Raw result:", result);
+    console.log("WCF Report - Result length:", result?.length || 0);
+
+    if (!result || result.length === 0) {
+      console.log("WCF Report - Query returned empty, using zero data");
+
+      const zeroData = [
+        {
+          "S No": 1,
+          EmpId: 0,
+          "Employee Name": "0",
+          "Employee Basic Pay": 0,
+          "Employee Gross Salary": 0,
+        },
+      ];
+      return zeroData;
+    }
+
+    return result;
+  } catch (error) {
+    console.error("WCF Report - Error executing query:", error);
+    throw error;
+  }
+};
+
+const generateWCFReportHTML = async (reportData, fromDate, toDate) => {
+  const companySettings = await getCompanySettings();
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const fromDateObj = new Date(fromDate);
+  const month = monthNames[fromDateObj.getMonth()];
+  const year = fromDateObj.getFullYear();
+
+  // const companyLogo = companySettings.company_logo
+  //   ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
+  //   : '<img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
+
+  const companyLogo = companySettings.company_logo
+    ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
+    : '<img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
+
+  let htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>WCF Report</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .main-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; }
+        .header-left { display: flex; align-items: center; flex: 1; }
+        .company-logo { margin-right: 20px; }
+        .header-right { text-align: right; font-weight: bold; font-size: 20px; color: #0066cc; }
+        .title-section { text-align: center; margin: 15px 0; }
+        .title-row { display: flex; justify-content: space-between; align-items: center; }
+        .company-logo { margin-right: 20px; }
+        .title-center { flex: 1; text-align: center; }
+        .wcf-title { font-weight: bold; font-size: 20px; color: #0066cc; }
+        .title-section h3 { margin: 5px 0; font-size: 16px; }
+        .info { margin: 20px 0; }
+        .info-row { margin: 5px 0; font-size: 14px; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #000; padding: 8px; text-align: left; font-size: 12px; }
+        th { background-color: #0066cc; color: white; font-weight: bold; }
+        .total-row { font-weight: bold; background-color: #f0f0f0; }
+        .text-right { text-align: right; }
+    </style>
+</head>
+<body>
+    <div class="title-section">
+        <div class="title-row">
+            <div class="company-logo">
+                ${companyLogo}
+            </div>
+            <div class="title-center">
+                <h3>WORKER'S COMPENSATION FUND (WCF)</h3>
+                <h3>MONTHLY CONTRIBUTION REPORT</h3>
+            </div>
+            <div class="wcf-title">WCF Report</div>
+        </div>
+    </div>
+    
+    <div class="info">
+        <div class="info-row"><strong>Employer Name:</strong> ${companySettings.company_name || "USANGU LOGISTICS LIMITED"}</div>
+        <div class="info-row"><strong>Applicable Month:</strong> ${month}</div>
+        <div class="info-row"><strong> Year:</strong> ${year}</div>
+    </div>
+    
+    <table>
+        <thead>
+            <tr>
+                <th>S No</th>
+                <th>EmpId</th>
+                <th>Employee Name</th>
+                <th>Employee Basic Pay</th>
+                <th>Employee Gross Salary</th>
+            </tr>
+        </thead>
+        <tbody>
+`;
+
+  let totalBasicPay = 0;
+  let totalGrossSalary = 0;
+
+  reportData.forEach((employee) => {
+    totalBasicPay += employee["Employee Basic Pay"] || 0;
+    totalGrossSalary += employee["Employee Gross Salary"] || 0;
+
+    htmlContent += `
+                <tr>
+                    <td>${employee["S No"] || ""}</td>
+                    <td>${employee["EmpId"] || ""}</td>
+                    <td>${employee["Employee Name"] || ""}</td>
+                    <td class="text-right">${employee["Employee Basic Pay"] || 0}</td>
+                    <td class="text-right">${employee["Employee Gross Salary"] || 0}</td>
+                </tr>
+      `;
+  });
+
+  htmlContent += `
+            <tr class="total-row">
+                <td colspan="3">Grand Total :</td>
+                <td class="text-right">${totalBasicPay}</td>
+                <td class="text-right">${totalGrossSalary}</td>
+            </tr>
+        </tbody>
+    </table>
+</body>
+</html>
+    `;
+
+  return htmlContent;
+};
+
+const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
+  let browser = null;
+  try {
+    const htmlContent = await generateWCFReportHTML(
+      reportData,
+      fromDate,
+      toDate,
     );
 
-    return filePath.replace(".pdf", ".html");
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
+
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
   } catch (error) {
-    console.error("NSSF Report - Error generating PDF:", error);
+    console.log("WCF PDF generation error:", error);
+    throw new Error(`WCF PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
+  }
+};
+
+const getPayrollSummaryReportData = async (paymonth, payyear) => {
+  try {
+    console.log(
+      "Payroll Summary Report - Executing stored procedure with params:",
+      {
+        paymonth,
+        payyear,
+      },
+    );
+
+    const result = await prisma.$queryRaw`
+      EXEC sp_hrms_payroll_summary_report ${paymonth}, ${payyear}
+    `;
+
+    console.log("Payroll Summary Report - Raw result:", result);
+    console.log("Payroll Summary Report - Result length:", result?.length || 0);
+
+    if (!result || result.length === 0) {
+      console.log(
+        "Payroll Summary Report - Query returned empty, using zero data",
+      );
+
+      const zeroData = [
+        {
+          RowNumber: 1,
+          empID: 0,
+          dept: "0",
+          EmpName: "0",
+          BasicSalary: 0,
+          1002: 0,
+          1003: 0,
+          1004: 0,
+          1005: 0,
+          1006: 0,
+          1007: 0,
+          1008: 0,
+          1009: 0,
+          1012: 0,
+          Tax: 0,
+          Net: 0,
+          TaxableAmount: 0,
+        },
+      ];
+      return zeroData;
+    }
+
+    return result;
+  } catch (error) {
+    console.error("Payroll Summary Report - Error executing query:", error);
     throw error;
+  }
+};
+
+const generatePayrollSummaryReportHTML = async (
+  reportData,
+  paymonth,
+  payyear,
+) => {
+  const companySettings = await getCompanySettings();
+
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
+
+  const companyLogo = companySettings.company_logo
+    ? `<img src="${companySettings.company_logo}" style="max-width:120px;max-height:80px;">`
+    : "";
+
+  let htmlContent = `
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>Payroll Summary</title>
+<style>
+  body { font-family: Arial, sans-serif; margin: 20px; }
+  .header { display:flex; justify-content:space-between; margin-bottom:30px; }
+  .company-name { font-size:22px; font-weight:bold; }
+  table { width:100%; border-collapse:collapse; margin-top:20px; }
+  th, td { border:1px solid #000; padding:6px; font-size:11px; }
+  th { background:#0066cc; color:#fff; }
+  .text-right { text-align:right; }
+  .total-row { font-weight:bold; background:#f0f0f0; }
+  .no-border td { border-bottom:none !important; }
+
+  .signature-section { margin-top:60px; }
+  .signature-row { display:flex; justify-content:space-between; }
+  .signature-box { width:30%; text-align:center; }
+  .signature-label { font-size:12px; margin-top:5px; }
+</style>
+</head>
+
+<body>
+
+<div class="header">
+  <div>
+    ${companyLogo}
+    <div class="company-name">${companySettings.company_name}</div>
+    <div>${companySettings.street_address || ""}</div>
+  </div>
+  <div style="text-align:right;">
+    <div style="font-size:18px;font-weight:bold;">PAYROLL SUMMARY</div>
+    <div>For ${monthNames[paymonth - 1]} ${payyear}</div>
+  </div>
+</div>
+
+<table>
+<thead>
+<tr>
+  <th>S No</th>
+  <th>Emp ID</th>
+  <th>Name</th>
+  <th>Basic</th>
+  <th>NSSF</th>
+  <th>Loan</th>
+  <th>Advance</th>
+  <th>Taxable</th>
+  <th>Tax</th>
+  <th>Net</th>
+</tr>
+</thead>
+<tbody>
+`;
+
+  let totals = {
+    basic: 0,
+    nssf: 0,
+    loan: 0,
+    advance: 0,
+    taxable: 0,
+    tax: 0,
+    net: 0,
+  };
+
+  reportData.forEach((e, i) => {
+    totals.basic += e.BasicSalary || 0;
+    totals.nssf += e["1002"] || 0;
+    totals.loan += e["1003"] || 0;
+    totals.advance += e["1004"] || 0;
+    totals.taxable += e.TaxableAmount || 0;
+    totals.tax += e.Tax || 0;
+    totals.net += e.Net || 0;
+
+    htmlContent += `
+<tr>
+  <td>${i + 1}</td>
+  <td>${e.empID || ""}</td>
+  <td>${e.EmpName || ""}</td>
+  <td class="text-right">${(e.BasicSalary || 0).toLocaleString()}</td>
+  <td class="text-right">${(e["1002"] || 0).toLocaleString()}</td>
+  <td class="text-right">${(e["1003"] || 0).toLocaleString()}</td>
+  <td class="text-right">${(e["1004"] || 0).toLocaleString()}</td>
+  <td class="text-right">${(e.TaxableAmount || 0).toLocaleString()}</td>
+  <td class="text-right">${(e.Tax || 0).toLocaleString()}</td>
+  <td class="text-right">${(e.Net || 0).toLocaleString()}</td>
+</tr>
+`;
+  });
+
+  htmlContent += `
+<tr class="total-row no-border">
+  <td colspan="3">Grand Total</td>
+  <td class="text-right">${totals.basic.toLocaleString()}</td>
+  <td class="text-right">${totals.nssf.toLocaleString()}</td>
+  <td class="text-right">${totals.loan.toLocaleString()}</td>
+  <td class="text-right">${totals.advance.toLocaleString()}</td>
+  <td class="text-right">${totals.taxable.toLocaleString()}</td>
+  <td class="text-right">${totals.tax.toLocaleString()}</td>
+  <td class="text-right">${totals.net.toLocaleString()}</td>
+</tr>
+
+</tbody>
+</table>
+
+<div class="signature-section">
+  <div class="signature-row">
+    <div class="signature-box">
+      <div class="signature-label">Prepared By</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-label">Authorized Signature</div>
+    </div>
+    <div class="signature-box">
+      <div class="signature-label">Managing Director</div>
+    </div>
+  </div>
+</div>
+
+</body>
+</html>
+`;
+
+  return htmlContent;
+};
+
+const generatePayrollSummaryReportPDF = async (
+  reportData,
+  filePath,
+  paymonth,
+  payyear,
+) => {
+  let browser = null;
+  try {
+    const htmlContent = await generatePayrollSummaryReportHTML(
+      reportData,
+      paymonth,
+      payyear,
+    );
+
+    const dir = path.dirname(filePath);
+    if (!fs.existsSync(dir)) {
+      fs.mkdirSync(dir, { recursive: true });
+    }
+
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
+
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
+
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
+  } catch (error) {
+    console.log("Payroll Summary PDF generation error:", error);
+    throw new Error(`Payroll Summary PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
   }
 };
 
@@ -2922,9 +3439,14 @@ module.exports = {
   getP10ReportData,
   getSDLReportData,
   getNSSFReportData,
+  getWCFReportData,
   getCompanySettings,
   generateP09ReportPDF,
   generateP10ReportPDF,
   generateSDLReportPDF,
   generateNSSFReportPDF,
+  generateWCFReportPDF,
+  getPayrollSummaryReportData,
+  generatePayrollSummaryReportHTML,
+  generatePayrollSummaryReportPDF,
 };
