@@ -1401,6 +1401,7 @@ model hrms_m_pay_component {
   is_basic                              String?                                         @db.VarChar(50)
   relief_amount                         String?                                         @db.VarChar(50)
   relief_type                           String?                                         @db.VarChar(50)
+  type_value                            String?
   pay_component_for_line                hrms_d_employee_pay_component_assignment_line[]
   employee_payroll_adjustment_component hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentComponent")
   employee_payroll_deduction_component  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeduction")
@@ -1789,6 +1790,7 @@ model hrms_d_monthly_payroll_processing {
   total_deductions              Decimal         @db.Decimal(18, 4)
   net_pay                       Decimal         @db.Decimal(18, 2)
   status                        String          @db.NVarChar(20)
+  is_printed                    String?         @default("N") @db.Char(1)
   execution_date                DateTime?       @db.Date
   pay_date                      DateTime?       @db.DateTime
   doc_date                      DateTime?       @db.Date

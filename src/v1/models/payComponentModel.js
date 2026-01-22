@@ -316,7 +316,7 @@ const serializePayComponentData = (data) => {
     if (factorNum < SMALLINT_MIN || factorNum > SMALLINT_MAX) {
       throw new CustomError(
         `Factor value ${factorNum} is out of range. Must be between ${SMALLINT_MIN} and ${SMALLINT_MAX}.`,
-        400,
+        400
       );
     }
     factor = factorNum;
@@ -332,7 +332,7 @@ const serializePayComponentData = (data) => {
     if (columnOrderNum < SMALLINT_MIN || columnOrderNum > SMALLINT_MAX) {
       throw new CustomError(
         `Column order value ${columnOrderNum} is out of range. Must be between ${SMALLINT_MIN} and ${SMALLINT_MAX}.`,
-        400,
+        400
       );
     }
     columnOrder = columnOrderNum;
@@ -387,7 +387,7 @@ const createPayComponent = async (data) => {
     if (!data.component_name || !data.component_code) {
       throw new CustomError(
         "component_name and component_code are required",
-        400,
+        400
       );
     }
 
@@ -411,7 +411,7 @@ const createPayComponent = async (data) => {
     if (!requesterExists) {
       throw new CustomError(
         `Cannot create pay component: User ID ${requesterId} is not a valid employee.`,
-        403,
+        403
       );
     }
 
@@ -432,12 +432,12 @@ const createPayComponent = async (data) => {
       ) {
         throw new CustomError(
           "Pay component with the same code already exists",
-          400,
+          400
         );
       } else {
         throw new CustomError(
           "Pay component with the same name already exists",
-          400,
+          400
         );
       }
     }
@@ -478,7 +478,7 @@ const createPayComponent = async (data) => {
               ADD [${data.component_code}] DECIMAL(18,4) NULL
             `);
             console.log(
-              `Column [${data.component_code}] added to payroll table`,
+              `Column [${data.component_code}] added to payroll table`
             );
           } catch (sqlErr) {
             console.error("ALTER TABLE failed:", sqlErr.message);
@@ -490,7 +490,7 @@ const createPayComponent = async (data) => {
 
         return created;
       },
-      { maxWait: 10000, timeout: 30000 },
+      { maxWait: 10000, timeout: 30000 }
     );
 
     return result;
@@ -506,7 +506,7 @@ const createPayComponent = async (data) => {
 
     throw new CustomError(
       `Error creating pay component: ${error.message}`,
-      500,
+      500
     );
   }
 };
@@ -523,7 +523,7 @@ const findPayComponentById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding pay component by ID: ${error.message}`,
-      503,
+      503
     );
   }
 };
@@ -541,7 +541,7 @@ const updatePayComponent = async (id, data) => {
     if (totalCount > 0) {
       throw new CustomError(
         "Pay component with the same name or code already exists",
-        400,
+        400
       );
     }
     const updatedEntry = await prisma.hrms_m_pay_component.update({
@@ -568,7 +568,7 @@ const updatePayComponent = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating pay component: ${error.message}`,
-      500,
+      500
     );
   }
 };
@@ -738,7 +738,7 @@ const updatePayOneTimeForColumnComponent = async () => {
         } catch (sqlError) {
           throw new CustomError(
             `Failed to alter table for component ${componentId}: ${sqlError.message}`,
-            500,
+            500
           );
         }
       } else {
@@ -760,7 +760,7 @@ const updatePayOneTimeForColumnComponent = async () => {
           if (duplicateCount > 0) {
             throw new CustomError(
               `Duplicate found for component ID ${componentId}`,
-              400,
+              400
             );
           }
 
@@ -788,7 +788,7 @@ const updatePayOneTimeForColumnComponent = async () => {
         updatedComponents.push(updated);
       } catch (updateError) {
         console.error(
-          `Failed to update component ID ${componentId}: ${updateError.message}`,
+          `Failed to update component ID ${componentId}: ${updateError.message}`
         );
       }
     }
@@ -812,7 +812,7 @@ const deletePayComponent = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400,
+        400
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -827,7 +827,7 @@ const getAllPayComponent = async (
   startDate,
   endDate,
   is_active,
-  is_advance,
+  is_advance
 ) => {
   try {
     // AUTO-CREATION DISABLED
@@ -975,7 +975,7 @@ const getAllPayComponent = async (
 const getPayComponentOptions = async (
   isAdvance,
   isOvertimeRelated,
-  is_loan,
+  is_loan
 ) => {
   try {
     const whereClause = {};
@@ -1048,7 +1048,7 @@ const getP10ReportData = async (fromDate, toDate) => {
 
     if (!result || result.length === 0) {
       console.log(
-        "P10 Report - Stored procedure returned empty, using sample data",
+        "P10 Report - Stored procedure returned empty, using sample data"
       );
 
       const sampleData = [
@@ -1113,7 +1113,7 @@ const getP10ReportData = async (fromDate, toDate) => {
     console.error("P10 Report - Error:", error);
     throw new CustomError(
       `Error executing P10 report stored procedure: ${error.message}`,
-      500,
+      500
     );
   }
 };
@@ -1153,7 +1153,7 @@ const getP09ReportData = async (fromDate, toDate) => {
 
     if (!result || result.length === 0) {
       console.log(
-        "P09 Report - Stored procedure returned empty, using sample data",
+        "P09 Report - Stored procedure returned empty, using sample data"
       );
       return sampleData;
     }
@@ -1167,7 +1167,7 @@ const getP09ReportData = async (fromDate, toDate) => {
     console.error("P09 Report - Error:", error);
     throw new CustomError(
       `Error executing P09 report stored procedure: ${error.message}`,
-      500,
+      500
     );
   }
 };
@@ -1200,7 +1200,7 @@ const getCompanySettings = async () => {
   } catch (error) {
     throw new CustomError(
       `Error fetching company settings: ${error.message}`,
-      500,
+      500
     );
   }
 };
@@ -1516,7 +1516,7 @@ const getSDLReportData = async (fromDate, toDate) => {
 
     if (!result || result.length === 0) {
       console.log(
-        "SDL Report - Stored procedure returned empty, using sample data",
+        "SDL Report - Stored procedure returned empty, using sample data"
       );
 
       const sampleData = [
@@ -1578,7 +1578,7 @@ const getSDLReportData = async (fromDate, toDate) => {
       const firstRow = result[0];
       if (firstRow.hasOwnProperty("column1")) {
         console.log(
-          "SDL Report - Detected column1 issue, attempting to fix data structure",
+          "SDL Report - Detected column1 issue, attempting to fix data structure"
         );
 
         const fixedResult = result.map((row, index) => {
@@ -1607,7 +1607,7 @@ const getSDLReportData = async (fromDate, toDate) => {
             if (!fixedRow.id) fixedRow.id = index + 1;
 
             console.log(
-              `SDL Report - Fixed row ${index}: mapped column1(${value}) to pay components`,
+              `SDL Report - Fixed row ${index}: mapped column1(${value}) to pay components`
             );
           }
 
@@ -1615,7 +1615,7 @@ const getSDLReportData = async (fromDate, toDate) => {
         });
 
         console.log(
-          "SDL Report - Data structure fixed, returning processed result",
+          "SDL Report - Data structure fixed, returning processed result"
         );
         return fixedResult;
       }
@@ -1630,7 +1630,7 @@ const getSDLReportData = async (fromDate, toDate) => {
       error.message.includes("Invalid column name 'column1'")
     ) {
       console.log(
-        "SDL Report - Detected column1 database error, using fallback data",
+        "SDL Report - Detected column1 database error, using fallback data"
       );
 
       const fallbackData = [
@@ -1679,7 +1679,9 @@ const getSDLReportData = async (fromDate, toDate) => {
           updatedate: new Date(),
           updatedby: 1,
           log_inst: 1,
-          payroll_period: `${new Date().getMonth() + 1}/${new Date().getFullYear()}`,
+          payroll_period: `${
+            new Date().getMonth() + 1
+          }/${new Date().getFullYear()}`,
         },
         {
           1001: 60000,
@@ -1726,21 +1728,23 @@ const getSDLReportData = async (fromDate, toDate) => {
           updatedate: new Date(),
           updatedby: 1,
           log_inst: 1,
-          payroll_period: `${new Date().getMonth() + 1}/${new Date().getFullYear()}`,
+          payroll_period: `${
+            new Date().getMonth() + 1
+          }/${new Date().getFullYear()}`,
         },
       ];
 
       console.log(
         "SDL Report - Returning fallback data with",
         fallbackData.length,
-        "records",
+        "records"
       );
       return fallbackData;
     }
 
     throw new CustomError(
       `Error executing SDL report stored procedure: ${error.message}`,
-      500,
+      500
     );
   }
 };
@@ -1749,7 +1753,7 @@ const generateSDLReportHTML = (
   reportData,
   companySettings,
   fromDate,
-  toDate,
+  toDate
 ) => {
   return new Promise((resolve, reject) => {
     try {
@@ -1791,7 +1795,7 @@ const generateSDLReportHTML = (
               parseFloat(row.total_deductions || 0) || grossSalary * 0.045;
 
             console.log(
-              `SDL HTML - Processing row ${index}: month=${month}, year=${year}, sdl=${sdlAmount}, gross=${grossSalary}`,
+              `SDL HTML - Processing row ${index}: month=${month}, year=${year}, sdl=${sdlAmount}, gross=${grossSalary}`
             );
 
             if (!monthlyData[monthKey]) {
@@ -1804,7 +1808,7 @@ const generateSDLReportHTML = (
           } catch (rowError) {
             console.error(
               `SDL HTML - Error processing row ${index}:`,
-              rowError,
+              rowError
             );
             // Skip problematic rows but continue processing
           }
@@ -1834,8 +1838,8 @@ const generateSDLReportHTML = (
       const years = [
         ...new Set(
           reportData.map(
-            (row) => parseInt(row.payroll_year) || new Date().getFullYear(),
-          ),
+            (row) => parseInt(row.payroll_year) || new Date().getFullYear()
+          )
         ),
       ];
       console.log("SDL HTML - Years found in data:", years);
@@ -1970,7 +1974,7 @@ const generateSDLReportPDF = async (
   companySettings,
   filePath,
   fromDate,
-  toDate,
+  toDate
 ) => {
   let browser = null;
   try {
@@ -1978,7 +1982,7 @@ const generateSDLReportPDF = async (
       reportData,
       companySettings,
       fromDate,
-      toDate,
+      toDate
     );
 
     const dir = path.dirname(filePath);
@@ -2039,7 +2043,7 @@ const generateP10ReportHTML = (
   reportData,
   companySettings,
   fromDate,
-  toDate,
+  toDate
 ) => {
   return new Promise((resolve, reject) => {
     try {
@@ -2077,7 +2081,7 @@ const generateP10ReportHTML = (
             parseFloat(row["1009"] || 0);
 
           console.log(
-            `P10 HTML - Processing row: month=${month}, year=${year}, tax=${taxAmount}, gross=${grossSalary}`,
+            `P10 HTML - Processing row: month=${month}, year=${year}, tax=${taxAmount}, gross=${grossSalary}`
           );
 
           if (!monthlyData[monthKey]) {
@@ -2113,8 +2117,8 @@ const generateP10ReportHTML = (
       const years = [
         ...new Set(
           reportData.map(
-            (row) => parseInt(row.payroll_year) || new Date().getFullYear(),
-          ),
+            (row) => parseInt(row.payroll_year) || new Date().getFullYear()
+          )
         ),
       ];
       console.log("P10 HTML - Years found in data:", years);
@@ -2246,7 +2250,7 @@ const generateP10ReportPDF = async (
   companySettings,
   filePath,
   fromDate,
-  toDate,
+  toDate
 ) => {
   let browser = null;
   try {
@@ -2254,7 +2258,7 @@ const generateP10ReportPDF = async (
       reportData,
       companySettings,
       fromDate,
-      toDate,
+      toDate
     );
 
     const dir = path.dirname(filePath);
@@ -2506,7 +2510,7 @@ const generateP09ReportHTML = (
   reportData,
   companySettings,
   fromDate,
-  toDate,
+  toDate
 ) => {
   return new Promise((resolve, reject) => {
     try {
@@ -2623,7 +2627,7 @@ const generateP09ReportPDF = async (
   companySettings,
   filePath,
   fromDate,
-  toDate,
+  toDate
 ) => {
   let browser = null;
   try {
@@ -2631,7 +2635,7 @@ const generateP09ReportPDF = async (
       reportData,
       companySettings,
       fromDate,
-      toDate,
+      toDate
     );
 
     const dir = path.dirname(filePath);
@@ -2766,11 +2770,11 @@ const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
   const grandTotal = {
     "BASIC PAY": transformedData.reduce(
       (sum, item) => sum + (parseFloat(item["BASIC PAY"]) || 0),
-      0,
+      0
     ),
     "Contribution (20%)": transformedData.reduce(
       (sum, item) => sum + (parseFloat(item["Contribution (20%)"]) || 0),
-      0,
+      0
     ),
   };
 
@@ -2820,8 +2824,14 @@ const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
     </div>
     
     <div class="info">
-        <div class="info-row"><strong>Employer Name:</strong> ${companySettings.company_name || "BOARD OF TRUSTEES NSSF NATIONAL SOCIAL SECURITY FUND"}</div>
-        <div class="info-row"><strong>Address:</strong> ${companySettings.street_address || "THE UNITED REPUBLIC OF TANZANIA NATIONAL SOCIAL SECURITY FUND"}</div>
+        <div class="info-row"><strong>Employer Name:</strong> ${
+          companySettings.company_name ||
+          "BOARD OF TRUSTEES NSSF NATIONAL SOCIAL SECURITY FUND"
+        }</div>
+        <div class="info-row"><strong>Address:</strong> ${
+          companySettings.street_address ||
+          "THE UNITED REPUBLIC OF TANZANIA NATIONAL SOCIAL SECURITY FUND"
+        }</div>
         <div class="info-row"><strong>MONTH OF CONTRIBUTION:</strong> ${monthName}</div>
     </div>
     
@@ -2845,16 +2855,25 @@ const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
                     <td>${item["INSURED PERSON'S NAME"]}</td>
                     <td>${item["EmpId"]}</td>
                     <td>${item["Membership No."]}</td>
-                    <td class="text-right">${item["BASIC PAY"].toLocaleString()}</td>
-                    <td class="text-right">${item["Contribution (20%)"].toLocaleString()}</td>
+                    <td class="text-right">${item[
+                      "BASIC PAY"
+                    ].toLocaleString()}</td>
+                    <td class="text-right">${item[
+                      "Contribution (20%)"
+                    ].toLocaleString()}</td>
                 </tr>
-            `,
+            `
               )
               .join("")}
 <tr class="total-row no-border">
                 <td colspan="4">Grand Total :</td>
-                <td class="text-right">${grandTotal["BASIC PAY"].toLocaleString("en-US", { useGrouping: false })}</td>
-                <td class="text-right">${grandTotal["Contribution (20%)"].toLocaleString("en-US", { useGrouping: false })}</td>
+                <td class="text-right">${grandTotal["BASIC PAY"].toLocaleString(
+                  "en-US",
+                  { useGrouping: false }
+                )}</td>
+                <td class="text-right">${grandTotal[
+                  "Contribution (20%)"
+                ].toLocaleString("en-US", { useGrouping: false })}</td>
             </tr>
         </tbody>
     </table>
@@ -2867,14 +2886,14 @@ const generateNSSFReportPDF = async (
   reportData,
   filePath,
   paymonth,
-  payyear,
+  payyear
 ) => {
   let browser = null;
   try {
     const htmlContent = await generateNSSFReportHTML(
       reportData,
       paymonth,
-      payyear,
+      payyear
     );
 
     const dir = path.dirname(filePath);
@@ -3039,7 +3058,9 @@ const generateWCFReportHTML = async (reportData, fromDate, toDate) => {
     </div>
     
     <div class="info">
-        <div class="info-row"><strong>Employer Name:</strong> ${companySettings.company_name || "USANGU LOGISTICS LIMITED"}</div>
+        <div class="info-row"><strong>Employer Name:</strong> ${
+          companySettings.company_name || "USANGU LOGISTICS LIMITED"
+        }</div>
         <div class="info-row"><strong>Applicable Month:</strong> ${month}</div>
         <div class="info-row"><strong> Year:</strong> ${year}</div>
     </div>
@@ -3069,8 +3090,12 @@ const generateWCFReportHTML = async (reportData, fromDate, toDate) => {
                     <td>${employee["S No"] || ""}</td>
                     <td>${employee["EmpId"] || ""}</td>
                     <td>${employee["Employee Name"] || ""}</td>
-                    <td class="text-right">${employee["Employee Basic Pay"] || 0}</td>
-                    <td class="text-right">${employee["Employee Gross Salary"] || 0}</td>
+                    <td class="text-right">${
+                      employee["Employee Basic Pay"] || 0
+                    }</td>
+                    <td class="text-right">${
+                      employee["Employee Gross Salary"] || 0
+                    }</td>
                 </tr>
       `;
   });
@@ -3096,7 +3121,7 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
     const htmlContent = await generateWCFReportHTML(
       reportData,
       fromDate,
-      toDate,
+      toDate
     );
 
     const dir = path.dirname(filePath);
@@ -3160,7 +3185,7 @@ const getPayrollSummaryReportData = async (paymonth, payyear) => {
       {
         paymonth,
         payyear,
-      },
+      }
     );
 
     const result = await prisma.$queryRaw`
@@ -3172,7 +3197,7 @@ const getPayrollSummaryReportData = async (paymonth, payyear) => {
 
     if (!result || result.length === 0) {
       console.log(
-        "Payroll Summary Report - Query returned empty, using zero data",
+        "Payroll Summary Report - Query returned empty, using zero data"
       );
 
       const zeroData = [
@@ -3209,7 +3234,7 @@ const getPayrollSummaryReportData = async (paymonth, payyear) => {
 const generatePayrollSummaryReportHTML = async (
   reportData,
   paymonth,
-  payyear,
+  payyear
 ) => {
   const companySettings = await getCompanySettings();
 
@@ -3363,14 +3388,14 @@ const generatePayrollSummaryReportPDF = async (
   reportData,
   filePath,
   paymonth,
-  payyear,
+  payyear
 ) => {
   let browser = null;
   try {
     const htmlContent = await generatePayrollSummaryReportHTML(
       reportData,
       paymonth,
-      payyear,
+      payyear
     );
 
     const dir = path.dirname(filePath);
