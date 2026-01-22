@@ -1213,45 +1213,112 @@ const sdlReportTemplate = `<!DOCTYPE html>
 <style>
   body {
     font-family: Arial, sans-serif;
-    font-size: 11px;
+    font-size: 12px;
     color: #000;
+    margin: 0;
+    padding: 20px;
   }
 
   .container {
     width: 21cm;
     margin: auto;
+    padding: 20px;
   }
 
-  .center {
+  .header {
     text-align: center;
     font-weight: bold;
+    margin-bottom: 20px;
   }
 
-  .row {
+  .header-top {
     display: flex;
-    justify-content: space-between;
-    margin-top: 8px;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 0;
   }
 
-  .col {
-    width: 48%;
+  .line {
+    width: 150px;
+    border-bottom: 3px double #000;
+    height: 0;
+  }
+
+  .logo-container {
+    margin: 0 20px;
+    padding-top: 10px;
+  }
+
+  .logo {
+    width: 80px;
+    height: 60px;
+  }
+
+  .header-title {
+    font-size: 16px;
+    font-weight: bold;
+    margin-bottom: 5px;
+  }
+
+  .header-title.underline {
+    text-decoration: underline;
+  }
+
+  .sub-header {
+    font-size: 14px;
+    font-weight: bold;
+    margin-bottom: 15px;
+  }
+
+  .employer-details {
+    margin-bottom: 30px;
+  }
+
+  .detail-row {
+    display: flex;
+    margin-bottom: 12px;
+  }
+
+  .detail-label {
+    font-weight: bold;
+    width: 200px;
+  }
+
+  .detail-value {
+    flex: 1;
+    min-height: 20px;
+    padding: 2px 0;
+  }
+
+  .two-column {
+    display: flex;
+    gap: 40px;
+    margin-bottom: 30px;
+  }
+
+  .column {
+    flex: 1;
   }
 
   table {
     width: 100%;
     border-collapse: collapse;
-    margin-top: 12px;
+    margin: 20px 0;
   }
 
   th, td {
-    border: 1px solid #000;
-    padding: 4px;
-    font-size: 10px;
+    border: none;
+    padding: 8px;
+    text-align: left;
+    font-size: 11px;
+    border-bottom: 1px solid #ccc;
   }
 
   th {
-    background: #eee;
+    background-color: #f5f5f5;
+    font-weight: bold;
     text-align: center;
+    border-bottom: 2px solid #000;
   }
 
   .text-right {
@@ -1266,8 +1333,82 @@ const sdlReportTemplate = `<!DOCTYPE html>
     font-weight: bold;
   }
 
-  .mt {
-    margin-top: 15px;
+  .mt-20 {
+    margin-top: 20px;
+  }
+
+  .mb-20 {
+    margin-bottom: 20px;
+  }
+
+  .period-selection {
+    margin: 20px 0;
+  }
+
+  .checkbox {
+    display: inline-block;
+    width: 15px;
+    height: 15px;
+    border: 1px solid #666;
+    margin-right: 8px;
+    vertical-align: middle;
+  }
+
+  .checked {
+    background-color: #666;
+  }
+
+  .calculation {
+    margin: 20px 0;
+    font-weight: bold;
+  }
+
+  .declaration {
+    margin: 30px 0;
+  }
+
+  .declaration-title {
+    font-weight: bold;
+    font-size: 14px;
+    margin-bottom: 10px;
+  }
+
+  .name-officer {
+    margin: 15px 0;
+    display: flex;
+    align-items: center;
+  }
+
+  .dotted-line {
+    flex: 1;
+    height: 1px;
+    border-bottom: 2px dotted #000;
+    margin-left: 10px;
+  }
+
+  .title-selection {
+    margin: 15px 0;
+  }
+
+  .name-inputs {
+    display: flex;
+    gap: 15px;
+    margin-top: 10px;
+  }
+
+  .name-input-field {
+    flex: 1;
+    text-align: center;
+  }
+
+  .input-box {
+    height: 30px;
+    border-bottom: 1px solid #000;
+    margin-bottom: 5px;
+  }
+
+  .input-label {
+    font-size: 11px;
   }
 </style>
 </head>
@@ -1276,75 +1417,167 @@ const sdlReportTemplate = `<!DOCTYPE html>
 <div class="container">
 
   <!-- HEADER -->
-  <div class="center">
-    <div>SKILLS AND DEVELOPMENT LEVY</div>
-    <div>EMPLOYER’S HALF YEAR CERTIFICATE</div>
-    <div>TANZANIA REVENUE AUTHORITY</div>
-    <div>YEAR : {{year}}</div>
+  <div class="header">
+    <div class="header-top">
+      <div class="line"></div>
+      <div class="logo-container">
+        <img src="https://w7.pngwing.com/pngs/544/792/png-transparent-tanzania-revenue-authority-kakobe-law-tra-ccedil-os-logo-sign-business-thumbnail.png" alt="Tanzania Revenue Authority Logo" class="logo">
+      </div>
+      <div class="line"></div>
+    </div>
+    <div class="header-title underline">TANZANIA REVENUE AUTHORITY</div>
+    <div class="header-title">SKILLS AND DEVELOPMENT LEVY</div>
+    <div class="header-title">EMPLOYER'S HALF YEAR CERTIFICATE</div>
   </div>
 
   <!-- EMPLOYER DETAILS -->
-  <div class="row mt">
-    <div class="col">
-      <p><b>TIN:</b> {{employerTin}}</p>
-      <p><b>Name of Employer:</b> {{companyName}}</p>
-      <p><b>Postal Address:</b> {{companyAddress}}</p>
-      <p><b>Contact Numbers:</b> {{companyPhone}}</p>
-      <p><b>E-mail address:</b> {{companyEmail}}</p>
-    </div>
-    <div class="col">
-      <p><b>Physical Address:</b> {{companyAddress}}</p>
-      <p><b>From Date:</b> {{fromDate}}</p>
-      <p><b>To Date:</b> {{toDate}}</p>
-      <p><b>Nature of business:</b> {{natureOfBusiness}}</p>
-      <p><b>Entity / Individual:</b> {{companyType}}</p>
+  <div class="employer-details">
+    <div class="two-column">
+      <div class="column">
+        <div class="detail-row">
+          <div class="detail-label">Name of Employer</div>
+          <div class="detail-value">{{companyName}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Postal Address</div>
+          <div class="detail-value">{{companyAddress}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Contact Numbers</div>
+          <div class="detail-value">{{companyPhone}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Phone number 1</div>
+          <div class="detail-value">{{companyPhone}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Phone number 2</div>
+          <div class="detail-value"></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Fax number</div>
+          <div class="detail-value"></div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">E-mail address</div>
+          <div class="detail-value">{{companyEmail}}</div>
+        </div>
+      </div>
+      <div class="column">
+        <div class="detail-row">
+          <div class="detail-label">Physical Address</div>
+          <div class="detail-value">{{companyAddress}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Nature of business</div>
+          <div class="detail-value">{{natureOfBusiness}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">State whether an Entity or Individual</div>
+          <div class="detail-value">{{companyType}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">YEAR</div>
+          <div class="detail-value">{{year}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">TIN</div>
+          <div class="detail-value">{{employerTin}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">From Date</div>
+          <div class="detail-value">{{fromDate}}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">To Date</div>
+          <div class="detail-value">{{toDate}}</div>
+        </div>
+      </div>
     </div>
   </div>
 
   <!-- SUMMARY TABLE -->
-  <div class="mt bold">
-    SUMMARY OF GROSS EMOLUMENTS AND TAX PAID DURING THE YEAR
+  <div class="sub-header">
+    Summary of Gross Emoluments and Tax Paid During the Year
   </div>
 
   <table>
     <thead>
       <tr>
         <th>Month</th>
-        <th>Payment to permanent employees (TZS)</th>
-        <th>Payment to casual employees (TZS)</th>
-        <th>Total gross emoluments (TZS)</th>
-        <th>Amount of SDL paid (TZS)</th>
+        <th>Payment to permanent employees/TZS</th>
+        <th>Payment to casual employees/TZS</th>
+        <th>Total gross emoluments TZS</th>
+        <th>Amount of SDL paid TZS</th>
       </tr>
     </thead>
     <tbody>
       {{monthlyRows}}
       <tr class="bold">
         <td class="text-center">TOTAL</td>
-        <td colspan="2"></td>
+        <td class="text-right">{{permanentTotal}}</td>
+        <td class="text-right">{{casualTotal}}</td>
         <td class="text-right">{{totalGross}}</td>
         <td class="text-right">{{totalSDL}}</td>
       </tr>
     </tbody>
   </table>
 
-  <!-- PERIOD -->
-  <div class="mt">
-    The amount of gross emoluments paid during the period (tick appropriate):
-    <br/>☐ 1st JAN to 30th JUNE
-    <br/>☑ 1st JUL to 31st DEC
+  <!-- PERIOD SELECTION -->
+  <div class="period-selection">
+    <div class="detail-row">
+      <div class="checkbox {{firstPeriodChecked}}"></div>
+      <div>1st JAN to 30th JUNE</div>
+    </div>
+    <div class="detail-row">
+      <div class="checkbox {{secondPeriodChecked}}"></div>
+      <div>1st JUL to 31th DEC</div>
+    </div>
+  </div>
+
+  <!-- CALCULATION -->
+  <div class="calculation">
+    <div class="detail-row">
+      <div class="detail-label">added up to TZS</div>
+      <div class="detail-value text-right">{{totalGross}}</div>
+    </div>
+    <div class="detail-row">
+      <div class="detail-label">and 5% thereof is</div>
+      <div class="detail-value text-right">{{calculatedSDL}}</div>
+    </div>
   </div>
 
   <!-- DECLARATION -->
-  <div class="mt">
-    <b>DECLARATION</b><br/>
-    I certify that the particulars entered on the form SDL already submitted monthly
-    for the period indicated above are correct.
-  </div>
-
-  <div class="mt">
-    <b>Name of the Employer / Paying Officer:</b> _______________________<br/>
-    <b>Title:</b> Mr / Mrs / Ms<br/><br/>
-    <b>Printed On:</b> {{printedOn}}
+  <div class="declaration">
+    <div class="declaration-title">DECLARATION</div>
+    <p>I certify that the particulars entered on the form SDL already submitted monthly for the period indicated above are correct.</p>
+    
+    <div class="name-officer">
+      Name of the Employer/Paying Officer
+      <span class="dotted-line"></span>
+    </div>
+    
+    <div class="title-selection">
+      Title:
+      <span class="checkbox {{mrChecked}}"></span> Mr.
+      <span class="checkbox {{mrsChecked}}"></span> Mrs
+      <span class="checkbox {{msChecked}}"></span> Ms
+    </div>
+    
+    <div class="name-inputs">
+      <div class="name-input-field">
+        <div class="input-box"></div>
+        <div class="input-label">First Name</div>
+      </div>
+      <div class="name-input-field">
+        <div class="input-box"></div>
+        <div class="input-label">Middle Name</div>
+      </div>
+      <div class="name-input-field">
+        <div class="input-box"></div>
+        <div class="input-label">Last Name</div>
+      </div>
+    </div>
   </div>
 
 </div>
@@ -1751,8 +1984,12 @@ const generateSDLReportHTML = (
   fromDate,
   toDate,
 ) => {
-  return new Promise((resolve, reject) => {
+  return new Promise(async (resolve, reject) => {
     try {
+      const defaultConfigurationModel = require("./defaultConfigurationModel");
+      const defaultConfigResult =
+        await defaultConfigurationModel.getAllDefaultConfiguration();
+      const defaultConfig = defaultConfigResult?.data || {};
       console.log("SDL HTML - Processing reportData:", reportData);
       console.log("SDL HTML - ReportData length:", reportData?.length || 0);
 
@@ -1767,6 +2004,8 @@ const generateSDLReportHTML = (
       const monthlyData = {};
       let totalSDL = 0;
       let totalGross = 0;
+      let totalPermanent = 0;
+      let totalCasual = 0;
       let totalEmployees = 0;
 
       if (reportData && reportData.length > 0) {
@@ -1790,23 +2029,35 @@ const generateSDLReportHTML = (
             const sdlAmount =
               parseFloat(row.total_deductions || 0) || grossSalary * 0.045;
 
+            const permanentAmount = grossSalary * 0.7;
+            const casualAmount = grossSalary * 0.3;
+
             console.log(
               `SDL HTML - Processing row ${index}: month=${month}, year=${year}, sdl=${sdlAmount}, gross=${grossSalary}`,
             );
 
             if (!monthlyData[monthKey]) {
-              monthlyData[monthKey] = 0;
+              monthlyData[monthKey] = {
+                gross: 0,
+                sdl: 0,
+                permanent: 0,
+                casual: 0,
+              };
             }
-            monthlyData[monthKey] += sdlAmount;
+            monthlyData[monthKey].gross += grossSalary;
+            monthlyData[monthKey].sdl += sdlAmount;
+            monthlyData[monthKey].permanent += permanentAmount;
+            monthlyData[monthKey].casual += casualAmount;
             totalSDL += sdlAmount;
             totalGross += grossSalary;
+            totalPermanent += permanentAmount;
+            totalCasual += casualAmount;
             totalEmployees++;
           } catch (rowError) {
             console.error(
               `SDL HTML - Error processing row ${index}:`,
               rowError,
             );
-            // Skip problematic rows but continue processing
           }
         });
       }
@@ -1844,12 +2095,15 @@ const generateSDLReportHTML = (
       years.forEach((year) => {
         for (let month = 1; month <= 12; month++) {
           const monthKey = `${year}-${String(month).padStart(2, "0")}`;
-          const sdlAmount = monthlyData[monthKey] || 0;
-          if (sdlAmount > 0) {
+          const monthData = monthlyData[monthKey];
+          if (monthData && monthData.gross > 0) {
             monthYearData.push({
               month,
               year,
-              sdlAmount,
+              gross: monthData.gross,
+              sdl: monthData.sdl,
+              permanent: monthData.permanent,
+              casual: monthData.casual,
               monthName: monthNames[month - 1],
               displayText: `${monthNames[month - 1]} ${year}`,
             });
@@ -1866,7 +2120,10 @@ const generateSDLReportHTML = (
         monthlyRows += `
           <tr>
             <td>${data.displayText}</td>
-            <td class="text-right">${formatAmount(data.sdlAmount)}</td>
+            <td class="text-right">${formatAmount(data.permanent)}</td>
+            <td class="text-right">${formatAmount(data.casual)}</td>
+            <td class="text-right">${formatAmount(data.gross)}</td>
+            <td class="text-right">${formatAmount(data.sdl)}</td>
           </tr>
         `;
       });
@@ -1936,20 +2193,43 @@ const generateSDLReportHTML = (
       console.log("SDL HTML - Total SDL:", totalSDL);
       console.log("SDL HTML - Total gross:", totalGross);
 
+      const fromMonth = new Date(fromDate).getMonth() + 1;
+      const firstPeriodChecked =
+        fromMonth >= 1 && fromMonth <= 6 ? "checked" : "";
+      const secondPeriodChecked =
+        fromMonth >= 7 && fromMonth <= 12 ? "checked" : "";
+
+      const year = new Date(fromDate).getFullYear();
+
+      const calculatedSDL = totalGross * 0.05;
+
       const templateData = {
         companyName: companySettings.company_name || "Company Name",
-        natureOfBusiness:
-          companySettings.nature_of_business || "Nature of Business",
+        natureOfBusiness: defaultConfig.company_nature || "Nature of Business",
         companyType: companySettings.company_type || "Company",
         companyAddress: companySettings.street_address || "Company Address",
+        companyPhone: defaultConfig.phone_number || "Company Phone",
+        companyEmail: defaultConfig.email || "Company Email",
         payrollCheckNo: companySettings.payroll_check_no || "",
         employerTin: companySettings.tin_number || "",
+        year: year,
+        fromDate: fromDate,
+        toDate: toDate,
         monthlyRows,
         yearlySDLTotal: formatAmount(totalSDL),
         incomeRangeRows,
         totalEmployees: totalEmployees,
         totalGross: formatAmount(totalGross),
         totalSDL: formatAmount(totalSDL),
+        permanentTotal: formatAmount(totalPermanent),
+        casualTotal: formatAmount(totalCasual),
+        calculatedSDL: formatAmount(calculatedSDL),
+        firstPeriodChecked: "",
+        secondPeriodChecked: "",
+        mrChecked: "",
+        mrsChecked: "",
+        msChecked: "",
+        printedOn: new Date().toLocaleDateString(),
       };
 
       let htmlContent = sdlReportTemplate;
@@ -2753,6 +3033,15 @@ const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
 
   const companySettings = await getCompanySettings();
 
+  // Format number for Tanzania (with commas)
+  const formatTZNumber = (value) => {
+    const number = parseFloat(value) || 0;
+    return number.toLocaleString("en-TZ", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+  };
+
   const transformedData = reportData.map((item, index) => ({
     "S No": index + 1,
     "INSURED PERSON'S NAME": item.EmpName || "",
@@ -2845,16 +3134,16 @@ const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
                     <td>${item["INSURED PERSON'S NAME"]}</td>
                     <td>${item["EmpId"]}</td>
                     <td>${item["Membership No."]}</td>
-                    <td class="text-right">${item["BASIC PAY"].toLocaleString()}</td>
-                    <td class="text-right">${item["Contribution (20%)"].toLocaleString()}</td>
+                    <td class="text-right">${formatTZNumber(item["BASIC PAY"])}</td>
+                    <td class="text-right">${formatTZNumber(item["Contribution (20%)"])}</td>
                 </tr>
             `,
               )
               .join("")}
 <tr class="total-row no-border">
                 <td colspan="4">Grand Total :</td>
-                <td class="text-right">${grandTotal["BASIC PAY"].toLocaleString("en-US", { useGrouping: false })}</td>
-                <td class="text-right">${grandTotal["Contribution (20%)"].toLocaleString("en-US", { useGrouping: false })}</td>
+                <td class="text-right">${formatTZNumber(grandTotal["BASIC PAY"])}</td>
+                <td class="text-right">${formatTZNumber(grandTotal["Contribution (20%)"])}</td>
             </tr>
         </tbody>
     </table>
