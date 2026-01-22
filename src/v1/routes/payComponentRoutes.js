@@ -65,7 +65,13 @@ router.get(
 router.get(
   "/payroll-report",
   authenticateToken,
-  payComponentController.generatePayRollSummaryReport,
+  payComponentController.generatePayrollSummaryReport,
+);
+
+router.get(
+  "/payroll-summary-report",
+  authenticateToken,
+  payComponentController.generatePayrollSummaryReport,
 );
 
 router.get(
