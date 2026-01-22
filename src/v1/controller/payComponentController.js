@@ -1,6 +1,7 @@
 const payComponentService = require("../services/payComponentService");
 const payComponentModel = require("../models/payComponentModel");
 const payRollReportModel = require("../models/payRollReportModal");
+const defaultConfigurationModel = require("../models/defaultConfigurationModel");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const path = require("path");
@@ -476,6 +477,75 @@ const generateWCFReport = async (req, res) => {
   }
 };
 
+const generatePayrollSummaryReport = async (req, res, next) => {
+  try {
+    const { paymonth, payyear } = req.query;
+
+    if (!paymonth || !payyear) {
+      throw new CustomError("Paymonth and Payyear are required", 400);
+    }
+
+    console.log("Payroll Summary Report - Request received:", {
+      paymonth,
+      payyear,
+    });
+
+    // Get company settings for default configuration
+    const companyConfigResult =
+      await defaultConfigurationModel.getAllDefaultConfiguration();
+    const companySettings = companyConfigResult?.data || {};
+
+    // Get payroll summary report data
+    const reportData = await payRollReportModel.generatePayRollSummaryReport(
+      parseInt(paymonth),
+      parseInt(payyear),
+    );
+
+    const fileName = `Payroll_Summary_Report_${paymonth}_${payyear}_${Date.now()}.pdf`;
+    const filePath = path.join(__dirname, "../../../temp", fileName);
+
+    await payRollReportModel.generatePayrollSummaryReportPDF(
+      reportData,
+      companySettings,
+      filePath,
+      parseInt(paymonth),
+      parseInt(payyear),
+    );
+
+    const pdfBuffer = fs.readFileSync(filePath);
+
+    res.setHeader("Content-Type", "application/pdf");
+    res.setHeader("Content-Disposition", `attachment; filename="${fileName}"`);
+    res.setHeader("Content-Length", pdfBuffer.length);
+
+    res.send(pdfBuffer);
+
+    // Auto-cleanup PDF file after 5 minutes
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(filePath)) {
+            fs.unlinkSync(filePath);
+            console.log(
+              "Payroll Summary Report - PDF file auto-cleaned:",
+              filePath,
+            );
+          }
+        } catch (error) {
+          console.error(
+            "Payroll Summary Report - Error auto-cleaning file:",
+            error,
+          );
+        }
+      },
+      5 * 60 * 1000,
+    ); // 5 minutes
+  } catch (error) {
+    console.error("Payroll Summary Report - Controller error:", error);
+    next(error);
+  }
+};
+
 module.exports = {
   createPayComponent,
   findPayComponentById,
@@ -490,4 +560,5 @@ module.exports = {
   generateP10Report,
   generateNSSFReport,
   generateWCFReport,
+  generatePayrollSummaryReport,
 };
