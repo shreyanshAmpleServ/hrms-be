@@ -33,7 +33,6 @@ const findPayComponentById = async (req, res, next) => {
   }
 };
 
-// update all pay component
 const updatePayComponent = async (req, res, next) => {
   try {
     let departmentData = { ...req.body };
@@ -153,6 +152,20 @@ const generateSDLReport = async (req, res) => {
       }
       console.log("SDL Report - File downloaded successfully");
     });
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath);
+            console.log("SDL Report - PDF file auto-cleaned:", pdfPath);
+          }
+        } catch (error) {
+          console.error("SDL Report - Error auto-cleaning file:", error);
+        }
+      },
+      5 * 60 * 1000,
+    ); // 5 minutes
   } catch (error) {
     console.error("SDL Report - Controller error:", error);
     res.status(500).json({
@@ -211,6 +224,20 @@ const generateP10Report = async (req, res) => {
       }
       console.log("P10 Report - File downloaded successfully");
     });
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(pdfPath)) {
+            fs.unlinkSync(pdfPath);
+            console.log("P10 Report - PDF file auto-cleaned:", pdfPath);
+          }
+        } catch (error) {
+          console.error("P10 Report - Error auto-cleaning file:", error);
+        }
+      },
+      5 * 60 * 1000,
+    );
   } catch (error) {
     console.error("P10 Report - Controller error:", error);
     res.status(500).json({
@@ -347,7 +374,6 @@ const generateNSSFReport = async (req, res) => {
 
     console.log("NSSF Report - PDF generated successfully:", generatedPath);
 
-    // Download PDF file
     res.download(generatedPath, fileName, (err) => {
       if (err) {
         console.error("NSSF Report - Error downloading file:", err);
@@ -358,6 +384,20 @@ const generateNSSFReport = async (req, res) => {
       }
       console.log("NSSF Report - File downloaded successfully");
     });
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(generatedPath)) {
+            fs.unlinkSync(generatedPath);
+            console.log("NSSF Report - PDF file auto-cleaned:", generatedPath);
+          }
+        } catch (error) {
+          console.error("NSSF Report - Error auto-cleaning file:", error);
+        }
+      },
+      5 * 60 * 1000,
+    );
   } catch (error) {
     console.error("NSSF Report - Controller error:", error);
     res.status(500).json({
@@ -413,6 +453,20 @@ const generateWCFReport = async (req, res) => {
       }
       console.log("WCF Report - File downloaded successfully");
     });
+
+    setTimeout(
+      () => {
+        try {
+          if (fs.existsSync(generatedPath)) {
+            fs.unlinkSync(generatedPath);
+            console.log("WCF Report - PDF file auto-cleaned:", generatedPath);
+          }
+        } catch (error) {
+          console.error("WCF Report - Error auto-cleaning file:", error);
+        }
+      },
+      5 * 60 * 1000,
+    );
   } catch (error) {
     console.error("WCF Report - Controller error:", error);
     res.status(500).json({
