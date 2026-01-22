@@ -3033,7 +3033,6 @@ const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
 
   const companySettings = await getCompanySettings();
 
-  // Format number for Tanzania (with commas)
   const formatTZNumber = (value) => {
     const number = parseFloat(value) || 0;
     return number.toLocaleString("en-TZ", {
