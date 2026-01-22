@@ -235,19 +235,13 @@ body {
   <!-- FOOTER WITH SIGNATURES -->
   <div class="footer">
     <div class="signature-section">
-      <div class="signature-line">
+      <div >
         {{companySignature}}
       </div>
       <p>Authorized Signature</p>
     </div>
     
-    <div class="signature-section">
-      <div class="signature-line">
-        &nbsp;
-      </div>
-      <p>Prepared By</p>
-    </div>
-  </div>
+
 
 </div>
 </body>

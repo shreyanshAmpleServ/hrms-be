@@ -490,12 +490,10 @@ const generatePayrollSummaryReport = async (req, res, next) => {
       payyear,
     });
 
-    // Get company settings for default configuration
     const companyConfigResult =
       await defaultConfigurationModel.getAllDefaultConfiguration();
     const companySettings = companyConfigResult?.data || {};
 
-    // Get payroll summary report data
     const reportData = await payRollReportModel.generatePayRollSummaryReport(
       parseInt(paymonth),
       parseInt(payyear),
@@ -520,7 +518,6 @@ const generatePayrollSummaryReport = async (req, res, next) => {
 
     res.send(pdfBuffer);
 
-    // Auto-cleanup PDF file after 5 minutes
     setTimeout(
       () => {
         try {
