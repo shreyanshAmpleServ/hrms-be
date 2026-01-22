@@ -2749,54 +2749,39 @@ const getNSSFReportData = async (paymonth, payyear) => {
   }
 };
 
-const generateNSSFReportPDF = async (
-  reportData,
-  filePath,
-  paymonth,
-  payyear,
-) => {
-  try {
-    console.log(
-      "NSSF Report - Generating PDF with data:",
-      reportData.length,
-      "records",
-    );
+const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
+  const monthName = new Date(payyear, paymonth - 1).toLocaleString("default", {
+    month: "long",
+  });
 
-    const monthName = new Date(payyear, paymonth - 1).toLocaleString(
-      "default",
-      {
-        month: "long",
-      },
-    );
+  const companySettings = await getCompanySettings();
 
-    const companySettings = await getCompanySettings();
+  const transformedData = reportData.map((item, index) => ({
+    "S No": index + 1,
+    "INSURED PERSON'S NAME": item.EmpName || "",
+    EmpId: item.employee_id || "",
+    "Membership No.": item.nssf_no || "",
+    "BASIC PAY": item.taxable_earnings || 0,
+    "Contribution (20%)":
+      Math.round((item.taxable_earnings || 0) * 0.2 * 100) / 100,
+  }));
 
-    const transformedData = reportData.map((item, index) => ({
-      "S No": index + 1,
-      "INSURED PERSON'S NAME": item.EmpName || "",
-      EmpId: item.employee_id || "",
-      "Membership No.": item.nssf_no || "",
-      "BASIC PAY": item.taxable_earnings || 0,
-      "Contribution (20%)":
-        Math.round((item.taxable_earnings || 0) * 0.2 * 100) / 100,
-    }));
+  const grandTotal = {
+    "BASIC PAY": transformedData.reduce(
+      (sum, item) => sum + (parseFloat(item["BASIC PAY"]) || 0),
+      0,
+    ),
+    "Contribution (20%)": transformedData.reduce(
+      (sum, item) => sum + (parseFloat(item["Contribution (20%)"]) || 0),
+      0,
+    ),
+  };
 
-    const grandTotal = {
-      "BASIC PAY": transformedData.reduce(
-        (sum, item) => sum + (parseFloat(item["BASIC PAY"]) || 0),
-        0,
-      ),
-      "Contribution (20%)": transformedData.reduce(
-        (sum, item) => sum + (parseFloat(item["Contribution (20%)"]) || 0),
-        0,
-      ),
-    };
+  const companyLogo = companySettings.company_logo
+    ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
+    : "";
 
-    const companyLogo = companySettings.company_logo
-      ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
-      : "";
-
-    const htmlContent = `
+  return `
 <!DOCTYPE html>
 <html>
 <head>
@@ -2880,23 +2865,73 @@ const generateNSSFReportPDF = async (
 </body>
 </html>
     `;
+};
+
+const generateNSSFReportPDF = async (
+  reportData,
+  filePath,
+  paymonth,
+  payyear,
+) => {
+  let browser = null;
+  try {
+    const htmlContent = await generateNSSFReportHTML(
+      reportData,
+      paymonth,
+      payyear,
+    );
 
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(filePath.replace(".pdf", ".html"), htmlContent);
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
 
-    console.log(
-      "NSSF Report - HTML file created:",
-      filePath.replace(".pdf", ".html"),
-    );
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
 
-    return filePath.replace(".pdf", ".html");
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
   } catch (error) {
-    console.error("NSSF Report - Error generating PDF:", error);
-    throw error;
+    console.log("NSSF PDF generation error:", error);
+    throw new Error(`NSSF PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
   }
 };
 
@@ -2915,25 +2950,18 @@ const getWCFReportData = async (fromDate, toDate) => {
     console.log("WCF Report - Result length:", result?.length || 0);
 
     if (!result || result.length === 0) {
-      console.log("WCF Report - Query returned empty, using sample data");
+      console.log("WCF Report - Query returned empty, using zero data");
 
-      const sampleData = [
+      const zeroData = [
         {
           "S No": 1,
-          EmpId: 954,
-          "Employee Name": "Abdallah Bakari Kijazi",
-          "Employee Basic Pay": 480000,
-          "Employee Gross Salary": 480000,
-        },
-        {
-          "S No": 2,
-          EmpId: 955,
-          "Employee Name": "John Doe",
-          "Employee Basic Pay": 600000,
-          "Employee Gross Salary": 600000,
+          EmpId: 0,
+          "Employee Name": "0",
+          "Employee Basic Pay": 0,
+          "Employee Gross Salary": 0,
         },
       ];
-      return sampleData;
+      return zeroData;
     }
 
     return result;
@@ -2943,40 +2971,33 @@ const getWCFReportData = async (fromDate, toDate) => {
   }
 };
 
-const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
-  try {
-    console.log(
-      "WCF Report - Generating PDF with data:",
-      reportData.length,
-      "records",
-    );
+const generateWCFReportHTML = async (reportData, fromDate, toDate) => {
+  const companySettings = await getCompanySettings();
 
-    const companySettings = await getCompanySettings();
+  const monthNames = [
+    "January",
+    "February",
+    "March",
+    "April",
+    "May",
+    "June",
+    "July",
+    "August",
+    "September",
+    "October",
+    "November",
+    "December",
+  ];
 
-    const monthNames = [
-      "January",
-      "February",
-      "March",
-      "April",
-      "May",
-      "June",
-      "July",
-      "August",
-      "September",
-      "October",
-      "November",
-      "December",
-    ];
+  const fromDateObj = new Date(fromDate);
+  const month = monthNames[fromDateObj.getMonth()];
+  const year = fromDateObj.getFullYear();
 
-    const fromDateObj = new Date(fromDate);
-    const month = monthNames[fromDateObj.getMonth()];
-    const year = fromDateObj.getFullYear();
+  const companyLogo = companySettings.company_logo
+    ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
+    : '<img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
 
-    const companyLogo = companySettings.company_logo
-      ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
-      : '<img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
-
-    let htmlContent = `
+  let htmlContent = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -3036,14 +3057,14 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
         <tbody>
 `;
 
-    let totalBasicPay = 0;
-    let totalGrossSalary = 0;
+  let totalBasicPay = 0;
+  let totalGrossSalary = 0;
 
-    reportData.forEach((employee) => {
-      totalBasicPay += employee["Employee Basic Pay"] || 0;
-      totalGrossSalary += employee["Employee Gross Salary"] || 0;
+  reportData.forEach((employee) => {
+    totalBasicPay += employee["Employee Basic Pay"] || 0;
+    totalGrossSalary += employee["Employee Gross Salary"] || 0;
 
-      htmlContent += `
+    htmlContent += `
                 <tr>
                     <td>${employee["S No"] || ""}</td>
                     <td>${employee["EmpId"] || ""}</td>
@@ -3052,9 +3073,9 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
                     <td class="text-right">${employee["Employee Gross Salary"] || 0}</td>
                 </tr>
       `;
-    });
+  });
 
-    htmlContent += `
+  htmlContent += `
             <tr class="total-row">
                 <td colspan="3">Grand Total :</td>
                 <td class="text-right">${totalBasicPay}</td>
@@ -3066,22 +3087,69 @@ const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
 </html>
     `;
 
+  return htmlContent;
+};
+
+const generateWCFReportPDF = async (reportData, filePath, fromDate, toDate) => {
+  let browser = null;
+  try {
+    const htmlContent = await generateWCFReportHTML(
+      reportData,
+      fromDate,
+      toDate,
+    );
+
     const dir = path.dirname(filePath);
     if (!fs.existsSync(dir)) {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    fs.writeFileSync(filePath.replace(".pdf", ".html"), htmlContent);
+    browser = await puppeteer.launch({
+      executablePath:
+        process.cwd() +
+        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      headless: true,
+      args: [
+        "--no-sandbox",
+        "--disable-setuid-sandbox",
+        "--disable-dev-shm-usage",
+        "--disable-extensions",
+        "--disable-gpu",
+      ],
+    });
 
-    console.log(
-      "WCF Report - HTML file created:",
-      filePath.replace(".pdf", ".html"),
-    );
+    const page = await browser.newPage();
+    await page.setViewport({ width: 1240, height: 1754 });
 
-    return filePath.replace(".pdf", ".html");
+    await page.setContent(htmlContent, {
+      waitUntil: "networkidle0",
+      timeout: 30000,
+    });
+
+    await page.pdf({
+      path: filePath,
+      format: "A4",
+      printBackground: true,
+      margin: {
+        top: "0.5in",
+        right: "0.5in",
+        bottom: "0.5in",
+        left: "0.5in",
+      },
+    });
+
+    return filePath;
   } catch (error) {
-    console.error("WCF Report - Error generating PDF:", error);
-    throw error;
+    console.log("WCF PDF generation error:", error);
+    throw new Error(`WCF PDF generation failed: ${error.message}`);
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error("Error closing browser:", closeError);
+      }
+    }
   }
 };
 

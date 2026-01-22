@@ -329,7 +329,7 @@ const generateNSSFReport = async (req, res) => {
       payyear,
     );
 
-    const fileName = `NSSF_Report_${paymonth}_${payyear}.html`;
+    const fileName = `NSSF_Report_${paymonth}_${payyear}.pdf`;
     const filePath = path.join(
       process.cwd(),
       "public",
@@ -345,9 +345,9 @@ const generateNSSFReport = async (req, res) => {
       payyear,
     );
 
-    console.log("NSSF Report - HTML generated successfully:", generatedPath);
+    console.log("NSSF Report - PDF generated successfully:", generatedPath);
 
-    // Download the HTML file (since PDF generation is not implemented yet)
+    // Download PDF file
     res.download(generatedPath, fileName, (err) => {
       if (err) {
         console.error("NSSF Report - Error downloading file:", err);
@@ -385,7 +385,7 @@ const generateWCFReport = async (req, res) => {
       toDate,
     );
 
-    const fileName = `WCF_Report_${fromDate}_to_${toDate}.html`;
+    const fileName = `WCF_Report_${fromDate}_to_${toDate}.pdf`;
     const filePath = path.join(
       process.cwd(),
       "public",
@@ -401,7 +401,7 @@ const generateWCFReport = async (req, res) => {
       toDate,
     );
 
-    console.log("WCF Report - HTML generated successfully:", generatedPath);
+    console.log("WCF Report - PDF generated successfully:", generatedPath);
 
     res.download(generatedPath, fileName, (err) => {
       if (err) {
