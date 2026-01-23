@@ -204,6 +204,23 @@ monthlyPayrollQueue.process(async (job) => {
       await createZip(filesForZip, zipPath);
       await job.progress(95);
 
+      try {
+        console.log(`[Job ${jobId}] Marking payrolls as printed...`);
+        const markedCount = await markPayrollsAsPrinted(
+          filters,
+          userId,
+          tenantDb,
+        );
+        console.log(
+          `[Job ${jobId}] Marked ${markedCount} payroll records as printed`,
+        );
+      } catch (markError) {
+        console.error(
+          `[Job ${jobId}] Error marking payrolls as printed:`,
+          markError,
+        );
+      }
+
       fs.rmSync(tempDir, { recursive: true, force: true });
 
       await job.progress(100);

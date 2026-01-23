@@ -1,10 +1,16 @@
 const monthlyPayrollService = require("../services/monthlyPayrollService.js");
-const CustomError = require("../../utils/CustomError");
+const CustomError = require("../../utils/CustomError.js");
 const moment = require("moment");
 const { success } = require("zod/v4");
 const fs = require("fs");
 const path = require("path");
 const cleanupManager = require("../../utils/fileCleanupManager.js");
+const {
+  checkAlreadyDownloadedPayrolls,
+  getDownloadStatistics,
+  checkIndividualPayslipDownloaded,
+  markIndividualPayslipAsPrinted,
+} = require("../models/monthlyPayrollModel.js");
 const {
   uploadToBackblazeWithValidation,
   deleteFromBackblaze,
@@ -298,10 +304,47 @@ const downloadPayslipPDF = async (req, res, next) => {
   try {
     console.log("Query Params:", req.query);
 
-    const { employee_id, payroll_month, payroll_year } = req.query;
+    const { employee_id, payroll_month, payroll_year, force_download } =
+      req.query;
 
     if (!employee_id || !payroll_month || !payroll_year) {
       throw new CustomError("Missing required parameters", 400);
+    }
+
+    const alreadyDownloaded = await checkIndividualPayslipDownloaded(
+      employee_id,
+      payroll_month,
+      payroll_year,
+      req.tenantDb,
+    );
+
+    if (alreadyDownloaded && force_download !== "true") {
+      console.log(
+        `Payslip already downloaded: Employee ${employee_id}, ${payroll_month}/${payroll_year}`,
+      );
+
+      return res.status(200).json({
+        success: true,
+        message: "This payslip has already been downloaded",
+        data: {
+          warning: true,
+          needsConfirmation: true,
+          alreadyDownloaded: {
+            employee_id: alreadyDownloaded.employee_id,
+            payroll_month: alreadyDownloaded.payroll_month,
+            payroll_year: alreadyDownloaded.payroll_year,
+            full_name: alreadyDownloaded.full_name,
+            employee_code: alreadyDownloaded.employee_code,
+            download_date: alreadyDownloaded.download_date,
+            downloaded_by: alreadyDownloaded.downloaded_by,
+          },
+          downloadInfo: {
+            employee_id,
+            payroll_month,
+            payroll_year,
+          },
+        },
+      });
     }
 
     const filePath = await monthlyPayrollService.downloadPayslipPDF(
@@ -328,10 +371,29 @@ const downloadPayslipPDF = async (req, res, next) => {
       throw new CustomError("Invalid file URL returned from Backblaze", 500);
     }
 
+    // Mark the payslip as downloaded
+    try {
+      await markIndividualPayslipAsPrinted(
+        employee_id,
+        payroll_month,
+        payroll_year,
+        req.user.id,
+        req.tenantDb,
+      );
+      console.log(
+        `Marked payslip as downloaded: Employee ${employee_id}, ${payroll_month}/${payroll_year}`,
+      );
+    } catch (markError) {
+      console.error("Error marking payslip as downloaded:", markError);
+      // Don't fail the download, just log the error
+    }
+
     fs.unlink(filePath, (err) => {
       if (err) console.error("Error deleting temp file:", err);
     });
+
     res.json({ url: fileUrl });
+
     setTimeout(async () => {
       try {
         await deleteFromBackblaze(fileUrl);
@@ -350,17 +412,41 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
     const {
       employee_id_from,
       employee_id_to,
+      employee_ids,
       payroll_month_from,
       payroll_month_to,
       payroll_year_from,
       payroll_year_to,
       status,
+      force_download,
     } = req.query;
 
     const filters = {};
     const advancedFilters = {};
 
-    if (employee_id_from && employee_id_to) {
+    if (employee_ids) {
+      let employeeIdArray;
+      try {
+        employeeIdArray = JSON.parse(employee_ids);
+        if (!Array.isArray(employeeIdArray)) {
+          throw new Error("employee_ids must be an array");
+        }
+      } catch (e) {
+        employeeIdArray = employee_ids
+          .split(",")
+          .map((id) => id.trim())
+          .filter((id) => id);
+      }
+
+      const validEmployeeIds = employeeIdArray
+        .map((id) => Number(id))
+        .filter((id) => !isNaN(id) && id > 0);
+
+      if (validEmployeeIds.length > 0) {
+        filters.employee_ids = validEmployeeIds;
+        console.log(`Employee IDs Array: [${validEmployeeIds.join(", ")}]`);
+      }
+    } else if (employee_id_from && employee_id_to) {
       const minId = Number(employee_id_from);
       const maxId = Number(employee_id_to);
 
@@ -377,8 +463,10 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       );
     } else if (employee_id_from) {
       filters.employee_id = { gte: Number(employee_id_from) };
+      console.log(`Employee From: ${Number(employee_id_from)}`);
     } else if (employee_id_to) {
       filters.employee_id = { lte: Number(employee_id_to) };
+      console.log(`Employee To: ${Number(employee_id_to)}`);
     }
 
     if (status) {
@@ -537,6 +625,52 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       `Found ${payrollCount} monthly payroll record(s) matching filters`,
     );
 
+    // Check if any of these payrolls have already been downloaded
+    const alreadyDownloaded = await checkAlreadyDownloadedPayrolls(
+      filters,
+      req.tenantDb,
+    );
+
+    if (alreadyDownloaded.length > 0 && req.query.force_download !== "true") {
+      console.log(
+        `Found ${alreadyDownloaded.length} already downloaded payroll records`,
+      );
+
+      // Get download statistics
+      const stats = await getDownloadStatistics(filters, req.tenantDb);
+
+      // Return warning response with download information
+      return res.status(200).json({
+        success: true,
+        message: "Some payroll records have already been downloaded",
+        data: {
+          warning: true,
+          alreadyDownloadedCount: alreadyDownloaded.length,
+          totalRecords: payrollCount,
+          downloadedRecords: stats.downloaded_records,
+          notDownloadedRecords: stats.not_downloaded_records,
+          alreadyDownloaded: alreadyDownloaded.slice(0, 10), // Show first 10
+          needsConfirmation: true,
+          appliedFilters: {
+            employees: employee_ids
+              ? `Array: [${filters.employee_ids.join(", ")}]`
+              : employee_id_from || employee_id_to
+                ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+                : "All",
+            payrollMonths:
+              payroll_month_from || payroll_month_to
+                ? `${payroll_month_from || "Any"} to ${payroll_month_to || "Any"}`
+                : "All",
+            payrollYears:
+              payroll_year_from || payroll_year_to
+                ? `${payroll_year_from || "Any"} to ${payroll_year_to || "Any"}`
+                : "All",
+            status: status || "All",
+          },
+        },
+      });
+    }
+
     const jobId = uuidv4();
 
     const job = await monthlyPayrollQueue.add({
@@ -555,8 +689,9 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
         statusUrl: `/api/monthly-payroll/bulk-download/status/${job.id}`,
         totalPayrollRecords: payrollCount,
         appliedFilters: {
-          employees:
-            employee_id_from || employee_id_to
+          employees: employee_ids
+            ? `Array: [${filters.employee_ids.join(", ")}]`
+            : employee_id_from || employee_id_to
               ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
               : "All",
           payrollMonths:
