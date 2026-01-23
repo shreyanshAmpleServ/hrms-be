@@ -59,11 +59,11 @@ const snapshotHiringStagesForCandidate = async (
   candidateId,
   jobPostingId,
   createdBy,
-  logInst,
+  logInst
 ) => {
   try {
     console.log(
-      ` Snapshotting stages for candidate ${candidateId} from job ${jobPostingId}`,
+      ` Snapshotting stages for candidate ${candidateId} from job ${jobPostingId}`
     );
 
     const jobPosting = await prisma.hrms_d_job_posting.findUnique({
@@ -126,7 +126,7 @@ const snapshotHiringStagesForCandidate = async (
       console.log(
         `  Creating stage ${index + 1}: ${stageData.stage_name} (${
           stageData.stage_status
-        })`,
+        })`
       );
 
       return prisma.hrms_d_candidate_hiring_stage.create({
@@ -138,7 +138,7 @@ const snapshotHiringStagesForCandidate = async (
     const successfulSnapshots = results.filter(Boolean);
 
     console.log(
-      ` Successfully created ${successfulSnapshots.length} stage snapshots`,
+      ` Successfully created ${successfulSnapshots.length} stage snapshots`
     );
 
     return successfulSnapshots;
@@ -146,7 +146,7 @@ const snapshotHiringStagesForCandidate = async (
     console.error(" Error snapshotting hiring stages:", error);
     throw new CustomError(
       `Error snapshotting hiring stages: ${error.message}`,
-      error.status || 500,
+      error.status || 500
     );
   }
 };
@@ -230,7 +230,7 @@ const getCandidateDocumentTypes = async (candidateId) => {
     const candidateDocuments = await prisma.hrms_d_candidate_documents.findMany(
       {
         where: { candidate_id: parseInt(candidateId) },
-      },
+      }
     );
 
     const documentTypeMap = new Map(documentTypes.map((dt) => [dt.id, dt]));
@@ -241,7 +241,7 @@ const getCandidateDocumentTypes = async (candidateId) => {
         if (!docType) return null;
 
         const uploadedDoc = candidateDocuments.find(
-          (doc) => doc.document_type_id === docType.id,
+          (doc) => doc.document_type_id === docType.id
         );
 
         return {
@@ -316,7 +316,7 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
             });
           } catch (error) {
             console.warn(
-              `Could not fetch value for stage_id ${stage.stage_id}`,
+              `Could not fetch value for stage_id ${stage.stage_id}`
             );
           }
         }
@@ -330,7 +330,7 @@ const getHiringStagesForJobPosting = async (jobPostingId) => {
           status: stage.status,
           competency_level: stage.competency_level,
         };
-      }),
+      })
     );
 
     const stageMap = new Map(stageWithValues.map((s) => [s.id, s]));
@@ -359,7 +359,7 @@ const createRequiredDocumentsForCandidate = async (
   candidateId,
   jobPostingId,
   createdBy,
-  logInst,
+  logInst
 ) => {
   try {
     if (!jobPostingId) {
@@ -416,7 +416,7 @@ const createRequiredDocumentsForCandidate = async (
     const createdDocuments = await Promise.all(documentPromises);
 
     console.log(
-      `Created ${createdDocuments.length} required document records for candidate ${candidateId}`,
+      `Created ${createdDocuments.length} required document records for candidate ${candidateId}`
     );
 
     return createdDocuments;
@@ -424,7 +424,7 @@ const createRequiredDocumentsForCandidate = async (
     console.error("Error creating required documents:", error);
     throw new CustomError(
       `Error creating required documents: ${error.message}`,
-      error?.status || 500,
+      error?.status || 500
     );
   }
 };
@@ -461,7 +461,7 @@ const createCandidateMaster = async (data) => {
     const nextNumber = maxNumber + 1;
     const newCandidateCode = `${initials}${String(nextNumber).padStart(
       3,
-      "0",
+      "0"
     )}`;
 
     // console.log(` Creating candidate: ${fullName} (${newCandidateCode})`);
@@ -517,14 +517,14 @@ const createCandidateMaster = async (data) => {
         reqData.id,
         reqData.job_posting,
         data.createdby || 1,
-        data.log_inst || 1,
+        data.log_inst || 1
       );
 
       await createRequiredDocumentsForCandidate(
         reqData.id,
         reqData.job_posting,
         data.createdby || 1,
-        data.log_inst || 1,
+        data.log_inst || 1
       );
     }
 
@@ -540,7 +540,7 @@ const createCandidateMaster = async (data) => {
     console.error(" Error creating candidate master:", error);
     throw new CustomError(
       `Error creating candidate: ${error.message}`,
-      error?.status || 500,
+      error?.status || 500
     );
   }
 };
@@ -660,17 +660,17 @@ const findCandidateMasterById = async (id) => {
 
         console.log(
           `Fetched interview stage for candidate ${id}:`,
-          interviewStageDetails?.stage_name || "N/A",
+          interviewStageDetails?.stage_name || "N/A"
         );
       } catch (error) {
         console.warn(
           `Could not fetch interview stage for candidate ${id}:`,
-          error.message,
+          error.message
         );
       }
     } else if (isApprovedOrConverted) {
       console.log(
-        `Skipping interview_stage for candidate ${id} - Status: ${reqData.status}`,
+        `Skipping interview_stage for candidate ${id} - Status: ${reqData.status}`
       );
     }
 
@@ -686,7 +686,7 @@ const findCandidateMasterById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding candidate by ID: ${error.message}`,
-      503,
+      503
     );
   }
 };
@@ -756,7 +756,7 @@ const updateCandidateMaster = async (id, data) => {
 
     if (jobPostingChanged) {
       console.log(
-        `Job posting changed from ${existingCandidate.job_posting} to ${data.job_posting}`,
+        `Job posting changed from ${existingCandidate.job_posting} to ${data.job_posting}`
       );
 
       await prisma.hrms_d_candidate_hiring_stage.deleteMany({
@@ -776,14 +776,14 @@ const updateCandidateMaster = async (id, data) => {
         parseInt(id),
         Number(data.job_posting),
         data.updatedby || 1,
-        data.log_inst || 1,
+        data.log_inst || 1
       );
 
       await createRequiredDocumentsForCandidate(
         parseInt(id),
         Number(data.job_posting),
         data.updatedby || 1,
-        data.log_inst || 1,
+        data.log_inst || 1
       );
 
       console.log(`Updated hiring stages and documents for new job posting`);
@@ -801,7 +801,7 @@ const updateCandidateMaster = async (id, data) => {
     console.error("Error updating candidate master:", error);
     throw new CustomError(
       `Error updating candidate master: ${error.message}`,
-      error.status || 500,
+      error.status || 500
     );
   }
 };
@@ -816,7 +816,7 @@ const deleteCandidateMaster = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400,
+        400
       );
     } else {
       throw new CustomError(error.meta?.constraint || error.message, 500);
@@ -1021,7 +1021,7 @@ const getAllCandidateMaster = async (
   size,
   startDate,
   endDate,
-  is_active = "false",
+  is_active = "false"
 ) => {
   try {
     if (is_active == "true") {
@@ -1152,7 +1152,7 @@ const getAllCandidateMaster = async (
 
         if (remarkCount === stageCount) {
           const allRemarksAreA = candidate.interview_stage_candidate.every(
-            (remark) => remark.status === "A",
+            (remark) => remark.status === "A"
           );
 
           if (allRemarksAreA) {
@@ -1207,7 +1207,7 @@ const getAllCandidateMaster = async (
           } else {
             if (hiringStages && hiringStages.length > 0) {
               const currentStage = hiringStages.find(
-                (stage) => stage.stage_status === "in_progress",
+                (stage) => stage.stage_status === "in_progress"
               );
 
               if (currentStage) {
@@ -1224,15 +1224,15 @@ const getAllCandidateMaster = async (
                 interviewStatusSummary = `Currently in: ${currentStage.stage_name}`;
               } else {
                 const completedStages = hiringStages.filter(
-                  (stage) => stage.stage_status === "completed",
+                  (stage) => stage.stage_status === "completed"
                 );
                 const pendingStages = hiringStages.filter(
-                  (stage) => stage.stage_status === "pending",
+                  (stage) => stage.stage_status === "pending"
                 );
 
                 if (pendingStages.length > 0) {
                   const nextStage = pendingStages.sort(
-                    (a, b) => a.sequence_order - b.sequence_order,
+                    (a, b) => a.sequence_order - b.sequence_order
                   )[0];
                   currentInterviewStatus = {
                     stage_id: nextStage.stage_id,
@@ -1247,7 +1247,7 @@ const getAllCandidateMaster = async (
                   interviewStatusSummary = `Waiting for: ${nextStage.stage_name}`;
                 } else if (completedStages.length > 0) {
                   const lastStage = completedStages.sort(
-                    (a, b) => b.sequence_order - a.sequence_order,
+                    (a, b) => b.sequence_order - a.sequence_order
                   )[0];
                   currentInterviewStatus = {
                     stage_id: lastStage.stage_id,
@@ -1279,7 +1279,7 @@ const getAllCandidateMaster = async (
               } catch (error) {
                 console.warn(
                   `Could not fetch legacy interview stage for candidate ${candidate.id}:`,
-                  error.message,
+                  error.message
                 );
               }
             }
@@ -1298,7 +1298,7 @@ const getAllCandidateMaster = async (
             };
           } else if (hiringStages && hiringStages.length > 0) {
             const completedCount = hiringStages.filter(
-              (s) => s.stage_status === "completed",
+              (s) => s.stage_status === "completed"
             ).length;
             interviewProgress = {
               total_stages: hiringStages.length,
@@ -1307,7 +1307,7 @@ const getAllCandidateMaster = async (
                 ? currentInterviewStatus.sequence_order
                 : 0,
               progress_percentage: Math.round(
-                (completedCount / hiringStages.length) * 100,
+                (completedCount / hiringStages.length) * 100
               ),
               status: candidate.status,
             };
@@ -1330,7 +1330,7 @@ const getAllCandidateMaster = async (
             // Progress indicator
             interview_progress: interviewProgress,
           };
-        }),
+        })
       );
       return {
         data: enrichedData,
@@ -1373,7 +1373,7 @@ const updateCandidateMasterStatus = async (id, data) => {
     if (!existingCandidateMaster) {
       throw new CustomError(
         `Candidate Master with ID ${candidateMasterId} not found`,
-        404,
+        404
       );
     }
 
@@ -1416,7 +1416,7 @@ const updateCandidateMasterStatus = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating candidate master status: ${error.message}`,
-      error?.status || 500,
+      error?.status || 500
     );
   }
 };
@@ -1426,11 +1426,11 @@ const updateCandidateStageStatus = async (
   stageId,
   status,
   feedback,
-  updatedBy,
+  updatedBy
 ) => {
   try {
     console.log(
-      ` Updating stage ${stageId} for candidate ${candidateId} to ${status}`,
+      ` Updating stage ${stageId} for candidate ${candidateId} to ${status}`
     );
 
     const updatedStage = await prisma.hrms_d_candidate_hiring_stage.updateMany({
@@ -1455,14 +1455,14 @@ const updateCandidateStageStatus = async (
             candidate_id: parseInt(candidateId),
             id: parseInt(stageId),
           },
-        },
+        }
       );
 
       if (currentStage) {
         console.log(
           `   Moving to next stage (sequence ${
             currentStage.sequence_order + 1
-          })`,
+          })`
         );
 
         const nextStageUpdate =
@@ -1481,7 +1481,7 @@ const updateCandidateStageStatus = async (
           });
 
         console.log(
-          `   Next stage activated: ${nextStageUpdate.count} record(s) updated`,
+          `   Next stage activated: ${nextStageUpdate.count} record(s) updated`
         );
       }
     }
@@ -1491,7 +1491,7 @@ const updateCandidateStageStatus = async (
     console.error(" Error updating candidate stage:", error);
     throw new CustomError(
       `Error updating candidate stage: ${error.message}`,
-      error?.status || 500,
+      error?.status || 500
     );
   }
 };
@@ -1969,7 +1969,7 @@ const createEmployeeFromCandidate = async (
   candidateId,
   additionalData,
   createdBy,
-  logInst,
+  logInst
 ) => {
   try {
     const candidate = await prisma.hrms_d_candidate_master.findUnique({
@@ -1988,24 +1988,24 @@ const createEmployeeFromCandidate = async (
     if (candidate.status !== "A") {
       throw new CustomError(
         "Candidate must be hired or selected to create employee",
-        400,
+        400
       );
     }
 
     if (candidate.status === "Converted") {
       throw new CustomError(
         "This candidate has already been converted to an employee",
-        400,
+        400
       );
     }
 
     const documentVerification = await verifyCandidateDocuments(
-      parseInt(candidateId),
+      parseInt(candidateId)
     );
 
     if (!documentVerification.hasAnyDocument) {
       console.warn(
-        ` Warning: Creating employee for candidate ${candidateId} with no documents uploaded`,
+        ` Warning: Creating employee for candidate ${candidateId} with no documents uploaded`
       );
     }
 
@@ -2024,7 +2024,7 @@ const createEmployeeFromCandidate = async (
     if (existingEmployee) {
       throw new CustomError(
         `Employee already exists with this email (${candidate.email}). Existing employee: ${existingEmployee.full_name} (${existingEmployee.employee_code})`,
-        400,
+        400
       );
     }
 
@@ -2081,13 +2081,13 @@ const createEmployeeFromCandidate = async (
 
     console.log(
       "Creating employee with data:",
-      JSON.stringify(employeeData, null, 2),
+      JSON.stringify(employeeData, null, 2)
     );
 
     const newEmployee = await employeeModel.createEmployee(employeeData);
 
     console.log(
-      ` Employee created with ID: ${newEmployee.id}, Code: ${newEmployee.employee_code}`,
+      ` Employee created with ID: ${newEmployee.id}, Code: ${newEmployee.employee_code}`
     );
 
     console.log(`\n Fetching candidate documents to transfer...`);
@@ -2107,11 +2107,11 @@ const createEmployeeFromCandidate = async (
             },
           },
         },
-      },
+      }
     );
 
     console.log(
-      ` Found ${candidateDocuments.length} document(s) to transfer from candidate to employee`,
+      ` Found ${candidateDocuments.length} document(s) to transfer from candidate to employee`
     );
 
     let transferredDocuments = [];
@@ -2135,7 +2135,7 @@ const createEmployeeFromCandidate = async (
           console.log(
             `     Type: ${
               candidateDoc.candidate_documents_type?.name || "Unknown"
-            }`,
+            }`
           );
           console.log(`     Path: ${candidateDoc.path}`);
 
@@ -2183,7 +2183,7 @@ const createEmployeeFromCandidate = async (
           }
 
           console.log(
-            `     Transferred successfully (Employee Doc ID: ${employeeDocument.id})`,
+            `     Transferred successfully (Employee Doc ID: ${employeeDocument.id})`
           );
         } catch (docError) {
           console.error(`      Failed to transfer: ${docError.message}`);
@@ -2200,7 +2200,7 @@ const createEmployeeFromCandidate = async (
 
       console.log(`\n Document Transfer Summary:`);
       console.log(
-        `   Successfully transferred: ${transferredDocuments.length} document(s)`,
+        `   Successfully transferred: ${transferredDocuments.length} document(s)`
       );
       console.log(`   Failed transfers: ${failedTransfers.length} document(s)`);
 
@@ -2291,7 +2291,7 @@ const createEmployeeFromCandidate = async (
     }
     throw new CustomError(
       `Error creating employee from candidate: ${error.message}`,
-      error?.status || 500,
+      error?.status || 500
     );
   }
 };
@@ -2837,7 +2837,7 @@ const getCandidateDocumentVerificationStatus = async (candidateId) => {
     }
     throw new CustomError(
       `Error getting document verification status: ${error.message}`,
-      500,
+      500
     );
   }
 };

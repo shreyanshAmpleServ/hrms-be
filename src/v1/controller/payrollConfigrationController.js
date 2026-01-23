@@ -1,12 +1,12 @@
-const companyService = require("../services/CompanyMasterService");
+const payRollSettingsService = require("../services/payrollConfigService");
 const CustomError = require("../../utils/CustomError");
 const { generateFullUrl } = require("../../utils/helper");
 const moment = require("moment");
 
-// const sanitizecompanyData = (data) => {
+// const sanitizePayRollConfigSettingData = (data) => {
 //     return {
 //         title: data.title ? String(data.title).trim() : null,
-//         company: data.company ? String(data.company).trim() : null,
+//         PayRollConfigSetting: data.PayRollConfigSetting ? String(data.PayRollConfigSetting).trim() : null,
 //         attachment: data.attachment ? String(data.attachment).trim() : null,
 
 //         // Metadata
@@ -15,59 +15,77 @@ const moment = require("moment");
 //     };
 // };
 
-const createCompany = async (req, res, next) => {
+const createPayRollConfigSetting = async (req, res, next) => {
   try {
     console.log("daata : ", req.body);
-    let companyData = { ...req.body };
-    const company = await companyService.createCompany(companyData);
-    res.status(201).success("Company created successfully", company);
+    let PayRollConfigSettingData = { ...req.body };
+    const PayRollConfigSetting =
+      await payRollSettingsService.createPayRollConfigSetting(
+        PayRollConfigSettingData
+      );
+    res
+      .status(201)
+      .success(
+        "PayRoll Configuration Setting created successfully",
+        PayRollConfigSetting
+      );
   } catch (error) {
     next(error);
   }
 };
 
-const getCompanyById = async (req, res, next) => {
+const getPayRollConfigSettingById = async (req, res, next) => {
   try {
-    const company = await companyService.findCompanyById(req.params.id);
-    if (!company) throw new CustomError("Company not found", 404);
+    const PayRollConfigSetting =
+      await payRollSettingsService.findPayRollConfigSettingById(req.params.id);
+    if (!PayRollConfigSetting)
+      throw new CustomError("PayRoll Configuration Setting not found", 404);
 
-    res.status(200).success(null, company);
+    res.status(200).success(null, PayRollConfigSetting);
   } catch (error) {
     next(error);
   }
 };
 
-const updateCompany = async (req, res, next) => {
+const updatePayRollConfigSetting = async (req, res, next) => {
   try {
     // const attachmentPath = req.file ? req.file.path : null;
-    let companyData = { ...req.body };
-    // if (attachmentPath) companyData.attachment = generateFullUrl(req, attachmentPath);
+    let PayRollConfigSettingData = { ...req.body };
+    // if (attachmentPath) PayRollConfigSettingData.attachment = generateFullUrl(req, attachmentPath);
 
-    // companyData = sanitizecompanyData(companyData);
+    // PayRollConfigSettingData = sanitizePayRollConfigSettingData(PayRollConfigSettingData);
 
-    const company = await companyService.updateCompany(
-      req.params.id,
-      companyData
-    );
-    res.status(200).success("Company updated successfully", company);
+    const PayRollConfigSetting =
+      await payRollSettingsService.updatePayRollConfigSetting(
+        req.params.id,
+        PayRollConfigSettingData
+      );
+    res
+      .status(200)
+      .success(
+        "PayRoll Configuration Setting updated successfully",
+        PayRollConfigSetting
+      );
   } catch (error) {
     next(error);
   }
 };
 
-const deleteCompany = async (req, res, next) => {
+const deletePayRollConfigSetting = async (req, res, next) => {
   try {
-    await companyService.deleteCompany(req.params.id);
-    res.status(200).success("Company deleted successfully", null);
+    await payRollSettingsService.deletePayRollConfigSetting(req.params.id);
+    res
+      .status(200)
+      .success("PayRoll Configuration Setting deleted successfully", null);
   } catch (error) {
     next(error);
   }
 };
 
-const getAllCompanies = async (req, res, next) => {
+const getAllPayRollConfigSetting = async (req, res, next) => {
   try {
     const { page, size, search, startDate, endDate, is_active } = req.query;
-    const companies = await companyService.getAllCompanies(
+    const companies = await payRollSettingsService.getAllPayRollConfigSetting(
       Number(page),
       Number(size),
       search,
@@ -82,9 +100,9 @@ const getAllCompanies = async (req, res, next) => {
 };
 
 module.exports = {
-  createCompany,
-  getCompanyById,
-  updateCompany,
-  deleteCompany,
-  getAllCompanies,
+  createPayRollConfigSetting,
+  getPayRollConfigSettingById,
+  updatePayRollConfigSetting,
+  deletePayRollConfigSetting,
+  getAllPayRollConfigSetting,
 };

@@ -1,72 +1,115 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError.js");
+const { includes } = require("zod/v4");
 
-// Create a new company
-const createCompany = async (data) => {
+const normalizeConfigData = (data) => ({
+  ...data,
+  loan_pay_componet_id: data.loan_pay_componet_id
+    ? Number(data.loan_pay_componet_id)
+    : null,
+  advance_pay_componet_id: data.advance_pay_componet_id
+    ? Number(data.advance_pay_componet_id)
+    : null,
+  nssf_pay_componet_id: data.nssf_pay_componet_id
+    ? Number(data.nssf_pay_componet_id)
+    : null,
+
+  nssf_percent: data.nssf_percent ? data.nssf_percent : "0",
+  fix_nssf_amount: data.fix_nssf_amount ? data.fix_nssf_amount : "0",
+  max_advance_amount: data.max_advance_amount ? data.max_advance_amount : "0",
+
+  is_tax_payee_from_formula: data.is_tax_payee_from_formula || "N",
+  is_multiple_calculation: data.is_multiple_calculation || "N",
+  is_enable_branch: data.is_enable_branch || "N",
+  is_yearly_required: data.is_yearly_required || "N",
+});
+
+// Create a new payRollSettings
+const createPayRollConfigSetting = async (data) => {
   try {
-    const company = await prisma.hrms_m_company_master.create({
-      data: {
-        ...data,
-        country_id: Number(data.country_id),
-        createdby: data.createdby || 1,
-        createdate: new Date(),
-        updatedate: new Date(),
-        is_active: data.is_active || "Y",
-        log_inst: data.log_inst || 1,
-      },
-      include: {
-        company_country: true,
-      },
-    });
-    return company;
+    const normalized = normalizeConfigData(data);
+
+    const payRollSettings =
+      await prisma.hrms_m_payroll_confuguration_setting.create({
+        data: {
+          ...normalized,
+          createdby: data.createdby || 1,
+          createdate: new Date(),
+          updatedate: new Date(),
+          log_inst: data.log_inst || 1,
+        },
+        include: {
+          payroll_config_loan_pay_component: true,
+          payroll_config_advanc_pay_component: true,
+          payroll_config_nssf_pay_component: true,
+        },
+      });
+
+    return payRollSettings;
   } catch (error) {
-    throw new CustomError(`Error creating company: ${error.message}`, 500);
+    throw new CustomError(
+      `Error creating payroll configuration: ${error.message}`,
+      500
+    );
   }
 };
 
-// Find a company by ID
-const findCompanyById = async (id) => {
+// Find a payRollSettings by ID
+const findPayRollConfigSettingById = async (id) => {
   try {
-    const company = await prisma.hrms_m_company_master.findUnique({
-      where: { id: parseInt(id) },
-      include: {
-        company_country: true,
-      },
-    });
-    if (!company) {
-      throw new CustomError("company not found", 404);
-    }
-    return company;
+    const payRollSettings =
+      await prisma.hrms_m_payroll_confuguration_setting.findUnique({
+        where: { id: parseInt(id) },
+        include: {
+          payroll_config_loan_pay_component: true,
+          payroll_config_advanc_pay_component: true,
+          payroll_config_nssf_pay_component: true,
+        },
+      });
+    // if (!payRollSettings) {
+    //   throw new CustomError("Pay not found", 404);
+    // }
+    return payRollSettings;
   } catch (error) {
-    throw new CustomError(`Error finding company by ID: ${error.message}`, 503);
+    throw new CustomError(
+      `Error finding PayRoll Settings by ID: ${error.message}`,
+      503
+    );
   }
 };
 
-// Update a company
-const updateCompany = async (id, data) => {
+// Update a payRollSettings
+const updatePayRollConfigSetting = async (id, data) => {
   try {
-    const updatedcompany = await prisma.hrms_m_company_master.update({
-      where: { id: parseInt(id) },
-      data: {
-        ...data,
-        country_id: Number(data.country_id),
-        is_active: data.is_active || "Y",
-        updatedate: new Date(),
-      },
-      include: {
-        company_country: true,
-      },
-    });
-    return updatedcompany;
+    const normalized = normalizeConfigData(data);
+
+    const updatedpayRollSettings =
+      await prisma.hrms_m_payroll_confuguration_setting.update({
+        where: { id: parseInt(id) },
+        data: {
+          ...normalized,
+          updatedate: new Date(),
+        },
+        include: {
+          payroll_config_loan_pay_component: true,
+          payroll_config_advanc_pay_component: true,
+          payroll_config_nssf_pay_component: true,
+        },
+      });
+
+    return updatedpayRollSettings;
   } catch (error) {
-    throw new CustomError(`Error updating company: ${error.message}`, 500);
+    throw new CustomError(
+      `Error updating payroll configuration: ${error.message}`,
+      500
+    );
   }
 };
 
-// Delete a company
-const deleteCompany = async (id) => {
+// Delete a payRollSettings
+const deletePayRollConfigSetting = async (id) => {
   try {
-    await prisma.hrms_m_company_master.delete({
+    await prisma.hrms_m_payroll_confuguration_setting.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
@@ -81,8 +124,8 @@ const deleteCompany = async (id) => {
   }
 };
 
-// Get all companies
-const getAllCompanies = async (
+// Get all payRollSettings
+const getAllPayRollConfigSetting = async (
   page,
   size,
   search,
@@ -96,15 +139,6 @@ const getAllCompanies = async (
     const skip = (page - 1) * size || 0;
 
     const filters = {};
-    if (search) {
-      filters.OR = [
-        { company_name: { contains: search.toLowerCase() } },
-        { company_code: { contains: search.toLowerCase() } },
-        { contact_person: { contains: search.toLowerCase() } },
-        { contact_phone: { contains: search.toLowerCase() } },
-        { contact_email: { contains: search.toLowerCase() } },
-      ];
-    }
 
     if (startDate && endDate) {
       const start = new Date(startDate);
@@ -117,42 +151,38 @@ const getAllCompanies = async (
       }
     }
 
-    if (typeof is_active === "boolean") {
-      filters.is_active = is_active ? "Y" : "N";
-    } else if (typeof is_active === "string") {
-      if (is_active.toLowerCase() === "true") filters.is_active = "Y";
-      else if (is_active.toLowerCase() === "false") filters.is_active = "N";
-    }
+    const payRollSettings =
+      await prisma.hrms_m_payroll_confuguration_setting.findMany({
+        where: filters,
+        skip: skip,
+        take: size,
+        includes: {
+          payroll_config_loan_pay_component: true,
+          payroll_config_advanc_pay_component: true,
+          payroll_config_nssf_pay_component: true,
+        },
+        orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
+      });
 
-    const departments = await prisma.hrms_m_company_master.findMany({
-      where: filters,
-      skip: skip,
-      take: size,
-      orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
-      include: {
-        company_country: true,
-      },
-    });
-
-    const totalCount = await prisma.hrms_m_company_master.count({
+    const totalCount = await prisma.hrms_m_payroll_confuguration_setting.count({
       where: filters,
     });
     return {
-      data: departments,
+      data: payRollSettings,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
       totalCount: totalCount,
     };
   } catch (error) {
-    throw new CustomError("Error retrieving companies", 503);
+    throw new CustomError("Error retrieving PayRoll Settings", 503);
   }
 };
 
 module.exports = {
-  createCompany,
-  findCompanyById,
-  updateCompany,
-  deleteCompany,
-  getAllCompanies,
+  createPayRollConfigSetting,
+  findPayRollConfigSettingById,
+  updatePayRollConfigSetting,
+  deletePayRollConfigSetting,
+  getAllPayRollConfigSetting,
 };
