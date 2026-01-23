@@ -1445,7 +1445,6 @@ const getAllMonthlyPayrollsForBulkDownload = async (
     let whereConditions = ["1=1"];
 
     if (filters.employee_ids) {
-      // Handle array of employee IDs
       const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
       if (validIds.length > 0) {
         const idList = validIds.map((id) => Number(id)).join(", ");
@@ -1915,7 +1914,6 @@ const getMonthlyPayrollsPaginatedForBulkDownload = async (
   }
 };
 
-// Download tracking functions
 const checkIndividualPayslipDownloaded = async (
   employee_id,
   payroll_month,
@@ -2019,6 +2017,12 @@ const checkAlreadyDownloadedPayrolls = async (filters, tenantDb = null) => {
   }
 
   try {
+    console.log(
+      "checkAlreadyDownloadedPayrolls - Filters:",
+      JSON.stringify(filters, null, 2),
+    );
+    console.log("checkAlreadyDownloadedPayrolls - TenantDb:", tenantDb);
+
     let whereConditions = ["is_printed = 'Y'"];
 
     if (filters.employee_ids) {
@@ -2026,19 +2030,31 @@ const checkAlreadyDownloadedPayrolls = async (filters, tenantDb = null) => {
       if (validIds.length > 0) {
         const idList = validIds.map((id) => Number(id)).join(", ");
         whereConditions.push(`employee_id IN (${idList})`);
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Employee IDs filter: ${idList}`,
+        );
       }
     } else if (filters.employee_id) {
       if (filters.employee_id.gte && filters.employee_id.lte) {
         whereConditions.push(
           `employee_id BETWEEN ${Number(filters.employee_id.gte)} AND ${Number(filters.employee_id.lte)}`,
         );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Employee range filter: ${filters.employee_id.gte} to ${filters.employee_id.lte}`,
+        );
       } else if (filters.employee_id.gte) {
         whereConditions.push(
           `employee_id >= ${Number(filters.employee_id.gte)}`,
         );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Employee from filter: ${filters.employee_id.gte}`,
+        );
       } else if (filters.employee_id.lte) {
         whereConditions.push(
           `employee_id <= ${Number(filters.employee_id.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Employee to filter: ${filters.employee_id.lte}`,
         );
       }
     }
@@ -2048,13 +2064,22 @@ const checkAlreadyDownloadedPayrolls = async (filters, tenantDb = null) => {
         whereConditions.push(
           `payroll_month BETWEEN ${Number(filters.payroll_month.gte)} AND ${Number(filters.payroll_month.lte)}`,
         );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Month range filter: ${filters.payroll_month.gte} to ${filters.payroll_month.lte}`,
+        );
       } else if (filters.payroll_month.gte) {
         whereConditions.push(
           `payroll_month >= ${Number(filters.payroll_month.gte)}`,
         );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Month from filter: ${filters.payroll_month.gte}`,
+        );
       } else if (filters.payroll_month.lte) {
         whereConditions.push(
           `payroll_month <= ${Number(filters.payroll_month.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Month to filter: ${filters.payroll_month.lte}`,
         );
       }
     }
@@ -2064,13 +2089,22 @@ const checkAlreadyDownloadedPayrolls = async (filters, tenantDb = null) => {
         whereConditions.push(
           `payroll_year BETWEEN ${Number(filters.payroll_year.gte)} AND ${Number(filters.payroll_year.lte)}`,
         );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Year range filter: ${filters.payroll_year.gte} to ${filters.payroll_year.lte}`,
+        );
       } else if (filters.payroll_year.gte) {
         whereConditions.push(
           `payroll_year >= ${Number(filters.payroll_year.gte)}`,
         );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Year from filter: ${filters.payroll_year.gte}`,
+        );
       } else if (filters.payroll_year.lte) {
         whereConditions.push(
           `payroll_year <= ${Number(filters.payroll_year.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Year to filter: ${filters.payroll_year.lte}`,
         );
       }
     }
@@ -2078,9 +2112,15 @@ const checkAlreadyDownloadedPayrolls = async (filters, tenantDb = null) => {
     if (filters.status) {
       const escapedStatus = filters.status.replace(/'/g, "''");
       whereConditions.push(`status = '${escapedStatus}'`);
+      console.log(
+        `checkAlreadyDownloadedPayrolls - Status filter: ${escapedStatus}`,
+      );
     }
 
     const whereClause = whereConditions.join(" AND ");
+    console.log(
+      `checkAlreadyDownloadedPayrolls - Final WHERE clause: ${whereClause}`,
+    );
 
     const query = `
       SELECT 
@@ -2089,15 +2129,21 @@ const checkAlreadyDownloadedPayrolls = async (filters, tenantDb = null) => {
         payroll_year,
         full_name,
         employee_code,
-        FORMAT(updatedate, 'yyyy-MM-dd HH:mm:ss') as download_date,
-        updatedby as downloaded_by
+        FORMAT(mp.updatedate, 'yyyy-MM-dd HH:mm:ss') as download_date,
+        mp.updatedby as downloaded_by
       FROM hrms_d_monthly_payroll_processing mp
       LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
       WHERE ${whereClause}
-      ORDER BY updatedate DESC
+      ORDER BY mp.updatedate DESC
     `;
 
+    console.log(`checkAlreadyDownloadedPayrolls - Executing query: ${query}`);
+
     const downloadedPayrolls = await dbClient.$queryRawUnsafe(query);
+
+    console.log(
+      `checkAlreadyDownloadedPayrolls - Found ${downloadedPayrolls.length} downloaded payrolls`,
+    );
 
     return downloadedPayrolls;
   } catch (error) {

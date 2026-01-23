@@ -371,7 +371,6 @@ const downloadPayslipPDF = async (req, res, next) => {
       throw new CustomError("Invalid file URL returned from Backblaze", 500);
     }
 
-    // Mark the payslip as downloaded
     try {
       await markIndividualPayslipAsPrinted(
         employee_id,
@@ -385,7 +384,6 @@ const downloadPayslipPDF = async (req, res, next) => {
       );
     } catch (markError) {
       console.error("Error marking payslip as downloaded:", markError);
-      // Don't fail the download, just log the error
     }
 
     fs.unlink(filePath, (err) => {
@@ -625,10 +623,22 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       `Found ${payrollCount} monthly payroll record(s) matching filters`,
     );
 
-    // Check if any of these payrolls have already been downloaded
+    console.log(
+      "bulkDownloadMonthlyPayroll - Checking for already downloaded payrolls...",
+    );
+    console.log(
+      "bulkDownloadMonthlyPayroll - Filters:",
+      JSON.stringify(filters, null, 2),
+    );
+    console.log("bulkDownloadMonthlyPayroll - Tenant DB:", req.tenantDb);
+
     const alreadyDownloaded = await checkAlreadyDownloadedPayrolls(
       filters,
       req.tenantDb,
+    );
+
+    console.log(
+      `bulkDownloadMonthlyPayroll - Found ${alreadyDownloaded.length} already downloaded payroll records`,
     );
 
     if (alreadyDownloaded.length > 0 && req.query.force_download !== "true") {
@@ -636,10 +646,8 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
         `Found ${alreadyDownloaded.length} already downloaded payroll records`,
       );
 
-      // Get download statistics
       const stats = await getDownloadStatistics(filters, req.tenantDb);
 
-      // Return warning response with download information
       return res.status(200).json({
         success: true,
         message: "Some payroll records have already been downloaded",
@@ -649,7 +657,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
           totalRecords: payrollCount,
           downloadedRecords: stats.downloaded_records,
           notDownloadedRecords: stats.not_downloaded_records,
-          alreadyDownloaded: alreadyDownloaded.slice(0, 10), // Show first 10
+          alreadyDownloaded: alreadyDownloaded.slice(0, 10),
           needsConfirmation: true,
           appliedFilters: {
             employees: employee_ids

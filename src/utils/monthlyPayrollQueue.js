@@ -6,6 +6,9 @@ const { getPrismaClient } = require("../config/db.js");
 const { withTenantContext } = require("../utils/prismaProxy.js");
 const monthlyPayrollModel = require("../v1/models/monthlyPayrollModel.js");
 const monthlyPayrollService = require("../v1/services/monthlyPayrollService.js");
+const {
+  markPayrollsAsPrinted,
+} = require("../v1/models/monthlyPayrollModel.js");
 
 const monthlyPayrollQueue = new Queue("monthly-payroll-bulk-download", {
   redis: {
@@ -206,19 +209,34 @@ monthlyPayrollQueue.process(async (job) => {
 
       try {
         console.log(`[Job ${jobId}] Marking payrolls as printed...`);
+        console.log(
+          `[Job ${jobId}] Filters:`,
+          JSON.stringify(filters, null, 2),
+        );
+        console.log(`[Job ${jobId}] UserId:`, userId);
+        console.log(`[Job ${jobId}] TenantDb:`, tenantDb);
+
         const markedCount = await markPayrollsAsPrinted(
           filters,
           userId,
           tenantDb,
         );
+
         console.log(
           `[Job ${jobId}] Marked ${markedCount} payroll records as printed`,
         );
+
+        if (markedCount === 0) {
+          console.log(
+            `[Job ${jobId}] WARNING: No records were marked as printed. This might indicate an issue.`,
+          );
+        }
       } catch (markError) {
         console.error(
           `[Job ${jobId}] Error marking payrolls as printed:`,
           markError,
         );
+        console.error(`[Job ${jobId}] Error details:`, markError.message);
       }
 
       fs.rmSync(tempDir, { recursive: true, force: true });
