@@ -16,21 +16,12 @@ const deletePayRollConfigSetting = async (id) => {
   return await payRollSettingsModal.deletePayRollConfigSetting(id);
 };
 
-const getAllPayRollConfigSetting = async (
-  page,
-  size,
-  search,
-  startDate,
-  endDate,
-  is_active
-) => {
+const getAllPayRollConfigSetting = async (page, size, startDate, endDate) => {
   return await payRollSettingsModal.getAllPayRollConfigSetting(
     page,
     size,
-    search,
     startDate,
-    endDate,
-    is_active
+    endDate
   );
 };
 

@@ -84,14 +84,12 @@ const deletePayRollConfigSetting = async (req, res, next) => {
 
 const getAllPayRollConfigSetting = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate, is_active } = req.query;
+    const { page, size, startDate, endDate } = req.query;
     const companies = await payRollSettingsService.getAllPayRollConfigSetting(
       Number(page),
       Number(size),
-      search,
       startDate && moment(startDate),
-      endDate && moment(endDate),
-      is_active
+      endDate && moment(endDate)
     );
     res.status(200).success(null, companies);
   } catch (error) {
