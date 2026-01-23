@@ -125,14 +125,7 @@ const deletePayRollConfigSetting = async (id) => {
 };
 
 // Get all payRollSettings
-const getAllPayRollConfigSetting = async (
-  page,
-  size,
-  search,
-  startDate,
-  endDate,
-  is_active
-) => {
+const getAllPayRollConfigSetting = async (page, size, startDate, endDate) => {
   try {
     page = page || page == 0 ? 1 : page;
     size = size || 10;
@@ -156,7 +149,7 @@ const getAllPayRollConfigSetting = async (
         where: filters,
         skip: skip,
         take: size,
-        includes: {
+        include: {
           payroll_config_loan_pay_component: true,
           payroll_config_advanc_pay_component: true,
           payroll_config_nssf_pay_component: true,
@@ -175,6 +168,7 @@ const getAllPayRollConfigSetting = async (
       totalCount: totalCount,
     };
   } catch (error) {
+    console.error(error);
     throw new CustomError("Error retrieving PayRoll Settings", 503);
   }
 };
