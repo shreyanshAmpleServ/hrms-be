@@ -1024,7 +1024,7 @@ const getAllCandidateMaster = async (
   is_active = "false",
 ) => {
   try {
-    if (is_active === "true") {
+    if (is_active == "true") {
       const filters = {};
 
       if (search && search.trim()) {

@@ -1401,12 +1401,16 @@ model hrms_m_pay_component {
   is_basic                              String?                                         @db.VarChar(50)
   relief_amount                         String?                                         @db.VarChar(50)
   relief_type                           String?                                         @db.VarChar(50)
+  type_value                            String?
   pay_component_for_line                hrms_d_employee_pay_component_assignment_line[]
   employee_payroll_adjustment_component hrms_d_employee_payroll_adjustment[]            @relation("EmployeePayrollAdjustmentComponent")
   employee_payroll_deduction_component  hrms_d_employee_payroll_deduction_schedule[]    @relation("EmployeePayrollDeduction")
   exit_clearance_pay                    hrms_d_exit_clearance1[]                        @relation("ExitClearancePayComponent")
   finalsettlement_component             hrms_d_finalsettlement_processing[]
   midmonth_payroll_processing_component hrms_d_midmonth_payroll_processing[]            @relation("MidMonthPayrollProcessingComponent")
+  payroll_config_loan_pay_component     hrms_m_payroll_confuguration_setting[]          @relation("loanRelation")
+  payroll_config_advance_pay_component  hrms_m_payroll_confuguration_setting[]          @relation("advanceRelation")
+  payroll_config_nssf_pay_component     hrms_m_payroll_confuguration_setting[]          @relation("nssfRelation")
   overtime_payroll_processing_component hrms_d_overtime_payroll_processing[]
   pay_component_cost_center1            hrms_m_costcenters?                             @relation("CostCenter1", fields: [cost_center1_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_cost_center2            hrms_m_costcenters?                             @relation("CostCenter2", fields: [cost_center2_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -1789,6 +1793,7 @@ model hrms_d_monthly_payroll_processing {
   total_deductions              Decimal         @db.Decimal(18, 4)
   net_pay                       Decimal         @db.Decimal(18, 2)
   status                        String          @db.NVarChar(20)
+  is_printed                    String?         @default("N") @db.Char(1)
   execution_date                DateTime?       @db.Date
   pay_date                      DateTime?       @db.DateTime
   doc_date                      DateTime?       @db.Date
@@ -3048,4 +3053,30 @@ model hrms_d_candidate_hiring_stage {
   candidate_hiring_stage_job_posting      hrms_d_job_posting      @relation(fields: [job_posting_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   candidate_hiring_stage_hiring_stage     hrms_d_hiring_stage     @relation(fields: [stage_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
   candidate_hiring_stage_candidate_master hrms_d_candidate_master @relation(fields: [candidate_id], references: [id], onDelete: Cascade, onUpdate: NoAction)
+}
+
+model hrms_m_payroll_confuguration_setting {
+  id                                  Int                   @id @default(autoincrement())
+  loan_pay_componet_id                Int?
+  advance_pay_componet_id             Int?
+  nssf_pay_componet_id                Int?
+  tax_payable                         String?
+  fix_nssf_amount                     String?
+  max_advance_amount                  String?
+  pay_relief                          String?
+  round_amount                        String?
+  is_tax_payee_from_formula           String?               @default("Y") @db.Char(1)
+  nssf_percent                        String?
+  is_multiple_calculation             String?               @default("Y") @db.Char(1)
+  is_enable_branch                    String?               @default("Y") @db.Char(1)
+  defalut_branch                      String?
+  is_yearly_required                  String?               @default("Y") @db.Char(1)
+  createdate                          DateTime              @default(now()) @db.DateTime
+  updatedate                          DateTime?             @db.DateTime
+  createdby                           Int                   @default(1)
+  updatedby                           Int?
+  log_inst                            Int                   @default(1)
+  payroll_config_loan_pay_component   hrms_m_pay_component? @relation("loanRelation", fields: [loan_pay_componet_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  payroll_config_advanc_pay_component hrms_m_pay_component? @relation("advanceRelation", fields: [advance_pay_componet_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+  payroll_config_nssf_pay_component   hrms_m_pay_component? @relation("nssfRelation", fields: [nssf_pay_componet_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }

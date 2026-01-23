@@ -71,7 +71,7 @@ const serializeHeadersUpdate = (data) => {
   }
   if ("branch_id" in data) {
     serialized.branch_pay_component_header = {
-      connect: { id: Number(data.branch_id) },
+      connect: { id: Number(data?.branch_id) },
     };
   }
   if ("work_life_entry" in data) {
