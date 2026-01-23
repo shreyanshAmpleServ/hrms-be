@@ -3,6 +3,7 @@ const CustomError = require("../../utils/CustomError");
 const { generatePayslipPDF } = require("../../utils/pdfUtils.js");
 const fs = require("fs");
 const path = require("path");
+const cleanupManager = require("../../utils/fileCleanupManager.js");
 
 const ExcelJS = require("exceljs");
 
@@ -29,7 +30,7 @@ const getAllMonthlyPayroll = async (
   startDate,
   endDate,
   payroll_month,
-  payroll_year
+  payroll_year,
 ) => {
   return await monthlyPayrollModel.getAllMonthlyPayroll(
     search,
@@ -38,7 +39,7 @@ const getAllMonthlyPayroll = async (
     startDate,
     endDate,
     payroll_month,
-    payroll_year
+    payroll_year,
   );
 };
 
@@ -60,9 +61,8 @@ const callMonthlyPayrollSP = async (params) => {
 
 const triggerMonthlyPayrollCalculationSP = async (params) => {
   try {
-    const result = await monthlyPayrollModel.triggerMonthlyPayrollCalculationSP(
-      params
-    );
+    const result =
+      await monthlyPayrollModel.triggerMonthlyPayrollCalculationSP(params);
     return {
       message: "Taxable amount SP executed successfully",
       result: result,
@@ -70,7 +70,7 @@ const triggerMonthlyPayrollCalculationSP = async (params) => {
   } catch (error) {
     throw new CustomError(
       `Calculation SP execution failed: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -89,7 +89,7 @@ const getGeneratedMonthlyPayroll = async (
   size,
   employee_id,
   payroll_month,
-  payroll_year
+  payroll_year,
 ) => {
   return await monthlyPayrollModel.getGeneratedMonthlyPayroll(
     search,
@@ -97,7 +97,7 @@ const getGeneratedMonthlyPayroll = async (
     size,
     employee_id,
     payroll_month,
-    payroll_year
+    payroll_year,
   );
 };
 
@@ -105,7 +105,7 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
   const data = await monthlyPayrollModel.downloadPayslipPDF(
     employee_id,
     payroll_month,
-    payroll_year
+    payroll_year,
   );
 
   if (!data) {
@@ -122,6 +122,9 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
   console.log(data, "data");
 
   await generatePayslipPDF(data, filePath);
+
+  // Schedule automatic cleanup after 5 minutes using cleanup manager
+  cleanupManager.scheduleCleanup(filePath, 300000, "PDF payslip");
 
   return filePath;
 };
@@ -194,20 +197,20 @@ const downloadPayrollExcel = async (
   search,
   employee_id,
   payroll_month,
-  payroll_year
+  payroll_year,
 ) => {
   try {
     const result = await monthlyPayrollModel.getPayrollDataForExcel(
       search,
       employee_id,
       payroll_month,
-      payroll_year
+      payroll_year,
     );
 
     if (!result.data || result.data.length === 0) {
       throw new CustomError(
         "No payroll data found for the specified filters",
-        404
+        404,
       );
     }
 
@@ -358,7 +361,7 @@ const downloadPayrollExcel = async (
           col.numFmt = "#,##0.00";
           col.alignment = { horizontal: "right" };
         }
-      }
+      },
     );
 
     const dateColumns = [
@@ -434,9 +437,33 @@ const downloadPayrollExcel = async (
     console.error("Excel generation error:", error);
     throw new CustomError(
       `Failed to generate Excel file: ${error.message}`,
-      500
+      500,
     );
   }
+};
+
+const getAllMonthlyPayrollsForBulkDownload = async (filters = {}) => {
+  return await monthlyPayrollModel.getAllMonthlyPayrollsForBulkDownload(
+    filters,
+  );
+};
+
+const getMonthlyPayrollCountForBulkDownload = async (filters = {}) => {
+  return await monthlyPayrollModel.getMonthlyPayrollCountForBulkDownload(
+    filters,
+  );
+};
+
+const getMonthlyPayrollsPaginatedForBulkDownload = async (
+  filters,
+  offset,
+  limit,
+) => {
+  return await monthlyPayrollModel.getMonthlyPayrollsPaginatedForBulkDownload(
+    filters,
+    offset,
+    limit,
+  );
 };
 
 module.exports = {
@@ -452,4 +479,7 @@ module.exports = {
   getGeneratedMonthlyPayroll,
   downloadPayslipPDF,
   downloadPayrollExcel,
+  getAllMonthlyPayrollsForBulkDownload,
+  getMonthlyPayrollCountForBulkDownload,
+  getMonthlyPayrollsPaginatedForBulkDownload,
 };

@@ -4,10 +4,14 @@ const moment = require("moment");
 const { success } = require("zod/v4");
 const fs = require("fs");
 const path = require("path");
+const cleanupManager = require("../../utils/fileCleanupManager.js");
 const {
   uploadToBackblazeWithValidation,
   deleteFromBackblaze,
 } = require("../../utils/uploadBackblaze.js");
+const monthlyPayrollQueue = require("../../utils/monthlyPayrollQueue.js");
+const { v4: uuidv4 } = require("uuid");
+const { getPrismaClient } = require("../../config/db.js");
 
 const createMonthlyPayroll = async (req, res, next) => {
   try {
@@ -28,7 +32,7 @@ const createMonthlyPayroll = async (req, res, next) => {
 const findMonthlyPayroll = async (req, res, next) => {
   try {
     const reqData = await monthlyPayrollService.findMonthlyPayrollById(
-      req.params.id
+      req.params.id,
     );
     if (!reqData) throw new CustomError("Monthly payroll not found", 404);
     res.status(200).success(null, reqData);
@@ -46,7 +50,7 @@ const updateMonthlyPayroll = async (req, res, next) => {
     };
     const reqData = await monthlyPayrollService.updateMonthlyPayroll(
       req.params.id,
-      data
+      data,
     );
     res.status(200).success("Monthly payroll updated successfully", reqData);
   } catch (error) {
@@ -71,7 +75,7 @@ const getAllMonthlyPayroll = async (req, res, next) => {
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
     );
     res.status(200).success(null, data);
   } catch (error) {
@@ -110,21 +114,21 @@ const downloadPayrollExcel = async (req, res, next) => {
       search,
       employee_id,
       payroll_month,
-      payroll_year
+      payroll_year,
     );
 
     console.log(`Excel file generated successfully: ${result.filename}`);
     console.log(
-      `Total records: ${result.totalRecords}, Earnings: ${result.earningsCount}, Deductions: ${result.deductionsCount}`
+      `Total records: ${result.totalRecords}, Earnings: ${result.earningsCount}, Deductions: ${result.deductionsCount}`,
     );
 
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${result.filename}"`
+      `attachment; filename="${result.filename}"`,
     );
     res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
     res.setHeader("Cache-Control", "no-cache");
@@ -137,15 +141,8 @@ const downloadPayrollExcel = async (req, res, next) => {
 
       console.log(`Excel file sent successfully: ${result.filename}`);
 
-      setTimeout(() => {
-        fs.unlink(result.filePath, (unlinkErr) => {
-          if (unlinkErr) {
-            console.error("Error deleting Excel file:", unlinkErr);
-          } else {
-            console.log(`Deleted temporary Excel file: ${result.filePath}`);
-          }
-        });
-      }, 10 * 60 * 1000);
+      // Schedule Excel file cleanup after 5 minutes using cleanup manager
+      cleanupManager.scheduleCleanup(result.filePath, 300000, "Excel export");
     });
   } catch (error) {
     console.error("Excel download controller error:", error);
@@ -187,7 +184,7 @@ const createOrUpdateMonthlyPayroll = async (req, res, next) => {
 
     const result = await monthlyPayrollService.createOrUpdatePayrollBulk(
       rows,
-      user
+      user,
     );
     res.status(200).success("Monthly payroll processed successfully", result);
   } catch (error) {
@@ -241,7 +238,7 @@ const getGeneratedMonthlyPayroll = async (req, res, next) => {
       Number(size) || 10,
       employee_id,
       payroll_month,
-      payroll_year
+      payroll_year,
     );
 
     res.status(200).success("Payroll data retrieved successfully", data);
@@ -310,7 +307,7 @@ const downloadPayslipPDF = async (req, res, next) => {
     const filePath = await monthlyPayrollService.downloadPayslipPDF(
       employee_id,
       payroll_month,
-      payroll_year
+      payroll_year,
     );
 
     const fileBuffer = fs.readFileSync(filePath);
@@ -324,7 +321,7 @@ const downloadPayslipPDF = async (req, res, next) => {
       "payslips",
       {
         "b2-content-disposition": `inline; filename="${originalName}"`,
-      }
+      },
     );
 
     if (!/^https?:\/\//i.test(fileUrl)) {
@@ -348,6 +345,369 @@ const downloadPayslipPDF = async (req, res, next) => {
   }
 };
 
+const bulkDownloadMonthlyPayroll = async (req, res, next) => {
+  try {
+    const {
+      employee_id_from,
+      employee_id_to,
+      payroll_month_from,
+      payroll_month_to,
+      payroll_year_from,
+      payroll_year_to,
+      status,
+    } = req.query;
+
+    const filters = {};
+    const advancedFilters = {};
+
+    if (employee_id_from && employee_id_to) {
+      const minId = Number(employee_id_from);
+      const maxId = Number(employee_id_to);
+
+      filters.employee_id = {
+        gte: Math.min(minId, maxId),
+        lte: Math.max(minId, maxId),
+      };
+
+      console.log(
+        `Employee Range: ${Math.min(minId, maxId)} to ${Math.max(
+          minId,
+          maxId,
+        )}`,
+      );
+    } else if (employee_id_from) {
+      filters.employee_id = { gte: Number(employee_id_from) };
+    } else if (employee_id_to) {
+      filters.employee_id = { lte: Number(employee_id_to) };
+    }
+
+    if (status) {
+      filters.status = status;
+    }
+
+    if (payroll_month_from && payroll_month_to) {
+      const minMonth = Number(payroll_month_from);
+      const maxMonth = Number(payroll_month_to);
+
+      filters.payroll_month = {
+        gte: Math.min(minMonth, maxMonth),
+        lte: Math.max(minMonth, maxMonth),
+      };
+
+      console.log(
+        `Payroll Month Range: ${Math.min(minMonth, maxMonth)} to ${Math.max(
+          minMonth,
+          maxMonth,
+        )}`,
+      );
+    } else if (payroll_month_from) {
+      filters.payroll_month = { gte: Number(payroll_month_from) };
+    } else if (payroll_month_to) {
+      filters.payroll_month = { lte: Number(payroll_month_to) };
+    }
+
+    if (payroll_year_from && payroll_year_to) {
+      const minYear = Number(payroll_year_from);
+      const maxYear = Number(payroll_year_to);
+
+      filters.payroll_year = {
+        gte: Math.min(minYear, maxYear),
+        lte: Math.max(minYear, maxYear),
+      };
+
+      console.log(
+        `Payroll Year Range: ${Math.min(minYear, maxYear)} to ${Math.max(
+          minYear,
+          maxYear,
+        )}`,
+      );
+    } else if (payroll_year_from) {
+      filters.payroll_year = { gte: Number(payroll_year_from) };
+    } else if (payroll_year_to) {
+      filters.payroll_year = { lte: Number(payroll_year_to) };
+    }
+
+    console.log("Validating monthly payroll records exist...");
+
+    let dbClient;
+    if (req.tenantDb) {
+      dbClient = getPrismaClient(req.tenantDb);
+      console.log("Using tenant DB:", req.tenantDb);
+    } else {
+      dbClient = getPrismaClient();
+      console.log("Using default DB");
+    }
+
+    const validationWhere = {
+      ...filters,
+    };
+
+    if (Object.keys(advancedFilters).length > 0) {
+      validationWhere.hrms_monthly_payroll_employee = advancedFilters;
+    }
+
+    console.log("Validation where:", validationWhere);
+
+    let whereConditions = ["1=1"];
+
+    if (validationWhere.employee_id) {
+      if (validationWhere.employee_id.gte && validationWhere.employee_id.lte) {
+        whereConditions.push(
+          `mp.employee_id BETWEEN ${validationWhere.employee_id.gte} AND ${validationWhere.employee_id.lte}`,
+        );
+      } else if (validationWhere.employee_id.gte) {
+        whereConditions.push(
+          `mp.employee_id >= ${validationWhere.employee_id.gte}`,
+        );
+      } else if (validationWhere.employee_id.lte) {
+        whereConditions.push(
+          `mp.employee_id <= ${validationWhere.employee_id.lte}`,
+        );
+      }
+    }
+
+    if (validationWhere.payroll_month) {
+      if (
+        validationWhere.payroll_month.gte &&
+        validationWhere.payroll_month.lte
+      ) {
+        whereConditions.push(
+          `mp.payroll_month BETWEEN ${validationWhere.payroll_month.gte} AND ${validationWhere.payroll_month.lte}`,
+        );
+      } else if (validationWhere.payroll_month.gte) {
+        whereConditions.push(
+          `mp.payroll_month >= ${validationWhere.payroll_month.gte}`,
+        );
+      } else if (validationWhere.payroll_month.lte) {
+        whereConditions.push(
+          `mp.payroll_month <= ${validationWhere.payroll_month.lte}`,
+        );
+      }
+    }
+
+    if (validationWhere.payroll_year) {
+      if (
+        validationWhere.payroll_year.gte &&
+        validationWhere.payroll_year.lte
+      ) {
+        whereConditions.push(
+          `mp.payroll_year BETWEEN ${validationWhere.payroll_year.gte} AND ${validationWhere.payroll_year.lte}`,
+        );
+      } else if (validationWhere.payroll_year.gte) {
+        whereConditions.push(
+          `mp.payroll_year >= ${validationWhere.payroll_year.gte}`,
+        );
+      } else if (validationWhere.payroll_year.lte) {
+        whereConditions.push(
+          `mp.payroll_year <= ${validationWhere.payroll_year.lte}`,
+        );
+      }
+    }
+
+    if (validationWhere.status) {
+      whereConditions.push(`mp.status = '${validationWhere.status}'`);
+    }
+
+    const whereClause =
+      whereConditions.length > 0
+        ? `WHERE ${whereConditions.join(" AND ")}`
+        : "";
+
+    console.log("Final WHERE clause:", whereClause);
+
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM hrms_d_monthly_payroll_processing mp
+      ${whereClause}
+    `;
+
+    console.log("Count query:", countQuery);
+    const payrollCount = await dbClient.$queryRawUnsafe(countQuery);
+
+    console.log("Payroll count:", payrollCount);
+
+    if (payrollCount === 0) {
+      throw new CustomError(
+        "No monthly payroll records found matching the provided filters",
+        404,
+      );
+    }
+
+    console.log(
+      `Found ${payrollCount} monthly payroll record(s) matching filters`,
+    );
+
+    const jobId = uuidv4();
+
+    const job = await monthlyPayrollQueue.add({
+      userId: req.user.id,
+      tenantDb: req.tenantDb,
+      filters: filters,
+      jobId: jobId,
+    });
+
+    console.log(`Bulk monthly payroll download job created: ${job.id}`);
+
+    res
+      .status(202)
+      .success("Bulk download started. Use job ID to check progress.", {
+        jobId: job.id,
+        statusUrl: `/api/monthly-payroll/bulk-download/status/${job.id}`,
+        totalPayrollRecords: payrollCount,
+        appliedFilters: {
+          employees:
+            employee_id_from || employee_id_to
+              ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+              : "All",
+          payrollMonths:
+            payroll_month_from || payroll_month_to
+              ? `${payroll_month_from || "Any"} to ${payroll_month_to || "Any"}`
+              : "All",
+          payrollYears:
+            payroll_year_from || payroll_year_to
+              ? `${payroll_year_from || "Any"} to ${payroll_year_to || "Any"}`
+              : "All",
+          status: status || "All",
+        },
+      });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const checkBulkDownloadStatus = async (req, res, next) => {
+  try {
+    const jobId = req.params.jobId;
+
+    const job = await monthlyPayrollQueue.getJob(jobId);
+
+    if (!job) {
+      throw new CustomError("Job not found", 404);
+    }
+
+    const state = await job.getState();
+    const progress = job.progress();
+    const result = job.returnvalue;
+
+    res.status(200).success(null, {
+      jobId: job.id,
+      status: state,
+      progress: progress,
+      result: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const downloadBulkMonthlyPayroll = async (req, res, next) => {
+  try {
+    const jobId = req.params.jobId;
+
+    const job = await monthlyPayrollQueue.getJob(jobId);
+
+    if (!job) {
+      throw new CustomError("Job not found", 404);
+    }
+
+    const state = await job.getState();
+
+    if (state !== "completed") {
+      throw new CustomError(
+        `Job is ${state}. Please wait for completion.`,
+        400,
+      );
+    }
+
+    const result = job.returnvalue;
+
+    if (!result || !result.zipPath) {
+      throw new CustomError("Download file not found", 404);
+    }
+
+    if (!fs.existsSync(result.zipPath)) {
+      throw new CustomError("File has been deleted or expired", 410);
+    }
+
+    res.download(result.zipPath, result.fileName, (err) => {
+      if (err) {
+        console.error("Error sending file:", err);
+        next(err);
+      }
+
+      cleanupManager.scheduleCleanup(
+        result.zipPath,
+        300000,
+        "Bulk download ZIP",
+      );
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+const stopBulkDownloadJob = async (req, res) => {
+  try {
+    const { jobId } = req.params;
+
+    if (!jobId) {
+      return res.status(400).json({
+        success: false,
+        message: "Job ID is required",
+      });
+    }
+
+    console.log(`Attempting to stop job: ${jobId}`);
+
+    const jobDetails = await monthlyPayrollQueue.getJobDetails(jobId);
+
+    if (!jobDetails) {
+      return res.status(404).json({
+        success: false,
+        message: `Job ${jobId} not found`,
+        jobId: jobId,
+      });
+    }
+
+    console.log(`Job ${jobId} state: ${jobDetails.state}`);
+
+    try {
+      const result = await monthlyPayrollQueue.removeJob(jobId);
+
+      if (result) {
+        return res.status(200).json({
+          success: true,
+          message: `Job ${jobId} has been stopped (was in ${jobDetails.state} state)`,
+          jobId: jobId,
+          previousState: jobDetails.state,
+        });
+      } else {
+        return res.status(400).json({
+          success: false,
+          message: `Could not stop job ${jobId}`,
+          jobId: jobId,
+          state: jobDetails.state,
+        });
+      }
+    } catch (removeError) {
+      console.log(`Job ${jobId} removal had issues, but cleanup attempted`);
+      return res.status(200).json({
+        success: true,
+        message: `Job ${jobId} cleanup completed (was in ${jobDetails.state} state)`,
+        jobId: jobId,
+        note: "Job may have already finished",
+      });
+    }
+  } catch (error) {
+    console.error("Error stopping job:", error);
+    res.status(500).json({
+      success: false,
+      message: "Error stopping job",
+      error: error.message,
+    });
+  }
+};
+
 module.exports = {
   createMonthlyPayroll,
   findMonthlyPayroll,
@@ -361,4 +721,8 @@ module.exports = {
   getGeneratedMonthlyPayroll,
   downloadPayslipPDF,
   downloadPayrollExcel,
+  bulkDownloadMonthlyPayroll,
+  checkBulkDownloadStatus,
+  downloadBulkMonthlyPayroll,
+  stopBulkDownloadJob,
 };
