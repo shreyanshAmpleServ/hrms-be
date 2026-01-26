@@ -519,7 +519,7 @@ const updateLoanReqStatus = async (id, data) => {
       throw new CustomError("Invalid loan req id", 400);
     }
 
-    const existingLoanReq = await prisma.hrms_d_loan_request.findUnique({
+    const existingLoanReq = await prisma.hrms_d_loan_emi_schedule.findUnique({
       where: { id: loanReqId },
     });
     if (!existingLoanReq) {
@@ -540,10 +540,10 @@ const updateLoanReqStatus = async (id, data) => {
     } else {
       updateData.status = data.status;
     }
-    const updatedEntry = await prisma.hrms_d_goal_sheet_assignment.update({
-      where: { id: goalSheetId },
-      data: updateData,
-    });
+    // const updatedEntry = await prisma.hrms_d_goal_sheet_assignment.update({
+    //   where: { id: goalSheetId },
+    //   data: updateData,
+    // });
     return updatedEntry;
   } catch (error) {
     console.error("Error updating loan request status:", error);

@@ -8,37 +8,37 @@ const {
 router.get(
   "/monthly-payroll/run-sp",
   authenticateToken,
-  monthlyPayrollController.triggerMonthlyPayrollSP
+  monthlyPayrollController.triggerMonthlyPayrollSP,
 );
 
 router.get(
   "/monthly-payroll/download-excel",
   authenticateToken,
-  monthlyPayrollController.downloadPayrollExcel
+  monthlyPayrollController.downloadPayrollExcel,
 );
 
 router.get(
   "/monthly-payroll-download/download",
   authenticateToken,
-  monthlyPayrollController.downloadPayslipPDF
+  monthlyPayrollController.downloadPayslipPDF,
 );
 
 router.get(
   "/tax-calculation",
   authenticateToken,
-  monthlyPayrollController.triggerMonthlyPayrollCalculationSP
+  monthlyPayrollController.triggerMonthlyPayrollCalculationSP,
 );
 
 router.get(
   "/components",
   authenticateToken,
-  monthlyPayrollController.getComponentNames
+  monthlyPayrollController.getComponentNames,
 );
 
 router.get(
   "/generated-monthly-payroll",
   authenticateToken,
-  monthlyPayrollController.getGeneratedMonthlyPayroll
+  monthlyPayrollController.getGeneratedMonthlyPayroll,
 );
 
 router.post(
@@ -46,7 +46,7 @@ router.post(
   authenticateToken,
   (req, res, next) =>
     setupNotificationMiddleware(req, res, next, "Monthly Payroll", "create"),
-  monthlyPayrollController.createMonthlyPayroll
+  monthlyPayrollController.createMonthlyPayroll,
 );
 
 router.post(
@@ -54,25 +54,25 @@ router.post(
   authenticateToken,
   (req, res, next) =>
     setupNotificationMiddleware(req, res, next, "Monthly Payroll", "create"),
-  monthlyPayrollController.createOrUpdateMonthlyPayroll
+  monthlyPayrollController.createOrUpdateMonthlyPayroll,
 );
 
 router.post(
   "/monthly-payroll/generate-pdf",
   authenticateToken,
-  monthlyPayrollController.createOrUpdateMonthlyPayroll
+  monthlyPayrollController.createOrUpdateMonthlyPayroll,
 );
 
 router.get(
   "/monthly-payroll",
   authenticateToken,
-  monthlyPayrollController.getAllMonthlyPayroll
+  monthlyPayrollController.getAllMonthlyPayroll,
 );
 
 router.get(
   "/monthly-payroll/:id",
   authenticateToken,
-  monthlyPayrollController.findMonthlyPayroll
+  monthlyPayrollController.findMonthlyPayroll,
 );
 
 router.put(
@@ -80,7 +80,7 @@ router.put(
   authenticateToken,
   (req, res, next) =>
     setupNotificationMiddleware(req, res, next, "Monthly Payroll", "update"),
-  monthlyPayrollController.updateMonthlyPayroll
+  monthlyPayrollController.updateMonthlyPayroll,
 );
 
 router.delete(
@@ -88,7 +88,28 @@ router.delete(
   authenticateToken,
   (req, res, next) =>
     setupNotificationMiddleware(req, res, next, "Monthly Payroll", "delete"),
-  monthlyPayrollController.deleteMonthlyPayroll
+  monthlyPayrollController.deleteMonthlyPayroll,
+);
+
+router.post(
+  "/monthly-payroll/bulk-download",
+  authenticateToken,
+  monthlyPayrollController.bulkDownloadMonthlyPayroll,
+);
+router.get(
+  "/monthly-payroll/bulk-download/status/:jobId",
+  authenticateToken,
+  monthlyPayrollController.checkBulkDownloadStatus,
+);
+router.get(
+  "/monthly-payroll/bulk-download/:jobId",
+  authenticateToken,
+  monthlyPayrollController.downloadBulkMonthlyPayroll,
+);
+router.delete(
+  "/monthly-payroll/bulk-download/:jobId",
+  authenticateToken,
+  monthlyPayrollController.stopBulkDownloadJob,
 );
 
 module.exports = router;

@@ -1,6 +1,8 @@
-const { prisma } = require("../../utils/prismaProxy.js");
+const { prisma, asyncLocalStorage } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
 const { record } = require("zod/v4");
+const { getPrismaClient } = require("../../config/db.js");
+const { PrismaClient } = require("@prisma/client");
 
 // Serialize payroll data
 const serializePayrollData = (data) => ({
@@ -39,13 +41,13 @@ const createMonthlyPayroll = async (data) => {
       if (!result || result.length > 0) {
         throw new CustomError(
           `Payroll already exists for employee ID ${employee_id} in month ${payroll_month}`,
-          400
+          400,
         );
       }
     } catch (error) {
       throw new CustomError(
         `Error fetching payroll entry: ${error.message}`,
-        500
+        500,
       );
     }
 
@@ -74,7 +76,7 @@ const createMonthlyPayroll = async (data) => {
   } catch (error) {
     throw new CustomError(
       `Error creating payroll entry: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -103,7 +105,7 @@ const findMonthlyPayrollById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding payroll entry by ID: ${error.message}`,
-      503
+      503,
     );
   } finally {
     await prismaClient.$disconnect();
@@ -134,7 +136,7 @@ const updateMonthlyPayroll = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating payroll entry: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -149,7 +151,7 @@ const deleteMonthlyPayroll = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -234,7 +236,7 @@ const getAllMonthlyPayroll = async (
   depidto = "",
   positionidfrom = "",
   positionidto = "",
-  wage = ""
+  wage = "",
 ) => {
   try {
     console.log("=== getAllMonthlyPayroll START ===");
@@ -263,7 +265,6 @@ const getAllMonthlyPayroll = async (
 
     console.log("Pagination Settings:", { page, size, skip });
 
-    // Handle is_overtime filter
     let overtimeEmployeeIds = [];
 
     if (is_overtime === true || is_overtime === "Y" || is_overtime === "true") {
@@ -271,7 +272,7 @@ const getAllMonthlyPayroll = async (
 
       const month = String(payroll_month || new Date().getMonth() + 1).padStart(
         2,
-        "0"
+        "0",
       );
       const year = String(payroll_year || new Date().getFullYear());
 
@@ -316,7 +317,6 @@ const getAllMonthlyPayroll = async (
       console.log("Overtime filter NOT applied");
     }
 
-    // Handle is_advance filter
     let advanceComponentIds = [];
 
     if (is_advance !== undefined && is_advance !== null && is_advance !== "") {
@@ -361,14 +361,12 @@ const getAllMonthlyPayroll = async (
       console.log("Advance filter NOT applied");
     }
 
-    // Build WHERE conditions
     let whereConditions = ["1=1"];
     console.log("Building WHERE conditions...");
 
-    // Filter by overtime employees
     if (overtimeEmployeeIds.length > 0) {
       const overtimeCondition = `mp.employee_id IN (${overtimeEmployeeIds.join(
-        ","
+        ",",
       )})`;
       whereConditions.push(overtimeCondition);
       console.log("Added overtime condition:", overtimeCondition);
@@ -451,7 +449,6 @@ const getAllMonthlyPayroll = async (
     console.log("Data query returned rows:", data.length);
     console.log("Total count:", totalCount);
 
-    // Fixed columns list
     const fixedColumns = [
       "id",
       "employee_id",
@@ -496,14 +493,11 @@ const getAllMonthlyPayroll = async (
       "currency_name",
     ];
 
-    // Format data
     const formattedData = data.map((row) => {
       const result = {};
 
-      // Add dynamic component columns
       Object.keys(row).forEach((key) => {
         if (!fixedColumns.includes(key) && /^\d+$/.test(key)) {
-          // If advance filter is active, only include matching components
           if (advanceComponentIds.length > 0) {
             if (advanceComponentIds.includes(parseInt(key))) {
               result[key] = row[key];
@@ -514,7 +508,6 @@ const getAllMonthlyPayroll = async (
         }
       });
 
-      // Add fixed columns
       result.id = row.id;
       result.employee_id = row.employee_id;
       result.payroll_month = row.payroll_month;
@@ -551,7 +544,6 @@ const getAllMonthlyPayroll = async (
       result.updatedby = row.updatedby;
       result.log_inst = row.log_inst;
 
-      // Add related objects
       result.hrms_monthly_payroll_employee = {
         id: row.emp_id,
         full_name: row.full_name,
@@ -588,7 +580,6 @@ const getAllMonthlyPayroll = async (
     throw new CustomError("Error retrieving payroll entries", 503);
   }
 };
-// Mothly payroll stored procedure
 const callMonthlyPayrollSP = async (params) => {
   try {
     const {
@@ -632,7 +623,6 @@ const callMonthlyPayrollSP = async (params) => {
   }
 };
 
-// Monthly payroll calculation Stored  procedure
 const triggerMonthlyPayrollCalculationSP = async ({
   employee_id,
   taxable_amount,
@@ -653,7 +643,7 @@ const triggerMonthlyPayrollCalculationSP = async ({
     console.error("SP Execution Error:", error);
     throw new CustomError(
       `Stored procedure execution failed: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -661,7 +651,7 @@ const triggerMonthlyPayrollCalculationSP = async ({
 const getComponentNames = async () => {
   try {
     const result = await prisma.$queryRawUnsafe(
-      `SELECT * FROM vw_hrms_get_component_names`
+      `SELECT * FROM vw_hrms_get_component_names`,
     );
     return result;
   } catch (error) {
@@ -697,11 +687,11 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
       const employee_id = safeNumber(row.employee_id);
       const payroll_month = safeNumber(
         row.payroll_month,
-        new Date().getMonth() + 1
+        new Date().getMonth() + 1,
       );
       const payroll_year = safeNumber(
         row.payroll_year,
-        new Date().getFullYear()
+        new Date().getFullYear(),
       );
 
       const staticCols = {
@@ -750,7 +740,6 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
 
       const allCols = {};
       Object.entries({ ...staticCols, ...componentCols }).forEach(([k, v]) => {
-        // Ensure all values are properly formatted
         let formattedValue = v;
         if (v === undefined || v === null) {
           formattedValue = "NULL";
@@ -759,12 +748,10 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         } else if (v === "GETDATE()") {
           formattedValue = "GETDATE()";
         } else if (typeof v === "string") {
-          // Already formatted by safeString or safeDate
           formattedValue = v;
         } else {
           formattedValue = String(v);
         }
-        // Only add non-empty keys
         if (k) {
           allCols[`[${k}]`] = formattedValue;
         }
@@ -815,7 +802,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
       }
 
       // Log SQL for debugging (remove in production if sensitive)
-      console.log("Generated SQL:", sql.substring(0, 500) + "...");
+      // console.log("Generated SQL:", sql.substring(0, 500) + "...");
 
       await prisma.$executeRawUnsafe(sql);
 
@@ -833,6 +820,182 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         action,
         record: fullRecord || null,
       });
+      const unpaidLoanEmis = await prisma.hrms_d_loan_emi_schedule.findMany({
+        where: {
+          employee_id: employee_id,
+          due_month: payroll_month?.toString(),
+          due_year: payroll_year?.toString(),
+          status: "U",
+        },
+        include: {
+          loan_emi_loan_request: {
+            include: {
+              loan_types: {
+                select: {
+                  pay_component_id: true,
+                  loan_type_pay_component: {
+                    select: {
+                      component_code: true,
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      });
+
+      for (const unpaidLoanEmi of unpaidLoanEmis) {
+        const componentCode =
+          unpaidLoanEmi?.loan_emi_loan_request?.loan_types
+            ?.loan_type_pay_component?.component_code;
+
+        if (!componentCode) continue;
+
+        let remainingComponentAmount = Number(row?.[componentCode] || 0);
+
+        if (remainingComponentAmount <= 0) continue;
+
+        await prisma.$transaction(async (tx) => {
+          const lastPayment = await tx.hrms_d_loan_cash_payment.findFirst({
+            where: {
+              loan_request_id: unpaidLoanEmi.loan_request_id,
+            },
+            orderBy: {
+              id: "desc",
+            },
+          });
+
+          const previousPending =
+            lastPayment?.pending_amount ?? unpaidLoanEmi.emi_amount;
+
+          // 🔹 Determine payment for this EMI
+          const paymentAmount = Math.min(
+            remainingComponentAmount,
+            unpaidLoanEmi.emi_amount,
+          );
+
+          const newPending = Math.max(previousPending - paymentAmount, 0);
+
+          // 🔹 Update EMI
+          await tx.hrms_d_loan_emi_schedule.update({
+            where: { id: unpaidLoanEmi.id },
+            data: {
+              status: paymentAmount >= unpaidLoanEmi.emi_amount ? "P" : "U",
+              emi_amount:
+                paymentAmount >= unpaidLoanEmi.emi_amount
+                  ? unpaidLoanEmi.emi_amount
+                  : unpaidLoanEmi.emi_amount - paymentAmount,
+              updatedate: new Date(),
+            },
+          });
+
+          await tx.hrms_d_loan_cash_payment.create({
+            data: {
+              loan_request_id: unpaidLoanEmi.loan_request_id,
+              amount: paymentAmount,
+              balance_amount: previousPending,
+              pending_amount: newPending,
+              due_year: payroll_year?.toString(),
+              log_inst: user?.log_inst || 1,
+              createdby: user?.id || 1,
+              createdate: new Date(),
+            },
+          });
+
+          // 🔹 Reduce remaining component amount
+          remainingComponentAmount -= paymentAmount;
+        });
+      }
+
+      // const unpaidLoanEmi = await prisma.hrms_d_loan_emi_schedule.findFirst({
+      //   where: {
+      //     employee_id: employee_id,
+      //     due_month: payroll_month?.toString(),
+      //     due_year: payroll_year?.toString(),
+      //     status: "U",
+      //   },
+      //   include: {
+      //     loan_emi_loan_request: {
+      //       include: {
+      //         loan_types: {
+      //           select: {
+      //             pay_component_id: true,
+      //             loan_type_pay_component: {
+      //               select: {
+      //                 component_code: true,
+      //               },
+      //             },
+      //           },
+      //         },
+      //       },
+      //     },
+      //   },
+      // });
+      // console.log("Unpaid Loan EMI:", unpaidLoanEmi);
+
+      // if (unpaidLoanEmi) {
+      //   const componentCode =
+      //     unpaidLoanEmi?.loan_emi_loan_request?.loan_types
+      //       ?.loan_type_pay_component?.component_code;
+
+      //   const loanAmount = componentCode
+      //     ? Number(row?.[componentCode] || 0)
+      //     : 0;
+      //   // console.log(
+      //   //   "222222222222Unpaid Loan EMI:",
+      //   //   componentCode,
+      //   //   Number(row?.[componentCode]),
+      //   //   loanAmount,
+      //   //   unpaidLoanEmi?.loan_emi_loan_request?.loan_types
+      //   // );
+
+      //   if (loanAmount > 0) {
+      //     await prisma.$transaction(async (tx) => {
+      //       const updateEmi = await tx.hrms_d_loan_emi_schedule.update({
+      //         where: { id: unpaidLoanEmi.id },
+      //         data: {
+      //           status: loanAmount >= unpaidLoanEmi.emi_amount ? "P" : "U",
+      //           emi_amount:
+      //             loanAmount >= unpaidLoanEmi.emi_amount
+      //               ? unpaidLoanEmi.emi_amount
+      //               : unpaidLoanEmi.emi_amount - loanAmount,
+      //           updatedate: new Date(),
+      //         },
+      //       });
+
+      //       // ✅ 2. GET LAST CASH PAYMENT (FOR BALANCE)
+      //       const lastPayment = await tx.hrms_d_loan_cash_payment.findFirst({
+      //         where: {
+      //           loan_request_id: updateEmi.loan_request_id,
+      //         },
+      //         orderBy: {
+      //           id: "desc",
+      //         },
+      //       });
+
+      //       const previousPending =
+      //         lastPayment?.pending_amount ?? updateEmi.emi_amount;
+
+      //       const newPending = Math.max(previousPending - loanAmount, 0);
+
+      //       // ✅ 3. INSERT LOAN CASH PAYMENT USING COMPONENT VALUE
+      //       await tx.hrms_d_loan_cash_payment.create({
+      //         data: {
+      //           loan_request_id: updateEmi.loan_request_id,
+      //           amount: loanAmount, // 🔥 FROM PAY COMPONENT (1009)
+      //           balance_amount: previousPending,
+      //           pending_amount: newPending,
+      //           // due_month: payroll_month,
+      //           due_year: payroll_year?.toString(),
+      //           log_inst: user?.log_inst || 1,
+      //           createdby: user?.id || 1,
+      //           createdate: new Date(),
+      //         },
+      //       });
+      //     });
+      //   }
+      // }
     }
 
     return processed;
@@ -843,7 +1006,7 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
       stack: error.stack,
     });
     throw new Error(
-      `Failed to process payroll bulk operation: ${error.message}`
+      `Failed to process payroll bulk operation: ${error.message}`,
     );
   }
 };
@@ -854,7 +1017,7 @@ const getGeneratedMonthlyPayroll = async (
   size = 10,
   employee_id,
   payroll_month,
-  payroll_year
+  payroll_year,
 ) => {
   try {
     page = parseInt(page) || 1;
@@ -977,7 +1140,8 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
         mp.*,  
         emp.full_name,
         emp.employee_code AS pf_hr_id,
-        emp.account_number AS bank_account,        emp.join_date AS engagement_date,
+        emp.account_number AS bank_account,
+        emp.join_date AS engagement_date,
         emp.national_id_number AS nrc_no,
         emp.identification_number AS tpin_no,
         emp.cost_center_id AS cost_center,
@@ -997,6 +1161,13 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
         AND mp.payroll_month = ${Number(payroll_month)}
         AND mp.payroll_year = ${Number(payroll_year)}
     `);
+
+    if (!payroll || payroll.length === 0) {
+      throw new CustomError(
+        `No payroll record found for employee ${employee_id}, month ${payroll_month}, year ${payroll_year}`,
+        404,
+      );
+    }
 
     const record = payroll[0];
 
@@ -1080,7 +1251,7 @@ const getPayrollDataForExcel = async (
   search,
   employee_id,
   payroll_month,
-  payroll_year
+  payroll_year,
 ) => {
   try {
     let whereClause = `WHERE 1=1`;
@@ -1231,7 +1402,7 @@ const getPayrollDataForExcel = async (
           const componentName =
             componentCodeToName[componentCode] || `Component_${componentCode}`;
           processedRow[`${componentName} (${componentCode})`] = value;
-        }
+        },
       );
 
       return processedRow;
@@ -1248,8 +1419,930 @@ const getPayrollDataForExcel = async (
     console.error("Excel data retrieval error", error);
     throw new CustomError(
       `Error retrieving payroll data for Excel export: ${error.message}`,
-      500
+      500,
     );
+  }
+};
+
+const getAllMonthlyPayrollsForBulkDownload = async (
+  filters = {},
+  tenantDb = null,
+) => {
+  try {
+    let dbClient;
+
+    if (tenantDb) {
+      dbClient = getPrismaClient(tenantDb);
+    } else {
+      const store = asyncLocalStorage.getStore();
+      if (store && store.tenantDb) {
+        dbClient = prisma;
+      } else {
+        dbClient = prisma;
+      }
+    }
+
+    let whereConditions = ["1=1"];
+
+    if (filters.employee_ids) {
+      const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.employee_id IN (${idList})`);
+      }
+    } else if (filters.employee_id) {
+      if (filters.employee_id.gte && filters.employee_id.lte) {
+        whereConditions.push(
+          `mp.employee_id BETWEEN ${Number(filters.employee_id.gte)} AND ${Number(filters.employee_id.lte)}`,
+        );
+      } else if (filters.employee_id.gte) {
+        whereConditions.push(
+          `mp.employee_id >= ${Number(filters.employee_id.gte)}`,
+        );
+      } else if (filters.employee_id.lte) {
+        whereConditions.push(
+          `mp.employee_id <= ${Number(filters.employee_id.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_month) {
+      if (filters.payroll_month.gte && filters.payroll_month.lte) {
+        whereConditions.push(
+          `mp.payroll_month BETWEEN ${Number(filters.payroll_month.gte)} AND ${Number(filters.payroll_month.lte)}`,
+        );
+      } else if (filters.payroll_month.gte) {
+        whereConditions.push(
+          `mp.payroll_month >= ${Number(filters.payroll_month.gte)}`,
+        );
+      } else if (filters.payroll_month.lte) {
+        whereConditions.push(
+          `mp.payroll_month <= ${Number(filters.payroll_month.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_year) {
+      if (filters.payroll_year.gte && filters.payroll_year.lte) {
+        whereConditions.push(
+          `mp.payroll_year BETWEEN ${Number(filters.payroll_year.gte)} AND ${Number(filters.payroll_year.lte)}`,
+        );
+      } else if (filters.payroll_year.gte) {
+        whereConditions.push(
+          `mp.payroll_year >= ${Number(filters.payroll_year.gte)}`,
+        );
+      } else if (filters.payroll_year.lte) {
+        whereConditions.push(
+          `mp.payroll_year <= ${Number(filters.payroll_year.lte)}`,
+        );
+      }
+    }
+
+    if (filters.status) {
+      const escapedStatus = filters.status.replace(/'/g, "''");
+      whereConditions.push(`mp.status = '${escapedStatus}'`);
+    }
+
+    const whereClause = whereConditions.join(" AND ");
+
+    const query = `
+      SELECT 
+        mp.id,
+        mp.employee_id,
+        mp.payroll_month,
+        mp.payroll_year,
+        mp.payroll_week,
+        mp.payroll_start_date,
+        mp.payroll_end_date,
+        mp.payroll_paid_days,
+        mp.pay_currency,
+        mp.total_earnings,
+        mp.taxable_earnings,
+        mp.tax_amount,
+        mp.total_deductions,
+        mp.net_pay,
+        mp.status,
+        mp.execution_date,
+        mp.pay_date,
+        mp.doc_date,
+        mp.processed,
+        mp.je_transid,
+        mp.project_id,
+        mp.cost_center1_id,
+        mp.cost_center2_id,
+        mp.cost_center3_id,
+        mp.cost_center4_id,
+        mp.cost_center5_id,
+        mp.approved1,
+        mp.approver1_id,
+        mp.employee_email,
+        mp.remarks,
+        mp.createdate,
+        mp.updatedate,
+        e.id as emp_id,
+        e.employee_code,
+        e.full_name,
+        e.email as emp_email,
+        e.phone_number as phone,
+        e.department_id,
+        e.designation_id,
+        cur.id as currency_id,
+        cur.currency_code,
+        cur.currency_name
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
+      LEFT JOIN hrms_m_currency_master cur ON mp.pay_currency = cur.id
+      WHERE ${whereClause}
+      ORDER BY mp.createdate DESC
+    `;
+
+    const monthlyPayrolls = await dbClient.$queryRawUnsafe(query);
+
+    const formattedResults = monthlyPayrolls.map((row) => ({
+      id: row.id,
+      employee_id: row.employee_id,
+      payroll_month: row.payroll_month,
+      payroll_year: row.payroll_year,
+      payroll_week: row.payroll_week,
+      payroll_start_date: row.payroll_start_date,
+      payroll_end_date: row.payroll_end_date,
+      payroll_paid_days: row.payroll_paid_days,
+      pay_currency: row.pay_currency,
+      total_earnings: row.total_earnings,
+      taxable_earnings: row.taxable_earnings,
+      tax_amount: row.tax_amount,
+      total_deductions: row.total_deductions,
+      net_pay: row.net_pay,
+      status: row.status,
+      execution_date: row.execution_date,
+      pay_date: row.pay_date,
+      doc_date: row.doc_date,
+      processed: row.processed,
+      je_transid: row.je_transid,
+      project_id: row.project_id,
+      cost_center1_id: row.cost_center1_id,
+      cost_center2_id: row.cost_center2_id,
+      cost_center3_id: row.cost_center3_id,
+      cost_center4_id: row.cost_center4_id,
+      cost_center5_id: row.cost_center5_id,
+      approved1: row.approved1,
+      approver1_id: row.approver1_id,
+      employee_email: row.employee_email,
+      remarks: row.remarks,
+      createdate: row.createdate,
+      updatedate: row.updatedate,
+      hrms_monthly_payroll_employee: row.emp_id
+        ? {
+            id: row.emp_id,
+            full_name: row.full_name,
+            employee_code: row.employee_code,
+            email: row.emp_email,
+            phone: row.phone,
+            department_id: row.department_id,
+            designation_id: row.designation_id,
+          }
+        : null,
+      hrms_monthly_payroll_currency: row.currency_id
+        ? {
+            id: row.currency_id,
+            currency_code: row.currency_code,
+            currency_name: row.currency_name,
+          }
+        : null,
+    }));
+
+    return formattedResults;
+  } catch (error) {
+    console.error("Error in getAllMonthlyPayrollsForBulkDownload:", error);
+    throw new CustomError(error.message, 500);
+  }
+};
+
+const getMonthlyPayrollCountForBulkDownload = async (
+  filters = {},
+  tenantDb = null,
+) => {
+  try {
+    let dbClient;
+
+    if (tenantDb) {
+      dbClient = getPrismaClient(tenantDb);
+    } else {
+      const store = asyncLocalStorage.getStore();
+      if (store && store.tenantDb) {
+        dbClient = prisma;
+      } else {
+        dbClient = prisma;
+      }
+    }
+
+    let whereConditions = ["1=1"];
+
+    if (filters.employee_ids) {
+      const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.employee_id IN (${idList})`);
+      }
+    } else if (filters.employee_id) {
+      if (filters.employee_id.gte && filters.employee_id.lte) {
+        whereConditions.push(
+          `mp.employee_id BETWEEN ${Number(filters.employee_id.gte)} AND ${Number(filters.employee_id.lte)}`,
+        );
+      } else if (filters.employee_id.gte) {
+        whereConditions.push(
+          `mp.employee_id >= ${Number(filters.employee_id.gte)}`,
+        );
+      } else if (filters.employee_id.lte) {
+        whereConditions.push(
+          `mp.employee_id <= ${Number(filters.employee_id.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_month) {
+      if (filters.payroll_month.gte && filters.payroll_month.lte) {
+        whereConditions.push(
+          `mp.payroll_month BETWEEN ${Number(filters.payroll_month.gte)} AND ${Number(filters.payroll_month.lte)}`,
+        );
+      } else if (filters.payroll_month.gte) {
+        whereConditions.push(
+          `mp.payroll_month >= ${Number(filters.payroll_month.gte)}`,
+        );
+      } else if (filters.payroll_month.lte) {
+        whereConditions.push(
+          `mp.payroll_month <= ${Number(filters.payroll_month.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_year) {
+      if (filters.payroll_year.gte && filters.payroll_year.lte) {
+        whereConditions.push(
+          `mp.payroll_year BETWEEN ${Number(filters.payroll_year.gte)} AND ${Number(filters.payroll_year.lte)}`,
+        );
+      } else if (filters.payroll_year.gte) {
+        whereConditions.push(
+          `mp.payroll_year >= ${Number(filters.payroll_year.gte)}`,
+        );
+      } else if (filters.payroll_year.lte) {
+        whereConditions.push(
+          `mp.payroll_year <= ${Number(filters.payroll_year.lte)}`,
+        );
+      }
+    }
+
+    if (filters.status) {
+      const escapedStatus = filters.status.replace(/'/g, "''");
+      whereConditions.push(`mp.status = '${escapedStatus}'`);
+    }
+
+    const whereClause = whereConditions.join(" AND ");
+
+    const countQuery = `
+      SELECT COUNT(*) as total
+      FROM hrms_d_monthly_payroll_processing mp
+      WHERE ${whereClause}
+    `;
+
+    const result = await dbClient.$queryRawUnsafe(countQuery);
+    return Number(result[0]?.total) || 0;
+  } catch (error) {
+    console.error("Error in getMonthlyPayrollCountForBulkDownload:", error);
+    throw new CustomError(error.message, 500);
+  }
+};
+
+const getMonthlyPayrollsPaginatedForBulkDownload = async (
+  filters = {},
+  offset = 0,
+  limit = 1000,
+  tenantDb = null,
+) => {
+  try {
+    let dbClient;
+
+    if (tenantDb) {
+      dbClient = getPrismaClient(tenantDb);
+    } else {
+      const store = asyncLocalStorage.getStore();
+      if (store && store.tenantDb) {
+        dbClient = prisma;
+      } else {
+        dbClient = prisma;
+      }
+    }
+
+    let whereConditions = ["1=1"];
+
+    if (filters.employee_ids) {
+      const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.employee_id IN (${idList})`);
+      }
+    } else if (filters.employee_id) {
+      if (filters.employee_id.gte && filters.employee_id.lte) {
+        whereConditions.push(
+          `mp.employee_id BETWEEN ${Number(filters.employee_id.gte)} AND ${Number(filters.employee_id.lte)}`,
+        );
+      } else if (filters.employee_id.gte) {
+        whereConditions.push(
+          `mp.employee_id >= ${Number(filters.employee_id.gte)}`,
+        );
+      } else if (filters.employee_id.lte) {
+        whereConditions.push(
+          `mp.employee_id <= ${Number(filters.employee_id.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_month) {
+      if (filters.payroll_month.gte && filters.payroll_month.lte) {
+        whereConditions.push(
+          `mp.payroll_month BETWEEN ${Number(filters.payroll_month.gte)} AND ${Number(filters.payroll_month.lte)}`,
+        );
+      } else if (filters.payroll_month.gte) {
+        whereConditions.push(
+          `mp.payroll_month >= ${Number(filters.payroll_month.gte)}`,
+        );
+      } else if (filters.payroll_month.lte) {
+        whereConditions.push(
+          `mp.payroll_month <= ${Number(filters.payroll_month.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_year) {
+      if (filters.payroll_year.gte && filters.payroll_year.lte) {
+        whereConditions.push(
+          `mp.payroll_year BETWEEN ${Number(filters.payroll_year.gte)} AND ${Number(filters.payroll_year.lte)}`,
+        );
+      } else if (filters.payroll_year.gte) {
+        whereConditions.push(
+          `mp.payroll_year >= ${Number(filters.payroll_year.gte)}`,
+        );
+      } else if (filters.payroll_year.lte) {
+        whereConditions.push(
+          `mp.payroll_year <= ${Number(filters.payroll_year.lte)}`,
+        );
+      }
+    }
+
+    if (filters.status) {
+      const escapedStatus = filters.status.replace(/'/g, "''");
+      whereConditions.push(`mp.status = '${escapedStatus}'`);
+    }
+
+    const whereClause = whereConditions.join(" AND ");
+
+    const query = `
+      SELECT 
+        mp.id,
+        mp.employee_id,
+        mp.payroll_month,
+        mp.payroll_year,
+        mp.payroll_week,
+        mp.payroll_start_date,
+        mp.payroll_end_date,
+        mp.payroll_paid_days,
+        mp.pay_currency,
+        mp.total_earnings,
+        mp.taxable_earnings,
+        mp.tax_amount,
+        mp.total_deductions,
+        mp.net_pay,
+        mp.status,
+        mp.execution_date,
+        mp.pay_date,
+        mp.doc_date,
+        mp.processed,
+        mp.je_transid,
+        mp.project_id,
+        mp.cost_center1_id,
+        mp.cost_center2_id,
+        mp.cost_center3_id,
+        mp.cost_center4_id,
+        mp.cost_center5_id,
+        mp.approved1,
+        mp.approver1_id,
+        mp.employee_email,
+        mp.remarks,
+        mp.createdate,
+        mp.updatedate,
+        e.id as emp_id,
+        e.employee_code,
+        e.full_name,
+        e.email as emp_email,
+        e.phone_number as phone,
+        e.department_id,
+        e.designation_id,
+        cur.id as currency_id,
+        cur.currency_code,
+        cur.currency_name
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
+      LEFT JOIN hrms_m_currency_master cur ON mp.pay_currency = cur.id
+      WHERE ${whereClause}
+      ORDER BY mp.createdate DESC
+      OFFSET ${offset} ROWS
+      FETCH NEXT ${limit} ROWS ONLY
+    `;
+
+    const monthlyPayrolls = await dbClient.$queryRawUnsafe(query);
+
+    const formattedResults = monthlyPayrolls.map((row) => ({
+      id: row.id,
+      employee_id: row.employee_id,
+      payroll_month: row.payroll_month,
+      payroll_year: row.payroll_year,
+      payroll_week: row.payroll_week,
+      payroll_start_date: row.payroll_start_date,
+      payroll_end_date: row.payroll_end_date,
+      payroll_paid_days: row.payroll_paid_days,
+      pay_currency: row.pay_currency,
+      total_earnings: row.total_earnings,
+      taxable_earnings: row.taxable_earnings,
+      tax_amount: row.tax_amount,
+      total_deductions: row.total_deductions,
+      net_pay: row.net_pay,
+      status: row.status,
+      execution_date: row.execution_date,
+      pay_date: row.pay_date,
+      doc_date: row.doc_date,
+      processed: row.processed,
+      je_transid: row.je_transid,
+      project_id: row.project_id,
+      cost_center1_id: row.cost_center1_id,
+      cost_center2_id: row.cost_center2_id,
+      cost_center3_id: row.cost_center3_id,
+      cost_center4_id: row.cost_center4_id,
+      cost_center5_id: row.cost_center5_id,
+      approved1: row.approved1,
+      approver1_id: row.approver1_id,
+      employee_email: row.employee_email,
+      remarks: row.remarks,
+      createdate: row.createdate,
+      updatedate: row.updatedate,
+      hrms_monthly_payroll_employee: row.emp_id
+        ? {
+            id: row.emp_id,
+            full_name: row.full_name,
+            employee_code: row.employee_code,
+            email: row.emp_email,
+            phone: row.phone,
+            department_id: row.department_id,
+            designation_id: row.designation_id,
+          }
+        : null,
+      hrms_monthly_payroll_currency: row.currency_id
+        ? {
+            id: row.currency_id,
+            currency_code: row.currency_code,
+            currency_name: row.currency_name,
+          }
+        : null,
+    }));
+
+    return formattedResults;
+  } catch (error) {
+    console.error(
+      "Error in getMonthlyPayrollsPaginatedForBulkDownload:",
+      error,
+    );
+    throw new CustomError(error.message, 500);
+  }
+};
+
+const checkIndividualPayslipDownloaded = async (
+  employee_id,
+  payroll_month,
+  payroll_year,
+  tenantDb = null,
+) => {
+  let dbClient;
+  if (tenantDb) {
+    dbClient = getPrismaClient(tenantDb);
+  } else {
+    const store = asyncLocalStorage.getStore();
+    if (store && store.tenantDb) {
+      dbClient = prisma;
+    } else {
+      dbClient = prisma;
+    }
+  }
+
+  try {
+    const query = `
+      SELECT 
+        mp.employee_id,
+        mp.payroll_month,
+        mp.payroll_year,
+        mp.is_printed,
+        e.full_name,
+        e.employee_code,
+        FORMAT(mp.updatedate, 'yyyy-MM-dd HH:mm:ss') as download_date,
+        mp.updatedby as downloaded_by
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
+      WHERE mp.employee_id = ${Number(employee_id)}
+        AND mp.payroll_month = ${Number(payroll_month)}
+        AND mp.payroll_year = ${Number(payroll_year)}
+        AND mp.is_printed = 'Y'
+    `;
+
+    const result = await dbClient.$queryRawUnsafe(query);
+
+    return result.length > 0 ? result[0] : null;
+  } catch (error) {
+    console.error("Error checking individual payslip download status:", error);
+    return null;
+  }
+};
+
+const markIndividualPayslipAsPrinted = async (
+  employee_id,
+  payroll_month,
+  payroll_year,
+  userId,
+  tenantDb = null,
+) => {
+  let dbClient;
+  if (tenantDb) {
+    dbClient = getPrismaClient(tenantDb);
+  } else {
+    const store = asyncLocalStorage.getStore();
+    if (store && store.tenantDb) {
+      dbClient = prisma;
+    } else {
+      dbClient = prisma;
+    }
+  }
+
+  try {
+    const updateQuery = `
+      UPDATE hrms_d_monthly_payroll_processing 
+      SET is_printed = 'Y', 
+          updatedate = GETDATE(),
+          updatedby = ${userId}
+      WHERE employee_id = ${Number(employee_id)}
+        AND payroll_month = ${Number(payroll_month)}
+        AND payroll_year = ${Number(payroll_year)}
+        AND (is_printed IS NULL OR is_printed = 'N')
+    `;
+
+    const result = await dbClient.$executeRawUnsafe(updateQuery);
+
+    console.log(
+      `Marked individual payslip as printed: Employee ${employee_id}, ${payroll_month}/${payroll_year}`,
+    );
+    return result;
+  } catch (error) {
+    console.error("Error marking individual payslip as printed:", error);
+    throw error;
+  }
+};
+
+const checkAlreadyDownloadedPayrolls = async (filters, tenantDb = null) => {
+  let dbClient;
+  if (tenantDb) {
+    dbClient = getPrismaClient(tenantDb);
+  } else {
+    const store = asyncLocalStorage.getStore();
+    if (store && store.tenantDb) {
+      dbClient = prisma;
+    } else {
+      dbClient = prisma;
+    }
+  }
+
+  try {
+    console.log(
+      "checkAlreadyDownloadedPayrolls - Filters:",
+      JSON.stringify(filters, null, 2),
+    );
+    console.log("checkAlreadyDownloadedPayrolls - TenantDb:", tenantDb);
+
+    let whereConditions = ["is_printed = 'Y'"];
+
+    if (filters.employee_ids) {
+      const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`employee_id IN (${idList})`);
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Employee IDs filter: ${idList}`,
+        );
+      }
+    } else if (filters.employee_id) {
+      if (filters.employee_id.gte && filters.employee_id.lte) {
+        whereConditions.push(
+          `employee_id BETWEEN ${Number(filters.employee_id.gte)} AND ${Number(filters.employee_id.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Employee range filter: ${filters.employee_id.gte} to ${filters.employee_id.lte}`,
+        );
+      } else if (filters.employee_id.gte) {
+        whereConditions.push(
+          `employee_id >= ${Number(filters.employee_id.gte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Employee from filter: ${filters.employee_id.gte}`,
+        );
+      } else if (filters.employee_id.lte) {
+        whereConditions.push(
+          `employee_id <= ${Number(filters.employee_id.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Employee to filter: ${filters.employee_id.lte}`,
+        );
+      }
+    }
+
+    if (filters.payroll_month) {
+      if (filters.payroll_month.gte && filters.payroll_month.lte) {
+        whereConditions.push(
+          `payroll_month BETWEEN ${Number(filters.payroll_month.gte)} AND ${Number(filters.payroll_month.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Month range filter: ${filters.payroll_month.gte} to ${filters.payroll_month.lte}`,
+        );
+      } else if (filters.payroll_month.gte) {
+        whereConditions.push(
+          `payroll_month >= ${Number(filters.payroll_month.gte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Month from filter: ${filters.payroll_month.gte}`,
+        );
+      } else if (filters.payroll_month.lte) {
+        whereConditions.push(
+          `payroll_month <= ${Number(filters.payroll_month.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Month to filter: ${filters.payroll_month.lte}`,
+        );
+      }
+    }
+
+    if (filters.payroll_year) {
+      if (filters.payroll_year.gte && filters.payroll_year.lte) {
+        whereConditions.push(
+          `payroll_year BETWEEN ${Number(filters.payroll_year.gte)} AND ${Number(filters.payroll_year.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Year range filter: ${filters.payroll_year.gte} to ${filters.payroll_year.lte}`,
+        );
+      } else if (filters.payroll_year.gte) {
+        whereConditions.push(
+          `payroll_year >= ${Number(filters.payroll_year.gte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Year from filter: ${filters.payroll_year.gte}`,
+        );
+      } else if (filters.payroll_year.lte) {
+        whereConditions.push(
+          `payroll_year <= ${Number(filters.payroll_year.lte)}`,
+        );
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Year to filter: ${filters.payroll_year.lte}`,
+        );
+      }
+    }
+
+    if (filters.status) {
+      const escapedStatus = filters.status.replace(/'/g, "''");
+      whereConditions.push(`status = '${escapedStatus}'`);
+      console.log(
+        `checkAlreadyDownloadedPayrolls - Status filter: ${escapedStatus}`,
+      );
+    }
+
+    const whereClause = whereConditions.join(" AND ");
+    console.log(
+      `checkAlreadyDownloadedPayrolls - Final WHERE clause: ${whereClause}`,
+    );
+
+    const query = `
+      SELECT 
+        employee_id,
+        payroll_month,
+        payroll_year,
+        full_name,
+        employee_code,
+        FORMAT(mp.updatedate, 'yyyy-MM-dd HH:mm:ss') as download_date,
+        mp.updatedby as downloaded_by
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
+      WHERE ${whereClause}
+      ORDER BY mp.updatedate DESC
+    `;
+
+    console.log(`checkAlreadyDownloadedPayrolls - Executing query: ${query}`);
+
+    const downloadedPayrolls = await dbClient.$queryRawUnsafe(query);
+
+    console.log(
+      `checkAlreadyDownloadedPayrolls - Found ${downloadedPayrolls.length} downloaded payrolls`,
+    );
+
+    return downloadedPayrolls;
+  } catch (error) {
+    console.error("Error checking downloaded payrolls:", error);
+    return [];
+  }
+};
+
+const getDownloadStatistics = async (filters, tenantDb = null) => {
+  let dbClient;
+  if (tenantDb) {
+    dbClient = getPrismaClient(tenantDb);
+  } else {
+    const store = asyncLocalStorage.getStore();
+    if (store && store.tenantDb) {
+      dbClient = prisma;
+    } else {
+      dbClient = prisma;
+    }
+  }
+
+  try {
+    let whereConditions = ["1=1"];
+
+    if (filters.employee_ids) {
+      const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`employee_id IN (${idList})`);
+      }
+    } else if (filters.employee_id) {
+      if (filters.employee_id.gte && filters.employee_id.lte) {
+        whereConditions.push(
+          `employee_id BETWEEN ${Number(filters.employee_id.gte)} AND ${Number(filters.employee_id.lte)}`,
+        );
+      } else if (filters.employee_id.gte) {
+        whereConditions.push(
+          `employee_id >= ${Number(filters.employee_id.gte)}`,
+        );
+      } else if (filters.employee_id.lte) {
+        whereConditions.push(
+          `employee_id <= ${Number(filters.employee_id.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_month) {
+      if (filters.payroll_month.gte && filters.payroll_month.lte) {
+        whereConditions.push(
+          `payroll_month BETWEEN ${Number(filters.payroll_month.gte)} AND ${Number(filters.payroll_month.lte)}`,
+        );
+      } else if (filters.payroll_month.gte) {
+        whereConditions.push(
+          `payroll_month >= ${Number(filters.payroll_month.gte)}`,
+        );
+      } else if (filters.payroll_month.lte) {
+        whereConditions.push(
+          `payroll_month <= ${Number(filters.payroll_month.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_year) {
+      if (filters.payroll_year.gte && filters.payroll_year.lte) {
+        whereConditions.push(
+          `payroll_year BETWEEN ${Number(filters.payroll_year.gte)} AND ${Number(filters.payroll_year.lte)}`,
+        );
+      } else if (filters.payroll_year.gte) {
+        whereConditions.push(
+          `payroll_year >= ${Number(filters.payroll_year.gte)}`,
+        );
+      } else if (filters.payroll_year.lte) {
+        whereConditions.push(
+          `payroll_year <= ${Number(filters.payroll_year.lte)}`,
+        );
+      }
+    }
+
+    if (filters.status) {
+      const escapedStatus = filters.status.replace(/'/g, "''");
+      whereConditions.push(`status = '${escapedStatus}'`);
+    }
+
+    const whereClause = whereConditions.join(" AND ");
+
+    const statsQuery = `
+      SELECT 
+        COUNT(*) as total_records,
+        COUNT(CASE WHEN is_printed = 'Y' THEN 1 END) as downloaded_records,
+        COUNT(CASE WHEN is_printed IS NULL OR is_printed = 'N' THEN 1 END) as not_downloaded_records
+      FROM hrms_d_monthly_payroll_processing
+      WHERE ${whereClause}
+    `;
+
+    const stats = await dbClient.$queryRawUnsafe(statsQuery);
+
+    return stats[0];
+  } catch (error) {
+    console.error("Error getting download statistics:", error);
+    return {
+      total_records: 0,
+      downloaded_records: 0,
+      not_downloaded_records: 0,
+    };
+  }
+};
+
+const markPayrollsAsPrinted = async (filters, userId, tenantDb = null) => {
+  let dbClient;
+  if (tenantDb) {
+    dbClient = getPrismaClient(tenantDb);
+  } else {
+    const store = asyncLocalStorage.getStore();
+    if (store && store.tenantDb) {
+      dbClient = prisma;
+    } else {
+      dbClient = prisma;
+    }
+  }
+
+  try {
+    let whereConditions = ["is_printed IS NULL OR is_printed = 'N'"];
+
+    if (filters.employee_ids) {
+      const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`employee_id IN (${idList})`);
+      }
+    } else if (filters.employee_id) {
+      if (filters.employee_id.gte && filters.employee_id.lte) {
+        whereConditions.push(
+          `employee_id BETWEEN ${Number(filters.employee_id.gte)} AND ${Number(filters.employee_id.lte)}`,
+        );
+      } else if (filters.employee_id.gte) {
+        whereConditions.push(
+          `employee_id >= ${Number(filters.employee_id.gte)}`,
+        );
+      } else if (filters.employee_id.lte) {
+        whereConditions.push(
+          `employee_id <= ${Number(filters.employee_id.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_month) {
+      if (filters.payroll_month.gte && filters.payroll_month.lte) {
+        whereConditions.push(
+          `payroll_month BETWEEN ${Number(filters.payroll_month.gte)} AND ${Number(filters.payroll_month.lte)}`,
+        );
+      } else if (filters.payroll_month.gte) {
+        whereConditions.push(
+          `payroll_month >= ${Number(filters.payroll_month.gte)}`,
+        );
+      } else if (filters.payroll_month.lte) {
+        whereConditions.push(
+          `payroll_month <= ${Number(filters.payroll_month.lte)}`,
+        );
+      }
+    }
+
+    if (filters.payroll_year) {
+      if (filters.payroll_year.gte && filters.payroll_year.lte) {
+        whereConditions.push(
+          `payroll_year BETWEEN ${Number(filters.payroll_year.gte)} AND ${Number(filters.payroll_year.lte)}`,
+        );
+      } else if (filters.payroll_year.gte) {
+        whereConditions.push(
+          `payroll_year >= ${Number(filters.payroll_year.gte)}`,
+        );
+      } else if (filters.payroll_year.lte) {
+        whereConditions.push(
+          `payroll_year <= ${Number(filters.payroll_year.lte)}`,
+        );
+      }
+    }
+
+    if (filters.status) {
+      const escapedStatus = filters.status.replace(/'/g, "''");
+      whereConditions.push(`status = '${escapedStatus}'`);
+    }
+
+    const whereClause = whereConditions.join(" AND ");
+
+    const updateQuery = `
+      UPDATE hrms_d_monthly_payroll_processing 
+      SET is_printed = 'Y', 
+          updatedate = GETDATE(),
+          updatedby = ${userId}
+      WHERE ${whereClause}
+    `;
+
+    const result = await dbClient.$executeRawUnsafe(updateQuery);
+
+    console.log(`Marked ${result} payroll records as printed/downloaded`);
+    return result;
+  } catch (error) {
+    console.error("Error marking payrolls as printed:", error);
+    throw error;
   }
 };
 
@@ -1266,4 +2359,12 @@ module.exports = {
   getGeneratedMonthlyPayroll,
   downloadPayslipPDF,
   getPayrollDataForExcel,
+  getAllMonthlyPayrollsForBulkDownload,
+  getMonthlyPayrollCountForBulkDownload,
+  getMonthlyPayrollsPaginatedForBulkDownload,
+  checkIndividualPayslipDownloaded,
+  markIndividualPayslipAsPrinted,
+  checkAlreadyDownloadedPayrolls,
+  getDownloadStatistics,
+  markPayrollsAsPrinted,
 };

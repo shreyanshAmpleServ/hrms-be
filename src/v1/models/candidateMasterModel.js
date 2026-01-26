@@ -1024,7 +1024,7 @@ const getAllCandidateMaster = async (
   is_active = "false"
 ) => {
   try {
-    if (is_active === "true") {
+    if (is_active == "true") {
       const filters = {};
 
       if (search && search.trim()) {
@@ -2639,6 +2639,8 @@ const getCandidateDocumentVerificationStatus = async (candidateId) => {
         email: true,
         status: true,
         job_posting: true,
+        offer_accepted_date: true,
+        actual_joining_date: true,
       },
     });
 
@@ -2784,7 +2786,16 @@ const getCandidateDocumentVerificationStatus = async (candidateId) => {
         totalMissing > 1 ? "s are" : " is"
       } missing`;
     }
+    let missingData = null;
 
+    if (candidate?.offer_accepted_date && candidate?.actual_joining_date) {
+      missingData =
+        "Offer Accepted Date and Actual Joining Date are required to convert to employee.";
+    } else if (candidate?.offer_accepted_date) {
+      missingData = "Actual Joining Date is required to convert to employee.";
+    } else if (candidate?.actual_joining_date) {
+      missingData = "Offer Accepted Date is required to convert to employee.";
+    }
     return {
       success: true,
       candidateId: parseInt(candidateId),
@@ -2812,6 +2823,7 @@ const getCandidateDocumentVerificationStatus = async (candidateId) => {
 
       missingDocuments:
         missingDocuments.length > 0 ? missingDocuments : undefined,
+      missingData,
 
       warning,
       message: hasMissingDocuments

@@ -4,7 +4,6 @@ const path = require("path");
 const puppeteer = require("puppeteer");
 const chromePath =
   "../../.puppeteer/chrome/win64-138.0.7204.168/chrome-win64/chrome.exe";
-// HTML Template with placeholders
 const payslipTemplate = `<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -391,12 +390,6 @@ const payslipTemplate = `<!DOCTYPE html>
 </body>
 </html>`;
 
-/**
- * Generate HTML payslip from data
- * @param {Object} data - Payroll data object
- * @param {string} filePath - Output file path (optional)
- * @returns {Promise<string>} - Generated HTML content or file path
- */
 // const formatAmount = (value, currencyCode = "INR") => {
 //   const number = parseFloat(value || 0);
 //   return number.toLocaleString("en-IN", {
@@ -426,15 +419,15 @@ const generatePayslipHTML = (data, filePath = null) => {
       const grossEarning = formatAmount(
         (data.earnings || []).reduce(
           (sum, e) => sum + parseFloat(e.amount || 0),
-          0
-        )
+          0,
+        ),
       );
 
       const grossDeduction = formatAmount(
         (data.deductions || []).reduce(
           (sum, d) => sum + parseFloat(d.amount || 0),
-          0
-        )
+          0,
+        ),
       );
 
       // Generate earnings rows
@@ -444,9 +437,9 @@ const generatePayslipHTML = (data, filePath = null) => {
             `<div class="amount-row">
           <span>${earning.label || ""}</span>
           <span>${formatAmount(
-            parseFloat(earning.amount || 0).toFixed(2)
+            parseFloat(earning.amount || 0).toFixed(2),
           )}</span>
-        </div>`
+        </div>`,
         )
         .join("");
 
@@ -457,15 +450,14 @@ const generatePayslipHTML = (data, filePath = null) => {
             `<div class="amount-row">
           <span>${deduction.label || ""}</span>
           <span>${formatAmount(
-            parseFloat(deduction.amount || 0).toFixed(2)
+            parseFloat(deduction.amount || 0).toFixed(2),
           )}</span>
-        </div>`
+        </div>`,
         )
         .join("");
 
-      // Find basic pay from earnings
       const basicPayEarning = (data.earnings || []).find(
-        (e) => e.label && e.label.toLowerCase().includes("basic")
+        (e) => e.label && e.label.toLowerCase().includes("basic"),
       );
       // const basicPay = basicPayEarning
       //   ? parseFloat(basicPayEarning.amount).toFixed(2)
@@ -483,7 +475,6 @@ const generatePayslipHTML = (data, filePath = null) => {
       const taxablePayYtd = formatAmount(data.taxable_earnings);
       const taxYearToDate = formatAmount(data.tax_amount);
 
-      // Prepare template data
       const templateData = {
         grossEarning,
         grossDeduction,
@@ -524,7 +515,6 @@ const generatePayslipHTML = (data, filePath = null) => {
         currencyCode: data.currency_code || "",
       };
 
-      // Replace placeholders in template
       let htmlContent = payslipTemplate;
       Object.keys(templateData).forEach((key) => {
         const placeholder = new RegExp(`{{${key}}}`, "g");
@@ -533,12 +523,10 @@ const generatePayslipHTML = (data, filePath = null) => {
 
       logger.debug("HTML content generated successfully");
 
-      // If file path is provided, write to file
       if (filePath) {
         fs.writeFileSync(filePath, htmlContent, "utf8");
         resolve(filePath);
       } else {
-        // Return HTML content
         resolve(htmlContent);
       }
     } catch (error) {
@@ -546,16 +534,6 @@ const generatePayslipHTML = (data, filePath = null) => {
     }
   });
 };
-
-/**
- * Generate HTML payslip and convert to PDF using Playwright
- * @param {Object} data - Payroll data object
- * @param {string} filePath - Output PDF file path
- * @returns {Promise<string>} - Path to generated PDF file
- */
-/**
- * Generate HTML payslip and convert to PDF using puppeteer
- */
 
 const generatePayslipPDF = async (data, filePath) => {
   let browser = null;
@@ -567,12 +545,26 @@ const generatePayslipPDF = async (data, filePath) => {
       fs.mkdirSync(dir, { recursive: true });
     }
 
-    logger.error(process.cwd());
+    logger.error("Current working directory:", process.cwd());
+
+    const chromePath = path.join(
+      process.cwd(),
+      ".puppeteer",
+      "chrome",
+      "win64-138.0.7204.168",
+      "chrome-win64",
+      "chrome.exe",
+    );
+
+    logger.error("Chrome path:", chromePath);
+    logger.error("Chrome exists:", fs.existsSync(chromePath));
+
+    if (!fs.existsSync(chromePath)) {
+      throw new Error(`Chrome executable not found at: ${chromePath}`);
+    }
 
     browser = await puppeteer.launch({
-      executablePath:
-        process.cwd() +
-        "\\.puppeteer\\chrome\\win64-138.0.7204.168\\chrome-win64\\chrome.exe",
+      executablePath: chromePath,
       headless: true,
       args: [
         "--no-sandbox",
@@ -580,19 +572,22 @@ const generatePayslipPDF = async (data, filePath) => {
         "--disable-dev-shm-usage",
         "--disable-extensions",
         "--disable-gpu",
+        "--disable-web-security",
+        "--disable-features=VizDisplayCompositor",
       ],
     });
 
     const page = await browser.newPage();
     await page.setViewport({ width: 1240, height: 1754 });
 
+    logger.error("Setting page content...");
     await page.setContent(htmlContent, {
       waitUntil: "networkidle0",
       timeout: 30000,
     });
 
-    await page.pdf({
-      path: filePath,
+    logger.error("Generating PDF...");
+    const pdfBuffer = await page.pdf({
       format: "A4",
       printBackground: true,
       margin: {
@@ -603,6 +598,15 @@ const generatePayslipPDF = async (data, filePath) => {
       },
     });
 
+    fs.writeFileSync(filePath, pdfBuffer);
+    logger.error("PDF written to file:", filePath);
+
+    const stats = fs.statSync(filePath);
+    if (stats.size === 0) {
+      throw new Error(`Generated PDF file is empty: ${filePath}`);
+    }
+
+    logger.error("PDF generated successfully, size:", stats.size);
     return filePath;
   } catch (error) {
     console.log("PDF generation error:", error);
