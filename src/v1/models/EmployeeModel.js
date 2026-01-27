@@ -330,7 +330,7 @@ const generateEmployeeCode = async () => {
     const lastEmployee = await prisma.hrms_d_employee.findFirst({
       where: {
         employee_code: {
-          startsWith: "EMP-",
+          startsWith: "EMP",
         },
       },
       orderBy: {
@@ -345,14 +345,14 @@ const generateEmployeeCode = async () => {
 
     if (lastEmployee && lastEmployee.employee_code) {
       const lastNumber = parseInt(
-        lastEmployee.employee_code.replace("EMP-", ""),
+        lastEmployee.employee_code.replace("EMP", ""),
       );
       if (!isNaN(lastNumber)) {
         nextNumber = lastNumber + 1;
       }
     }
 
-    const newEmployeeCode = `EMP-${nextNumber.toString().padStart(4, "0")}`;
+    const newEmployeeCode = `EMP${nextNumber.toString().padStart(4, "0")}`;
 
     const existingCode = await prisma.hrms_d_employee.findFirst({
       where: { employee_code: newEmployeeCode },
