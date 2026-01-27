@@ -1443,7 +1443,13 @@ const getAllMonthlyPayrollsForBulkDownload = async (
     }
 
     let whereConditions = ["1=1"];
-
+    if (filters.payslip_ids) {
+      const validIds = filters.payslip_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.id IN (${idList})`);
+      }
+    }
     if (filters.employee_ids) {
       const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
       if (validIds.length > 0) {
@@ -1637,7 +1643,13 @@ const getMonthlyPayrollCountForBulkDownload = async (
     }
 
     let whereConditions = ["1=1"];
-
+    if (filters.payslip_ids) {
+      const validIds = filters.payslip_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.id IN (${idList})`);
+      }
+    }
     if (filters.employee_ids) {
       const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
       if (validIds.length > 0) {
@@ -1734,6 +1746,14 @@ const getMonthlyPayrollsPaginatedForBulkDownload = async (
     }
 
     let whereConditions = ["1=1"];
+
+    if (filters.payslip_ids) {
+      const validIds = filters.payslip_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.id IN (${idList})`);
+      }
+    }
 
     if (filters.employee_ids) {
       const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
