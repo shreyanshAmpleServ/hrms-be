@@ -92,9 +92,8 @@ const serializeTags = (data) => {
   if ("first_name" in data) serialized.first_name = data.first_name;
   if ("last_name" in data) serialized.last_name = data.last_name;
   if ("first_name" in data || "last_name" in data)
-    serialized.full_name = `${data.first_name || ""} ${
-      data.last_name || ""
-    }`.trim();
+    serialized.full_name = `${data.first_name || ""} ${data.last_name || ""
+      }`.trim();
   if ("shift_id" in data) {
     serialized.employee_shift_id = {
       connect: { id: Number(data.shift_id) },
@@ -217,8 +216,8 @@ const serializeTags = (data) => {
   //   };
   // }
 
-if ("bank_id" in data) {
-  if (
+  if ("bank_id" in data) {
+    if (
       data.bank_id === null ||
       data.bank_id === "" ||
       data.bank_id === undefined
@@ -378,7 +377,7 @@ const getEmployeeCodePreview = async () => {
       employee_code: nextEmployeeCode,
     };
   } catch (error) {
-    console.error("Error generating employee code preview.:", error);
+    console.error("Error generating employee code preview:", error);
     throw new CustomError("Failed to generate employee code preview", 500);
   }
 };
@@ -469,7 +468,6 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
     const employee = await prisma.hrms_d_employee.create({
       data: {
         ...serializedData,
-        employee_code: employeeData.employee_code,
         createdate: new Date(),
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
