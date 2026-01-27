@@ -1295,6 +1295,7 @@ model hrms_m_job_category {
 model hrms_m_kpi_master {
   id          Int       @id(map: "PK__hrms_m_k__3213E83F8790DFA5") @default(autoincrement())
   kpi_name    String?   @db.NVarChar(255)
+  weightage   Decimal?  @db.Decimal(18, 2)
   description String?   @db.NVarChar(255)
   createdate  DateTime? @default(now(), map: "DF__hrms_m_kp__creat__58D1301D") @db.DateTime
   createdby   Int
