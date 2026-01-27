@@ -71,7 +71,7 @@ const createLeaveBalance = async (data) => {
   if (isExist) {
     throw new CustomError(
       "Leave balance already exists for this employee within the selected date range.",
-      400
+      400,
     );
   }
 
@@ -93,7 +93,7 @@ const createLeaveBalance = async (data) => {
   } catch (error) {
     throw new CustomError(
       `Error creating leave balance: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -128,7 +128,7 @@ const updateLeaveBalance = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating leave balance: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -158,7 +158,7 @@ const findLeaveBalanceById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding leave balance by ID: ${error.message}`,
-      503
+      503,
     );
   }
 };
@@ -190,7 +190,7 @@ const findLeaveBalanceByEmployeeId = async (employeeId) => {
   } catch (error) {
     throw new CustomError(
       `Error finding leave balance by ID: ${error.message}`,
-      503
+      503,
     );
   }
 };
@@ -207,7 +207,7 @@ const deleteLeaveBalance = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -271,7 +271,7 @@ const getAllLeaveBalances = async (search, page = 1, size = 10, is_active) => {
  * Retrieves leave balances by employee ID and optional leave type ID.
  * @param {number|string} employeeId - Employee ID.
  * @param {number|string} [leaveTypeId] - Leave type ID.
- * @returns {Promise<Object>} Leave balance data.
+ * @returns {Promise<Object>} Leave balance data with leave taken calculation.
  */
 const getLeaveBalanceByEmployee = async (employeeId, leaveTypeId) => {
   try {
@@ -309,6 +309,10 @@ const getLeaveBalanceByEmployee = async (employeeId, leaveTypeId) => {
             employee_name: employee.full_name,
             leave_type: leaveType.leave_type,
             total_leave: leaveType.leave_qty,
+            leave_taken: await calculateLeaveTaken(
+              employeeIdInt,
+              leaveTypeIdInt,
+            ),
           }
         : null
       : await Promise.all(
@@ -317,13 +321,20 @@ const getLeaveBalanceByEmployee = async (employeeId, leaveTypeId) => {
               where: { id: item.leave_type_id },
               select: { leave_type: true, leave_qty: true },
             });
+
+            const leaveTaken = await calculateLeaveTaken(
+              employeeIdInt,
+              item.leave_type_id,
+            );
+
             return {
               ...item,
               employee_name: employee.full_name,
               leave_type: lt?.leave_type || null,
               total_leave: lt?.leave_qty || null,
+              leave_taken: leaveTaken,
             };
-          })
+          }),
         );
 
     return {
@@ -336,6 +347,143 @@ const getLeaveBalanceByEmployee = async (employeeId, leaveTypeId) => {
   }
 };
 
+/**
+ * Calculates leave taken for an employee within a specific period and leave type.
+ * @param {number|string} employeeId - Employee ID.
+ * @param {number|string} [leaveTypeId] - Leave type ID (optional).
+ * @param {number} [year] - Year to calculate for (defaults to current year).
+ * @returns {Promise<Object>} Leave taken data with total days and breakdown.
+ */
+const calculateLeaveTaken = async (
+  employeeId,
+  leaveTypeId,
+  year = new Date().getFullYear(),
+) => {
+  try {
+    const employeeIdInt = parseInt(employeeId);
+    const leaveTypeIdInt = leaveTypeId ? parseInt(leaveTypeId) : null;
+
+    const whereClause = {
+      employee_id: employeeIdInt,
+      status: "A",
+      AND: [
+        {
+          start_date: {
+            gte: new Date(`${year}-01-01`),
+            lte: new Date(`${year}-12-31`),
+          },
+        },
+      ],
+    };
+
+    if (leaveTypeIdInt) {
+      whereClause.leave_type_id = leaveTypeIdInt;
+    }
+
+    const leaveApplications = await prisma.hrms_d_leave_application.findMany({
+      where: whereClause,
+      select: {
+        id: true,
+        leave_type_id: true,
+        start_date: true,
+        end_date: true,
+        partial_day: true,
+        start_session: true,
+        end_session: true,
+        reason: true,
+        leave_types: {
+          select: {
+            id: true,
+            leave_type: true,
+          },
+        },
+      },
+    });
+
+    let totalDays = 0;
+    const leaveBreakdown = [];
+
+    for (const leave of leaveApplications) {
+      const start = new Date(leave.start_date);
+      const end = new Date(leave.end_date);
+
+      const diffTime = Math.abs(end - start);
+      let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      if (leave.partial_day === "Y") {
+        if (leave.start_session && leave.end_session) {
+          if (leave.start_session === leave.end_session) {
+            diffDays = 0.5;
+          } else {
+            diffDays = 1;
+          }
+        } else {
+          diffDays = 0.5;
+        }
+      }
+
+      totalDays += diffDays;
+
+      leaveBreakdown.push({
+        leave_application_id: leave.id,
+        leave_type_id: leave.leave_type_id,
+        leave_type_name: leave.leave_types?.leave_type || "Unknown",
+        start_date: leave.start_date,
+        end_date: leave.end_date,
+        days_taken: diffDays,
+        partial_day: leave.partial_day,
+        start_session: leave.start_session,
+        end_session: leave.end_session,
+        reason: leave.reason,
+      });
+    }
+
+    return {
+      leave_type_id: leaveTypeIdInt,
+      year: year,
+      total_leave_taken: totalDays,
+    };
+  } catch (error) {
+    console.error("Error calculating leave taken:", error);
+    throw new CustomError(
+      `Error calculating leave taken: ${error.message}`,
+      500,
+    );
+  }
+};
+
+/**
+ * Calculates leave taken for all leave types for an employee within a specific year.
+ * @param {number|string} employeeId - Employee ID.
+ * @param {number} [year] - Year to calculate for (defaults to current year).
+ * @returns {Promise<Array>} Array of leave taken data for each leave type.
+ */
+const calculateAllLeaveTaken = async (
+  employeeId,
+  year = new Date().getFullYear(),
+) => {
+  try {
+    const leaveTypes = await prisma.hrms_m_leave_type_master.findMany({
+      where: { is_active: "Y" },
+      select: { id: true, leave_type: true },
+    });
+
+    const leaveTakenPromises = leaveTypes.map(async (leaveType) => {
+      return await calculateLeaveTaken(employeeId, leaveType.id, year);
+    });
+
+    const results = await Promise.all(leaveTakenPromises);
+
+    return results.filter((result) => result.total_leave_taken > 0);
+  } catch (error) {
+    console.error("Error calculating all leave taken:", error);
+    throw new CustomError(
+      `Error calculating all leave taken: ${error.message}`,
+      500,
+    );
+  }
+};
+
 module.exports = {
   createLeaveBalance,
   findLeaveBalanceById,
@@ -344,4 +492,6 @@ module.exports = {
   getAllLeaveBalances,
   getLeaveBalanceByEmployee,
   findLeaveBalanceByEmployeeId,
+  calculateLeaveTaken,
+  calculateAllLeaveTaken,
 };

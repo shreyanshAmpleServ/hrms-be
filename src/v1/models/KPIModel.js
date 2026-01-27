@@ -8,7 +8,7 @@ const createKPI = async (data) => {
         kpi_name: data.kpi_name,
         description: data.description,
         is_active: data.is_active || "Y",
-
+        weightage: data.weightage || 0,
         createdby: data.createdby || 1,
         log_inst: data.log_inst || 1,
         createdate: new Date(),
@@ -62,7 +62,7 @@ const deleteKPI = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
