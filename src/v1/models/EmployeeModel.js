@@ -12,7 +12,7 @@ const { se } = require("date-fns/locale");
 const handleTransactionNotification = async (
   tableName,
   transactionType,
-  recordId
+  recordId,
 ) => {
   try {
     await prisma.$queryRaw`
@@ -54,7 +54,7 @@ const handleFileUploads = async (files, uploadFunction) => {
     uploadResults.profile_pic = await safeFileUpload(
       uploadFunction,
       files.profile_pic,
-      "profile_pic"
+      "profile_pic",
     );
     if (!uploadResults.profile_pic && files.profile_pic) {
       uploadResults.uploadErrors.push("profile_pic");
@@ -65,7 +65,7 @@ const handleFileUploads = async (files, uploadFunction) => {
     uploadResults.nssf_file = await safeFileUpload(
       uploadFunction,
       files.nssf_file,
-      "nssf_file"
+      "nssf_file",
     );
     if (!uploadResults.nssf_file && files.nssf_file) {
       uploadResults.uploadErrors.push("nssf_file");
@@ -76,7 +76,7 @@ const handleFileUploads = async (files, uploadFunction) => {
     uploadResults.nida_file = await safeFileUpload(
       uploadFunction,
       files.nida_file,
-      "nida_file"
+      "nida_file",
     );
     if (!uploadResults.nida_file && files.nida_file) {
       uploadResults.uploadErrors.push("nida_file");
@@ -92,9 +92,8 @@ const serializeTags = (data) => {
   if ("first_name" in data) serialized.first_name = data.first_name;
   if ("last_name" in data) serialized.last_name = data.last_name;
   if ("first_name" in data || "last_name" in data)
-    serialized.full_name = `${data.first_name || ""} ${
-      data.last_name || ""
-    }`.trim();
+    serialized.full_name = `${data.first_name || ""} ${data.last_name || ""
+      }`.trim();
   if ("shift_id" in data) {
     serialized.employee_shift_id = {
       connect: { id: Number(data.shift_id) },
@@ -120,7 +119,7 @@ const serializeTags = (data) => {
       : null;
   if ("passport_expiry_date" in data)
     serialized.passport_expiry_date = moment(
-      data.passport_expiry_date
+      data.passport_expiry_date,
     ).toDate();
   if ("passport_number" in data)
     serialized.passport_number = data.passport_number;
@@ -319,7 +318,7 @@ const createLifeEvents = async (employeeId, events, createdby) => {
           is_active: "Y",
         },
       });
-    })
+    }),
   );
 
   return lifeEvents;
@@ -345,7 +344,7 @@ const generateEmployeeCode = async () => {
 
     if (lastEmployee && lastEmployee.employee_code) {
       const lastNumber = parseInt(
-        lastEmployee.employee_code.replace("EMP", "")
+        lastEmployee.employee_code.replace("EMP", ""),
       );
       if (!isNaN(lastNumber)) {
         nextNumber = lastNumber + 1;
@@ -378,7 +377,7 @@ const getEmployeeCodePreview = async () => {
       employee_code: nextEmployeeCode,
     };
   } catch (error) {
-    console.error("Error generating employee code preview.:", error);
+    console.error("Error generating employee code preview:", error);
     throw new CustomError("Failed to generate employee code preview", 500);
   }
 };
@@ -426,13 +425,13 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
       if (existingEmployee.email === data.email) {
         throw new CustomError(
           `Employee with email ${data.email} already exists`,
-          400
+          400,
         );
       }
       if (existingEmployee.phone_number === data.phone_number) {
         throw new CustomError(
           `Employee with phone number ${data.phone_number} already exists`,
-          400
+          400,
         );
       }
     }
@@ -454,7 +453,7 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
       if (uploadResults.uploadErrors.length > 0) {
         uploadResults.uploadErrors.forEach((field) => {
           uploadWarnings.push(
-            `Failed to upload ${field}. Employee created without this file.`
+            `Failed to upload ${field}. Employee created without this file.`,
           );
         });
       }
@@ -604,13 +603,13 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
     if (error.code === "P2002") {
       throw new CustomError(
         `A unique constraint would be violated. An employee with the same unique fields already exists.`,
-        400
+        400,
       );
     }
 
     throw new CustomError(
       `Error creating employee: ${error.message}`,
-      error.status || 500
+      error.status || 500,
     );
   }
 };
@@ -629,7 +628,7 @@ const updateEmployee = async (
   id,
   data,
   files = null,
-  uploadFunction = null
+  uploadFunction = null,
 ) => {
   const { empAddressData, life_events: lifeEvents, ...employeeData } = data;
   const uploadWarnings = [];
@@ -653,7 +652,7 @@ const updateEmployee = async (
         employeeData.profile_pic = uploadResults.profile_pic;
       } else if (files.profile_pic) {
         uploadWarnings.push(
-          `Failed to upload profile_pic. Keeping existing file.`
+          `Failed to upload profile_pic. Keeping existing file.`,
         );
       }
 
@@ -661,7 +660,7 @@ const updateEmployee = async (
         employeeData.nssf_file = uploadResults.nssf_file;
       } else if (files.nssf_file) {
         uploadWarnings.push(
-          `Failed to upload nssf_file. Keeping existing file.`
+          `Failed to upload nssf_file. Keeping existing file.`,
         );
       }
 
@@ -669,7 +668,7 @@ const updateEmployee = async (
         employeeData.nida_file = uploadResults.nida_file;
       } else if (files.nida_file) {
         uploadWarnings.push(
-          `Failed to upload nida_file. Keeping existing file.`
+          `Failed to upload nida_file. Keeping existing file.`,
         );
       }
     }
@@ -692,13 +691,13 @@ const updateEmployee = async (
       const existingAddresses = empAddressData.filter((addr) => addr.id);
 
       const currentAddressIds = currentEmployee.hrms_employee_address.map(
-        (a) => a.id
+        (a) => a.id,
       );
 
       const keepAddressIds = existingAddresses.map((a) => a.id);
 
       const deleteAddressIds = currentAddressIds.filter(
-        (id) => !keepAddressIds.includes(id)
+        (id) => !keepAddressIds.includes(id),
       );
 
       if (deleteAddressIds.length > 0) {
@@ -838,7 +837,7 @@ const updateEmployee = async (
     if (error.message && error.message.includes("No tenant database context")) {
       throw new CustomError(
         "Database context error. Please ensure you are authenticated.",
-        500
+        500,
       );
     }
 
@@ -849,13 +848,13 @@ const updateEmployee = async (
     if (error.code === "P2002") {
       throw new CustomError(
         `A unique constraint would be violated. An employee with the same unique fields already exists.`,
-        400
+        400,
       );
     }
 
     throw new CustomError(
       `Error updating employee: ${error.message || "Unknown error"}`,
-      error.status || 500
+      error.status || 500,
     );
   }
 };
@@ -874,7 +873,7 @@ const updateLifeEvents = async (employeeId, events, updatedby) => {
   const currentEventIds = currentEvents.map((e) => e.id);
   const keepEventIds = existingEvents.map((e) => e.id);
   const deleteEventIds = currentEventIds.filter(
-    (id) => !keepEventIds.includes(id)
+    (id) => !keepEventIds.includes(id),
   );
 
   if (deleteEventIds.length > 0) {
@@ -895,7 +894,7 @@ const updateLifeEvents = async (employeeId, events, updatedby) => {
           updatedby: event.updatedby || updatedby || 1,
         },
       });
-    })
+    }),
   );
 
   if (newEvents.length > 0) {
@@ -1009,13 +1008,13 @@ const findEmployeeById = async (id) => {
     if (error.message && error.message.includes("No tenant database context")) {
       throw new CustomError(
         "Database context error. Please ensure you are authenticated.",
-        500
+        500,
       );
     }
 
     throw new CustomError(
       `Error finding employee by ID: ${error.message || "Unknown error"}`,
-      error.status || 500
+      error.status || 500,
     );
   }
 };
@@ -1142,7 +1141,7 @@ const getAllEmployee = async (
   endDate,
   status,
   managerId,
-  userRole
+  userRole,
 ) => {
   try {
     if (!page || page === 0) {
@@ -1175,7 +1174,7 @@ const getAllEmployee = async (
     }
 
     const isAdmin = adminRoles.some(
-      (role) => role.toLowerCase() === actualRoleName?.toLowerCase()?.trim()
+      (role) => role.toLowerCase() === actualRoleName?.toLowerCase()?.trim(),
     );
 
     console.log("User Role ID:", userRole);
@@ -1380,7 +1379,7 @@ const employeeOptions = async () => {
           designation: hrms_employee_designation?.designation_name,
           branch: employee_branch,
         },
-      })
+      }),
     );
   } catch (error) {
     console.error("Error retrieving employee options: ", error);
@@ -1441,7 +1440,7 @@ const deleteEmployee = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       console.log("Error in deleting:", error);
