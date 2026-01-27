@@ -412,10 +412,10 @@ const getAllMonthlyPayroll = async (
     const whereClause = `WHERE ${whereConditions.join(" AND ")}`;
     console.log("Final WHERE clause:", whereClause);
 
-    // Get all data including dynamic columns
     const dataQuery = `
       SELECT 
         mp.*,
+        COALESCE(mp.is_printed, 'N') as is_print,
         e.id as emp_id,
         e.employee_code,
         e.first_name + ' ' + ISNULL(e.last_name, '') as full_name,
@@ -480,6 +480,7 @@ const getAllMonthlyPayroll = async (
       "approver1_id",
       "employee_email",
       "remarks",
+      "is_print",
       "createdate",
       "createdby",
       "updatedate",
@@ -538,6 +539,7 @@ const getAllMonthlyPayroll = async (
       result.approver1_id = row.approver1_id;
       result.employee_email = row.employee_email;
       result.remarks = row.remarks;
+      result.is_print = row.is_print;
       result.createdate = row.createdate;
       result.createdby = row.createdby;
       result.updatedate = row.updatedate;
