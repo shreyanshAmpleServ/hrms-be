@@ -411,6 +411,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       employee_id_from,
       employee_id_to,
       employee_ids,
+      payslip_ids,
       payroll_month_from,
       payroll_month_to,
       payroll_year_from,
@@ -443,6 +444,28 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       if (validEmployeeIds.length > 0) {
         filters.employee_ids = validEmployeeIds;
         console.log(`Employee IDs Array: [${validEmployeeIds.join(", ")}]`);
+      }
+    } else if (payslip_ids) {
+      let payslipIdArray;
+      try {
+        payslipIdArray = JSON.parse(payslip_ids);
+        if (!Array.isArray(payslipIdArray)) {
+          throw new Error("payslip_ids must be an array");
+        }
+      } catch (e) {
+        payslipIdArray = payslip_ids
+          .split(",")
+          .map((id) => id.trim())
+          .filter((id) => id);
+      }
+
+      const validPayslipIds = payslipIdArray
+        .map((id) => Number(id))
+        .filter((id) => !isNaN(id) && id > 0);
+
+      if (validPayslipIds.length > 0) {
+        filters.payslip_ids = validPayslipIds;
+        console.log(`Payslip IDs Array: [${validPayslipIds.join(", ")}]`);
       }
     } else if (employee_id_from && employee_id_to) {
       const minId = Number(employee_id_from);
@@ -535,6 +558,28 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
     console.log("Validation where:", validationWhere);
 
     let whereConditions = ["1=1"];
+
+    if (validationWhere.payslip_ids) {
+      const validIds = validationWhere.payslip_ids.filter(
+        (id) => id && !isNaN(id),
+      );
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.id IN (${idList})`);
+        console.log(`Payslip IDs filter: ${idList}`);
+      }
+    }
+
+    if (validationWhere.employee_ids) {
+      const validIds = validationWhere.employee_ids.filter(
+        (id) => id && !isNaN(id),
+      );
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.employee_id IN (${idList})`);
+        console.log(`Employee IDs filter: ${idList}`);
+      }
+    }
 
     if (validationWhere.employee_id) {
       if (validationWhere.employee_id.gte && validationWhere.employee_id.lte) {
@@ -660,11 +705,13 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
           alreadyDownloaded: alreadyDownloaded.slice(0, 10),
           needsConfirmation: true,
           appliedFilters: {
-            employees: employee_ids
-              ? `Array: [${filters.employee_ids.join(", ")}]`
-              : employee_id_from || employee_id_to
-                ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
-                : "All",
+            payslips: payslip_ids
+              ? `Array: [${filters.payslip_ids.join(", ")}]`
+              : employee_ids
+                ? `Array: [${filters.employee_ids.join(", ")}]`
+                : employee_id_from || employee_id_to
+                  ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+                  : "All",
             payrollMonths:
               payroll_month_from || payroll_month_to
                 ? `${payroll_month_from || "Any"} to ${payroll_month_to || "Any"}`
@@ -697,11 +744,13 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
         statusUrl: `/api/monthly-payroll/bulk-download/status/${job.id}`,
         totalPayrollRecords: payrollCount,
         appliedFilters: {
-          employees: employee_ids
-            ? `Array: [${filters.employee_ids.join(", ")}]`
-            : employee_id_from || employee_id_to
-              ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
-              : "All",
+          payslips: payslip_ids
+            ? `Array: [${filters.payslip_ids.join(", ")}]`
+            : employee_ids
+              ? `Array: [${filters.employee_ids.join(", ")}]`
+              : employee_id_from || employee_id_to
+                ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+                : "All",
           payrollMonths:
             payroll_month_from || payroll_month_to
               ? `${payroll_month_from || "Any"} to ${payroll_month_to || "Any"}`
