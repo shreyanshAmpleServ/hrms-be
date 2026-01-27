@@ -89,12 +89,12 @@ const handleFileUploads = async (files, uploadFunction) => {
 const serializeTags = (data) => {
   const serialized = {};
 
-  if ("employee_code" in data) serialized.employee_code = data.employee_code;
   if ("first_name" in data) serialized.first_name = data.first_name;
   if ("last_name" in data) serialized.last_name = data.last_name;
   if ("first_name" in data || "last_name" in data)
-    serialized.full_name = `${data.first_name || ""} ${data.last_name || ""
-      }`.trim();
+    serialized.full_name = `${data.first_name || ""} ${
+      data.last_name || ""
+    }`.trim();
   if ("shift_id" in data) {
     serialized.employee_shift_id = {
       connect: { id: Number(data.shift_id) },
@@ -325,6 +325,64 @@ const createLifeEvents = async (employeeId, events, createdby) => {
   return lifeEvents;
 };
 
+const generateEmployeeCode = async () => {
+  try {
+    const lastEmployee = await prisma.hrms_d_employee.findFirst({
+      where: {
+        employee_code: {
+          startsWith: "EMP",
+        },
+      },
+      orderBy: {
+        id: "desc",
+      },
+      select: {
+        employee_code: true,
+      },
+    });
+
+    let nextNumber = 1;
+
+    if (lastEmployee && lastEmployee.employee_code) {
+      const lastNumber = parseInt(
+        lastEmployee.employee_code.replace("EMP", "")
+      );
+      if (!isNaN(lastNumber)) {
+        nextNumber = lastNumber + 1;
+      }
+    }
+
+    const newEmployeeCode = `EMP${nextNumber.toString().padStart(4, "0")}`;
+
+    const existingCode = await prisma.hrms_d_employee.findFirst({
+      where: { employee_code: newEmployeeCode },
+      select: { employee_code: true },
+    });
+
+    if (existingCode) {
+      return await generateEmployeeCode();
+    }
+
+    return newEmployeeCode;
+  } catch (error) {
+    console.error("Error generating employee code:", error);
+    throw new CustomError("Failed to generate employee code", 500);
+  }
+};
+
+const getEmployeeCodePreview = async () => {
+  try {
+    const nextEmployeeCode = await generateEmployeeCode();
+    return {
+      success: true,
+      employee_code: nextEmployeeCode,
+    };
+  } catch (error) {
+    console.error("Error generating employee code preview.:", error);
+    throw new CustomError("Failed to generate employee code preview", 500);
+  }
+};
+
 const createEmployee = async (data, files = null, uploadFunction = null) => {
   const { empAddressData, life_events: lifeEvents, ...employeeData } = data;
   const uploadWarnings = [];
@@ -339,9 +397,7 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
     // if (!data.employment_type) {
     //   throw new CustomError(`Employment Type is required`, 400);
     // }
-    if (!data.employee_code) {
-      throw new CustomError(`Employee Code is required`, 400);
-    }
+    employeeData.employee_code = await generateEmployeeCode();
     if (!data.gender) {
       throw new CustomError(`Gender is required`, 400);
     }
@@ -357,11 +413,7 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
 
     const existingEmployee = await prisma.hrms_d_employee.findFirst({
       where: {
-        OR: [
-          { email: data.email },
-          { employee_code: data.employee_code },
-          { phone_number: data.phone_number },
-        ],
+        OR: [{ email: data.email }, { phone_number: data.phone_number }],
       },
       select: {
         email: true,
@@ -377,9 +429,9 @@ const createEmployee = async (data, files = null, uploadFunction = null) => {
           400
         );
       }
-      if (existingEmployee.employee_code === data.employee_code) {
+      if (existingEmployee.phone_number === data.phone_number) {
         throw new CustomError(
-          `Employee with code ${data.employee_code} already exists`,
+          `Employee with phone number ${data.phone_number} already exists`,
           400
         );
       }
@@ -1407,4 +1459,6 @@ module.exports = {
   employeeOptions,
   handleFileUploads,
   safeFileUpload,
+  generateEmployeeCode,
+  getEmployeeCodePreview,
 };
