@@ -217,8 +217,8 @@ const serializeTags = (data) => {
   //   };
   // }
 
-  if ("bank_id" in data) {
-    if (
+if ("bank_id" in data) {
+  if (
       data.bank_id === null ||
       data.bank_id === "" ||
       data.bank_id === undefined
