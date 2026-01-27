@@ -94,7 +94,7 @@ const getAllEmployee = async (
   status,
   priority,
   managerId,
-  userRole
+  userRole,
 ) => {
   return await employeeModel.getAllEmployee(
     page,
@@ -105,12 +105,16 @@ const getAllEmployee = async (
     status,
     priority,
     managerId,
-    userRole
+    userRole,
   );
 };
 
 const employeeOptions = async () => {
   return await employeeModel.employeeOptions();
+};
+
+const getEmployeeCodePreview = async () => {
+  return await employeeModel.getEmployeeCodePreview();
 };
 
 module.exports = {
@@ -120,4 +124,5 @@ module.exports = {
   getAllEmployee,
   deleteEmployee,
   employeeOptions,
+  getEmployeeCodePreview,
 };

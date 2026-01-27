@@ -57,26 +57,26 @@ router.post(
   "/employee",
   authenticateToken,
   upload.any(),
-  EmployeeController.createEmployee
+  EmployeeController.createEmployee,
 );
 
 router.get(
   "/employee/:id",
   authenticateToken,
-  EmployeeController.findEmployeeById
+  EmployeeController.findEmployeeById,
 );
 
 router.put(
   "/employee/:id",
   authenticateToken,
   upload.any(),
-  EmployeeController.updateEmployee
+  EmployeeController.updateEmployee,
 );
 
 router.delete(
   "/employee/:id",
   authenticateToken,
-  EmployeeController.deleteEmployee
+  EmployeeController.deleteEmployee,
 );
 
 router.get("/employee", authenticateToken, EmployeeController.getAllEmployee);
@@ -84,7 +84,13 @@ router.get("/employee", authenticateToken, EmployeeController.getAllEmployee);
 router.get(
   "/employee-options",
   authenticateToken,
-  EmployeeController.employeeOptions
+  EmployeeController.employeeOptions,
+);
+
+router.get(
+  "/employee-code-preview",
+  authenticateToken,
+  EmployeeController.getEmployeeCodePreview,
 );
 
 module.exports = router;

@@ -432,7 +432,7 @@ const safeUploadToBackblaze = async (
   file,
   folder,
   resize = false,
-  size = 1024
+  size = 1024,
 ) => {
   if (!file) return null;
 
@@ -443,7 +443,7 @@ const safeUploadToBackblaze = async (
       file.mimetype,
       folder,
       resize,
-      size
+      size,
     );
     console.log(`Successfully uploaded ${file.fieldname} to ${folder}`);
     return fileUrl;
@@ -483,11 +483,11 @@ const processFileUploads = async (files) => {
       profilePicFile,
       "profile_pics",
       true,
-      1024
+      1024,
     );
     if (!result.profile_pic) {
       result.warnings.push(
-        "Failed to upload profile picture. Employee saved without profile picture."
+        "Failed to upload profile picture. Employee saved without profile picture.",
       );
     }
   }
@@ -496,11 +496,11 @@ const processFileUploads = async (files) => {
     result.nssf_file = await safeUploadToBackblaze(
       nssfFile,
       "nssf_files",
-      false
+      false,
     );
     if (!result.nssf_file) {
       result.warnings.push(
-        "Failed to upload NSSF file. Employee saved without NSSF file."
+        "Failed to upload NSSF file. Employee saved without NSSF file.",
       );
     }
   }
@@ -509,11 +509,11 @@ const processFileUploads = async (files) => {
     result.nida_file = await safeUploadToBackblaze(
       nidaFile,
       "nida_files",
-      false
+      false,
     );
     if (!result.nida_file) {
       result.warnings.push(
-        "Failed to upload NIDA file. Employee saved without NIDA file."
+        "Failed to upload NIDA file. Employee saved without NIDA file.",
       );
     }
   }
@@ -539,11 +539,11 @@ const createEmployee = async (req, res, next) => {
     const lifeEvents = safeParseJSON(req.body?.life_events, "life_events");
     const workLifeEvents = safeParseJSON(
       req.body?.work_life_events,
-      "work_life_events"
+      "work_life_events",
     );
     const empAddressData = safeParseJSON(
       req.body?.empAddressData,
-      "empAddressData"
+      "empAddressData",
     );
 
     const employeeData = {
@@ -611,7 +611,7 @@ const updateEmployee = async (req, res, next) => {
     }
 
     const existingData = await ensureTenantContext(tenantDb, () =>
-      EmployeeService.findEmployeeById(req.params.id)
+      EmployeeService.findEmployeeById(req.params.id),
     );
 
     if (!existingData) throw new CustomError("Employee not found", 404);
@@ -619,11 +619,11 @@ const updateEmployee = async (req, res, next) => {
     const lifeEvents = safeParseJSON(req.body?.life_events, "life_events");
     const workLifeEvents = safeParseJSON(
       req.body?.work_life_events,
-      "work_life_events"
+      "work_life_events",
     );
     const empAddressData = safeParseJSON(
       req.body?.empAddressData,
-      "empAddressData"
+      "empAddressData",
     );
 
     let data = {
@@ -639,14 +639,14 @@ const updateEmployee = async (req, res, next) => {
 
     if (req.files && req.files.length > 0) {
       const profilePicFile = req.files.find(
-        (f) => f.fieldname === "profile_pic"
+        (f) => f.fieldname === "profile_pic",
       );
       if (profilePicFile) {
         const newProfilePic = await safeUploadToBackblaze(
           profilePicFile,
           "profile_pics",
           true,
-          512
+          512,
         );
 
         if (newProfilePic) {
@@ -656,7 +656,7 @@ const updateEmployee = async (req, res, next) => {
           }
         } else {
           uploadWarnings.push(
-            "Failed to upload new profile picture. Keeping existing file."
+            "Failed to upload new profile picture. Keeping existing file.",
           );
         }
       }
@@ -666,7 +666,7 @@ const updateEmployee = async (req, res, next) => {
         const newNssfFile = await safeUploadToBackblaze(
           nssfFile,
           "nssf_files",
-          false
+          false,
         );
 
         if (newNssfFile) {
@@ -676,7 +676,7 @@ const updateEmployee = async (req, res, next) => {
           }
         } else {
           uploadWarnings.push(
-            "Failed to upload new NSSF file. Keeping existing file."
+            "Failed to upload new NSSF file. Keeping existing file.",
           );
         }
       }
@@ -686,7 +686,7 @@ const updateEmployee = async (req, res, next) => {
         const newNidaFile = await safeUploadToBackblaze(
           nidaFile,
           "nida_files",
-          false
+          false,
         );
 
         if (newNidaFile) {
@@ -696,14 +696,14 @@ const updateEmployee = async (req, res, next) => {
           }
         } else {
           uploadWarnings.push(
-            "Failed to upload new NIDA file. Keeping existing file."
+            "Failed to upload new NIDA file. Keeping existing file.",
           );
         }
       }
     }
 
     const updatedEmployee = await ensureTenantContext(tenantDb, () =>
-      EmployeeService.updateEmployee(req.params.id, data)
+      EmployeeService.updateEmployee(req.params.id, data),
     );
 
     for (const fileUrl of oldFilesToDelete) {
@@ -801,7 +801,7 @@ const getAllEmployee = async (req, res, next) => {
       endDate && moment(endDate),
       status,
       managerId,
-      userRole
+      userRole,
     );
 
     res.status(200).json({
@@ -830,6 +830,21 @@ const employeeOptions = async (req, res, next) => {
   }
 };
 
+const getEmployeeCodePreview = async (req, res, next) => {
+  try {
+    const result = await EmployeeService.getEmployeeCodePreview();
+
+    res.status(200).json({
+      success: true,
+      message: "Employee code preview generated successfully",
+      data: result,
+      status: 200,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
 module.exports = {
   createEmployee,
   findEmployeeById,
@@ -837,4 +852,5 @@ module.exports = {
   deleteEmployee,
   getAllEmployee,
   employeeOptions,
+  getEmployeeCodePreview,
 };
