@@ -22,7 +22,8 @@ const getAllWorkEventType = async (
   search,
   startDate,
   endDate,
-  is_active
+  is_active,
+  employee_id,
 ) => {
   return await workEventTypeModel.getAllWorkEventType(
     page,
@@ -30,7 +31,8 @@ const getAllWorkEventType = async (
     search,
     startDate,
     endDate,
-    is_active
+    is_active,
+    employee_id,
   );
 };
 

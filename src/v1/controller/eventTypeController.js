@@ -29,7 +29,7 @@ const updateWorkEventType = async (req, res, next) => {
 
     const data = await eventTypeService.updateWorkEventType(
       req.params.id,
-      reqData
+      reqData,
     );
     res.status(200).success("Work life event type updated successfully", data);
   } catch (error) {
@@ -48,14 +48,16 @@ const deleteWorkEventType = async (req, res, next) => {
 
 const getAllWorkEventType = async (req, res, next) => {
   try {
-    const { page, size, search, startDate, endDate, is_active } = req.query;
+    const { page, size, search, startDate, endDate, is_active, employee_id } =
+      req.query;
     const data = await eventTypeService.getAllWorkEventType(
       Number(page),
       Number(size),
       search,
       moment(startDate),
       moment(endDate),
-      is_active
+      is_active,
+      employee_id,
     );
     res.status(200).success(null, data);
   } catch (error) {

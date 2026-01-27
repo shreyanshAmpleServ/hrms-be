@@ -370,6 +370,70 @@ const generateEmployeeCode = async () => {
   }
 };
 
+const calculateLeaveTaken = async (
+  employeeId,
+  year = new Date().getFullYear(),
+) => {
+  try {
+    const leaveApplications = await prisma.hrms_d_leave_application.findMany({
+      where: {
+        employee_id: parseInt(employeeId),
+        status: "A",
+        AND: [
+          {
+            start_date: {
+              gte: new Date(`${year}-01-01`),
+              lte: new Date(`${year}-12-31`),
+            },
+          },
+        ],
+      },
+      select: {
+        start_date: true,
+        end_date: true,
+        partial_day: true,
+        start_session: true,
+        end_session: true,
+      },
+    });
+
+    let totalDays = 0;
+
+    for (const leave of leaveApplications) {
+      const start = new Date(leave.start_date);
+      const end = new Date(leave.end_date);
+
+      const diffTime = Math.abs(end - start);
+      let diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+
+      if (leave.partial_day === "Y") {
+        if (leave.start_session && leave.end_session) {
+          if (leave.start_session === leave.end_session) {
+            diffDays = 0.5;
+          } else {
+            diffDays = 1;
+          }
+        } else {
+          diffDays = 0.5;
+        }
+      }
+
+      totalDays += diffDays;
+    }
+
+    return {
+      total_leave_taken: totalDays,
+      year: year,
+    };
+  } catch (error) {
+    console.error("Error calculating leave taken:", error);
+    return {
+      total_leave_taken: 0,
+      year: year,
+    };
+  }
+};
+
 const getEmployeeCodePreview = async () => {
   try {
     const nextEmployeeCode = await generateEmployeeCode();
@@ -997,7 +1061,13 @@ const findEmployeeById = async (id) => {
       throw new CustomError(`Employee with ID ${employeeId} not found`, 404);
     }
 
-    return parseData(employee);
+    // Calculate leave taken for the current year
+    const leaveTaken = await calculateLeaveTaken(employeeId);
+
+    const result = parseData(employee);
+    result.leave_taken = leaveTaken;
+
+    return result;
   } catch (error) {
     if (error instanceof CustomError) {
       throw error;
@@ -1298,15 +1368,25 @@ const getAllEmployee = async (
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
+    // Calculate leave taken for each employee
+    const employeesWithLeaveTaken = await Promise.all(
+      employees.map(async (employee) => {
+        const leaveTaken = await calculateLeaveTaken(employee.id);
+        const parsedEmployee = parseData(employee);
+        parsedEmployee.leave_taken = leaveTaken;
+        return parsedEmployee;
+      }),
+    );
+
     const totalCount = await prisma.hrms_d_employee.count({
       where: filters,
     });
 
-    console.log("Employees found:", employees.length);
+    console.log("Employees found:", employeesWithLeaveTaken.length);
     console.log("Total count:", totalCount);
 
     return {
-      data: employees,
+      data: employeesWithLeaveTaken,
       currentPage: page,
       size,
       totalPages: Math.ceil(totalCount / size),
@@ -1462,4 +1542,5 @@ module.exports = {
   safeFileUpload,
   generateEmployeeCode,
   getEmployeeCodePreview,
+  calculateLeaveTaken,
 };

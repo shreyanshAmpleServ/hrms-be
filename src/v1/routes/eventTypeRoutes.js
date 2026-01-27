@@ -8,32 +8,27 @@ const router = express.Router();
 router.post(
   "/work-life-event-type",
   authenticateToken,
-  eventTypeController.createWorkEventType
+  eventTypeController.createWorkEventType,
 );
 router.get(
   "/work-life-event-type/:id",
   authenticateToken,
-  eventTypeController.findWorkEventTypeById
+  eventTypeController.findWorkEventTypeById,
 );
 router.put(
   "/work-life-event-type/:id",
   authenticateToken,
-  eventTypeController.updateWorkEventType
+  eventTypeController.updateWorkEventType,
 );
 router.delete(
   "/work-life-event-type/:id",
   authenticateToken,
-  eventTypeController.deleteWorkEventType
+  eventTypeController.deleteWorkEventType,
 );
 router.get(
   "/work-life-event-type",
   authenticateToken,
-  eventTypeController.getAllWorkEventType
-);
-router.get(
-  "/work-life-event-type",
-  authenticateToken,
-  eventTypeController.getAllWorkEventType
+  eventTypeController.getAllWorkEventType,
 );
 
 module.exports = router;

@@ -76,7 +76,7 @@ const deleteWorkEventType = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -90,7 +90,8 @@ const getAllWorkEventType = async (
   search,
   startDate,
   endDate,
-  is_active
+  is_active,
+  employee_id,
 ) => {
   try {
     const totalCountCheck = await prisma.hrms_m_work_life_event_type.count();
@@ -110,7 +111,7 @@ const getAllWorkEventType = async (
       }
     }
 
-    page = page || page == 0 ? 1 : page;
+    page = !page || page === 0 ? 1 : Number(page);
     size = size || 10;
     const skip = (page - 1) * size || 0;
 
@@ -128,15 +129,55 @@ const getAllWorkEventType = async (
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
+
+    let whereClause = filters;
+    if (employee_id) {
+      console.log("Filtering for employee_id:", employee_id);
+      const employeeEvents = await prisma.hrms_d_work_life_event.findMany({
+        where: {
+          employee_id: parseInt(employee_id),
+          is_active: "Y",
+        },
+        select: {
+          event_type: true,
+        },
+      });
+
+      console.log("Found employee events:", employeeEvents);
+
+      const eventTypeIds = employeeEvents
+        .map((event) => event.event_type)
+        .filter((id) => id !== null)
+        .filter((id, index, self) => self.indexOf(id) === index); // Remove duplicates
+
+      console.log("Event type IDs:", eventTypeIds);
+
+      if (eventTypeIds.length > 0) {
+        whereClause = {
+          ...filters,
+          id: { in: eventTypeIds },
+        };
+      } else {
+        console.log("No events found for employee, returning empty result");
+        return {
+          data: [],
+          currentPage: page,
+          size,
+          totalPages: 0,
+          totalCount: 0,
+        };
+      }
+    }
+
     const data = await prisma.hrms_m_work_life_event_type.findMany({
-      where: filters,
+      where: whereClause,
       skip: skip,
       take: size,
       orderBy: [{ updatedate: "desc" }, { createdate: "desc" }],
     });
 
     const totalCount = await prisma.hrms_m_work_life_event_type.count({
-      where: filters,
+      where: whereClause,
     });
     return {
       data: data,
