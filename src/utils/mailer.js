@@ -45,7 +45,7 @@
 const nodemailer = require("nodemailer");
 const { prisma } = require("../utils/prismaProxy.js");
 
-const sendEmail = async ({ to, subject, html, log_inst }) => {
+const sendEmail = async ({ to, subject, html, log_inst, attachments = [] }) => {
   try {
     let config = await prisma.hrms_d_default_configurations.findFirst({
       where: { log_inst },
@@ -85,6 +85,7 @@ const sendEmail = async ({ to, subject, html, log_inst }) => {
       to,
       subject,
       html,
+      attachments,
     });
 
     console.log(`Email sent to: ${to}`);
