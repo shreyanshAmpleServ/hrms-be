@@ -38,7 +38,8 @@ const validateEmailTemplateData = async (data) => {
       },
     });
     if (existingName) {
-      if (existingName.id !== Number(data.id)) {
+      console.log("Existing Name ID:", existingName);
+      if (existingName?.id !== Number(data?.id)) {
         errors.push("Template name already exists");
       }
     }
@@ -51,11 +52,10 @@ const validateEmailTemplateData = async (data) => {
       },
     });
 
-    if (!existingKey) {
-      errors.push("Template key already exists");
-    }
-    if (existingKey.id !== Number(data.id)) {
-      errors.push("Template key already exists");
+    if (existingKey) {
+      if (existingKey?.id !== Number(data?.id)) {
+        errors.push("Template key already exists");
+      }
     }
   }
 
@@ -67,7 +67,7 @@ const validateEmailTemplateData = async (data) => {
 const createEmailTemplate = async (data) => {
   try {
     await validateEmailTemplateData(data);
-
+    console.log("Getttt data : ", data);
     const result = await prisma.hrms_d_templates.create({
       data: {
         ...serializeEmailTemplateData(data),
@@ -76,6 +76,7 @@ const createEmailTemplate = async (data) => {
     });
     return result;
   } catch (error) {
+    console.log("Getttt error : ", error);
     if (error instanceof CustomError) {
       throw error;
     }
