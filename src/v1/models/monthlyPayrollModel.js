@@ -1977,6 +1977,7 @@ const checkIndividualPayslipDownloaded = async (
       SELECT 
         mp.employee_id,
         mp.payroll_month,
+        mp.email,
         mp.payroll_year,
         mp.is_printed,
         e.full_name,
