@@ -20,10 +20,10 @@ const monthlyPayrollQueue = new Queue("monthly-payroll-bulk-download", {
 const cancelledJobs = new Set();
 
 monthlyPayrollQueue.process(async (job) => {
-  const { userId, filters, jobId, tenantDb } = job.data;
+  const { userId, filters, jobId, tenantDb, isEmailEnabled } = job.data;
 
   console.log(
-    `[Job ${jobId}] Starting bulk monthly payroll download for tenant: ${tenantDb}`,
+    `[Job ${jobId}] Starting bulk monthly payroll download for tenant: ${tenantDb}`
   );
 
   return withTenantContext(tenantDb, async () => {
@@ -45,11 +45,11 @@ monthlyPayrollQueue.process(async (job) => {
 
       const totalCount =
         await monthlyPayrollService.getMonthlyPayrollCountForBulkDownload(
-          filters || {},
+          filters || {}
         );
 
       console.log(
-        `[Job ${jobId}] Found ${totalCount} monthly payroll records to process`,
+        `[Job ${jobId}] Found ${totalCount} monthly payroll records to process`
       );
 
       if (totalCount === 0) {
@@ -68,12 +68,12 @@ monthlyPayrollQueue.process(async (job) => {
       const pdfFiles = [];
 
       console.log(
-        `[Job ${jobId}] Processing ${totalCount} records in batches of ${PAGE_SIZE}`,
+        `[Job ${jobId}] Processing ${totalCount} records in batches of ${PAGE_SIZE}`
       );
       for (let offset = 0; offset < totalCount; offset += PAGE_SIZE) {
         if (cancelledJobs.has(job.id.toString())) {
           console.log(
-            `[Job ${job.id}] Cancelled during processing at ${processedCount}/${totalCount}`,
+            `[Job ${job.id}] Cancelled during processing at ${processedCount}/${totalCount}`
           );
           cancelledJobs.delete(job.id.toString());
           fs.rmSync(tempDir, { recursive: true, force: true });
@@ -81,20 +81,25 @@ monthlyPayrollQueue.process(async (job) => {
         }
 
         console.log(
-          `[Job ${jobId}] Processing batch: records ${offset + 1} to ${Math.min(offset + PAGE_SIZE, totalCount)}`,
+          `[Job ${jobId}] Processing batch: records ${offset + 1} to ${Math.min(
+            offset + PAGE_SIZE,
+            totalCount
+          )}`
         );
 
         const batchPayrolls =
           await monthlyPayrollService.getMonthlyPayrollsPaginatedForBulkDownload(
             filters || {},
             offset,
-            PAGE_SIZE,
+            PAGE_SIZE
           );
 
         for (const payroll of batchPayrolls) {
           try {
             console.log(
-              `[Job ${jobId}] Generating PDF for employee: ${payroll.hrms_monthly_payroll_employee?.full_name || "Unknown"} (ID: ${payroll.employee_id})`,
+              `[Job ${jobId}] Generating PDF for employee: ${
+                payroll.hrms_monthly_payroll_employee?.full_name || "Unknown"
+              } (ID: ${payroll.employee_id})`
             );
 
             let pdfFilePath;
@@ -102,13 +107,13 @@ monthlyPayrollQueue.process(async (job) => {
               pdfFilePath = await monthlyPayrollService.downloadPayslipPDF(
                 payroll.employee_id,
                 payroll.payroll_month,
-                payroll.payroll_year,
+                payroll.payroll_year
               );
               console.log(`[Job ${jobId}] PDF generated at: ${pdfFilePath}`);
             } catch (pdfGenError) {
               console.error(
                 `[Job ${jobId}] Error generating PDF for employee ${payroll.employee_id}:`,
-                pdfGenError,
+                pdfGenError
               );
               throw pdfGenError;
             }
@@ -124,6 +129,57 @@ monthlyPayrollQueue.process(async (job) => {
             const filename = `Payslip_${employeeCode}_${employeeName}_${payroll.payroll_month}_${payroll.payroll_year}.pdf`;
             const filePath = path.join(tempDir, filename);
 
+            const fileBuffer = fs.readFileSync(filePath);
+            const originalName = path.basename(filePath);
+            if (isEmailEnabled == "true") {
+              const monthNames = [
+                "",
+                "January",
+                "February",
+                "March",
+                "April",
+                "May",
+                "June",
+                "July",
+                "August",
+                "September",
+                "October",
+                "November",
+                "December",
+              ];
+              const company =
+                await prisma.hrms_d_default_configurations.findFirst({
+                  select: { company_name: true },
+                });
+              console.log(
+                "Company fetched for email:",
+                company,
+                payroll?.hrms_monthly_payroll_employee
+              );
+              const company_name = company?.company_name || "HRMS System";
+              // const employee = reqData?.payslip_employee;
+              const emailContent = await generateEmailContent("payslip_email", {
+                employee_name: employeeName,
+                month: monthNames?.[Number(payroll.payroll_month)],
+                years: String(payroll.payroll_year),
+                company_name: company_name,
+              });
+              console.log("Email content generated:", emailContent);
+              await sendEmail({
+                to: "shreyansh.tripathi@ampleserv.com",
+                // to: payroll?.hrms_monthly_payroll_employee?.email,
+                subject: emailContent.subject,
+                html: emailContent.body,
+                log_inst: payroll?.log_inst || 1,
+                attachments: [
+                  {
+                    filename: originalName,
+                    content: fileBuffer,
+                    contentType: "application/pdf",
+                  },
+                ],
+              });
+            }
             try {
               if (!fs.existsSync(pdfFilePath)) {
                 throw new Error(`PDF file not found at: ${pdfFilePath}`);
@@ -135,7 +191,7 @@ monthlyPayrollQueue.process(async (job) => {
               }
 
               console.log(
-                `[Job ${jobId}] Copying PDF (${fileStats.size} bytes) from ${pdfFilePath} to ${filePath}`,
+                `[Job ${jobId}] Copying PDF (${fileStats.size} bytes) from ${pdfFilePath} to ${filePath}`
               );
               fs.copyFileSync(pdfFilePath, filePath);
 
@@ -145,15 +201,16 @@ monthlyPayrollQueue.process(async (job) => {
               }
 
               console.log(
-                `[Job ${jobId}] PDF copied successfully (${copiedStats.size} bytes)`,
+                `[Job ${jobId}] PDF copied successfully (${copiedStats.size} bytes)`
               );
             } catch (copyError) {
               console.error(
                 `[Job ${jobId}] Error copying PDF file:`,
-                copyError,
+                copyError
               );
               throw new Error(`Failed to copy PDF file: ${copyError.message}`);
             }
+
             pdfFiles.push({
               filename,
               employeeName:
@@ -177,7 +234,7 @@ monthlyPayrollQueue.process(async (job) => {
           } catch (pdfError) {
             console.error(
               `[Job ${jobId}] Error generating PDF for employee ${payroll.employee_id}:`,
-              pdfError,
+              pdfError
             );
             processedCount++;
           }
@@ -191,7 +248,7 @@ monthlyPayrollQueue.process(async (job) => {
         process.cwd(),
         "uploads",
         "bulk-downloads",
-        zipFileName,
+        zipFileName
       );
 
       const zipDir = path.dirname(zipPath);
@@ -211,7 +268,7 @@ monthlyPayrollQueue.process(async (job) => {
         console.log(`[Job ${jobId}] Marking payrolls as printed...`);
         console.log(
           `[Job ${jobId}] Filters:`,
-          JSON.stringify(filters, null, 2),
+          JSON.stringify(filters, null, 2)
         );
         console.log(`[Job ${jobId}] UserId:`, userId);
         console.log(`[Job ${jobId}] TenantDb:`, tenantDb);
@@ -219,22 +276,22 @@ monthlyPayrollQueue.process(async (job) => {
         const markedCount = await markPayrollsAsPrinted(
           filters,
           userId,
-          tenantDb,
+          tenantDb
         );
 
         console.log(
-          `[Job ${jobId}] Marked ${markedCount} payroll records as printed`,
+          `[Job ${jobId}] Marked ${markedCount} payroll records as printed`
         );
 
         if (markedCount === 0) {
           console.log(
-            `[Job ${jobId}] WARNING: No records were marked as printed. This might indicate an issue.`,
+            `[Job ${jobId}] WARNING: No records were marked as printed. This might indicate an issue.`
           );
         }
       } catch (markError) {
         console.error(
           `[Job ${jobId}] Error marking payrolls as printed:`,
-          markError,
+          markError
         );
         console.error(`[Job ${jobId}] Error details:`, markError.message);
       }
@@ -244,7 +301,7 @@ monthlyPayrollQueue.process(async (job) => {
       await job.progress(100);
 
       console.log(
-        `[Job ${jobId}] Completed successfully! Processed ${processedCount} records`,
+        `[Job ${jobId}] Completed successfully! Processed ${processedCount} records`
       );
 
       return {

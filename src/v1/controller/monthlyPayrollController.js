@@ -403,7 +403,7 @@ const downloadPayslipPDF = async (req, res, next) => {
       const company_name = company?.company_name || "HRMS System";
       // const employee = reqData?.payslip_employee;
       const emailContent = await generateEmailContent("payslip_email", {
-        employee_name: alreadyDownloaded.full_name,
+        employee_name: alreadyDownloaded?.full_name || "Employee",
         month: monthNames?.[Number(payroll_month)],
         years: String(payroll_year),
         company_name: company_name,
@@ -472,6 +472,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       payroll_year_to,
       status,
       force_download,
+      isEmailEnabled,
     } = req.query;
 
     const filters = {};
@@ -737,7 +738,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       `bulkDownloadMonthlyPayroll - Found ${alreadyDownloaded.length} already downloaded payroll records`
     );
 
-    if (alreadyDownloaded.length > 0 && req.query.force_download !== "true") {
+    if (alreadyDownloaded.length > 0 && force_download !== "true") {
       console.log(
         `Found ${alreadyDownloaded.length} already downloaded payroll records`
       );
@@ -786,8 +787,10 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       tenantDb: req.tenantDb,
       filters: filters,
       jobId: jobId,
+      isEmailEnabled: isEmailEnabled == "true",
     });
 
+    console.log("Monthly payroll bulk download job added to queue", job);
     console.log(`Bulk monthly payroll download job created: ${job.id}`);
 
     res
