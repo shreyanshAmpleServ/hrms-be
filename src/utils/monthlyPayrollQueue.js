@@ -131,7 +131,7 @@ monthlyPayrollQueue.process(async (job) => {
 
             const fileBuffer = fs.readFileSync(filePath);
             const originalName = path.basename(filePath);
-            if (isEmailEnabled == "true") {
+            if (isEmailEnabled) {
               const monthNames = [
                 "",
                 "January",
