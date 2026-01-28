@@ -1,5 +1,8 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { generateEmailContent } = require("../../utils/emailTemplates.js");
+const { email } = require("zod/v4");
+const sendEmail = require("../../utils/mailer.js");
 
 // Serialize payslip data
 const serializePayslipData = (data) => ({
@@ -26,9 +29,10 @@ const serializePayslipData = (data) => ({
 // Create a new payslip
 const createPaySlip = async (data) => {
   try {
+    const { isEmailEnabled, ...datas } = data;
     const reqData = await prisma.hrms_d_payslip.create({
       data: {
-        ...serializePayslipData(data),
+        ...serializePayslipData(datas),
         createdby: data.createdby || 1,
         createdate: new Date(),
         log_inst: data.log_inst || 1,
@@ -38,13 +42,54 @@ const createPaySlip = async (data) => {
           select: {
             id: true,
             full_name: true,
+            email: true,
           },
         },
       },
     });
+    console.log("Sending payslip email to:", data);
+
+    // if (isEmailEnabled == true) {
+    //   const monthNames = [
+    //     "",
+    //     "January",
+    //     "February",
+    //     "March",
+    //     "April",
+    //     "May",
+    //     "June",
+    //     "July",
+    //     "August",
+    //     "September",
+    //     "October",
+    //     "November",
+    //     "December",
+    //   ];
+    //   const company = await prisma.hrms_d_default_configurations.findFirst({
+    //     select: { company_name: true },
+    //   });
+    //   const company_name = company?.company_name || "HRMS System";
+    //   const employee = reqData?.payslip_employee;
+    //   const emailContent = await generateEmailContent("payslip_email", {
+    //     employee_name: employee.full_name,
+    //     month: monthNames?.[Number(reqData.month)],
+    //     years: String(data?.payroll_year),
+    //     company_name: company_name,
+    //   });
+    //   console.log("Email content generated:", emailContent);
+    //   await sendEmail({
+    //     to: "shreyansh.tripathi@ampleserv.com",
+    //     // to: reqData?.employee.email,
+    //     subject: emailContent.subject,
+    //     html: emailContent.body,
+    //     log_inst: reqData?.log_inst || 1,
+    //   });
+    //   console.log(`Payslip email sent to: ${employee.email}`);
+    // }
 
     return reqData;
   } catch (error) {
+    console.log("Error creating payslip:", error);
     throw new CustomError(`Error creating payslip: ${error.message}`, 500);
   }
 };
