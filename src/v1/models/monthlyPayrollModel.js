@@ -2078,7 +2078,16 @@ const checkAlreadyDownloadedPayrolls = async (filters, tenantDb = null) => {
 
     let whereConditions = ["is_printed = 'Y'"];
 
-    if (filters.employee_ids) {
+    if (filters.payslip_ids) {
+      const validIds = filters.payslip_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`mp.id IN (${idList})`);
+        console.log(
+          `checkAlreadyDownloadedPayrolls - Payslip IDs filter: ${idList}`,
+        );
+      }
+    } else if (filters.employee_ids) {
       const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
       if (validIds.length > 0) {
         const idList = validIds.map((id) => Number(id)).join(", ");
