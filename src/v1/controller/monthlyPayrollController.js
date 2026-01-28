@@ -42,7 +42,7 @@ const createMonthlyPayroll = async (req, res, next) => {
 const findMonthlyPayroll = async (req, res, next) => {
   try {
     const reqData = await monthlyPayrollService.findMonthlyPayrollById(
-      req.params.id
+      req.params.id,
     );
     if (!reqData) throw new CustomError("Monthly payroll not found", 404);
     res.status(200).success(null, reqData);
@@ -60,7 +60,7 @@ const updateMonthlyPayroll = async (req, res, next) => {
     };
     const reqData = await monthlyPayrollService.updateMonthlyPayroll(
       req.params.id,
-      data
+      data,
     );
     res.status(200).success("Monthly payroll updated successfully", reqData);
   } catch (error) {
@@ -85,7 +85,7 @@ const getAllMonthlyPayroll = async (req, res, next) => {
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
     );
     res.status(200).success(null, data);
   } catch (error) {
@@ -124,21 +124,21 @@ const downloadPayrollExcel = async (req, res, next) => {
       search,
       employee_id,
       payroll_month,
-      payroll_year
+      payroll_year,
     );
 
     console.log(`Excel file generated successfully: ${result.filename}`);
     console.log(
-      `Total records: ${result.totalRecords}, Earnings: ${result.earningsCount}, Deductions: ${result.deductionsCount}`
+      `Total records: ${result.totalRecords}, Earnings: ${result.earningsCount}, Deductions: ${result.deductionsCount}`,
     );
 
     res.setHeader(
       "Content-Type",
-      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
     );
     res.setHeader(
       "Content-Disposition",
-      `attachment; filename="${result.filename}"`
+      `attachment; filename="${result.filename}"`,
     );
     res.setHeader("Access-Control-Expose-Headers", "Content-Disposition");
     res.setHeader("Cache-Control", "no-cache");
@@ -194,7 +194,7 @@ const createOrUpdateMonthlyPayroll = async (req, res, next) => {
 
     const result = await monthlyPayrollService.createOrUpdatePayrollBulk(
       rows,
-      user
+      user,
     );
     res.status(200).success("Monthly payroll processed successfully", result);
   } catch (error) {
@@ -248,7 +248,7 @@ const getGeneratedMonthlyPayroll = async (req, res, next) => {
       Number(size) || 10,
       employee_id,
       payroll_month,
-      payroll_year
+      payroll_year,
     );
 
     res.status(200).success("Payroll data retrieved successfully", data);
@@ -324,12 +324,12 @@ const downloadPayslipPDF = async (req, res, next) => {
       employee_id,
       payroll_month,
       payroll_year,
-      req.tenantDb
+      req.tenantDb,
     );
 
     if (alreadyDownloaded && force_download !== "true") {
       console.log(
-        `Payslip already downloaded: Employee ${employee_id}, ${payroll_month}/${payroll_year}`
+        `Payslip already downloaded: Employee ${employee_id}, ${payroll_month}/${payroll_year}`,
       );
 
       return res.status(200).json({
@@ -359,7 +359,7 @@ const downloadPayslipPDF = async (req, res, next) => {
     const filePath = await monthlyPayrollService.downloadPayslipPDF(
       employee_id,
       payroll_month,
-      payroll_year
+      payroll_year,
     );
 
     const fileBuffer = fs.readFileSync(filePath);
@@ -373,7 +373,7 @@ const downloadPayslipPDF = async (req, res, next) => {
       "payslips",
       {
         "b2-content-disposition": `inline; filename="${originalName}"`,
-      }
+      },
     );
 
     if (!/^https?:\/\//i.test(fileUrl)) {
@@ -430,11 +430,11 @@ const downloadPayslipPDF = async (req, res, next) => {
         payroll_month,
         payroll_year,
         req.user.id,
-        req.tenantDb
+        req.tenantDb,
       );
 
       console.log(
-        `Marked payslip as downloaded: Employee ${employee_id}, ${payroll_month}/${payroll_year}`
+        `Marked payslip as downloaded: Employee ${employee_id}, ${payroll_month}/${payroll_year}`,
       );
     } catch (markError) {
       console.error("Error marking payslip as downloaded:", markError);
@@ -473,6 +473,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       status,
       force_download,
       isEmailEnabled,
+      isEmailOnly,
     } = req.query;
 
     const filters = {};
@@ -532,7 +533,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       };
 
       console.log(
-        `Employee Range: ${Math.min(minId, maxId)} to ${Math.max(minId, maxId)}`
+        `Employee Range: ${Math.min(minId, maxId)} to ${Math.max(minId, maxId)}`,
       );
     } else if (employee_id_from) {
       filters.employee_id = { gte: Number(employee_id_from) };
@@ -558,8 +559,8 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       console.log(
         `Payroll Month Range: ${Math.min(minMonth, maxMonth)} to ${Math.max(
           minMonth,
-          maxMonth
-        )}`
+          maxMonth,
+        )}`,
       );
     } else if (payroll_month_from) {
       filters.payroll_month = { gte: Number(payroll_month_from) };
@@ -579,8 +580,8 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       console.log(
         `Payroll Year Range: ${Math.min(minYear, maxYear)} to ${Math.max(
           minYear,
-          maxYear
-        )}`
+          maxYear,
+        )}`,
       );
     } else if (payroll_year_from) {
       filters.payroll_year = { gte: Number(payroll_year_from) };
@@ -613,7 +614,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
 
     if (validationWhere.payslip_ids) {
       const validIds = validationWhere.payslip_ids.filter(
-        (id) => id && !isNaN(id)
+        (id) => id && !isNaN(id),
       );
       if (validIds.length > 0) {
         const idList = validIds.map((id) => Number(id)).join(", ");
@@ -624,7 +625,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
 
     if (validationWhere.employee_ids) {
       const validIds = validationWhere.employee_ids.filter(
-        (id) => id && !isNaN(id)
+        (id) => id && !isNaN(id),
       );
       if (validIds.length > 0) {
         const idList = validIds.map((id) => Number(id)).join(", ");
@@ -636,15 +637,15 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
     if (validationWhere.employee_id) {
       if (validationWhere.employee_id.gte && validationWhere.employee_id.lte) {
         whereConditions.push(
-          `mp.employee_id BETWEEN ${validationWhere.employee_id.gte} AND ${validationWhere.employee_id.lte}`
+          `mp.employee_id BETWEEN ${validationWhere.employee_id.gte} AND ${validationWhere.employee_id.lte}`,
         );
       } else if (validationWhere.employee_id.gte) {
         whereConditions.push(
-          `mp.employee_id >= ${validationWhere.employee_id.gte}`
+          `mp.employee_id >= ${validationWhere.employee_id.gte}`,
         );
       } else if (validationWhere.employee_id.lte) {
         whereConditions.push(
-          `mp.employee_id <= ${validationWhere.employee_id.lte}`
+          `mp.employee_id <= ${validationWhere.employee_id.lte}`,
         );
       }
     }
@@ -655,15 +656,15 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
         validationWhere.payroll_month.lte
       ) {
         whereConditions.push(
-          `mp.payroll_month BETWEEN ${validationWhere.payroll_month.gte} AND ${validationWhere.payroll_month.lte}`
+          `mp.payroll_month BETWEEN ${validationWhere.payroll_month.gte} AND ${validationWhere.payroll_month.lte}`,
         );
       } else if (validationWhere.payroll_month.gte) {
         whereConditions.push(
-          `mp.payroll_month >= ${validationWhere.payroll_month.gte}`
+          `mp.payroll_month >= ${validationWhere.payroll_month.gte}`,
         );
       } else if (validationWhere.payroll_month.lte) {
         whereConditions.push(
-          `mp.payroll_month <= ${validationWhere.payroll_month.lte}`
+          `mp.payroll_month <= ${validationWhere.payroll_month.lte}`,
         );
       }
     }
@@ -674,15 +675,15 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
         validationWhere.payroll_year.lte
       ) {
         whereConditions.push(
-          `mp.payroll_year BETWEEN ${validationWhere.payroll_year.gte} AND ${validationWhere.payroll_year.lte}`
+          `mp.payroll_year BETWEEN ${validationWhere.payroll_year.gte} AND ${validationWhere.payroll_year.lte}`,
         );
       } else if (validationWhere.payroll_year.gte) {
         whereConditions.push(
-          `mp.payroll_year >= ${validationWhere.payroll_year.gte}`
+          `mp.payroll_year >= ${validationWhere.payroll_year.gte}`,
         );
       } else if (validationWhere.payroll_year.lte) {
         whereConditions.push(
-          `mp.payroll_year <= ${validationWhere.payroll_year.lte}`
+          `mp.payroll_year <= ${validationWhere.payroll_year.lte}`,
         );
       }
     }
@@ -712,72 +713,75 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
     if (payrollCount === 0) {
       throw new CustomError(
         "No monthly payroll records found matching the provided filters",
-        404
+        404,
       );
     }
 
     console.log(
-      `Found ${payrollCount} monthly payroll record(s) matching filters`
+      `Found ${payrollCount} monthly payroll record(s) matching filters`,
     );
 
-    console.log(
-      "bulkDownloadMonthlyPayroll - Checking for already downloaded payrolls..."
-    );
-    console.log(
-      "bulkDownloadMonthlyPayroll - Filters:",
-      JSON.stringify(filters, null, 2)
-    );
-    console.log("bulkDownloadMonthlyPayroll - Tenant DB:", req.tenantDb);
-
-    const alreadyDownloaded = await checkAlreadyDownloadedPayrolls(
-      filters,
-      req.tenantDb
-    );
-
-    console.log(
-      `bulkDownloadMonthlyPayroll - Found ${alreadyDownloaded.length} already downloaded payroll records`
-    );
-
-    if (alreadyDownloaded.length > 0 && force_download !== "true") {
+    // Skip already downloaded check for email-only jobs
+    if (isEmailOnly !== "true") {
       console.log(
-        `Found ${alreadyDownloaded.length} already downloaded payroll records`
+        "bulkDownloadMonthlyPayroll - Checking for already downloaded payrolls...",
+      );
+      console.log(
+        "bulkDownloadMonthlyPayroll - Filters:",
+        JSON.stringify(filters, null, 2),
+      );
+      console.log("bulkDownloadMonthlyPayroll - Tenant DB:", req.tenantDb);
+
+      const alreadyDownloaded = await checkAlreadyDownloadedPayrolls(
+        filters,
+        req.tenantDb,
       );
 
-      const stats = await getDownloadStatistics(filters, req.tenantDb);
+      console.log(
+        `bulkDownloadMonthlyPayroll - Found ${alreadyDownloaded.length} already downloaded payroll records`,
+      );
 
-      return res.status(200).json({
-        success: true,
-        message: "Some payroll records have already been downloaded",
-        data: {
-          warning: true,
-          alreadyDownloadedCount: alreadyDownloaded.length,
-          totalRecords: payrollCount,
-          downloadedRecords: stats.downloaded_records,
-          notDownloadedRecords: stats.not_downloaded_records,
-          alreadyDownloaded: alreadyDownloaded.slice(0, 10),
-          needsConfirmation: true,
-          appliedFilters: {
-            payslips: payslip_ids
-              ? `Array: [${filters.payslip_ids.join(", ")}]`
-              : employee_ids
-              ? `Array: [${filters.employee_ids.join(", ")}]`
-              : employee_id_from || employee_id_to
-              ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
-              : "All",
-            payrollMonths:
-              payroll_month_from || payroll_month_to
-                ? `${payroll_month_from || "Any"} to ${
-                    payroll_month_to || "Any"
-                  }`
-                : "All",
-            payrollYears:
-              payroll_year_from || payroll_year_to
-                ? `${payroll_year_from || "Any"} to ${payroll_year_to || "Any"}`
-                : "All",
-            status: status || "All",
+      if (alreadyDownloaded.length > 0 && force_download !== "true") {
+        console.log(
+          `Found ${alreadyDownloaded.length} already downloaded payroll records`,
+        );
+
+        const stats = await getDownloadStatistics(filters, req.tenantDb);
+
+        return res.status(200).json({
+          success: true,
+          message: "Some payroll records have already been downloaded",
+          data: {
+            warning: true,
+            alreadyDownloadedCount: alreadyDownloaded.length,
+            totalRecords: payrollCount,
+            downloadedRecords: stats.downloaded_records,
+            notDownloadedRecords: stats.not_downloaded_records,
+            alreadyDownloaded: alreadyDownloaded.slice(0, 10),
+            needsConfirmation: true,
+            appliedFilters: {
+              payslips: payslip_ids
+                ? `Array: [${filters.payslip_ids.join(", ")}]`
+                : employee_ids
+                  ? `Array: [${filters.employee_ids.join(", ")}]`
+                  : employee_id_from || employee_id_to
+                    ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+                    : "All",
+              payrollMonths:
+                payroll_month_from || payroll_month_to
+                  ? `${payroll_month_from || "Any"} to ${
+                      payroll_month_to || "Any"
+                    }`
+                  : "All",
+              payrollYears:
+                payroll_year_from || payroll_year_to
+                  ? `${payroll_year_from || "Any"} to ${payroll_year_to || "Any"}`
+                  : "All",
+              status: status || "All",
+            },
           },
-        },
-      });
+        });
+      }
     }
 
     const jobId = uuidv4();
@@ -787,37 +791,43 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       tenantDb: req.tenantDb,
       filters: filters,
       jobId: jobId,
-      isEmailEnabled: isEmailEnabled == "true",
+      isEmailEnabled: isEmailEnabled == "true" || isEmailOnly == "true",
+      isBulkEmailOnly: isEmailOnly == "true",
     });
 
-    console.log("Monthly payroll bulk download job added to queue", job);
-    console.log(`Bulk monthly payroll download job created: ${job.id}`);
+    console.log("Monthly payroll bulk job added to queue", job);
+    console.log(`Bulk monthly payroll job created: ${job.id}`);
 
-    res
-      .status(202)
-      .success("Bulk download started. Use job ID to check progress.", {
-        jobId: job.id,
-        statusUrl: `/api/monthly-payroll/bulk-download/status/${job.id}`,
-        totalPayrollRecords: payrollCount,
-        appliedFilters: {
-          payslips: payslip_ids
-            ? `Array: [${filters.payslip_ids.join(", ")}]`
-            : employee_ids
+    const operationType = isEmailOnly == "true" ? "email" : "download";
+    const successMessage =
+      isEmailOnly == "true"
+        ? "Bulk email started. Use job ID to check progress."
+        : "Bulk download started. Use job ID to check progress.";
+
+    res.status(202).success(successMessage, {
+      jobId: job.id,
+      statusUrl: `/api/monthly-payroll/bulk-download/status/${job.id}`,
+      totalPayrollRecords: payrollCount,
+      operationType: operationType,
+      appliedFilters: {
+        payslips: payslip_ids
+          ? `Array: [${filters.payslip_ids.join(", ")}]`
+          : employee_ids
             ? `Array: [${filters.employee_ids.join(", ")}]`
             : employee_id_from || employee_id_to
-            ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+              ? `${employee_id_from || "Any"} to ${employee_id_to || "Any"}`
+              : "All",
+        payrollMonths:
+          payroll_month_from || payroll_month_to
+            ? `${payroll_month_from || "Any"} to ${payroll_month_to || "Any"}`
             : "All",
-          payrollMonths:
-            payroll_month_from || payroll_month_to
-              ? `${payroll_month_from || "Any"} to ${payroll_month_to || "Any"}`
-              : "All",
-          payrollYears:
-            payroll_year_from || payroll_year_to
-              ? `${payroll_year_from || "Any"} to ${payroll_year_to || "Any"}`
-              : "All",
-          status: status || "All",
-        },
-      });
+        payrollYears:
+          payroll_year_from || payroll_year_to
+            ? `${payroll_year_from || "Any"} to ${payroll_year_to || "Any"}`
+            : "All",
+        status: status || "All",
+      },
+    });
   } catch (error) {
     next(error);
   }
@@ -863,7 +873,7 @@ const downloadBulkMonthlyPayroll = async (req, res, next) => {
     if (state !== "completed") {
       throw new CustomError(
         `Job is ${state}. Please wait for completion.`,
-        400
+        400,
       );
     }
 
@@ -886,7 +896,7 @@ const downloadBulkMonthlyPayroll = async (req, res, next) => {
       cleanupManager.scheduleCleanup(
         result.zipPath,
         300000,
-        "Bulk download ZIP"
+        "Bulk download ZIP",
       );
     });
   } catch (error) {

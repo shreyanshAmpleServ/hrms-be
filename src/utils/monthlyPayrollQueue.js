@@ -9,6 +9,8 @@ const monthlyPayrollService = require("../v1/services/monthlyPayrollService.js")
 const {
   markPayrollsAsPrinted,
 } = require("../v1/models/monthlyPayrollModel.js");
+const { generateEmailContent } = require("../utils/emailTemplates.js");
+const sendEmail = require("../utils/mailer.js");
 
 const monthlyPayrollQueue = new Queue("monthly-payroll-bulk-download", {
   redis: {
@@ -20,10 +22,11 @@ const monthlyPayrollQueue = new Queue("monthly-payroll-bulk-download", {
 const cancelledJobs = new Set();
 
 monthlyPayrollQueue.process(async (job) => {
-  const { userId, filters, jobId, tenantDb, isEmailEnabled } = job.data;
+  const { userId, filters, jobId, tenantDb, isEmailEnabled, isBulkEmailOnly } =
+    job.data;
 
   console.log(
-    `[Job ${jobId}] Starting bulk monthly payroll download for tenant: ${tenantDb}`
+    `[Job ${jobId}] Starting bulk monthly payroll ${isBulkEmailOnly ? "email" : "download"} for tenant: ${tenantDb}`,
   );
 
   return withTenantContext(tenantDb, async () => {
@@ -31,6 +34,12 @@ monthlyPayrollQueue.process(async (job) => {
       if (cancelledJobs.has(job.id.toString())) {
         console.log(`[Job ${job.id}] Cancelled before starting`);
         cancelledJobs.delete(job.id.toString());
+        if (!isBulkEmailOnly) {
+          const tempDir = path.join(process.cwd(), "temp", jobId);
+          if (fs.existsSync(tempDir)) {
+            fs.rmSync(tempDir, { recursive: true, force: true });
+          }
+        }
         throw new Error("Job was cancelled");
       }
 
@@ -45,11 +54,11 @@ monthlyPayrollQueue.process(async (job) => {
 
       const totalCount =
         await monthlyPayrollService.getMonthlyPayrollCountForBulkDownload(
-          filters || {}
+          filters || {},
         );
 
       console.log(
-        `[Job ${jobId}] Found ${totalCount} monthly payroll records to process`
+        `[Job ${jobId}] Found ${totalCount} monthly payroll records to process`,
       );
 
       if (totalCount === 0) {
@@ -58,48 +67,50 @@ monthlyPayrollQueue.process(async (job) => {
 
       await job.progress(20);
 
-      const tempDir = path.join(process.cwd(), "temp", jobId);
-      if (!fs.existsSync(tempDir)) {
-        fs.mkdirSync(tempDir, { recursive: true });
-      }
-
       const PAGE_SIZE = 1000;
       let processedCount = 0;
+      let emailSentCount = 0;
+      let emailSkippedCount = 0;
       const pdfFiles = [];
 
       console.log(
-        `[Job ${jobId}] Processing ${totalCount} records in batches of ${PAGE_SIZE}`
+        `[Job ${jobId}] Processing ${totalCount} records in batches of ${PAGE_SIZE}`,
       );
       for (let offset = 0; offset < totalCount; offset += PAGE_SIZE) {
         if (cancelledJobs.has(job.id.toString())) {
           console.log(
-            `[Job ${job.id}] Cancelled during processing at ${processedCount}/${totalCount}`
+            `[Job ${job.id}] Cancelled during processing at ${processedCount}/${totalCount}`,
           );
           cancelledJobs.delete(job.id.toString());
-          fs.rmSync(tempDir, { recursive: true, force: true });
+          if (!isBulkEmailOnly) {
+            const tempDir = path.join(process.cwd(), "temp", jobId);
+            if (fs.existsSync(tempDir)) {
+              fs.rmSync(tempDir, { recursive: true, force: true });
+            }
+          }
           throw new Error("Job was cancelled by user");
         }
 
         console.log(
           `[Job ${jobId}] Processing batch: records ${offset + 1} to ${Math.min(
             offset + PAGE_SIZE,
-            totalCount
-          )}`
+            totalCount,
+          )}`,
         );
 
         const batchPayrolls =
           await monthlyPayrollService.getMonthlyPayrollsPaginatedForBulkDownload(
             filters || {},
             offset,
-            PAGE_SIZE
+            PAGE_SIZE,
           );
 
         for (const payroll of batchPayrolls) {
           try {
             console.log(
-              `[Job ${jobId}] Generating PDF for employee: ${
+              `[Job ${jobId}] Processing employee: ${
                 payroll.hrms_monthly_payroll_employee?.full_name || "Unknown"
-              } (ID: ${payroll.employee_id})`
+              } (ID: ${payroll.employee_id})`,
             );
 
             let pdfFilePath;
@@ -107,13 +118,13 @@ monthlyPayrollQueue.process(async (job) => {
               pdfFilePath = await monthlyPayrollService.downloadPayslipPDF(
                 payroll.employee_id,
                 payroll.payroll_month,
-                payroll.payroll_year
+                payroll.payroll_year,
               );
               console.log(`[Job ${jobId}] PDF generated at: ${pdfFilePath}`);
             } catch (pdfGenError) {
               console.error(
                 `[Job ${jobId}] Error generating PDF for employee ${payroll.employee_id}:`,
-                pdfGenError
+                pdfGenError,
               );
               throw pdfGenError;
             }
@@ -127,11 +138,37 @@ monthlyPayrollQueue.process(async (job) => {
               payroll.hrms_monthly_payroll_employee?.employee_code ||
               payroll.employee_id;
             const filename = `Payslip_${employeeCode}_${employeeName}_${payroll.payroll_month}_${payroll.payroll_year}.pdf`;
-            const filePath = path.join(tempDir, filename);
+            const filePath = path.join(process.cwd(), "temp", jobId, filename);
 
-            const fileBuffer = fs.readFileSync(filePath);
-            const originalName = path.basename(filePath);
-            if (isEmailEnabled == "true") {
+            // Ensure temp directory exists
+            if (!isBulkEmailOnly) {
+              const tempDir = path.join(process.cwd(), "temp", jobId);
+              if (!fs.existsSync(tempDir)) {
+                fs.mkdirSync(tempDir, { recursive: true });
+              }
+            }
+
+            const fileBuffer = fs.readFileSync(pdfFilePath);
+            const originalName = path.basename(pdfFilePath);
+
+            // Debug logging
+            console.log(
+              `[Job ${jobId}] Email parameters - isEmailEnabled: ${isEmailEnabled}, isBulkEmailOnly: ${isBulkEmailOnly}`,
+            );
+            console.log(
+              `[Job ${jobId}] Email condition check: isEmailEnabled === true = ${isEmailEnabled === true}, isEmailEnabled === "true" = ${isEmailEnabled === "true"}, isBulkEmailOnly = ${isBulkEmailOnly}`,
+            );
+            console.log(
+              `[Job ${jobId}] Final condition result: ${isEmailEnabled === true || isEmailEnabled === "true" || isBulkEmailOnly}`,
+            );
+
+            // Send email if enabled OR if this is an email-only job
+            if (
+              isEmailEnabled === true ||
+              isEmailEnabled === "true" ||
+              isBulkEmailOnly
+            ) {
+              console.log(`[Job ${jobId}] Starting email sending process...`);
               const monthNames = [
                 "",
                 "January",
@@ -154,72 +191,100 @@ monthlyPayrollQueue.process(async (job) => {
               console.log(
                 "Company fetched for email:",
                 company,
-                payroll?.hrms_monthly_payroll_employee
+                payroll?.hrms_monthly_payroll_employee,
               );
               const company_name = company?.company_name || "HRMS System";
-              // const employee = reqData?.payslip_employee;
-              const emailContent = await generateEmailContent("payslip_email", {
-                employee_name: employeeName,
-                month: monthNames?.[Number(payroll.payroll_month)],
-                years: String(payroll.payroll_year),
-                company_name: company_name,
+              const employeeEmail =
+                payroll?.hrms_monthly_payroll_employee?.email;
+
+              console.log(`[Job ${jobId}] Employee email data:`, {
+                employeeId: payroll.employee_id,
+                employeeName: employeeName,
+                employeeEmail: employeeEmail,
+                employeeData: payroll?.hrms_monthly_payroll_employee,
               });
-              console.log("Email content generated:", emailContent);
-              await sendEmail({
-                to: "shreyansh.tripathi@ampleserv.com",
-                // to: payroll?.hrms_monthly_payroll_employee?.email,
-                subject: emailContent.subject,
-                html: emailContent.body,
-                log_inst: payroll?.log_inst || 1,
-                attachments: [
+
+              if (!employeeEmail) {
+                console.warn(
+                  `[Job ${jobId}] No email found for employee ${payroll.employee_id} - ${employeeName}. Skipping email.`,
+                );
+                emailSkippedCount++;
+              } else {
+                const emailContent = await generateEmailContent(
+                  "payslip_email",
                   {
-                    filename: originalName,
-                    content: fileBuffer,
-                    contentType: "application/pdf",
+                    employee_name: employeeName,
+                    month: monthNames?.[Number(payroll.payroll_month)],
+                    years: String(payroll.payroll_year),
+                    company_name: company_name,
                   },
-                ],
+                );
+                console.log("Email content generated:", emailContent);
+                await sendEmail({
+                  to: employeeEmail,
+                  subject: emailContent.subject,
+                  html: emailContent.body,
+                  log_inst: payroll?.log_inst || 1,
+                  attachments: [
+                    {
+                      filename: originalName,
+                      content: fileBuffer,
+                      contentType: "application/pdf",
+                    },
+                  ],
+                });
+                console.log(
+                  `[Job ${jobId}] Email sent successfully to ${employeeEmail} for employee ${payroll.employee_id} - ${employeeName}`,
+                );
+                emailSentCount++;
+              }
+            }
+
+            // Only create files for download jobs
+            if (!isBulkEmailOnly) {
+              try {
+                if (!fs.existsSync(pdfFilePath)) {
+                  throw new Error(`PDF file not found at: ${pdfFilePath}`);
+                }
+
+                const fileStats = fs.statSync(pdfFilePath);
+                if (fileStats.size === 0) {
+                  throw new Error(`PDF file is empty: ${pdfFilePath}`);
+                }
+
+                console.log(
+                  `[Job ${jobId}] Copying PDF (${fileStats.size} bytes) from ${pdfFilePath} to ${filePath}`,
+                );
+                fs.copyFileSync(pdfFilePath, filePath);
+
+                const copiedStats = fs.statSync(filePath);
+                if (copiedStats.size === 0) {
+                  throw new Error(`Copied PDF file is empty: ${filePath}`);
+                }
+
+                console.log(
+                  `[Job ${jobId}] PDF copied successfully (${copiedStats.size} bytes)`,
+                );
+              } catch (copyError) {
+                console.error(
+                  `[Job ${jobId}] Error copying PDF file:`,
+                  copyError,
+                );
+                throw new Error(
+                  `Failed to copy PDF file: ${copyError.message}`,
+                );
+              }
+
+              pdfFiles.push({
+                filename,
+                employeeName:
+                  payroll.hrms_monthly_payroll_employee?.full_name || "Unknown",
+                employeeCode: employeeCode,
+                payrollMonth: payroll.payroll_month,
+                payrollYear: payroll.payroll_year,
+                path: filePath,
               });
             }
-            try {
-              if (!fs.existsSync(pdfFilePath)) {
-                throw new Error(`PDF file not found at: ${pdfFilePath}`);
-              }
-
-              const fileStats = fs.statSync(pdfFilePath);
-              if (fileStats.size === 0) {
-                throw new Error(`PDF file is empty: ${pdfFilePath}`);
-              }
-
-              console.log(
-                `[Job ${jobId}] Copying PDF (${fileStats.size} bytes) from ${pdfFilePath} to ${filePath}`
-              );
-              fs.copyFileSync(pdfFilePath, filePath);
-
-              const copiedStats = fs.statSync(filePath);
-              if (copiedStats.size === 0) {
-                throw new Error(`Copied PDF file is empty: ${filePath}`);
-              }
-
-              console.log(
-                `[Job ${jobId}] PDF copied successfully (${copiedStats.size} bytes)`
-              );
-            } catch (copyError) {
-              console.error(
-                `[Job ${jobId}] Error copying PDF file:`,
-                copyError
-              );
-              throw new Error(`Failed to copy PDF file: ${copyError.message}`);
-            }
-
-            pdfFiles.push({
-              filename,
-              employeeName:
-                payroll.hrms_monthly_payroll_employee?.full_name || "Unknown",
-              employeeCode: employeeCode,
-              payrollMonth: payroll.payroll_month,
-              payrollYear: payroll.payroll_year,
-              path: filePath,
-            });
 
             processedCount++;
 
@@ -229,12 +294,14 @@ monthlyPayrollQueue.process(async (job) => {
               totalCount,
               currentEmployee:
                 payroll.hrms_monthly_payroll_employee?.full_name || "Unknown",
-              status: "Generating PDFs",
+              status: isBulkEmailOnly ? "Sending emails" : "Generating PDFs",
+              emailSentCount,
+              emailSkippedCount,
             });
           } catch (pdfError) {
             console.error(
-              `[Job ${jobId}] Error generating PDF for employee ${payroll.employee_id}:`,
-              pdfError
+              `[Job ${jobId}] Error processing employee ${payroll.employee_id}:`,
+              pdfError,
             );
             processedCount++;
           }
@@ -243,32 +310,50 @@ monthlyPayrollQueue.process(async (job) => {
 
       await job.progress(85);
 
-      const zipFileName = `monthly_payroll_bulk_${jobId}.zip`;
-      const zipPath = path.join(
-        process.cwd(),
-        "uploads",
-        "bulk-downloads",
-        zipFileName
-      );
+      let result = {
+        success: true,
+        totalProcessed: processedCount,
+        totalRequested: totalCount,
+        emailSentCount,
+        emailSkippedCount,
+      };
 
-      const zipDir = path.dirname(zipPath);
-      if (!fs.existsSync(zipDir)) {
-        fs.mkdirSync(zipDir, { recursive: true });
+      // Only create ZIP for download jobs
+      if (!isBulkEmailOnly) {
+        const zipFileName = `monthly_payroll_bulk_${jobId}.zip`;
+        const zipPath = path.join(
+          process.cwd(),
+          "uploads",
+          "bulk-downloads",
+          zipFileName,
+        );
+
+        const zipDir = path.dirname(zipPath);
+        if (!fs.existsSync(zipDir)) {
+          fs.mkdirSync(zipDir, { recursive: true });
+        }
+
+        const filesForZip = pdfFiles.map((pdfFile) => ({
+          path: pdfFile.path,
+          name: pdfFile.filename,
+        }));
+
+        await createZip(filesForZip, zipPath);
+        await job.progress(95);
+
+        result = {
+          ...result,
+          downloadUrl: `/api/monthly-payroll/bulk-download/${jobId}`,
+          fileName: zipFileName,
+          zipPath: zipPath,
+        };
       }
-
-      const filesForZip = pdfFiles.map((pdfFile) => ({
-        path: pdfFile.path,
-        name: pdfFile.filename,
-      }));
-
-      await createZip(filesForZip, zipPath);
-      await job.progress(95);
 
       try {
         console.log(`[Job ${jobId}] Marking payrolls as printed...`);
         console.log(
           `[Job ${jobId}] Filters:`,
-          JSON.stringify(filters, null, 2)
+          JSON.stringify(filters, null, 2),
         );
         console.log(`[Job ${jobId}] UserId:`, userId);
         console.log(`[Job ${jobId}] TenantDb:`, tenantDb);
@@ -276,42 +361,38 @@ monthlyPayrollQueue.process(async (job) => {
         const markedCount = await markPayrollsAsPrinted(
           filters,
           userId,
-          tenantDb
+          tenantDb,
         );
 
         console.log(
-          `[Job ${jobId}] Marked ${markedCount} payroll records as printed`
+          `[Job ${jobId}] Marked ${markedCount} payroll records as printed`,
         );
 
         if (markedCount === 0) {
           console.log(
-            `[Job ${jobId}] WARNING: No records were marked as printed. This might indicate an issue.`
+            `[Job ${jobId}] WARNING: No records were marked as printed. This might indicate an issue.`,
           );
         }
       } catch (markError) {
         console.error(
           `[Job ${jobId}] Error marking payrolls as printed:`,
-          markError
+          markError,
         );
         console.error(`[Job ${jobId}] Error details:`, markError.message);
       }
 
-      fs.rmSync(tempDir, { recursive: true, force: true });
+      if (!isBulkEmailOnly) {
+        const tempDir = path.join(process.cwd(), "temp", jobId);
+        fs.rmSync(tempDir, { recursive: true, force: true });
+      }
 
       await job.progress(100);
 
       console.log(
-        `[Job ${jobId}] Completed successfully! Processed ${processedCount} records`
+        `[Job ${jobId}] Completed successfully! Processed ${processedCount} records`,
       );
 
-      return {
-        success: true,
-        totalProcessed: processedCount,
-        totalRequested: totalCount,
-        downloadUrl: `/api/monthly-payroll/bulk-download/${jobId}`,
-        fileName: zipFileName,
-        zipPath: zipPath,
-      };
+      return result;
     } catch (error) {
       console.error(`[Job ${jobId}] Failed:`, error);
       throw error;
