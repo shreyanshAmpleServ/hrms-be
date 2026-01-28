@@ -410,8 +410,8 @@ const downloadPayslipPDF = async (req, res, next) => {
       });
       console.log("Email content generated:", emailContent);
       await sendEmail({
-        // to: "shreyansh.tripathi@ampleserv.com",
-        to: alreadyDownloaded.email,
+        to: "shreyansh.tripathi@ampleserv.com",
+        // to: alreadyDownloaded?.email,
         subject: emailContent.subject,
         html: emailContent.body,
         log_inst: alreadyDownloaded?.log_inst || 1,
