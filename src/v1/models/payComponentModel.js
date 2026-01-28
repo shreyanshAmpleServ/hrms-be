@@ -1452,7 +1452,7 @@ const sdlReportTemplate = `<!DOCTYPE html>
     <div class="header-top">
       <div class="line"></div>
       <div class="logo-container">
-        <img src="https://w7.pngwing.com/pngs/544/792/png-transparent-tanzania-revenue-authority-kakobe-law-tra-ccedil-os-logo-sign-business-thumbnail.png" alt="Tanzania Revenue Authority Logo" class="logo">
+        <img src="{{companyLogo}}" alt="Company Logo" class="logo">
       </div>
       <div class="line"></div>
     </div>
@@ -2239,6 +2239,7 @@ const generateSDLReportHTML = (
       const calculatedSDL = totalGross * 0.05;
 
       const templateData = {
+        companyLogo: getSDFLogoAsBase64(),
         companyName: companySettings.company_name || "Company Name",
         natureOfBusiness: defaultConfig.company_nature || "Nature of Business",
         companyType: companySettings.company_type || "Company",
@@ -2894,8 +2895,8 @@ const generateP09ReportHTML = (
       console.log("P09 HTML - Final totals:", totals);
       console.log("P09 HTML - Generated tableRows length:", tableRows.length);
 
-      const companyLogo = companySettings.company_logo
-        ? `<img src="${companySettings.company_logo}" alt="Company Logo" class="company-logo">`
+      const companyLogo = getLogoAsBase64()
+        ? `<img src="${getLogoAsBase64()}" alt="Company Logo" class="company-logo">`
         : "";
 
       const companySignature = companySettings.company_signature
@@ -3061,6 +3062,33 @@ const getNSSFReportData = async (paymonth, payyear) => {
   }
 };
 
+const getLogoAsBase64 = () => {
+  try {
+    const logoPath = path.join(
+      __dirname,
+      "../../../public/logos/National_Social_Security_Fund_Tanzania_Logo.png",
+    );
+    const imageBuffer = fs.readFileSync(logoPath);
+    const base64Image = imageBuffer.toString("base64");
+    return `data:image/png;base64,${base64Image}`;
+  } catch (error) {
+    console.error("Error reading logo file:", error);
+    return "";
+  }
+};
+
+const getSDFLogoAsBase64 = () => {
+  try {
+    const logoPath = path.join(__dirname, "../../../public/logos/SDF_Logo.png");
+    const imageBuffer = fs.readFileSync(logoPath);
+    const base64Image = imageBuffer.toString("base64");
+    return `data:image/png;base64,${base64Image}`;
+  } catch (error) {
+    console.error("Error reading SDF logo file:", error);
+    return "";
+  }
+};
+
 const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
   const monthName = new Date(payyear, paymonth - 1).toLocaleString("default", {
     month: "long",
@@ -3097,8 +3125,7 @@ const generateNSSFReportHTML = async (reportData, paymonth, payyear) => {
     ),
   };
 
-  const companyLogo =
-    "https://sgastanford.com/wp-content/uploads/2024/08/National_Social_Security_Fund_Tanzania_Logo.png";
+  const companyLogo = getLogoAsBase64();
 
   return `
 <!DOCTYPE html>
@@ -3326,13 +3353,9 @@ const generateWCFReportHTML = async (reportData, fromDate, toDate) => {
   const month = monthNames[fromDateObj.getMonth()];
   const year = fromDateObj.getFullYear();
 
-  // const companyLogo = companySettings.company_logo
-  //   ? `<img src="${companySettings.company_logo}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
-  //   : '<img src="https://DCC-HRMS.s3.us-east-005.backblazeb2.com/company_logo/90b7848c-ae9a-4f37-b333-c3e45fdc8b10.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
-
-  const companyLogo = "https://i.ibb.co/qFJGz0xv/images.png"
-    ? `<img src="https://i.ibb.co/qFJGz0xv/images.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';`
-    : '<img src="https://i.ibb.co/qFJGz0xv/images.png" alt="Company Logo" style="max-width: 120px; max-height: 80px;">';
+  const companyLogo = getLogoAsBase64()
+    ? `<img src="${getLogoAsBase64()}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`
+    : `<img src="${getLogoAsBase64()}" alt="Company Logo" style="max-width: 120px; max-height: 80px;">`;
 
   let htmlContent = `
 <!DOCTYPE html>
@@ -3571,8 +3594,8 @@ const generatePayrollSummaryReportHTML = async (
     "December",
   ];
 
-  const companyLogo = companySettings.company_logo
-    ? `<img src="${companySettings.company_logo}" style="max-width:120px;max-height:80px;">`
+  const companyLogo = getLogoAsBase64()
+    ? `<img src="${getLogoAsBase64()}" style="max-width:120px;max-height:80px;">`
     : "";
 
   let htmlContent = `

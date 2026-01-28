@@ -108,6 +108,7 @@ app.use(
 app.use(responseHandler);
 app.use("/uploads", express.static("uploads"));
 app.use("/public", express.static("public"));
+app.use("/logos", express.static("public/logos"));
 app.use("/api", optionalTenantMiddleware);
 app.use("/api", routes);
 
