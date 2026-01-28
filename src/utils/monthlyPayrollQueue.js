@@ -28,7 +28,7 @@ monthlyPayrollQueue.process(async (job) => {
   console.log(
     `[Job ${jobId}] Starting bulk monthly payroll ${
       isBulkEmailOnly ? "email" : "download"
-    } for tenant: ${tenantDb}`
+    } for tenant: ${tenantDb}`,
   );
 
   return withTenantContext(tenantDb, async () => {
@@ -56,11 +56,11 @@ monthlyPayrollQueue.process(async (job) => {
 
       const totalCount =
         await monthlyPayrollService.getMonthlyPayrollCountForBulkDownload(
-          filters || {}
+          filters || {},
         );
 
       console.log(
-        `[Job ${jobId}] Found ${totalCount} monthly payroll records to process`
+        `[Job ${jobId}] Found ${totalCount} monthly payroll records to process`,
       );
 
       if (totalCount === 0) {
@@ -76,12 +76,12 @@ monthlyPayrollQueue.process(async (job) => {
       const pdfFiles = [];
 
       console.log(
-        `[Job ${jobId}] Processing ${totalCount} records in batches of ${PAGE_SIZE}`
+        `[Job ${jobId}] Processing ${totalCount} records in batches of ${PAGE_SIZE}`,
       );
       for (let offset = 0; offset < totalCount; offset += PAGE_SIZE) {
         if (cancelledJobs.has(job.id.toString())) {
           console.log(
-            `[Job ${job.id}] Cancelled during processing at ${processedCount}/${totalCount}`
+            `[Job ${job.id}] Cancelled during processing at ${processedCount}/${totalCount}`,
           );
           cancelledJobs.delete(job.id.toString());
           if (!isBulkEmailOnly) {
@@ -96,15 +96,15 @@ monthlyPayrollQueue.process(async (job) => {
         console.log(
           `[Job ${jobId}] Processing batch: records ${offset + 1} to ${Math.min(
             offset + PAGE_SIZE,
-            totalCount
-          )}`
+            totalCount,
+          )}`,
         );
 
         const batchPayrolls =
           await monthlyPayrollService.getMonthlyPayrollsPaginatedForBulkDownload(
             filters || {},
             offset,
-            PAGE_SIZE
+            PAGE_SIZE,
           );
 
         for (const payroll of batchPayrolls) {
@@ -112,7 +112,7 @@ monthlyPayrollQueue.process(async (job) => {
             console.log(
               `[Job ${jobId}] Processing employee: ${
                 payroll.hrms_monthly_payroll_employee?.full_name || "Unknown"
-              } (ID: ${payroll.employee_id})`
+              } (ID: ${payroll.employee_id})`,
             );
 
             let pdfFilePath;
@@ -120,13 +120,13 @@ monthlyPayrollQueue.process(async (job) => {
               pdfFilePath = await monthlyPayrollService.downloadPayslipPDF(
                 payroll.employee_id,
                 payroll.payroll_month,
-                payroll.payroll_year
+                payroll.payroll_year,
               );
               console.log(`[Job ${jobId}] PDF generated at: ${pdfFilePath}`);
             } catch (pdfGenError) {
               console.error(
                 `[Job ${jobId}] Error generating PDF for employee ${payroll.employee_id}:`,
-                pdfGenError
+                pdfGenError,
               );
               throw pdfGenError;
             }
@@ -150,9 +150,27 @@ monthlyPayrollQueue.process(async (job) => {
               }
             }
 
-            const fileBuffer = fs.readFileSync(filePath);
-            const originalName = path.basename(filePath);
-            if (isEmailEnabled) {
+            const fileBuffer = fs.readFileSync(pdfFilePath);
+            const originalName = path.basename(pdfFilePath);
+
+            // Debug logging
+            console.log(
+              `[Job ${jobId}] Email parameters - isEmailEnabled: ${isEmailEnabled}, isBulkEmailOnly: ${isBulkEmailOnly}`,
+            );
+            console.log(
+              `[Job ${jobId}] Email condition check: isEmailEnabled === true = ${isEmailEnabled === true}, isEmailEnabled === "true" = ${isEmailEnabled === "true"}, isBulkEmailOnly = ${isBulkEmailOnly}`,
+            );
+            console.log(
+              `[Job ${jobId}] Final condition result: ${isEmailEnabled === true || isEmailEnabled === "true" || isBulkEmailOnly}`,
+            );
+
+            // Send email if enabled OR if this is an email-only job
+            if (
+              isEmailEnabled === true ||
+              isEmailEnabled === "true" ||
+              isBulkEmailOnly
+            ) {
+              console.log(`[Job ${jobId}] Starting email sending process...`);
               const monthNames = [
                 "",
                 "January",
@@ -175,7 +193,7 @@ monthlyPayrollQueue.process(async (job) => {
               console.log(
                 "Company fetched for email:",
                 company,
-                payroll?.hrms_monthly_payroll_employee
+                payroll?.hrms_monthly_payroll_employee,
               );
               const company_name = company?.company_name || "HRMS System";
               const employeeEmail =
@@ -190,7 +208,7 @@ monthlyPayrollQueue.process(async (job) => {
 
               if (!employeeEmail) {
                 console.warn(
-                  `[Job ${jobId}] No email found for employee ${payroll.employee_id} - ${employeeName}. Skipping email.`
+                  `[Job ${jobId}] No email found for employee ${payroll.employee_id} - ${employeeName}. Skipping email.`,
                 );
                 emailSkippedCount++;
               } else {
@@ -201,7 +219,7 @@ monthlyPayrollQueue.process(async (job) => {
                     month: monthNames?.[Number(payroll.payroll_month)],
                     years: String(payroll.payroll_year),
                     company_name: company_name,
-                  }
+                  },
                 );
                 console.log("Email content generated:", emailContent);
                 await sendEmail({
@@ -218,7 +236,7 @@ monthlyPayrollQueue.process(async (job) => {
                   ],
                 });
                 console.log(
-                  `[Job ${jobId}] Email sent successfully to ${employeeEmail} for employee ${payroll.employee_id} - ${employeeName}`
+                  `[Job ${jobId}] Email sent successfully to ${employeeEmail} for employee ${payroll.employee_id} - ${employeeName}`,
                 );
                 emailSentCount++;
               }
@@ -237,7 +255,7 @@ monthlyPayrollQueue.process(async (job) => {
                 }
 
                 console.log(
-                  `[Job ${jobId}] Copying PDF (${fileStats.size} bytes) from ${pdfFilePath} to ${filePath}`
+                  `[Job ${jobId}] Copying PDF (${fileStats.size} bytes) from ${pdfFilePath} to ${filePath}`,
                 );
                 fs.copyFileSync(pdfFilePath, filePath);
 
@@ -247,15 +265,15 @@ monthlyPayrollQueue.process(async (job) => {
                 }
 
                 console.log(
-                  `[Job ${jobId}] PDF copied successfully (${copiedStats.size} bytes)`
+                  `[Job ${jobId}] PDF copied successfully (${copiedStats.size} bytes)`,
                 );
               } catch (copyError) {
                 console.error(
                   `[Job ${jobId}] Error copying PDF file:`,
-                  copyError
+                  copyError,
                 );
                 throw new Error(
-                  `Failed to copy PDF file: ${copyError.message}`
+                  `Failed to copy PDF file: ${copyError.message}`,
                 );
               }
 
@@ -285,7 +303,7 @@ monthlyPayrollQueue.process(async (job) => {
           } catch (pdfError) {
             console.error(
               `[Job ${jobId}] Error processing employee ${payroll.employee_id}:`,
-              pdfError
+              pdfError,
             );
             processedCount++;
           }
@@ -309,7 +327,7 @@ monthlyPayrollQueue.process(async (job) => {
           process.cwd(),
           "uploads",
           "bulk-downloads",
-          zipFileName
+          zipFileName,
         );
 
         const zipDir = path.dirname(zipPath);
@@ -337,7 +355,7 @@ monthlyPayrollQueue.process(async (job) => {
         console.log(`[Job ${jobId}] Marking payrolls as printed...`);
         console.log(
           `[Job ${jobId}] Filters:`,
-          JSON.stringify(filters, null, 2)
+          JSON.stringify(filters, null, 2),
         );
         console.log(`[Job ${jobId}] UserId:`, userId);
         console.log(`[Job ${jobId}] TenantDb:`, tenantDb);
@@ -345,35 +363,46 @@ monthlyPayrollQueue.process(async (job) => {
         const markedCount = await markPayrollsAsPrinted(
           filters,
           userId,
-          tenantDb
+          tenantDb,
         );
 
         console.log(
-          `[Job ${jobId}] Marked ${markedCount} payroll records as printed`
+          `[Job ${jobId}] Marked ${markedCount} payroll records as printed`,
         );
 
         if (markedCount === 0) {
           console.log(
-            `[Job ${jobId}] WARNING: No records were marked as printed. This might indicate an issue.`
+            `[Job ${jobId}] WARNING: No records were marked as printed. This might indicate an issue.`,
           );
         }
       } catch (markError) {
         console.error(
           `[Job ${jobId}] Error marking payrolls as printed:`,
-          markError
+          markError,
         );
         console.error(`[Job ${jobId}] Error details:`, markError.message);
       }
 
+      // Clean up temp directory only for download jobs
       if (!isBulkEmailOnly) {
         const tempDir = path.join(process.cwd(), "temp", jobId);
-        fs.rmSync(tempDir, { recursive: true, force: true });
+        try {
+          if (fs.existsSync(tempDir)) {
+            fs.rmSync(tempDir, { recursive: true, force: true });
+            console.log(`[Job ${jobId}] Temp directory cleaned up: ${tempDir}`);
+          }
+        } catch (cleanupError) {
+          console.warn(
+            `[Job ${jobId}] Warning: Could not clean up temp directory: ${cleanupError.message}`,
+          );
+          // Don't fail the job for cleanup issues
+        }
       }
 
       await job.progress(100);
 
       console.log(
-        `[Job ${jobId}] Completed successfully! Processed ${processedCount} records`
+        `[Job ${jobId}] Completed successfully! Processed ${processedCount} records`,
       );
 
       return result;
