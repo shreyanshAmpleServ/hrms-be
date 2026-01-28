@@ -151,7 +151,6 @@ const downloadPayrollExcel = async (req, res, next) => {
 
       console.log(`Excel file sent successfully: ${result.filename}`);
 
-      // Schedule Excel file cleanup after 5 minutes using cleanup manager
       cleanupManager.scheduleCleanup(result.filePath, 300000, "Excel export");
     });
   } catch (error) {
@@ -393,7 +392,6 @@ const downloadPayslipPDF = async (req, res, next) => {
     console.log("Email sending flag:", isEmailEnabled);
     if (isEmailEnabled == "true") {
       try {
-        // Get payroll data for email
         let dbClient;
         if (req.tenantDb) {
           dbClient = getPrismaClient(req.tenantDb);

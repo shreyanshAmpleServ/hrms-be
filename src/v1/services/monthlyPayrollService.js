@@ -123,7 +123,6 @@ const downloadPayslipPDF = async (employee_id, payroll_month, payroll_year) => {
 
   await generatePayslipPDF(data, filePath);
 
-  // Schedule automatic cleanup after 5 minutes using cleanup manager
   cleanupManager.scheduleCleanup(filePath, 300000, "PDF payslip");
 
   return filePath;

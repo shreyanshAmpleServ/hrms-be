@@ -759,7 +759,6 @@ const createOrUpdatePayrollBulk = async (rows, user) => {
         }
       });
 
-      // Validate that we have at least some columns
       if (Object.keys(allCols).length === 0) {
         throw new Error("No valid columns to insert/update");
       }

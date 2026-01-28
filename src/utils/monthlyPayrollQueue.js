@@ -142,7 +142,6 @@ monthlyPayrollQueue.process(async (job) => {
             const filename = `Payslip_${employeeCode}_${employeeName}_${payroll.payroll_month}_${payroll.payroll_year}.pdf`;
             const filePath = path.join(process.cwd(), "temp", jobId, filename);
 
-            // Ensure temp directory exists
             if (!isBulkEmailOnly) {
               const tempDir = path.join(process.cwd(), "temp", jobId);
               if (!fs.existsSync(tempDir)) {
@@ -164,7 +163,6 @@ monthlyPayrollQueue.process(async (job) => {
               `[Job ${jobId}] Final condition result: ${isEmailEnabled === true || isEmailEnabled === "true" || isBulkEmailOnly}`,
             );
 
-            // Send email if enabled OR if this is an email-only job
             if (
               isEmailEnabled === true ||
               isEmailEnabled === "true" ||
@@ -247,11 +245,9 @@ monthlyPayrollQueue.process(async (job) => {
                   emailError.message,
                 );
                 emailSkippedCount++;
-                // Don't re-throw - continue with PDF copying
               }
             }
 
-            // Only create files for download jobs (separate from email)
             if (!isBulkEmailOnly) {
               try {
                 if (!fs.existsSync(pdfFilePath)) {
@@ -393,7 +389,6 @@ monthlyPayrollQueue.process(async (job) => {
         console.error(`[Job ${jobId}] Error details:`, markError.message);
       }
 
-      // Clean up temp directory only for download jobs
       if (!isBulkEmailOnly) {
         const tempDir = path.join(process.cwd(), "temp", jobId);
         try {
@@ -405,7 +400,6 @@ monthlyPayrollQueue.process(async (job) => {
           console.warn(
             `[Job ${jobId}] Warning: Could not clean up temp directory: ${cleanupError.message}`,
           );
-          // Don't fail the job for cleanup issues
         }
       }
 
