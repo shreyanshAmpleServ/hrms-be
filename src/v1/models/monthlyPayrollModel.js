@@ -1973,11 +1973,15 @@ const checkIndividualPayslipDownloaded = async (
   }
 
   try {
+    console.log(
+      `[checkIndividualPayslipDownloaded] Querying for employee_id: ${employee_id}, month: ${payroll_month}, year: ${payroll_year}`,
+    );
+
     const query = `
       SELECT 
         mp.employee_id,
         mp.payroll_month,
-        mp.email,
+        mp.employee_email,
         mp.payroll_year,
         mp.is_printed,
         e.full_name,
@@ -1993,7 +1997,15 @@ const checkIndividualPayslipDownloaded = async (
         AND mp.is_printed = 'Y'
     `;
 
+    console.log(`[checkIndividualPayslipDownloaded] Executing query:`, query);
+
     const result = await dbClient.$queryRawUnsafe(query);
+
+    console.log(`[checkIndividualPayslipDownloaded] Query result:`, result);
+    console.log(
+      `[checkIndividualPayslipDownloaded] Result length:`,
+      result.length,
+    );
 
     return result.length > 0 ? result[0] : null;
   } catch (error) {

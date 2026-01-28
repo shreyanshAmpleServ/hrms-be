@@ -171,78 +171,87 @@ monthlyPayrollQueue.process(async (job) => {
               isBulkEmailOnly
             ) {
               console.log(`[Job ${jobId}] Starting email sending process...`);
-              const monthNames = [
-                "",
-                "January",
-                "February",
-                "March",
-                "April",
-                "May",
-                "June",
-                "July",
-                "August",
-                "September",
-                "October",
-                "November",
-                "December",
-              ];
-              const company =
-                await prisma.hrms_d_default_configurations.findFirst({
-                  select: { company_name: true },
+              try {
+                const monthNames = [
+                  "",
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December",
+                ];
+                const company =
+                  await prisma.hrms_d_default_configurations.findFirst({
+                    select: { company_name: true },
+                  });
+                console.log(
+                  "Company fetched for email:",
+                  company,
+                  payroll?.hrms_monthly_payroll_employee,
+                );
+                const company_name = company?.company_name || "HRMS System";
+                const employeeEmail =
+                  payroll?.hrms_monthly_payroll_employee?.email;
+
+                console.log(`[Job ${jobId}] Employee email data:`, {
+                  employeeId: payroll.employee_id,
+                  employeeName: employeeName,
+                  employeeEmail: employeeEmail,
+                  employeeData: payroll?.hrms_monthly_payroll_employee,
                 });
-              console.log(
-                "Company fetched for email:",
-                company,
-                payroll?.hrms_monthly_payroll_employee,
-              );
-              const company_name = company?.company_name || "HRMS System";
-              const employeeEmail =
-                payroll?.hrms_monthly_payroll_employee?.email;
 
-              console.log(`[Job ${jobId}] Employee email data:`, {
-                employeeId: payroll.employee_id,
-                employeeName: employeeName,
-                employeeEmail: employeeEmail,
-                employeeData: payroll?.hrms_monthly_payroll_employee,
-              });
-
-              if (!employeeEmail) {
-                console.warn(
-                  `[Job ${jobId}] No email found for employee ${payroll.employee_id} - ${employeeName}. Skipping email.`,
+                if (!employeeEmail) {
+                  console.warn(
+                    `[Job ${jobId}] No email found for employee ${payroll.employee_id} - ${employeeName}. Skipping email.`,
+                  );
+                  emailSkippedCount++;
+                } else {
+                  const emailContent = await generateEmailContent(
+                    "payslip_email",
+                    {
+                      employee_name: employeeName,
+                      month: monthNames?.[Number(payroll.payroll_month)],
+                      years: String(payroll.payroll_year),
+                      company_name: company_name,
+                    },
+                  );
+                  console.log("Email content generated:", emailContent);
+                  await sendEmail({
+                    to: employeeEmail,
+                    subject: emailContent.subject,
+                    html: emailContent.body,
+                    log_inst: payroll?.log_inst || 1,
+                    attachments: [
+                      {
+                        filename: originalName,
+                        content: fileBuffer,
+                        contentType: "application/pdf",
+                      },
+                    ],
+                  });
+                  console.log(
+                    `[Job ${jobId}] Email sent successfully to ${employeeEmail} for employee ${payroll.employee_id} - ${employeeName}`,
+                  );
+                  emailSentCount++;
+                }
+              } catch (emailError) {
+                console.error(
+                  `[Job ${jobId}] Email failed for employee ${payroll.employee_id}:`,
+                  emailError.message,
                 );
                 emailSkippedCount++;
-              } else {
-                const emailContent = await generateEmailContent(
-                  "payslip_email",
-                  {
-                    employee_name: employeeName,
-                    month: monthNames?.[Number(payroll.payroll_month)],
-                    years: String(payroll.payroll_year),
-                    company_name: company_name,
-                  },
-                );
-                console.log("Email content generated:", emailContent);
-                await sendEmail({
-                  to: employeeEmail,
-                  subject: emailContent.subject,
-                  html: emailContent.body,
-                  log_inst: payroll?.log_inst || 1,
-                  attachments: [
-                    {
-                      filename: originalName,
-                      content: fileBuffer,
-                      contentType: "application/pdf",
-                    },
-                  ],
-                });
-                console.log(
-                  `[Job ${jobId}] Email sent successfully to ${employeeEmail} for employee ${payroll.employee_id} - ${employeeName}`,
-                );
-                emailSentCount++;
+                // Don't re-throw - continue with PDF copying
               }
             }
 
-            // Only create files for download jobs
+            // Only create files for download jobs (separate from email)
             if (!isBulkEmailOnly) {
               try {
                 if (!fs.existsSync(pdfFilePath)) {
@@ -267,6 +276,17 @@ monthlyPayrollQueue.process(async (job) => {
                 console.log(
                   `[Job ${jobId}] PDF copied successfully (${copiedStats.size} bytes)`,
                 );
+
+                pdfFiles.push({
+                  filename,
+                  employeeName:
+                    payroll.hrms_monthly_payroll_employee?.full_name ||
+                    "Unknown",
+                  employeeCode: employeeCode,
+                  payrollMonth: payroll.payroll_month,
+                  payrollYear: payroll.payroll_year,
+                  path: filePath,
+                });
               } catch (copyError) {
                 console.error(
                   `[Job ${jobId}] Error copying PDF file:`,
@@ -276,16 +296,6 @@ monthlyPayrollQueue.process(async (job) => {
                   `Failed to copy PDF file: ${copyError.message}`,
                 );
               }
-
-              pdfFiles.push({
-                filename,
-                employeeName:
-                  payroll.hrms_monthly_payroll_employee?.full_name || "Unknown",
-                employeeCode: employeeCode,
-                payrollMonth: payroll.payroll_month,
-                payrollYear: payroll.payroll_year,
-                path: filePath,
-              });
             }
 
             processedCount++;
