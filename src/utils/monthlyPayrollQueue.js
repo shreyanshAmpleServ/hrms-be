@@ -341,12 +341,47 @@ monthlyPayrollQueue.process(async (job) => {
           fs.mkdirSync(zipDir, { recursive: true });
         }
 
+        console.log(`[Job ${jobId}] Creating ZIP for download job...`);
+        console.log(
+          `[Job ${jobId}] PDF files to include in ZIP:`,
+          pdfFiles.length,
+        );
+        console.log(
+          `[Job ${jobId}] PDF files details:`,
+          pdfFiles.map((f) => ({
+            filename: f.filename,
+            path: f.path,
+            size: fs.existsSync(f.path)
+              ? fs.statSync(f.path).size
+              : "file not found",
+          })),
+        );
+
+        if (pdfFiles.length === 0) {
+          console.warn(
+            `[Job ${jobId}] WARNING: No PDF files to include in ZIP!`,
+          );
+        }
+
         const filesForZip = pdfFiles.map((pdfFile) => ({
           path: pdfFile.path,
           name: pdfFile.filename,
         }));
 
+        console.log(`[Job ${jobId}] Files for ZIP:`, filesForZip);
+
         await createZip(filesForZip, zipPath);
+
+        // Check ZIP file size after creation
+        if (fs.existsSync(zipPath)) {
+          const zipStats = fs.statSync(zipPath);
+          console.log(
+            `[Job ${jobId}] ZIP created: ${zipStats.size} total bytes`,
+          );
+        } else {
+          console.error(`[Job ${jobId}] ERROR: ZIP file was not created!`);
+        }
+
         await job.progress(95);
 
         result = {

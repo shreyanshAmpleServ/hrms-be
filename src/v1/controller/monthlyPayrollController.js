@@ -392,23 +392,20 @@ const downloadPayslipPDF = async (req, res, next) => {
     console.log("Email sending flag:", isEmailEnabled);
     if (isEmailEnabled == "true") {
       try {
-        let dbClient;
-        if (req.tenantDb) {
-          dbClient = getPrismaClient(req.tenantDb);
-        } else {
-          dbClient = getPrismaClient();
-        }
+        // Get payroll data for email - fetch it from the service
+        const payrollDataForEmail =
+          await monthlyPayrollService.getPayrollDataForEmail(
+            employee_id,
+            payroll_month,
+            payroll_year,
+            req.tenantDb,
+          );
 
-        const payrollResult = await dbClient.$queryRawUnsafe(`
-          SELECT mp.employee_email, e.full_name, mp.log_inst
-          FROM hrms_d_monthly_payroll_processing mp
-          LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
-          WHERE mp.employee_id = ${Number(employee_id)}
-            AND mp.payroll_month = ${Number(payroll_month)}
-            AND mp.payroll_year = ${Number(payroll_year)}
-        `);
-
-        const payrollData = payrollResult[0];
+        console.log(`[Individual Download] Using payroll data for email:`, {
+          employee_email: payrollDataForEmail?.employee_email,
+          full_name: payrollDataForEmail?.full_name,
+          log_inst: payrollDataForEmail?.log_inst,
+        });
 
         const monthNames = [
           "",
@@ -429,7 +426,11 @@ const downloadPayslipPDF = async (req, res, next) => {
           select: { company_name: true },
         });
         const company_name = company?.company_name || "HRMS System";
-        const employeeEmail = payrollData?.employee_email;
+        const employeeEmail = payrollDataForEmail?.employee_email;
+
+        console.log(
+          `[Individual Download] Employee email extracted: "${employeeEmail}"`,
+        );
 
         if (!employeeEmail) {
           console.warn(
@@ -437,7 +438,7 @@ const downloadPayslipPDF = async (req, res, next) => {
           );
         } else {
           const emailContent = await generateEmailContent("payslip_email", {
-            employee_name: payrollData?.full_name || "Employee",
+            employee_name: payrollDataForEmail?.full_name || "Employee",
             month: monthNames?.[Number(payroll_month)],
             years: String(payroll_year),
             company_name: company_name,
@@ -446,7 +447,7 @@ const downloadPayslipPDF = async (req, res, next) => {
             to: employeeEmail,
             subject: emailContent.subject,
             html: emailContent.body,
-            log_inst: payrollData?.log_inst || 1,
+            log_inst: payrollDataForEmail?.log_inst || 1,
             attachments: [
               {
                 filename: originalName,

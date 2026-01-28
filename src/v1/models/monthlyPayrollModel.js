@@ -2033,6 +2033,10 @@ const markIndividualPayslipAsPrinted = async (
   }
 
   try {
+    console.log(
+      `[markIndividualPayslipAsPrinted] Updating: employee_id=${employee_id}, month=${payroll_month}, year=${payroll_year}, user=${userId}`,
+    );
+
     const updateQuery = `
       UPDATE hrms_d_monthly_payroll_processing 
       SET is_printed = 'Y', 
@@ -2044,10 +2048,15 @@ const markIndividualPayslipAsPrinted = async (
         AND (is_printed IS NULL OR is_printed = 'N')
     `;
 
+    console.log(
+      `[markIndividualPayslipAsPrinted] Executing query:`,
+      updateQuery,
+    );
+
     const result = await dbClient.$executeRawUnsafe(updateQuery);
 
     console.log(
-      `Marked individual payslip as printed: Employee ${employee_id}, ${payroll_month}/${payroll_year}`,
+      `Marked individual payslip as printed: Employee ${employee_id}, ${payroll_month}/${payroll_year}. Rows affected: ${result}`,
     );
     return result;
   } catch (error) {
@@ -2339,13 +2348,43 @@ const markPayrollsAsPrinted = async (filters, userId, tenantDb = null) => {
   }
 
   try {
+    console.log(
+      `[markPayrollsAsPrinted] Filters:`,
+      JSON.stringify(filters, null, 2),
+    );
+    console.log(`[markPayrollsAsPrinted] UserId:`, userId);
+    console.log(`[markPayrollsAsPrinted] TenantDb:`, tenantDb);
+
+    // First check what records exist with these payslip IDs
+    if (filters.payslip_ids) {
+      const checkQuery = `
+        SELECT id, employee_id, payroll_month, payroll_year, is_printed
+        FROM hrms_d_monthly_payroll_processing 
+        WHERE id IN (${filters.payslip_ids.join(", ")})
+      `;
+      console.log(
+        `[markPayrollsAsPrinted] Checking existing records:`,
+        checkQuery,
+      );
+      const existingRecords = await dbClient.$queryRawUnsafe(checkQuery);
+      console.log(`[markPayrollsAsPrinted] Existing records:`, existingRecords);
+    }
+
     let whereConditions = ["is_printed IS NULL OR is_printed = 'N'"];
 
-    if (filters.employee_ids) {
+    if (filters.payslip_ids) {
+      const validIds = filters.payslip_ids.filter((id) => id && !isNaN(id));
+      if (validIds.length > 0) {
+        const idList = validIds.map((id) => Number(id)).join(", ");
+        whereConditions.push(`id IN (${idList})`);
+        console.log(`[markPayrollsAsPrinted] Payslip IDs filter: ${idList}`);
+      }
+    } else if (filters.employee_ids) {
       const validIds = filters.employee_ids.filter((id) => id && !isNaN(id));
       if (validIds.length > 0) {
         const idList = validIds.map((id) => Number(id)).join(", ");
         whereConditions.push(`employee_id IN (${idList})`);
+        console.log(`[markPayrollsAsPrinted] Employee IDs filter: ${idList}`);
       }
     } else if (filters.employee_id) {
       if (filters.employee_id.gte && filters.employee_id.lte) {
@@ -2408,6 +2447,8 @@ const markPayrollsAsPrinted = async (filters, userId, tenantDb = null) => {
 
     const whereClause = whereConditions.join(" AND ");
 
+    console.log(`[markPayrollsAsPrinted] Final WHERE clause: ${whereClause}`);
+
     const updateQuery = `
       UPDATE hrms_d_monthly_payroll_processing 
       SET is_printed = 'Y', 
@@ -2415,6 +2456,8 @@ const markPayrollsAsPrinted = async (filters, userId, tenantDb = null) => {
           updatedby = ${userId}
       WHERE ${whereClause}
     `;
+
+    console.log(`[markPayrollsAsPrinted] Executing query:`, updateQuery);
 
     const result = await dbClient.$executeRawUnsafe(updateQuery);
 

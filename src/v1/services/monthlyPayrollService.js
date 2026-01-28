@@ -4,8 +4,61 @@ const { generatePayslipPDF } = require("../../utils/pdfUtils.js");
 const fs = require("fs");
 const path = require("path");
 const cleanupManager = require("../../utils/fileCleanupManager.js");
+const { prisma, asyncLocalStorage } = require("../../utils/prismaProxy.js");
+const { getPrismaClient } = require("../../config/db.js");
 
 const ExcelJS = require("exceljs");
+
+const getPayrollDataForEmail = async (
+  employee_id,
+  payroll_month,
+  payroll_year,
+  tenantDb = null,
+) => {
+  console.log(
+    `[getPayrollDataForEmail] Called with: employee_id=${employee_id}, month=${payroll_month}, year=${payroll_year}, tenantDb=${tenantDb}`,
+  );
+
+  let dbClient;
+  if (tenantDb) {
+    dbClient = getPrismaClient(tenantDb);
+    console.log(`[getPayrollDataForEmail] Using tenant DB: ${tenantDb}`);
+  } else {
+    const store = asyncLocalStorage.getStore();
+    if (store && store.tenantDb) {
+      dbClient = prisma;
+      console.log(
+        `[getPayrollDataForEmail] Using tenant DB from context: ${store.tenantDb}`,
+      );
+    } else {
+      dbClient = prisma;
+      console.log(`[getPayrollDataForEmail] Using default DB`);
+    }
+  }
+
+  try {
+    const query = `
+      SELECT e.email AS employee_email, e.full_name, mp.log_inst
+      FROM hrms_d_monthly_payroll_processing mp
+      LEFT JOIN hrms_d_employee e ON mp.employee_id = e.id
+      WHERE mp.employee_id = ${Number(employee_id)}
+        AND mp.payroll_month = ${Number(payroll_month)}
+        AND mp.payroll_year = ${Number(payroll_year)}
+    `;
+
+    console.log(`[getPayrollDataForEmail] Executing query:`, query);
+
+    const result = await dbClient.$queryRawUnsafe(query);
+
+    console.log(`[getPayrollDataForEmail] Query result:`, result);
+    console.log(`[getPayrollDataForEmail] Result length:`, result.length);
+
+    return result[0] || null;
+  } catch (error) {
+    console.error("Error getting payroll data for email:", error);
+    return null;
+  }
+};
 
 const createMonthlyPayroll = async (data) => {
   return await monthlyPayrollModel.createMonthlyPayroll(data);
@@ -481,4 +534,5 @@ module.exports = {
   getAllMonthlyPayrollsForBulkDownload,
   getMonthlyPayrollCountForBulkDownload,
   getMonthlyPayrollsPaginatedForBulkDownload,
+  getPayrollDataForEmail,
 };
