@@ -151,7 +151,6 @@ const downloadPayrollExcel = async (req, res, next) => {
 
       console.log(`Excel file sent successfully: ${result.filename}`);
 
-      // Schedule Excel file cleanup after 5 minutes using cleanup manager
       cleanupManager.scheduleCleanup(result.filePath, 300000, "Excel export");
     });
   } catch (error) {
@@ -320,11 +319,22 @@ const downloadPayslipPDF = async (req, res, next) => {
       throw new CustomError("Missing required parameters", 400);
     }
 
+    console.log(
+      `Checking download status for Employee ${employee_id}, Month ${payroll_month}, Year ${payroll_year}`,
+    );
+
     const alreadyDownloaded = await checkIndividualPayslipDownloaded(
       employee_id,
       payroll_month,
       payroll_year,
       req.tenantDb,
+    );
+
+    console.log(`Download check result:`, alreadyDownloaded);
+    console.log(`Force download parameter:`, force_download);
+    console.log(
+      `Condition check - alreadyDownloaded && force_download !== "true":`,
+      alreadyDownloaded && force_download !== "true",
     );
 
     if (alreadyDownloaded && force_download !== "true") {
@@ -381,48 +391,82 @@ const downloadPayslipPDF = async (req, res, next) => {
     }
     console.log("Email sending flag:", isEmailEnabled);
     if (isEmailEnabled == "true") {
-      const monthNames = [
-        "",
-        "January",
-        "February",
-        "March",
-        "April",
-        "May",
-        "June",
-        "July",
-        "August",
-        "September",
-        "October",
-        "November",
-        "December",
-      ];
-      const company = await prisma.hrms_d_default_configurations.findFirst({
-        select: { company_name: true },
-      });
-      console.log("Company fetched for email:", company);
-      const company_name = company?.company_name || "HRMS System";
-      // const employee = reqData?.payslip_employee;
-      const emailContent = await generateEmailContent("payslip_email", {
-        employee_name: alreadyDownloaded?.full_name || "Employee",
-        month: monthNames?.[Number(payroll_month)],
-        years: String(payroll_year),
-        company_name: company_name,
-      });
-      console.log("Email content generated:", emailContent);
-      await sendEmail({
-        to: "shreyansh.tripathi@ampleserv.com",
-        // to: alreadyDownloaded?.email,
-        subject: emailContent.subject,
-        html: emailContent.body,
-        log_inst: alreadyDownloaded?.log_inst || 1,
-        attachments: [
-          {
-            filename: originalName,
-            content: fileBuffer,
-            contentType: "application/pdf",
-          },
-        ],
-      });
+      try {
+        // Get payroll data for email - fetch it from the service
+        const payrollDataForEmail =
+          await monthlyPayrollService.getPayrollDataForEmail(
+            employee_id,
+            payroll_month,
+            payroll_year,
+            req.tenantDb,
+          );
+
+        console.log(`[Individual Download] Using payroll data for email:`, {
+          employee_email: payrollDataForEmail?.employee_email,
+          full_name: payrollDataForEmail?.full_name,
+          log_inst: payrollDataForEmail?.log_inst,
+        });
+
+        const monthNames = [
+          "",
+          "January",
+          "February",
+          "March",
+          "April",
+          "May",
+          "June",
+          "July",
+          "August",
+          "September",
+          "October",
+          "November",
+          "December",
+        ];
+        const company = await prisma.hrms_d_default_configurations.findFirst({
+          select: { company_name: true },
+        });
+        const company_name = company?.company_name || "HRMS System";
+        const employeeEmail = payrollDataForEmail?.employee_email;
+
+        console.log(
+          `[Individual Download] Employee email extracted: "${employeeEmail}"`,
+        );
+
+        if (!employeeEmail) {
+          console.warn(
+            `No email found for employee ${employee_id}. Skipping email.`,
+          );
+        } else {
+          const emailContent = await generateEmailContent("payslip_email", {
+            employee_name: payrollDataForEmail?.full_name || "Employee",
+            month: monthNames?.[Number(payroll_month)],
+            years: String(payroll_year),
+            company_name: company_name,
+          });
+          await sendEmail({
+            to: employeeEmail,
+            subject: emailContent.subject,
+            html: emailContent.body,
+            log_inst: payrollDataForEmail?.log_inst || 1,
+            attachments: [
+              {
+                filename: originalName,
+                content: fileBuffer,
+                contentType: "application/pdf",
+              },
+            ],
+          });
+          console.log(
+            `Email sent successfully to ${employeeEmail} for employee ${employee_id}`,
+          );
+        }
+      } catch (emailError) {
+        console.error(
+          `Email failed for employee ${employee_id}:`,
+          emailError.message,
+        );
+        // Don't fail the request - continue with download
+      }
     }
     try {
       await markIndividualPayslipAsPrinted(
@@ -451,7 +495,11 @@ const downloadPayslipPDF = async (req, res, next) => {
         await deleteFromBackblaze(fileUrl);
         console.log(`File auto-deleted from Backblaze after 10 seconds`);
       } catch (error) {
-        console.error("Error auto-deleting file from Backblaze:", error);
+        if (!error.message.includes("File not found")) {
+          console.error("Error auto-deleting file from Backblaze:", error);
+        } else {
+          console.log(`File was already deleted from Backblaze `);
+        }
       }
     }, 10000);
   } catch (error) {
@@ -721,7 +769,6 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
       `Found ${payrollCount} monthly payroll record(s) matching filters`,
     );
 
-    // Skip already downloaded check for email-only jobs
     if (isEmailOnly !== "true") {
       console.log(
         "bulkDownloadMonthlyPayroll - Checking for already downloaded payrolls...",

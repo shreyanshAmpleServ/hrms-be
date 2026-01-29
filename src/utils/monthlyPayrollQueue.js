@@ -142,7 +142,6 @@ monthlyPayrollQueue.process(async (job) => {
             const filename = `Payslip_${employeeCode}_${employeeName}_${payroll.payroll_month}_${payroll.payroll_year}.pdf`;
             const filePath = path.join(process.cwd(), "temp", jobId, filename);
 
-            // Ensure temp directory exists
             if (!isBulkEmailOnly) {
               const tempDir = path.join(process.cwd(), "temp", jobId);
               if (!fs.existsSync(tempDir)) {
@@ -164,85 +163,91 @@ monthlyPayrollQueue.process(async (job) => {
               `[Job ${jobId}] Final condition result: ${isEmailEnabled === true || isEmailEnabled === "true" || isBulkEmailOnly}`,
             );
 
-            // Send email if enabled OR if this is an email-only job
             if (
               isEmailEnabled === true ||
               isEmailEnabled === "true" ||
               isBulkEmailOnly
             ) {
               console.log(`[Job ${jobId}] Starting email sending process...`);
-              const monthNames = [
-                "",
-                "January",
-                "February",
-                "March",
-                "April",
-                "May",
-                "June",
-                "July",
-                "August",
-                "September",
-                "October",
-                "November",
-                "December",
-              ];
-              const company =
-                await prisma.hrms_d_default_configurations.findFirst({
-                  select: { company_name: true },
+              try {
+                const monthNames = [
+                  "",
+                  "January",
+                  "February",
+                  "March",
+                  "April",
+                  "May",
+                  "June",
+                  "July",
+                  "August",
+                  "September",
+                  "October",
+                  "November",
+                  "December",
+                ];
+                const company =
+                  await prisma.hrms_d_default_configurations.findFirst({
+                    select: { company_name: true },
+                  });
+                console.log(
+                  "Company fetched for email:",
+                  company,
+                  payroll?.hrms_monthly_payroll_employee,
+                );
+                const company_name = company?.company_name || "HRMS System";
+                const employeeEmail =
+                  payroll?.hrms_monthly_payroll_employee?.email;
+
+                console.log(`[Job ${jobId}] Employee email data:`, {
+                  employeeId: payroll.employee_id,
+                  employeeName: employeeName,
+                  employeeEmail: employeeEmail,
+                  employeeData: payroll?.hrms_monthly_payroll_employee,
                 });
-              console.log(
-                "Company fetched for email:",
-                company,
-                payroll?.hrms_monthly_payroll_employee,
-              );
-              const company_name = company?.company_name || "HRMS System";
-              const employeeEmail =
-                payroll?.hrms_monthly_payroll_employee?.email;
 
-              console.log(`[Job ${jobId}] Employee email data:`, {
-                employeeId: payroll.employee_id,
-                employeeName: employeeName,
-                employeeEmail: employeeEmail,
-                employeeData: payroll?.hrms_monthly_payroll_employee,
-              });
-
-              if (!employeeEmail) {
-                console.warn(
-                  `[Job ${jobId}] No email found for employee ${payroll.employee_id} - ${employeeName}. Skipping email.`,
+                if (!employeeEmail) {
+                  console.warn(
+                    `[Job ${jobId}] No email found for employee ${payroll.employee_id} - ${employeeName}. Skipping email.`,
+                  );
+                  emailSkippedCount++;
+                } else {
+                  const emailContent = await generateEmailContent(
+                    "payslip_email",
+                    {
+                      employee_name: employeeName,
+                      month: monthNames?.[Number(payroll.payroll_month)],
+                      years: String(payroll.payroll_year),
+                      company_name: company_name,
+                    },
+                  );
+                  console.log("Email content generated:", emailContent);
+                  await sendEmail({
+                    to: employeeEmail,
+                    subject: emailContent.subject,
+                    html: emailContent.body,
+                    log_inst: payroll?.log_inst || 1,
+                    attachments: [
+                      {
+                        filename: originalName,
+                        content: fileBuffer,
+                        contentType: "application/pdf",
+                      },
+                    ],
+                  });
+                  console.log(
+                    `[Job ${jobId}] Email sent successfully to ${employeeEmail} for employee ${payroll.employee_id} - ${employeeName}`,
+                  );
+                  emailSentCount++;
+                }
+              } catch (emailError) {
+                console.error(
+                  `[Job ${jobId}] Email failed for employee ${payroll.employee_id}:`,
+                  emailError.message,
                 );
                 emailSkippedCount++;
-              } else {
-                const emailContent = await generateEmailContent(
-                  "payslip_email",
-                  {
-                    employee_name: employeeName,
-                    month: monthNames?.[Number(payroll.payroll_month)],
-                    years: String(payroll.payroll_year),
-                    company_name: company_name,
-                  },
-                );
-                console.log("Email content generated:", emailContent);
-                await sendEmail({
-                  to: employeeEmail,
-                  subject: emailContent.subject,
-                  html: emailContent.body,
-                  log_inst: payroll?.log_inst || 1,
-                  attachments: [
-                    {
-                      filename: originalName,
-                      content: fileBuffer,
-                      contentType: "application/pdf",
-                    },
-                  ],
-                });
-                console.log(
-                  `[Job ${jobId}] Email sent successfully to ${employeeEmail} for employee ${payroll.employee_id} - ${employeeName}`,
-                );
-                emailSentCount++;
               }
             }
 
-            // Only create files for download jobs
             if (!isBulkEmailOnly) {
               try {
                 if (!fs.existsSync(pdfFilePath)) {
@@ -267,6 +272,17 @@ monthlyPayrollQueue.process(async (job) => {
                 console.log(
                   `[Job ${jobId}] PDF copied successfully (${copiedStats.size} bytes)`,
                 );
+
+                pdfFiles.push({
+                  filename,
+                  employeeName:
+                    payroll.hrms_monthly_payroll_employee?.full_name ||
+                    "Unknown",
+                  employeeCode: employeeCode,
+                  payrollMonth: payroll.payroll_month,
+                  payrollYear: payroll.payroll_year,
+                  path: filePath,
+                });
               } catch (copyError) {
                 console.error(
                   `[Job ${jobId}] Error copying PDF file:`,
@@ -276,16 +292,6 @@ monthlyPayrollQueue.process(async (job) => {
                   `Failed to copy PDF file: ${copyError.message}`,
                 );
               }
-
-              pdfFiles.push({
-                filename,
-                employeeName:
-                  payroll.hrms_monthly_payroll_employee?.full_name || "Unknown",
-                employeeCode: employeeCode,
-                payrollMonth: payroll.payroll_month,
-                payrollYear: payroll.payroll_year,
-                path: filePath,
-              });
             }
 
             processedCount++;
@@ -335,12 +341,47 @@ monthlyPayrollQueue.process(async (job) => {
           fs.mkdirSync(zipDir, { recursive: true });
         }
 
+        console.log(`[Job ${jobId}] Creating ZIP for download job...`);
+        console.log(
+          `[Job ${jobId}] PDF files to include in ZIP:`,
+          pdfFiles.length,
+        );
+        console.log(
+          `[Job ${jobId}] PDF files details:`,
+          pdfFiles.map((f) => ({
+            filename: f.filename,
+            path: f.path,
+            size: fs.existsSync(f.path)
+              ? fs.statSync(f.path).size
+              : "file not found",
+          })),
+        );
+
+        if (pdfFiles.length === 0) {
+          console.warn(
+            `[Job ${jobId}] WARNING: No PDF files to include in ZIP!`,
+          );
+        }
+
         const filesForZip = pdfFiles.map((pdfFile) => ({
           path: pdfFile.path,
           name: pdfFile.filename,
         }));
 
+        console.log(`[Job ${jobId}] Files for ZIP:`, filesForZip);
+
         await createZip(filesForZip, zipPath);
+
+        // Check ZIP file size after creation
+        if (fs.existsSync(zipPath)) {
+          const zipStats = fs.statSync(zipPath);
+          console.log(
+            `[Job ${jobId}] ZIP created: ${zipStats.size} total bytes`,
+          );
+        } else {
+          console.error(`[Job ${jobId}] ERROR: ZIP file was not created!`);
+        }
+
         await job.progress(95);
 
         result = {
@@ -383,7 +424,6 @@ monthlyPayrollQueue.process(async (job) => {
         console.error(`[Job ${jobId}] Error details:`, markError.message);
       }
 
-      // Clean up temp directory only for download jobs
       if (!isBulkEmailOnly) {
         const tempDir = path.join(process.cwd(), "temp", jobId);
         try {
@@ -395,7 +435,6 @@ monthlyPayrollQueue.process(async (job) => {
           console.warn(
             `[Job ${jobId}] Warning: Could not clean up temp directory: ${cleanupError.message}`,
           );
-          // Don't fail the job for cleanup issues
         }
       }
 
