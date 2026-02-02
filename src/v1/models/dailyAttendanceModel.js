@@ -603,6 +603,7 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
           check_out_time: true,
           working_hours: true,
           overtime_hours: true,
+          attendance_overtime_type: true,
         },
       });
 
@@ -618,13 +619,13 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
     attendanceEntries.forEach((entry) => {
       const status = entry.status?.toLowerCase();
       if (status === "present") summary.present++;
+      if (entry?.overtime_hours) summary.total_overtime++;
       else if (status === "absent") summary.absent++;
       else if (status === "leave") summary.leave++;
       else if (status === "late") summary.late++;
       else if (status === "half day" || status === "half_day")
         summary.half_Day++;
 
-      summary.total_overtime += summary.overtime_hours;
       // summary.total_overtime += calculateOvertimeHours(
       //   entry.check_in_time,
       //   entry.check_out_time,
@@ -659,6 +660,7 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
         check_out_time: entry?.check_out_time || null,
         working_hours: entry?.working_hours || null,
         overtime_hours: entry?.overtime_hours || 0,
+        attendance_overtime_type: entry?.attendance_overtime_type || null,
         // overtime_hours: entry
         //   ? calculateOvertimeHours(entry.check_in_time, entry.check_out_time)
         //   : 0,
