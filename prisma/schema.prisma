@@ -1421,6 +1421,7 @@ model hrms_m_pay_component {
   pay_component_project                 hrms_m_projects?                                @relation(fields: [project_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   pay_component_tax                     hrms_m_tax_slab_rule?                           @relation("TaxSlabRule", fields: [tax_code_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_m_pay_component_formula          hrms_m_pay_component_formula[]
+  overTime_payComponent                 hrms_m_overtime_setup[]
   tax_slab_pay_component                hrms_m_tax_slab_rule[]
   pay_component_for_contract            hrms_d_pay_component_contract[]
   kpi_component_pay_component           hrms_d_employee_kpi_component_lines[]
@@ -1758,24 +1759,27 @@ model hrms_d_kpi_progress_entry {
 }
 
 model hrms_d_daily_attendance_entry {
-  id                             Int             @id @default(autoincrement())
+  id                             Int                    @id @default(autoincrement())
   employee_id                    Int
-  attendance_date                DateTime        @db.Date
-  check_in_time                  DateTime?       @db.DateTime
-  check_out_time                 DateTime?       @db.DateTime
-  status                         String          @db.NVarChar(20)
-  remarks                        String?         @db.NVarChar(250)
-  createdate                     DateTime        @default(now()) @db.DateTime
+  attendance_date                DateTime               @db.Date
+  check_in_time                  DateTime?              @db.DateTime
+  check_out_time                 DateTime?              @db.DateTime
+  status                         String                 @db.NVarChar(20)
+  remarks                        String?                @db.NVarChar(250)
+  createdate                     DateTime               @default(now()) @db.DateTime
   createdby                      Int
-  updatedate                     DateTime?       @db.DateTime
+  updatedate                     DateTime?              @db.DateTime
   updatedby                      Int?
   log_inst                       Int?
-  working_hours                  Decimal?        @db.Decimal(18, 0)
-  manager_verified               String?         @db.VarChar(100)
+  working_hours                  Decimal?               @db.Decimal(18, 0)
+  overtime_hours                 Decimal?               @db.Decimal(18, 0)
+  overtime_types                 Int?
+  manager_verified               String?                @db.VarChar(100)
   manager_verification_date      DateTime?
-  manager_remarks                String?         @db.Text
+  manager_remarks                String?                @db.Text
   verified_by_manager_id         Int?
-  hrms_daily_attendance_employee hrms_d_employee @relation("DailyAttendanceRelation", fields: [employee_id], references: [id], onUpdate: NoAction)
+  hrms_daily_attendance_employee hrms_d_employee        @relation("DailyAttendanceRelation", fields: [employee_id], references: [id], onUpdate: NoAction)
+  attendance_overtime_type       hrms_m_overtime_setup? @relation(fields: [overtime_types], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_monthly_payroll_processing {
@@ -2546,16 +2550,18 @@ model hrms_m_loan_master {
 }
 
 model hrms_m_overtime_setup {
-  id                       Int       @id @default(autoincrement())
-  days_code                String    @db.VarChar(20)
-  wage_type                String    @db.VarChar(50)
-  hourly_rate_hike         Decimal   @db.Decimal(10, 5)
-  maximum_overtime_allowed String    @db.VarChar(50)
-  createdate               DateTime  @default(now())
+  id                       Int                             @id @default(autoincrement())
+  days_code                String                          @db.VarChar(20)
+  wage_type                Int
+  hourly_rate_hike         Decimal?                        @db.Decimal(10, 5)
+  maximum_overtime_allowed String?                         @db.VarChar(50)
+  createdate               DateTime                        @default(now())
   createdby                Int
   log_inst                 Int?
   updatedate               DateTime?
   updatedby                Int?
+  attendance_overtime_type hrms_d_daily_attendance_entry[]
+  overTime_payComponent    hrms_m_pay_component            @relation(fields: [wage_type], references: [id], onUpdate: NoAction, onDelete: NoAction)
 }
 
 model hrms_m_tax_slab_rule1 {

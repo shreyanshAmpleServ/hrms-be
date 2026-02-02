@@ -1,13 +1,52 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const XLSX = require("xlsx");
 const { includes } = require("zod/v4");
 
 const { DateTime, Interval } = require("luxon");
+const isWeekend = (date) => {
+  const day = date.getUTCDay(); // safe UTC
+  return day === 0 || day === 6;
+};
+const getDayName = (date) => {
+  return date.toLocaleDateString("en-US", {
+    weekday: "long",
+    timeZone: "UTC",
+  });
+};
+const parseDDMMYYYY = (dateStr) => {
+  if (!dateStr) return "All Dates is not find.";
+
+  const [dd, mm, yyyy] = dateStr?.split("/").map(Number);
+  return new Date(Date.UTC(yyyy, mm - 1, dd));
+};
+const parseTime = (date, timeStr) => {
+  if (!date || !timeStr) return "All time is not find.";
+
+  const [hh, mm] = timeStr?.split(":").map(Number);
+
+  const d = new Date(date);
+  d.setUTCHours(hh, mm, 0, 0);
+  return d;
+};
 
 const timeStringToDecimal = (timeStr) => {
   if (!timeStr || typeof timeStr !== "string") return null;
   const [hours, minutes, seconds] = timeStr.split(":").map(Number);
   return parseFloat((hours + minutes / 60 + seconds / 3600).toFixed(2));
+};
+const getOvertimeTypeIdByDate = async (attendanceDate) => {
+  if (!attendanceDate) return null;
+
+  const day = new Date(attendanceDate).getUTCDay();
+  const dayCode = day === 0 || day === 6 ? "Weekend" : "Normal";
+
+  const overtimeType = await prisma.hrms_m_overtime_setup.findFirst({
+    where: { days_code: dayCode },
+    select: { id: true },
+  });
+
+  return overtimeType?.id || null;
 };
 
 // Serialize attendance data
@@ -16,11 +55,20 @@ const serializeAttendanceData = async (data) => {
   const checkOut = data.check_out_time ? new Date(data.check_out_time) : null;
 
   let working_hours = null;
+  let overtime_hours = 0;
+  let overtime_types = null;
   let status = data.status;
 
   if (checkIn && checkOut && checkOut > checkIn) {
     const diffMs = checkOut - checkIn;
     working_hours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+
+    // 🔹 overtime (default 8 hrs)
+    overtime_hours = Math.max(0, parseFloat((working_hours - 8).toFixed(2)));
+
+    if (overtime_hours > 0) {
+      overtime_types = await getOvertimeTypeIdByDate(data.attendance_date);
+    }
   }
 
   if (!status && working_hours !== null && data.employee_id) {
@@ -37,6 +85,8 @@ const serializeAttendanceData = async (data) => {
     status,
     remarks: data.remarks || "",
     working_hours,
+    overtime_hours,
+    overtime_types,
   };
 };
 
@@ -82,6 +132,7 @@ const createDailyAttendance = async (data) => {
             employee_code: true,
             full_name: true,
           },
+          attendance_overtime_type: true,
         },
       },
     });
@@ -90,24 +141,7 @@ const createDailyAttendance = async (data) => {
   } catch (error) {
     throw new CustomError(
       `Error creating attendance entry: ${error.message}`,
-      500
-    );
-  }
-};
-
-const findDailyAttendanceById = async (id) => {
-  try {
-    const reqData = await prisma.hrms_d_daily_attendance_entry.findUnique({
-      where: { id: parseInt(id) },
-    });
-    if (!reqData) {
-      throw new CustomError("Attendance entry not found", 404);
-    }
-    return reqData;
-  } catch (error) {
-    throw new CustomError(
-      `Error finding attendance entry by ID: ${error.message}`,
-      503
+      500,
     );
   }
 };
@@ -135,6 +169,7 @@ const upsertDailyAttendance = async (id, data) => {
               full_name: true,
             },
           },
+          attendance_overtime_type: true,
         },
       });
     } else {
@@ -163,6 +198,23 @@ const upsertDailyAttendance = async (id, data) => {
   }
 };
 
+const findDailyAttendanceById = async (id) => {
+  try {
+    const reqData = await prisma.hrms_d_daily_attendance_entry.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!reqData) {
+      throw new CustomError("Attendance entry not found", 404);
+    }
+    return reqData;
+  } catch (error) {
+    throw new CustomError(
+      `Error finding attendance entry by ID: ${error.message}`,
+      503,
+    );
+  }
+};
+
 // Delete attendance entry
 const deleteDailyAttendance = async (id) => {
   try {
@@ -173,7 +225,7 @@ const deleteDailyAttendance = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -186,7 +238,7 @@ const getAllDailyAttendance = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -237,6 +289,7 @@ const getAllDailyAttendance = async (
               employee_code: true,
               full_name: true,
             },
+            attendance_overtime_type: true,
           },
         },
       });
@@ -255,6 +308,9 @@ const getAllDailyAttendance = async (
       const dateStr = current.toISOString().split("T")[0];
       const entry = attendanceMap[dateStr];
 
+      const weekend = isWeekend(current);
+      const dayName = getDayName(current);
+
       if (entry) {
         allDates.push({
           id: entry.id,
@@ -262,19 +318,51 @@ const getAllDailyAttendance = async (
           status: entry.status,
           remarks: entry.remarks,
           hrms_daily_attendance_employee: entry.hrms_daily_attendance_employee,
+          attendance_overtime_type: entry.attendance_overtime_type,
+          is_weekend: weekend,
+          day_name: dayName,
         });
       } else {
         allDates.push({
           id: null,
           attendance_date: new Date(dateStr),
-          status: null,
+          status: weekend ? "Weekend" : null,
           remarks: null,
           hrms_daily_attendance_employee: null,
+          attendance_overtime_type: null,
+
+          is_weekend: weekend,
+          day_name: dayName,
         });
       }
 
       current.setUTCDate(current.getUTCDate() + 1);
     }
+
+    // while (current <= final) {
+    //   const dateStr = current.toISOString().split("T")[0];
+    //   const entry = attendanceMap[dateStr];
+
+    //   if (entry) {
+    //     allDates.push({
+    //       id: entry.id,
+    //       attendance_date: entry.attendance_date,
+    //       status: entry.status,
+    //       remarks: entry.remarks,
+    //       hrms_daily_attendance_employee: entry.hrms_daily_attendance_employee,
+    //     });
+    //   } else {
+    //     allDates.push({
+    //       id: null,
+    //       attendance_date: new Date(dateStr),
+    //       status: null,
+    //       remarks: null,
+    //       hrms_daily_attendance_employee: null,
+    //     });
+    //   }
+
+    //   current.setUTCDate(current.getUTCDate() + 1);
+    // }
 
     const paginated = allDates.slice(skip, skip + size);
 
@@ -310,7 +398,7 @@ const getAttendanceSummaryByEmployee = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -403,7 +491,7 @@ const getAttendanceSummaryByEmployee = async (
       }
       employeeOvertimeMap[employee_id] += calculateOvertimeHours(
         check_in_time,
-        check_out_time
+        check_out_time,
       );
     });
 
@@ -426,7 +514,7 @@ const getAttendanceSummaryByEmployee = async (
           empSummary.find((s) => normalize(s.status) === "late")?._count
             .status || 0,
         overtime_hours: parseFloat(
-          (employeeOvertimeMap[emp.id] || 0).toFixed(2)
+          (employeeOvertimeMap[emp.id] || 0).toFixed(2),
         ),
       };
     });
@@ -506,7 +594,7 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
 
       summary.total_overtime += calculateOvertimeHours(
         entry.check_in_time,
-        entry.check_out_time
+        entry.check_out_time,
       );
     });
 
@@ -526,6 +614,9 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
       const dateStr = current.toISOString().split("T")[0];
       const entry = attendanceMap[dateStr];
 
+      const weekend = isWeekend(current);
+      const dayName = getDayName(current);
+
       allDates.push({
         attendance_date: dateStr,
         id: entry?.id || null,
@@ -537,6 +628,8 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
         overtime_hours: entry
           ? calculateOvertimeHours(entry.check_in_time, entry.check_out_time)
           : 0,
+        is_weekend: weekend,
+        day_name: dayName,
       });
 
       current.setUTCDate(current.getUTCDate() + 1);
@@ -611,7 +704,7 @@ const getManagerEmployees = async (
   managerId,
   search = "",
   page = 1,
-  take = 10
+  take = 10,
 ) => {
   const skip = (page - 1) * take;
 
@@ -677,7 +770,7 @@ const getManagerTeamAttendance = async (
   _size,
   startDate,
   endDate,
-  employeeId
+  employeeId,
 ) => {
   try {
     const managerEmployees = await prisma.hrms_d_employee.findMany({
@@ -789,7 +882,7 @@ const getAllHRUsers = async () => {
     const allHrEmployees = [...hrByDesignation];
     const uniqueHrEmployees = allHrEmployees.filter(
       (employee, index, self) =>
-        index === self.findIndex((e) => e.id === employee.id)
+        index === self.findIndex((e) => e.id === employee.id),
     );
 
     console.log(`Total unique HR employees found: ${uniqueHrEmployees.length}`);
@@ -879,7 +972,7 @@ const verifyAttendanceWithManualHR = async (
   remarks,
   logInst,
   selected_hr_userId,
-  notify_HR = true
+  notify_HR = true,
 ) => {
   try {
     const updatedRecord = await prisma.hrms_d_daily_attendance_entry.update({
@@ -932,7 +1025,7 @@ const verifyAttendanceWithManualHR = async (
         remarks,
         logInst,
         employeeDetails,
-        false
+        false,
       );
     }
 
@@ -948,7 +1041,7 @@ const verifyAttendanceWithManualHR = async (
     console.error("Error verifying attendance with manual HR:", error);
     throw new CustomError(
       "Failed to verify attendance with manual HR notification",
-      500
+      500,
     );
   }
 };
@@ -1276,7 +1369,7 @@ const bulkVerifyWithManualHR = async (
   verificationStatus = "A",
   remarks = "Bulk verification by manager",
   logInst = 1,
-  notifyHR = true
+  notifyHR = true,
 ) => {
   try {
     const managerEmployees = await prisma.hrms_d_employee.findMany({
@@ -1427,7 +1520,7 @@ const bulkVerifyWithManualHR = async (
       });
 
       console.log(
-        `Found ${hrUsers.length} HR users to notify (excluding manager ${manager_id})`
+        `Found ${hrUsers.length} HR users to notify (excluding manager ${manager_id})`,
       );
 
       for (const hrUser of hrUsers) {
@@ -1445,7 +1538,7 @@ const bulkVerifyWithManualHR = async (
             `${remarks} - Processed ${results.length} attendance records`,
             logInst,
             employeeDetails,
-            true
+            true,
           );
 
           notificationResults.push({
@@ -1657,7 +1750,7 @@ const createHRNotification = async (
   remarks,
   logInst,
   employeeDetails = null,
-  isBulk = false
+  isBulk = false,
 ) => {
   try {
     const managerDetails = await prisma.hrms_d_employee.findUnique({
@@ -1795,7 +1888,7 @@ ${remarks || "No additional remarks provided"}
     });
 
     console.log(
-      `Notification created for HR User ${hrUserId}: ${messageTitle}`
+      `Notification created for HR User ${hrUserId}: ${messageTitle}`,
     );
     return notification;
   } catch (error) {
@@ -1811,7 +1904,7 @@ const getVerificationStatusForHR = async (
   startDate,
   endDate,
   verificationStatus,
-  manager_id
+  manager_id,
 ) => {
   try {
     const skip = (page - 1) * size;
@@ -2040,6 +2133,136 @@ const getAllManagersWithVerifications = async () => {
   }
 };
 
+const importAttendanceFromExcel = async ({
+  employeeId,
+  fileBuffer,
+  createdBy,
+  logInst = 1,
+}) => {
+  const workbook = XLSX.read(fileBuffer, { type: "buffer" });
+  const sheet = workbook.Sheets["Attendance"];
+
+  if (!sheet) {
+    throw new CustomError("Attendance sheet not found", 400);
+  }
+
+  const rows = XLSX.utils.sheet_to_json(sheet);
+
+  const results = [];
+  const errors = [];
+
+  for (const [index, row] of rows.entries()) {
+    try {
+      const attendanceDate = new Date(row.attendance_date);
+      // const attendanceDate = parseDDMMYYYY(row.attendance_date);
+
+      const checkIn = parseTime(attendanceDate, row.check_in_time);
+      const checkOut = parseTime(attendanceDate, row.check_out_time);
+      if (isNaN(attendanceDate)) {
+        throw new Error("Invalid attendance_date");
+      }
+
+      // const checkIn = row.check_in_time
+      //   ? new Date(`${row.attendance_date}T${row.check_in_time}:00Z`)
+      //   : null;
+
+      // const checkOut = row.check_out_time
+      //   ? new Date(`${row.attendance_date}T${row.check_out_time}:00Z`)
+      //   : null;
+
+      const overtimeHours = calculateOvertimeHours(checkIn, checkOut);
+      const overtimeTypeId =
+        overtimeHours > 0
+          ? await getOvertimeTypeIdByDate(attendanceDate)
+          : null;
+
+      const serializedData = await serializeAttendanceData({
+        employee_id: employeeId, // ✅ forced employee
+        attendance_date: attendanceDate,
+        check_in_time: checkIn,
+        check_out_time: checkOut,
+        status: row.status,
+        remarks: row.remarks,
+      });
+
+      const record = await prisma.hrms_d_daily_attendance_entry.create({
+        data: {
+          ...serializedData,
+          overtime_hours: overtimeHours,
+          overtime_types: overtimeTypeId,
+          createdby: createdBy,
+          log_inst: logInst,
+          createdate: new Date(),
+        },
+      });
+
+      results.push({
+        row: index + 2,
+        attendance_date: row.attendance_date,
+        attendance_id: record.id,
+        status: "SUCCESS",
+      });
+    } catch (err) {
+      errors.push({
+        row: index + 2,
+        attendance_date: row.attendance_date,
+        error: err.message,
+      });
+    }
+  }
+
+  return {
+    success: true,
+    employee_id: employeeId,
+    total: rows.length,
+    inserted: results.length,
+    failed: errors.length,
+    results,
+    errors,
+  };
+};
+
+const generateAttendanceSampleExcel = async () => {
+  /**
+   * Sample rows (HR reference)
+   * These rows can be deleted by HR before upload
+   */
+  const sampleData = [
+    {
+      attendance_date: "02/02/2026",
+      check_in_time: "09:30",
+      check_out_time: "18:30",
+      status: "Present",
+      remarks: "",
+    },
+  ];
+
+  /**
+   * Create worksheet
+   */
+  const worksheet = XLSX.utils.json_to_sheet(sampleData);
+
+  /**
+   * Add column width (better UX)
+   */
+  worksheet["!cols"] = [
+    // { wch: 15 }, // employee_id
+    { wch: 18 }, // attendance_date
+    { wch: 18 }, // check_in_time
+    { wch: 18 }, // check_out_time
+    { wch: 15 }, // status
+    { wch: 30 }, // remarks
+  ];
+
+  /**
+   * Create workbook
+   */
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance");
+
+  return workbook;
+};
+
 module.exports = {
   createDailyAttendance,
   findDailyAttendanceById,
@@ -2056,4 +2279,35 @@ module.exports = {
   getVerificationStatusForHR,
   getVerificationSummary,
   getAllManagersWithVerifications,
+  importAttendanceFromExcel,
+  generateAttendanceSampleExcel,
 };
+
+// const serializeAttendanceData = async (data) => {
+//   const checkIn = data.check_in_time ? new Date(data.check_in_time) : null;
+//   const checkOut = data.check_out_time ? new Date(data.check_out_time) : null;
+
+//   let working_hours = null;
+//   let status = data.status;
+
+//   if (checkIn && checkOut && checkOut > checkIn) {
+//     const diffMs = checkOut - checkIn;
+//     working_hours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+//   }
+
+//   if (!status && working_hours !== null && data.employee_id) {
+//     status = await getStatusFromWorkingHours(data.employee_id, working_hours);
+//   }
+
+//   return {
+//     employee_id: Number(data.employee_id),
+//     attendance_date: data.attendance_date
+//       ? new Date(data.attendance_date)
+//       : null,
+//     check_in_time: checkIn,
+//     check_out_time: checkOut,
+//     status,
+//     remarks: data.remarks || "",
+//     working_hours,
+//   };
+// };

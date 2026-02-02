@@ -1,10 +1,11 @@
 const { prisma } = require("../../utils/prismaProxy.js");
 const CustomError = require("../../utils/CustomError");
+const { includes } = require("zod/v4");
 
 // Serialize input data
 const serializeOvertimeSetupData = (data) => ({
   days_code: data.days_code || null,
-  wage_type: data.wage_type || null,
+  wage_type: Number(data.wage_type) || null,
   hourly_rate_hike: data.hourly_rate_hike
     ? parseFloat(data.hourly_rate_hike)
     : 0,
@@ -24,12 +25,15 @@ const createOverTimeSetup = async (data) => {
         createdate: new Date(),
         log_inst: data.log_inst || 1,
       },
+      include: {
+        overTime_payComponent: true,
+      },
     });
     return result;
   } catch (error) {
     throw new CustomError(
       `Error creating overtime setup: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -45,7 +49,6 @@ const getAllOverTimeSetup = async (search, page, size, startDate, endDate) => {
     if (search) {
       filters.OR = [
         { days_code: { contains: search.toLowerCase() } },
-        { wage_type: { contains: search.toLowerCase() } },
         { maximum_overtime_allowed: { contains: search.toLowerCase() } },
       ];
     }
@@ -65,6 +68,9 @@ const getAllOverTimeSetup = async (search, page, size, startDate, endDate) => {
       where: filters,
       skip,
       take: size,
+      include: {
+        overTime_payComponent: true,
+      },
       orderBy: { id: "desc" },
     });
 
@@ -89,13 +95,16 @@ const findOverTimeSetupById = async (id) => {
   try {
     const result = await prisma.hrms_m_overtime_setup.findUnique({
       where: { id: parseInt(id) },
+      include: {
+        overTime_payComponent: true,
+      },
     });
     if (!result) throw new CustomError("Overtime setup not found", 404);
     return result;
   } catch (error) {
     throw new CustomError(
       `Error getting overtime setup: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -110,12 +119,15 @@ const updateOverTimeSetup = async (id, data) => {
         updatedby: data.updatedby || 1,
         updatedate: new Date(),
       },
+      include: {
+        overTime_payComponent: true,
+      },
     });
     return updated;
   } catch (error) {
     throw new CustomError(
       `Error updating overtime setup: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -130,7 +142,7 @@ const deleteOverTimeSetup = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
