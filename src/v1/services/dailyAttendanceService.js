@@ -4,6 +4,12 @@ const dailyAttendanceModel = require("../models/dailyAttendanceModel.js");
 const createDailyAttendance = async (data) => {
   return await dailyAttendanceModel.createDailyAttendance(data);
 };
+const importAttendanceFromExcel = async (data) => {
+  return await dailyAttendanceModel.importAttendanceFromExcel(data);
+};
+const generateAttendanceSampleExcel = async (data) => {
+  return await dailyAttendanceModel.generateAttendanceSampleExcel(data);
+};
 
 const findDailyAttendanceById = async (id) => {
   return await dailyAttendanceModel.findDailyAttendanceById(id);
@@ -22,14 +28,14 @@ const getAllDailyAttendance = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
 ) => {
   return await dailyAttendanceModel.getAllDailyAttendance(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
   );
 };
 
@@ -38,14 +44,14 @@ const getAttendanceSummaryByEmployee = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
 ) => {
   return await dailyAttendanceModel.getAttendanceSummaryByEmployee(
     search,
     page,
     size,
     startDate,
-    endDate
+    endDate,
   );
 };
 const upsertDailyAttendance = async (id, data) => {
@@ -70,7 +76,7 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
   return await dailyAttendanceModel.findAttendanceByEmployeeId(
     employeeId,
     startDate,
-    endDate
+    endDate,
   );
 };
 const getManagerEmployees = async (manager_id, search, page, size) => {
@@ -78,7 +84,7 @@ const getManagerEmployees = async (manager_id, search, page, size) => {
     manager_id,
     search,
     page,
-    size
+    size,
   );
 };
 
@@ -89,7 +95,7 @@ const getManagerTeamAttendance = async (
   size,
   startDate,
   endDate,
-  employee_id
+  employee_id,
 ) => {
   return await dailyAttendanceModel.getManagerTeamAttendance(
     manager_id,
@@ -98,7 +104,7 @@ const getManagerTeamAttendance = async (
     size,
     startDate,
     endDate,
-    employee_id
+    employee_id,
   );
 };
 
@@ -110,13 +116,13 @@ const verifyAttendanceByManager = async (
   manager_id,
   attendanceId,
   verificationStatus,
-  remarks
+  remarks,
 ) => {
   return await dailyAttendanceModel.verifyAttendanceByManager(
     manager_id,
     attendanceId,
     verificationStatus,
-    remarks
+    remarks,
   );
 };
 
@@ -127,7 +133,7 @@ const verifyAttendanceWithManualHR = async (
   remarks,
   logInst,
   selectedHRUserId,
-  notifyHR
+  notifyHR,
 ) => {
   return await dailyAttendanceModel.verifyAttendanceWithManualHR(
     manager_id,
@@ -136,7 +142,7 @@ const verifyAttendanceWithManualHR = async (
     remarks,
     logInst,
     selectedHRUserId,
-    notifyHR
+    notifyHR,
   );
 };
 
@@ -145,14 +151,14 @@ const bulkVerifyWithManualHR = async (
   verificationStatus = "A",
   remarks = "Bulk verification by manager",
   logInst = 1,
-  notifyHR = true
+  notifyHR = true,
 ) => {
   return await dailyAttendanceModel.bulkVerifyWithManualHR(
     manager_id,
     verificationStatus,
     remarks,
     logInst,
-    notifyHR
+    notifyHR,
   );
 };
 
@@ -167,7 +173,7 @@ const getVerificationStatusForHR = async (
   startDate,
   endDate,
   verificationStatus,
-  manager_id
+  manager_id,
 ) => {
   return await dailyAttendanceModel.getVerificationStatusForHR(
     search,
@@ -176,14 +182,14 @@ const getVerificationStatusForHR = async (
     startDate,
     endDate,
     verificationStatus,
-    manager_id
+    manager_id,
   );
 };
 const getVerificationSummary = async (startDate, endDate, manager_id) => {
   return await dailyAttendanceModel.getVerificationSummary(
     startDate,
     endDate,
-    manager_id
+    manager_id,
   );
 };
 
@@ -208,4 +214,7 @@ module.exports = {
   getAllManagersWithVerifications,
   getVerificationStatusForHR,
   getVerificationSummary,
+
+  importAttendanceFromExcel,
+  generateAttendanceSampleExcel,
 };

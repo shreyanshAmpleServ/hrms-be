@@ -2,15 +2,15 @@ const dailyAttendanceService = require("../services/dailyAttendanceService.js");
 const CustomError = require("../../utils/CustomError");
 const moment = require("moment");
 const { prisma } = require("../../utils/prismaProxy.js");
+const XLSX = require("xlsx");
 
 const attendanceScheduler = require("../services/attendanceScheduler");
 
 const createDefaultAttendanceForToday = async (req, res, next) => {
   try {
     const { date } = req.query;
-    const result = await attendanceScheduler.createDefaultAttendanceForDate(
-      date
-    );
+    const result =
+      await attendanceScheduler.createDefaultAttendanceForDate(date);
 
     if (result.success) {
       res.status(200).success(result.message, {
@@ -25,6 +25,50 @@ const createDefaultAttendanceForToday = async (req, res, next) => {
     next(error);
   }
 };
+
+const generateAttendanceSampleExcel = async (req, res, next) => {
+  try {
+    const workbook =
+      await dailyAttendanceService.generateAttendanceSampleExcel();
+
+    res.setHeader(
+      "Content-Disposition",
+      "attachment; filename=Daily_Attendance_Import_Sample.xlsx",
+    );
+    res.setHeader(
+      "Content-Type",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    );
+
+    const buffer = XLSX.write(workbook, {
+      type: "buffer",
+      bookType: "xlsx",
+    });
+
+    res.send(buffer);
+  } catch (error) {
+    next(error);
+  }
+};
+
+const importAttendanceFromExcel = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      throw new CustomError("Excel file is required", 400);
+    }
+
+    const result = await dailyAttendanceService.importAttendanceFromExcel({
+      fileBuffer: req.file.buffer, // ✅ IMPORTANT
+      createdBy: req.user.id,
+      logInst: req.user.log_inst || 1,
+    });
+
+    res.status(201).success("Daily attendance imported successfully", result);
+  } catch (error) {
+    next(error);
+  }
+};
+
 const createDailyAttendance = async (req, res, next) => {
   try {
     console.log("Incoming request body:", req.body);
@@ -54,7 +98,7 @@ const upsertDailyAttendance = async (req, res, next) => {
 
     const reqData = await dailyAttendanceService.upsertDailyAttendance(
       id && id !== "0" ? id : null,
-      data
+      data,
     );
 
     res
@@ -63,7 +107,7 @@ const upsertDailyAttendance = async (req, res, next) => {
         id && id !== "0"
           ? "Daily attendance updated successfully"
           : "Daily attendance created successfully",
-        reqData
+        reqData,
       );
   } catch (error) {
     next(error);
@@ -73,7 +117,7 @@ const upsertDailyAttendance = async (req, res, next) => {
 const findDailyAttendance = async (req, res, next) => {
   try {
     const reqData = await dailyAttendanceService.findDailyAttendanceById(
-      req.params.id
+      req.params.id,
     );
     if (!reqData) throw new CustomError("Daily attendance not found", 404);
     res.status(200).success(null, reqData);
@@ -91,7 +135,7 @@ const updateDailyAttendance = async (req, res, next) => {
     };
     const reqData = await dailyAttendanceService.updateDailyAttendance(
       req.params.id,
-      data
+      data,
     );
     res.status(200).success("Daily attendance updated successfully", reqData);
   } catch (error) {
@@ -116,7 +160,7 @@ const getAllDailyAttendance = async (req, res, next) => {
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
     );
     res.status(200).success(null, data);
   } catch (error) {
@@ -142,7 +186,7 @@ const getAttendanceSummaryByEmployee = async (req, res, next) => {
       Number(page),
       Number(size),
       start,
-      end
+      end,
     );
 
     res.status(200).success(null, data);
@@ -159,7 +203,7 @@ const findAttendanceByEmployeeId = async (req, res, next) => {
     const result = await dailyAttendanceService.findAttendanceByEmployeeId(
       employeeId,
       startDate,
-      endDate
+      endDate,
     );
 
     res
@@ -179,7 +223,7 @@ const getManagerEmployees = async (req, res, next) => {
       manager_id,
       search,
       page,
-      size
+      size,
     );
 
     res.status(200).success("Manager employees retrieved successfully", {
@@ -211,7 +255,7 @@ const getManagerTeamAttendance = async (req, res, next) => {
       size,
       startDate,
       endDate,
-      employee_id
+      employee_id,
     );
 
     res.status(200).success("Team attendance retrieved successfully", reqData);
@@ -242,14 +286,14 @@ const verifyAttendanceByManager = async (req, res, next) => {
     if (!attendanceId || !verificationStatus) {
       throw new CustomError(
         "Attendance ID and verification status are required",
-        400
+        400,
       );
     }
 
     if (!["A", "R", "P"].includes(verificationStatus)) {
       throw new CustomError(
         "Invalid verification status. Must be A, R, or P",
-        400
+        400,
       );
     }
 
@@ -258,7 +302,7 @@ const verifyAttendanceByManager = async (req, res, next) => {
       attendanceId,
       verificationStatus,
       remarks,
-      req.user.log_inst
+      req.user.log_inst,
     );
 
     res.status(200).success("Attendance verified successfully", {
@@ -284,7 +328,7 @@ const verifyAttendanceWithManualHR = async (req, res, next) => {
     if (!attendance_id || !verification_status) {
       throw new CustomError(
         "Attendance ID and verification status are required",
-        400
+        400,
       );
     }
 
@@ -299,7 +343,7 @@ const verifyAttendanceWithManualHR = async (req, res, next) => {
       remarks,
       req.user.log_inst,
       selected_hr_userId,
-      notify_HR
+      notify_HR,
     );
 
     res
@@ -319,7 +363,7 @@ const bulkVerifyWithManualHR = async (req, res, next) => {
       "A",
       "Bulk verification by manager - all team attendance approved",
       req.user.log_inst,
-      true
+      true,
     );
 
     res
@@ -349,7 +393,7 @@ const getVerificationStatusForHR = async (req, res, next) => {
       startDate,
       endDate,
       verificationStatus,
-      manager_id
+      manager_id,
     );
 
     res
@@ -367,7 +411,7 @@ const getVerificationSummary = async (req, res, next) => {
     const reqData = await dailyAttendanceService.getVerificationSummary(
       startDate,
       endDate,
-      manager_id
+      manager_id,
     );
 
     res
@@ -387,7 +431,7 @@ const getHRNotifications = async (req, res, next) => {
       hrUserId,
       page,
       size,
-      isRead
+      isRead,
     );
 
     res.status(200).success("HR notifications retrieved successfully", reqData);
@@ -403,7 +447,7 @@ const markNotificationRead = async (req, res, next) => {
 
     const reqData = await dailyAttendanceService.markNotificationRead(
       id,
-      hrUserId
+      hrUserId,
     );
 
     res.status(200).success("Notification marked as read", reqData);
@@ -450,4 +494,7 @@ module.exports = {
 
   getAllManagersWithVerifications,
   createDefaultAttendanceForToday,
+
+  importAttendanceFromExcel,
+  generateAttendanceSampleExcel,
 };
