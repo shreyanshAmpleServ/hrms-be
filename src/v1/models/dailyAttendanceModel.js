@@ -2089,6 +2089,7 @@ const getAllManagersWithVerifications = async () => {
 };
 
 const importAttendanceFromExcel = async ({
+  employeeId,
   fileBuffer,
   createdBy,
   logInst = 1,
@@ -2108,6 +2109,9 @@ const importAttendanceFromExcel = async ({
   for (const [index, row] of rows.entries()) {
     try {
       const attendanceDate = new Date(row.attendance_date);
+      if (isNaN(attendanceDate)) {
+        throw new Error("Invalid attendance_date");
+      }
 
       const checkIn = row.check_in_time
         ? new Date(`${row.attendance_date}T${row.check_in_time}:00Z`)
@@ -2124,7 +2128,7 @@ const importAttendanceFromExcel = async ({
           : null;
 
       const serializedData = await serializeAttendanceData({
-        employee_id: row.employee_id,
+        employee_id: employeeId, // ✅ forced employee
         attendance_date: attendanceDate,
         check_in_time: checkIn,
         check_out_time: checkOut,
@@ -2145,12 +2149,14 @@ const importAttendanceFromExcel = async ({
 
       results.push({
         row: index + 2,
+        attendance_date: row.attendance_date,
         attendance_id: record.id,
         status: "SUCCESS",
       });
     } catch (err) {
       errors.push({
         row: index + 2,
+        attendance_date: row.attendance_date,
         error: err.message,
       });
     }
@@ -2158,6 +2164,7 @@ const importAttendanceFromExcel = async ({
 
   return {
     success: true,
+    employee_id: employeeId,
     total: rows.length,
     inserted: results.length,
     failed: errors.length,

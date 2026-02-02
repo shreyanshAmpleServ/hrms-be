@@ -53,12 +53,19 @@ const generateAttendanceSampleExcel = async (req, res, next) => {
 
 const importAttendanceFromExcel = async (req, res, next) => {
   try {
+    const { employee_id } = req.body;
+
+    if (!employee_id) {
+      throw new CustomError("employee_id is required", 400);
+    }
+
     if (!req.file) {
       throw new CustomError("Excel file is required", 400);
     }
 
     const result = await dailyAttendanceService.importAttendanceFromExcel({
-      fileBuffer: req.file.buffer, // ✅ IMPORTANT
+      employeeId: Number(employee_id), // 👈 single employee
+      fileBuffer: req.file.buffer, // 👈 excel binary
       createdBy: req.user.id,
       logInst: req.user.log_inst || 1,
     });
