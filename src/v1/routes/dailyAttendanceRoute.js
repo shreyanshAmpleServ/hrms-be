@@ -59,7 +59,6 @@ router.get(
 router.get(
   "/manager/employees",
   authenticateToken,
-  upload.single("file"),
   dailyAttendanceController.getManagerEmployees,
 );
 
@@ -119,6 +118,7 @@ router.post(
 router.post(
   "/daily-attendance-bulk-upload",
   authenticateToken,
+  upload.single("file"),
   dailyAttendanceController.importAttendanceFromExcel,
 );
 router.get(
