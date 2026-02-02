@@ -15,15 +15,15 @@ const getDayName = (date) => {
   });
 };
 const parseDDMMYYYY = (dateStr) => {
-  if (!dateStr) return null;
+  if (!dateStr) return "All Dates is not find.";
 
-  const [dd, mm, yyyy] = dateStr.split("/").map(Number);
+  const [dd, mm, yyyy] = dateStr?.split("/").map(Number);
   return new Date(Date.UTC(yyyy, mm - 1, dd));
 };
 const parseTime = (date, timeStr) => {
-  if (!date || !timeStr) return null;
+  if (!date || !timeStr) return "All time is not find.";
 
-  const [hh, mm] = timeStr.split(":").map(Number);
+  const [hh, mm] = timeStr?.split(":").map(Number);
 
   const d = new Date(date);
   d.setUTCHours(hh, mm, 0, 0);
