@@ -101,7 +101,7 @@ const serializeAttendanceData = async (data) => {
 
   let working_hours = null;
   let overtime_hours = 0;
-  let overtime_types = data.overtime_types ? data.overtime_types : null;
+  let overtime_types = data.overtime_types ? Number(data.overtime_types) : null;
   let status = data.status;
 
   if (checkIn && checkOut && checkOut > checkIn) {
