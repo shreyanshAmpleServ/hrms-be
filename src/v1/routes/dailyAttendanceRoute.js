@@ -122,7 +122,7 @@ router.post(
   dailyAttendanceController.importAttendanceFromExcel,
 );
 router.get(
-  "/daily-attendance-sample-excel",
+  "/daily-attendance-sample-download-excel",
   authenticateToken,
   dailyAttendanceController.generateAttendanceSampleExcel,
 );
