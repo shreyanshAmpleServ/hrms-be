@@ -2208,24 +2208,24 @@ const generateAttendanceSampleExcel = async () => {
    * Sample rows (HR reference)
    * These rows can be deleted by HR before upload
    */
-  const sampleData = [
-    {
-      employee_id: 101,
-      attendance_date: "2026-04-10",
-      check_in_time: "09:30",
-      check_out_time: "18:30",
-      status: "Present",
-      remarks: "",
-    },
-    {
-      employee_id: 102,
-      attendance_date: "2026-04-13",
-      check_in_time: "10:00",
-      check_out_time: "19:15",
-      status: "Present",
-      remarks: "Late arrival",
-    },
-  ];
+  // const sampleData = [
+  //   {
+  //     employee_id: 101,
+  //     attendance_date: "2026-04-10",
+  //     check_in_time: "09:30",
+  //     check_out_time: "18:30",
+  //     status: "Present",
+  //     remarks: "",
+  //   },
+  //   {
+  //     employee_id: 102,
+  //     attendance_date: "2026-04-13",
+  //     check_in_time: "10:00",
+  //     check_out_time: "19:15",
+  //     status: "Present",
+  //     remarks: "Late arrival",
+  //   },
+  // ];
 
   /**
    * Create worksheet
@@ -2236,7 +2236,7 @@ const generateAttendanceSampleExcel = async () => {
    * Add column width (better UX)
    */
   worksheet["!cols"] = [
-    { wch: 15 }, // employee_id
+    // { wch: 15 }, // employee_id
     { wch: 18 }, // attendance_date
     { wch: 18 }, // check_in_time
     { wch: 18 }, // check_out_time
