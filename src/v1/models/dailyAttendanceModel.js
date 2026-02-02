@@ -101,7 +101,7 @@ const serializeAttendanceData = async (data) => {
 
   let working_hours = null;
   let overtime_hours = 0;
-  let overtime_types = null;
+  let overtime_types = data.overtime_types ? data.overtime_types : null;
   let status = data.status;
 
   if (checkIn && checkOut && checkOut > checkIn) {
@@ -109,9 +109,25 @@ const serializeAttendanceData = async (data) => {
     working_hours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
 
     // 🔹 overtime (default 8 hrs)
-    overtime_hours = Math.max(0, parseFloat((working_hours - 8).toFixed(2)));
+    // overtime_hours = Math.max(0, parseFloat((working_hours - 8).toFixed(2)));
 
-    if (overtime_hours > 0) {
+    const companyConfigration =
+      await prisma.hrms_d_default_configurations.findFirst({
+        select: {
+          full_day_working_hours: true,
+          half_day_working_hours: true,
+          working_days: true,
+        },
+      });
+
+    overtime_hours = calculateOvertimeHours(
+      checkIn,
+      checkOut,
+      companyConfigration?.full_day_working_hours, // standard hours
+      data.attendance_date, // REQUIRED for weekend check
+    );
+
+    if (overtime_hours > 0 && !overtime_types) {
       overtime_types = await getOvertimeTypeIdByDate(data.attendance_date);
     }
   }
@@ -177,8 +193,8 @@ const createDailyAttendance = async (data) => {
             employee_code: true,
             full_name: true,
           },
-          attendance_overtime_type: true,
         },
+        attendance_overtime_type: true,
       },
     });
 
@@ -233,6 +249,7 @@ const upsertDailyAttendance = async (id, data) => {
               full_name: true,
             },
           },
+          attendance_overtime_type: true, // ✅ correct place
         },
       });
     }
@@ -2274,16 +2291,16 @@ const importAttendanceFromExcel = async ({
       //   ? new Date(`${row.attendance_date}T${row.check_out_time}:00Z`)
       //   : null;
 
-      const overtimeHours = calculateOvertimeHoursNew(
-        checkIn,
-        checkOut,
-        8,
-        attendanceDate,
-      );
-      const overtimeTypeId =
-        overtimeHours > 0
-          ? await getOvertimeTypeIdByDate(attendanceDate)
-          : null;
+      // const overtimeHours = calculateOvertimeHoursNew(
+      //   checkIn,
+      //   checkOut,
+      //   8,
+      //   attendanceDate,
+      // );
+      // const overtimeTypeId =
+      //   overtimeHours > 0
+      //     ? await getOvertimeTypeIdByDate(attendanceDate)
+      //     : null;
 
       const serializedData = await serializeAttendanceData({
         employee_id: employeeId, // ✅ forced employee
@@ -2297,8 +2314,8 @@ const importAttendanceFromExcel = async ({
       const record = await prisma.hrms_d_daily_attendance_entry.create({
         data: {
           ...serializedData,
-          overtime_hours: overtimeHours,
-          overtime_types: overtimeTypeId,
+          // overtime_hours: overtimeHours,
+          // overtime_types: overtimeTypeId,
           createdby: createdBy,
           log_inst: logInst,
           createdate: new Date(),
@@ -2338,7 +2355,7 @@ const generateAttendanceSampleExcel = async () => {
    */
   const sampleData = [
     {
-      attendance_date: "02/02/2026",
+      attendance_date: "2026-02-02",
       check_in_time: "09:30",
       check_out_time: "18:30",
       status: "Present",
