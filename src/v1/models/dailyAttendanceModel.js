@@ -14,6 +14,21 @@ const getDayName = (date) => {
     timeZone: "UTC",
   });
 };
+const parseDDMMYYYY = (dateStr) => {
+  if (!dateStr) return null;
+
+  const [dd, mm, yyyy] = dateStr.split("/").map(Number);
+  return new Date(Date.UTC(yyyy, mm - 1, dd));
+};
+const parseTime = (date, timeStr) => {
+  if (!date || !timeStr) return null;
+
+  const [hh, mm] = timeStr.split(":").map(Number);
+
+  const d = new Date(date);
+  d.setUTCHours(hh, mm, 0, 0);
+  return d;
+};
 
 const timeStringToDecimal = (timeStr) => {
   if (!timeStr || typeof timeStr !== "string") return null;
@@ -2138,18 +2153,22 @@ const importAttendanceFromExcel = async ({
 
   for (const [index, row] of rows.entries()) {
     try {
-      const attendanceDate = new Date(row.attendance_date);
+      // const attendanceDate = new Date(row.attendance_date);
+      const attendanceDate = parseDDMMYYYY(row.attendance_date);
+
+      const checkIn = parseTime(attendanceDate, row.check_in_time);
+      const checkOut = parseTime(attendanceDate, row.check_out_time);
       if (isNaN(attendanceDate)) {
         throw new Error("Invalid attendance_date");
       }
 
-      const checkIn = row.check_in_time
-        ? new Date(`${row.attendance_date}T${row.check_in_time}:00Z`)
-        : null;
+      // const checkIn = row.check_in_time
+      //   ? new Date(`${row.attendance_date}T${row.check_in_time}:00Z`)
+      //   : null;
 
-      const checkOut = row.check_out_time
-        ? new Date(`${row.attendance_date}T${row.check_out_time}:00Z`)
-        : null;
+      // const checkOut = row.check_out_time
+      //   ? new Date(`${row.attendance_date}T${row.check_out_time}:00Z`)
+      //   : null;
 
       const overtimeHours = calculateOvertimeHours(checkIn, checkOut);
       const overtimeTypeId =
@@ -2210,7 +2229,7 @@ const generateAttendanceSampleExcel = async () => {
    */
   const sampleData = [
     {
-      attendance_date: "02-02-2026",
+      attendance_date: "02/02/2026",
       check_in_time: "09:30",
       check_out_time: "18:30",
       status: "Present",
