@@ -20,6 +20,19 @@ const timeStringToDecimal = (timeStr) => {
   const [hours, minutes, seconds] = timeStr.split(":").map(Number);
   return parseFloat((hours + minutes / 60 + seconds / 3600).toFixed(2));
 };
+const getOvertimeTypeIdByDate = async (attendanceDate) => {
+  if (!attendanceDate) return null;
+
+  const day = new Date(attendanceDate).getUTCDay();
+  const dayCode = day === 0 || day === 6 ? "Weekend" : "Normal";
+
+  const overtimeType = await prisma.hrms_m_overtime_setup.findFirst({
+    where: { days_code: dayCode },
+    select: { id: true },
+  });
+
+  return overtimeType?.id || null;
+};
 
 // Serialize attendance data
 const serializeAttendanceData = async (data) => {
@@ -27,11 +40,20 @@ const serializeAttendanceData = async (data) => {
   const checkOut = data.check_out_time ? new Date(data.check_out_time) : null;
 
   let working_hours = null;
+  let overtime_hours = 0;
+  let overtime_types = null;
   let status = data.status;
 
   if (checkIn && checkOut && checkOut > checkIn) {
     const diffMs = checkOut - checkIn;
     working_hours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+
+    // 🔹 overtime (default 8 hrs)
+    overtime_hours = Math.max(0, parseFloat((working_hours - 8).toFixed(2)));
+
+    if (overtime_hours > 0) {
+      overtime_types = await getOvertimeTypeIdByDate(data.attendance_date);
+    }
   }
 
   if (!status && working_hours !== null && data.employee_id) {
@@ -48,6 +70,8 @@ const serializeAttendanceData = async (data) => {
     status,
     remarks: data.remarks || "",
     working_hours,
+    overtime_hours,
+    overtime_types,
   };
 };
 
@@ -93,6 +117,7 @@ const createDailyAttendance = async (data) => {
             employee_code: true,
             full_name: true,
           },
+          attendance_overtime_type: true,
         },
       },
     });
@@ -102,23 +127,6 @@ const createDailyAttendance = async (data) => {
     throw new CustomError(
       `Error creating attendance entry: ${error.message}`,
       500,
-    );
-  }
-};
-
-const findDailyAttendanceById = async (id) => {
-  try {
-    const reqData = await prisma.hrms_d_daily_attendance_entry.findUnique({
-      where: { id: parseInt(id) },
-    });
-    if (!reqData) {
-      throw new CustomError("Attendance entry not found", 404);
-    }
-    return reqData;
-  } catch (error) {
-    throw new CustomError(
-      `Error finding attendance entry by ID: ${error.message}`,
-      503,
     );
   }
 };
@@ -146,6 +154,7 @@ const upsertDailyAttendance = async (id, data) => {
               full_name: true,
             },
           },
+          attendance_overtime_type: true,
         },
       });
     } else {
@@ -171,6 +180,23 @@ const upsertDailyAttendance = async (id, data) => {
   } catch (error) {
     console.log(`Error in updating attendance entry: ${error.message}`);
     throw new CustomError(` ${error.message}`);
+  }
+};
+
+const findDailyAttendanceById = async (id) => {
+  try {
+    const reqData = await prisma.hrms_d_daily_attendance_entry.findUnique({
+      where: { id: parseInt(id) },
+    });
+    if (!reqData) {
+      throw new CustomError("Attendance entry not found", 404);
+    }
+    return reqData;
+  } catch (error) {
+    throw new CustomError(
+      `Error finding attendance entry by ID: ${error.message}`,
+      503,
+    );
   }
 };
 
@@ -248,6 +274,7 @@ const getAllDailyAttendance = async (
               employee_code: true,
               full_name: true,
             },
+            attendance_overtime_type: true,
           },
         },
       });
@@ -276,6 +303,7 @@ const getAllDailyAttendance = async (
           status: entry.status,
           remarks: entry.remarks,
           hrms_daily_attendance_employee: entry.hrms_daily_attendance_employee,
+          attendance_overtime_type: entry.attendance_overtime_type,
           is_weekend: weekend,
           day_name: dayName,
         });
@@ -286,6 +314,8 @@ const getAllDailyAttendance = async (
           status: weekend ? "Weekend" : null,
           remarks: null,
           hrms_daily_attendance_employee: null,
+          attendance_overtime_type: null,
+
           is_weekend: weekend,
           day_name: dayName,
         });
@@ -2242,3 +2272,32 @@ module.exports = {
   importAttendanceFromExcel,
   generateAttendanceSampleExcel,
 };
+
+// const serializeAttendanceData = async (data) => {
+//   const checkIn = data.check_in_time ? new Date(data.check_in_time) : null;
+//   const checkOut = data.check_out_time ? new Date(data.check_out_time) : null;
+
+//   let working_hours = null;
+//   let status = data.status;
+
+//   if (checkIn && checkOut && checkOut > checkIn) {
+//     const diffMs = checkOut - checkIn;
+//     working_hours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+//   }
+
+//   if (!status && working_hours !== null && data.employee_id) {
+//     status = await getStatusFromWorkingHours(data.employee_id, working_hours);
+//   }
+
+//   return {
+//     employee_id: Number(data.employee_id),
+//     attendance_date: data.attendance_date
+//       ? new Date(data.attendance_date)
+//       : null,
+//     check_in_time: checkIn,
+//     check_out_time: checkOut,
+//     status,
+//     remarks: data.remarks || "",
+//     working_hours,
+//   };
+// };
