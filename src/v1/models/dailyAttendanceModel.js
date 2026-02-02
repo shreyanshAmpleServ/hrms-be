@@ -2153,22 +2153,22 @@ const importAttendanceFromExcel = async ({
 
   for (const [index, row] of rows.entries()) {
     try {
-      // const attendanceDate = new Date(row.attendance_date);
-      const attendanceDate = parseDDMMYYYY(row.attendance_date);
+      const attendanceDate = new Date(row.attendance_date);
+      // const attendanceDate = parseDDMMYYYY(row.attendance_date);
 
-      const checkIn = parseTime(attendanceDate, row.check_in_time);
-      const checkOut = parseTime(attendanceDate, row.check_out_time);
+      // const checkIn = parseTime(attendanceDate, row.check_in_time);
+      // const checkOut = parseTime(attendanceDate, row.check_out_time);
       if (isNaN(attendanceDate)) {
         throw new Error("Invalid attendance_date");
       }
 
-      // const checkIn = row.check_in_time
-      //   ? new Date(`${row.attendance_date}T${row.check_in_time}:00Z`)
-      //   : null;
+      const checkIn = row.check_in_time
+        ? new Date(`${row.attendance_date}T${row.check_in_time}:00Z`)
+        : null;
 
-      // const checkOut = row.check_out_time
-      //   ? new Date(`${row.attendance_date}T${row.check_out_time}:00Z`)
-      //   : null;
+      const checkOut = row.check_out_time
+        ? new Date(`${row.attendance_date}T${row.check_out_time}:00Z`)
+        : null;
 
       const overtimeHours = calculateOvertimeHours(checkIn, checkOut);
       const overtimeTypeId =
