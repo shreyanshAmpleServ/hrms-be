@@ -20,7 +20,7 @@ const parseDDMMYYYY = (dateStr) => {
   const [dd, mm, yyyy] = dateStr?.split("/").map(Number);
   return new Date(Date.UTC(yyyy, mm - 1, dd));
 };
-const parseTime = (date, timeStr) => {
+const parseTime1 = (date, timeStr) => {
   if (!date || !timeStr) return "All time is not find.";
 
   const [hh, mm] = timeStr?.split(":").map(Number);
@@ -47,6 +47,51 @@ const getOvertimeTypeIdByDate = async (attendanceDate) => {
   });
 
   return overtimeType?.id || null;
+};
+const calculateOvertimeHours = (checkIn, checkOut, standardHours = 8) => {
+  if (!checkIn || !checkOut) return 0;
+
+  let inTime = DateTime.fromISO(checkIn.toISOString());
+  let outTime = DateTime.fromISO(checkOut.toISOString());
+
+  if (outTime < inTime) {
+    outTime = outTime.plus({ days: 1 });
+  }
+
+  const workedHours = Interval.fromDateTimes(inTime, outTime).length("hours");
+  return Math.max(0, parseFloat((workedHours - standardHours).toFixed(2)));
+};
+const calculateOvertimeHoursNew = (
+  checkIn,
+  checkOut,
+  standardHours = 8,
+  attendanceDate, // 👈 pass attendance_date
+) => {
+  if (!checkIn || !checkOut) return 0;
+
+  let inTime = DateTime.fromJSDate(checkIn, { zone: "utc" });
+  let outTime = DateTime.fromJSDate(checkOut, { zone: "utc" });
+
+  // Handle overnight shift
+  if (outTime < inTime) {
+    outTime = outTime.plus({ days: 1 });
+  }
+
+  const workedHours = Interval.fromDateTimes(inTime, outTime).length("hours");
+
+  // 🟢 Weekend check (UTC-safe)
+  const day = DateTime.fromJSDate(attendanceDate, { zone: "utc" }).weekday;
+  // const isWeek = isWeekend(attendanceDate);
+  const isWeekend = day === 6 || day === 7; // 6 = Saturday, 0 = Sunday
+
+  // 🔥 Overtime logic
+  if (isWeekend) {
+    // ALL hours are overtime on weekend
+    return parseFloat(workedHours.toFixed(2));
+  }
+
+  // Weekday overtime
+  return Math.max(0, parseFloat((workedHours - standardHours).toFixed(2)));
 };
 
 // Serialize attendance data
@@ -379,20 +424,6 @@ const getAllDailyAttendance = async (
   }
 };
 
-const calculateOvertimeHours = (checkIn, checkOut, standardHours = 8) => {
-  if (!checkIn || !checkOut) return 0;
-
-  let inTime = DateTime.fromISO(checkIn.toISOString());
-  let outTime = DateTime.fromISO(checkOut.toISOString());
-
-  if (outTime < inTime) {
-    outTime = outTime.plus({ days: 1 });
-  }
-
-  const workedHours = Interval.fromDateTimes(inTime, outTime).length("hours");
-  return Math.max(0, parseFloat((workedHours - standardHours).toFixed(2)));
-};
-
 const getAttendanceSummaryByEmployee = async (
   search,
   page,
@@ -571,6 +602,7 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
           check_in_time: true,
           check_out_time: true,
           working_hours: true,
+          overtime_hours: true,
         },
       });
 
@@ -592,10 +624,11 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
       else if (status === "half day" || status === "half_day")
         summary.half_Day++;
 
-      summary.total_overtime += calculateOvertimeHours(
-        entry.check_in_time,
-        entry.check_out_time,
-      );
+      summary.total_overtime += summary.overtime_hours;
+      // summary.total_overtime += calculateOvertimeHours(
+      //   entry.check_in_time,
+      //   entry.check_out_time,
+      // );
     });
 
     // Map attendance by date for easier iteration
@@ -625,9 +658,10 @@ const findAttendanceByEmployeeId = async (employeeId, startDate, endDate) => {
         check_in_time: entry?.check_in_time || null,
         check_out_time: entry?.check_out_time || null,
         working_hours: entry?.working_hours || null,
-        overtime_hours: entry
-          ? calculateOvertimeHours(entry.check_in_time, entry.check_out_time)
-          : 0,
+        overtime_hours: entry?.overtime_hours || 0,
+        // overtime_hours: entry
+        //   ? calculateOvertimeHours(entry.check_in_time, entry.check_out_time)
+        //   : 0,
         is_weekend: weekend,
         day_name: dayName,
       });
@@ -2132,6 +2166,62 @@ const getAllManagersWithVerifications = async () => {
     throw new CustomError("Failed to fetch managers", 500);
   }
 };
+const parseExcelDate = (value) => {
+  if (!value) return null;
+
+  // 🟢 Excel serial number (e.g. 46056)
+  if (typeof value === "number") {
+    const excelEpoch = new Date(Date.UTC(1899, 11, 30));
+    excelEpoch.setUTCDate(excelEpoch.getUTCDate() + value);
+    return excelEpoch;
+  }
+
+  // 🟢 String date: DD-MM-YYYY or DD/MM/YYYY
+  if (typeof value === "string") {
+    const parts = value.includes("/") ? value.split("/") : value.split("-");
+
+    if (parts.length === 3) {
+      const [dd, mm, yyyy] = parts.map(Number);
+      return new Date(Date.UTC(yyyy, mm - 1, dd));
+    }
+  }
+
+  return null;
+};
+const parseTime = (date, value) => {
+  if (!date || value == null) return null;
+
+  let hours = 0;
+  let minutes = 0;
+
+  // 🟢 Case 1: Excel numeric time (fraction of day)
+  if (typeof value === "number") {
+    const totalMinutes = Math.round(value * 24 * 60);
+    hours = Math.floor(totalMinutes / 60);
+    minutes = totalMinutes % 60;
+  }
+
+  // 🟢 Case 2: String time "HH:mm"
+  else if (typeof value === "string") {
+    const [hh, mm] = value.split(":").map(Number);
+    hours = hh;
+    minutes = mm;
+  } else {
+    return null;
+  }
+
+  return new Date(
+    Date.UTC(
+      date.getUTCFullYear(),
+      date.getUTCMonth(),
+      date.getUTCDate(),
+      hours,
+      minutes,
+      0,
+      0,
+    ),
+  );
+};
 
 const importAttendanceFromExcel = async ({
   employeeId,
@@ -2153,11 +2243,23 @@ const importAttendanceFromExcel = async ({
 
   for (const [index, row] of rows.entries()) {
     try {
-      const attendanceDate = new Date(row.attendance_date);
-      // const attendanceDate = parseDDMMYYYY(row.attendance_date);
+      // const attendanceDate = new Date(row.attendance_date);
+      // // const attendanceDate = parseDDMMYYYY(row.attendance_date);
+      // const checkIn = 1(attendanceDate, row.check_in_time);
+      // const checkOut = parseTime(attendanceDate, row.check_out_time);
+      // console.log("Time print : k", row, attendanceDate, checkIn, checkOut);
 
+      // ✅ 1. Parse Excel date (string OR serial number)
+      const attendanceDate = parseExcelDate(row.attendance_date);
+
+      if (!attendanceDate || isNaN(attendanceDate.getTime())) {
+        throw new Error("Invalid attendance_date");
+      }
+
+      // ✅ 2. Attach time safely in UTC (no timezone shift)
       const checkIn = parseTime(attendanceDate, row.check_in_time);
       const checkOut = parseTime(attendanceDate, row.check_out_time);
+
       if (isNaN(attendanceDate)) {
         throw new Error("Invalid attendance_date");
       }
@@ -2170,7 +2272,12 @@ const importAttendanceFromExcel = async ({
       //   ? new Date(`${row.attendance_date}T${row.check_out_time}:00Z`)
       //   : null;
 
-      const overtimeHours = calculateOvertimeHours(checkIn, checkOut);
+      const overtimeHours = calculateOvertimeHoursNew(
+        checkIn,
+        checkOut,
+        8,
+        attendanceDate,
+      );
       const overtimeTypeId =
         overtimeHours > 0
           ? await getOvertimeTypeIdByDate(attendanceDate)
@@ -2179,8 +2286,8 @@ const importAttendanceFromExcel = async ({
       const serializedData = await serializeAttendanceData({
         employee_id: employeeId, // ✅ forced employee
         attendance_date: attendanceDate,
-        check_in_time: checkIn,
-        check_out_time: checkOut,
+        check_in_time: checkIn.toISOString(),
+        check_out_time: checkOut.toISOString(),
         status: row.status,
         remarks: row.remarks,
       });
