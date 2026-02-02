@@ -392,7 +392,6 @@ const downloadPayslipPDF = async (req, res, next) => {
     console.log("Email sending flag:", isEmailEnabled);
     if (isEmailEnabled == "true") {
       try {
-        // Get payroll data for email - fetch it from the service
         const payrollDataForEmail =
           await monthlyPayrollService.getPayrollDataForEmail(
             employee_id,
@@ -465,7 +464,6 @@ const downloadPayslipPDF = async (req, res, next) => {
           `Email failed for employee ${employee_id}:`,
           emailError.message,
         );
-        // Don't fail the request - continue with download
       }
     }
     try {
@@ -849,7 +847,7 @@ const bulkDownloadMonthlyPayroll = async (req, res, next) => {
     const successMessage =
       isEmailOnly == "true"
         ? "Bulk email started. Use job ID to check progress."
-        : "Bulk download started. Use job ID to check progress.";
+        : "Do you want to download this payslip?.";
 
     res.status(202).success(successMessage, {
       jobId: job.id,
