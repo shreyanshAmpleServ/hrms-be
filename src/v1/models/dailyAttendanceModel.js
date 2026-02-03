@@ -70,10 +70,13 @@ const calculateOvertimeHours = (
   // 🔥 Overtime logic
   if (isWeekend) {
     // ALL hours are overtime on weekend
-    return parseFloat(workedHours.toFixed(2));
+    return Number(workedHours.toFixed(2));
   }
 
-  return Math.max(0, parseFloat((workedHours - standardHours).toFixed(2)));
+  // return Math.max(0, parseFloat((workedHours - standardHours).toFixed(2)));
+  const overtime = Math.max(0, workedHours - standardHours);
+
+  return Number(overtime.toFixed(2));
 };
 const calculateOvertimeHoursNew = (
   checkIn,
@@ -101,11 +104,14 @@ const calculateOvertimeHoursNew = (
   // 🔥 Overtime logic
   if (isWeekend) {
     // ALL hours are overtime on weekend
-    return parseFloat(workedHours.toFixed(2));
+    return Number(workedHours.toFixed(2));
   }
 
   // Weekday overtime
-  return Math.max(0, parseFloat((workedHours - standardHours).toFixed(2)));
+  // return Math.max(0, parseFloat((workedHours - standardHours).toFixed(2)));
+  const overtime = Math.max(0, workedHours - standardHours);
+
+  return Number(overtime.toFixed(2));
 };
 
 // Serialize attendance data
