@@ -5,7 +5,7 @@ const { includes } = require("zod/v4");
 
 const { DateTime, Interval } = require("luxon");
 const isWeekend = (date) => {
-  const day = date.getUTCDay(); // safe UTC
+  const day = date?.getUTCDay(); // safe UTC
   return day === 0 || day === 6;
 };
 const getDayName = (date) => {
@@ -48,7 +48,12 @@ const getOvertimeTypeIdByDate = async (attendanceDate) => {
 
   return overtimeType?.id || null;
 };
-const calculateOvertimeHours = (checkIn, checkOut, standardHours = 8) => {
+const calculateOvertimeHours = (
+  checkIn,
+  checkOut,
+  standardHours = 8,
+  attendanceDate,
+) => {
   if (!checkIn || !checkOut) return 0;
 
   let inTime = DateTime.fromISO(checkIn.toISOString());
@@ -59,6 +64,15 @@ const calculateOvertimeHours = (checkIn, checkOut, standardHours = 8) => {
   }
 
   const workedHours = Interval.fromDateTimes(inTime, outTime).length("hours");
+
+  const isWeek = isWeekend(attendanceDate);
+
+  // 🔥 Overtime logic
+  if (isWeekend) {
+    // ALL hours are overtime on weekend
+    return parseFloat(workedHours.toFixed(2));
+  }
+
   return Math.max(0, parseFloat((workedHours - standardHours).toFixed(2)));
 };
 const calculateOvertimeHoursNew = (
@@ -82,7 +96,7 @@ const calculateOvertimeHoursNew = (
   // 🟢 Weekend check (UTC-safe)
   const day = DateTime.fromJSDate(attendanceDate, { zone: "utc" }).weekday;
   // const isWeek = isWeekend(attendanceDate);
-  const isWeekend = day === 6 || day === 7; // 6 = Saturday, 0 = Sunday
+  const isWeekend = day === 6 || day === 0; // 6 = Saturday, 0 = Sunday
 
   // 🔥 Overtime logic
   if (isWeekend) {
@@ -119,17 +133,13 @@ const serializeAttendanceData = async (data) => {
           working_days: true,
         },
       });
-
     overtime_hours = calculateOvertimeHours(
       checkIn,
       checkOut,
       companyConfigration?.full_day_working_hours, // standard hours
-      data.attendance_date, // REQUIRED for weekend check
+      new Date(data.attendance_date), // REQUIRED for weekend check
     );
-
-    if (overtime_hours > 0 && !overtime_types) {
-      overtime_types = await getOvertimeTypeIdByDate(data.attendance_date);
-    }
+    overtime_types = await getOvertimeTypeIdByDate(data.attendance_date);
   }
 
   if (!status && working_hours !== null && data.employee_id) {
@@ -2291,16 +2301,16 @@ const importAttendanceFromExcel = async ({
       //   ? new Date(`${row.attendance_date}T${row.check_out_time}:00Z`)
       //   : null;
 
-      // const overtimeHours = calculateOvertimeHoursNew(
-      //   checkIn,
-      //   checkOut,
-      //   8,
-      //   attendanceDate,
-      // );
-      // const overtimeTypeId =
-      //   overtimeHours > 0
-      //     ? await getOvertimeTypeIdByDate(attendanceDate)
-      //     : null;
+      const overtimeHours = calculateOvertimeHoursNew(
+        checkIn,
+        checkOut,
+        8,
+        attendanceDate,
+      );
+      const overtimeTypeId =
+        overtimeHours > 0
+          ? await getOvertimeTypeIdByDate(attendanceDate)
+          : null;
 
       const serializedData = await serializeAttendanceData({
         employee_id: employeeId, // ✅ forced employee
@@ -2314,8 +2324,8 @@ const importAttendanceFromExcel = async ({
       const record = await prisma.hrms_d_daily_attendance_entry.create({
         data: {
           ...serializedData,
-          // overtime_hours: overtimeHours,
-          // overtime_types: overtimeTypeId,
+          overtime_hours: overtimeHours,
+          overtime_types: overtimeTypeId,
           createdby: createdBy,
           log_inst: logInst,
           createdate: new Date(),
