@@ -568,6 +568,7 @@ model hrms_d_leave_application {
   employee_id                  Int?
   leave_type_id                Int?
   start_date                   DateTime?                 @db.Date
+  deduction_type               String?                   @db.VarChar(100)
   end_date                     DateTime?                 @db.Date
   reason                       String?                   @db.NVarChar(255)
   status                       String?                   @db.VarChar(20)
@@ -1771,8 +1772,8 @@ model hrms_d_daily_attendance_entry {
   updatedate                     DateTime?              @db.DateTime
   updatedby                      Int?
   log_inst                       Int?
-  working_hours                  Decimal?               @db.Decimal(18, 0)
-  overtime_hours                 Decimal?               @db.Decimal(18, 0)
+  working_hours                  Decimal?               @db.Decimal(18, 2)
+  overtime_hours                 Decimal?               @db.Decimal(18, 2)
   overtime_types                 Int?
   manager_verified               String?                @db.VarChar(100)
   manager_verification_date      DateTime?
