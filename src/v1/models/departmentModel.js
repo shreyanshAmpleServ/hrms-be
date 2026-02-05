@@ -35,7 +35,7 @@ const findDepartmentById = async (id) => {
     console.log("department By Id  ", error);
     throw new CustomError(
       `Error finding department by ID: ${error.message}`,
-      503
+      503,
     );
   }
 };
@@ -49,7 +49,7 @@ const updateDepartment = async (id, data) => {
     };
 
     const updateData = Object.fromEntries(
-      Object.entries(allowedFields).filter(([_, v]) => v !== undefined)
+      Object.entries(allowedFields).filter(([_, v]) => v !== undefined),
     );
 
     const updateddepartment = await prisma.hrms_m_department_master.update({
@@ -75,7 +75,7 @@ const deleteDepartment = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -89,7 +89,7 @@ const getAllDepartments = async (
   search,
   startDate,
   endDate,
-  is_active
+  is_active,
 ) => {
   try {
     const totalCountCheck = await prisma.hrms_m_department_master.count();
@@ -153,6 +153,23 @@ const getAllDepartments = async (
   }
 };
 
+const findDepartmentByName = async (departmentName) => {
+  try {
+    const department = await prisma.hrms_m_department_master.findFirst({
+      where: {
+        department_name: departmentName,
+      },
+    });
+    return department;
+  } catch (error) {
+    console.log("Error finding department by name: ", error);
+    throw new CustomError(
+      `Error finding department by name: ${error.message}`,
+      503,
+    );
+  }
+};
+
 const getDepartmentOptions = async (is_active) => {
   try {
     const totalCountCheck = await prisma.hrms_m_department_master.count();
@@ -198,11 +215,25 @@ const getDepartmentOptions = async (is_active) => {
   }
 };
 
+const getAllDepartmentsForExport = async () => {
+  try {
+    const departments = await prisma.hrms_m_department_master.findMany({
+      orderBy: [{ department_name: "asc" }],
+    });
+    return departments;
+  } catch (error) {
+    console.error("Error retrieving departments for export: ", error);
+    throw new CustomError("Error retrieving departments for export", 503);
+  }
+};
+
 module.exports = {
   createDepartment,
   findDepartmentById,
   updateDepartment,
   deleteDepartment,
   getAllDepartments,
+  findDepartmentByName,
   getDepartmentOptions,
+  getAllDepartmentsForExport,
 };
