@@ -396,14 +396,6 @@ Human Resources,Active`;
     return await csvWriter.stringifyRecords(exportData);
   }
 
-  async exportToJson(options = {}) {
-    const data = await departmentModel.getAllDepartmentsForExport(
-      options.filters?.is_active,
-    );
-    const exportData = await this.transformDataForExport(data);
-    return JSON.stringify(exportData, null, 2);
-  }
-
   async importFromFile(filePath, userId = 1) {
     const fileExtension = path.extname(filePath).toLowerCase();
     let data = [];
@@ -412,11 +404,9 @@ Human Resources,Active`;
       data = await this.parseCsvFile(filePath);
     } else if (fileExtension === ".xlsx" || fileExtension === ".xls") {
       data = await this.parseExcelFile(filePath);
-    } else if (fileExtension === ".json") {
-      data = await this.parseJsonFile(filePath);
     } else {
       throw new Error(
-        "Unsupported file format. Only CSV, Excel, and JSON files are supported.",
+        "Unsupported file format. Only CSV and Excel files are supported.",
       );
     }
 
@@ -543,11 +533,6 @@ Human Resources,Active`;
     return data;
   }
 
-  async parseJsonFile(filePath) {
-    const data = fs.readFileSync(filePath, "utf8");
-    return JSON.parse(data);
-  }
-
   async parseFile(filePath) {
     const fileExtension = path.extname(filePath).toLowerCase();
 
@@ -555,11 +540,9 @@ Human Resources,Active`;
       return await this.parseCsvFile(filePath);
     } else if (fileExtension === ".xlsx" || fileExtension === ".xls") {
       return await this.parseExcelFile(filePath);
-    } else if (fileExtension === ".json") {
-      return await this.parseJsonFile(filePath);
     } else {
       throw new Error(
-        "Unsupported file format. Only CSV, Excel, and JSON files are supported.",
+        "Unsupported file format. Only CSV and Excel files are supported.",
       );
     }
   }

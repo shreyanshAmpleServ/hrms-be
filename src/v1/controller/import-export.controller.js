@@ -308,58 +308,6 @@ const importExportController = {
       next(error);
     }
   },
-
-  async exportToJSON(req, res, next) {
-    try {
-      const { table } = req.params;
-      const service = ImportExportFactory.getService(table);
-
-      if (!service) {
-        return res.status(400).json({
-          success: false,
-          message: `Table '${table}' is not supported`,
-          errors: [{ msg: "Unsupported table", param: "table" }],
-        });
-      }
-
-      const {
-        search,
-        limit,
-        sortField = "id",
-        sortOrder = "desc",
-        is_active,
-        ...filters
-      } = req.query;
-
-      const options = {
-        filters: search
-          ? {
-              OR: service.searchFields.map((field) => ({
-                [field]: { contains: search },
-              })),
-            }
-          : is_active !== undefined
-            ? { is_active: is_active === "true" ? "Y" : "N" }
-            : Object.keys(filters).length > 0
-              ? filters
-              : undefined,
-        limit: limit ? parseInt(limit) : undefined,
-        orderBy: { [sortField]: sortOrder },
-      };
-
-      const jsonData = await service.exportToJson(options);
-      const filename = `${table}_export_${new Date().toISOString().split("T")[0]}.json`;
-
-      res.setHeader("Content-Type", "application/json");
-      res.setHeader(
-        "Content-Disposition",
-        `attachment; filename="${filename}"`,
-      );
-      res.send(jsonData);
-    } catch (error) {
-      next(error);
-    }
-  },
 };
 
 module.exports = { importExportController };

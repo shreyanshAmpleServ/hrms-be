@@ -80,11 +80,4 @@ router.get(
   importExportController.exportToCSV,
 );
 
-router.get(
-  "/import-export/:table/export/json",
-  authenticateToken,
-  validateExport,
-  importExportController.exportToJSON,
-);
-
 module.exports = router;
