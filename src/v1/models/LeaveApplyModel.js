@@ -17,8 +17,8 @@ const serializeLeaveApplicationData = (data) => ({
     ? Number(data.backup_person_id)
     : null,
   contact_details_during_leave: data.contact_details_during_leave || "",
-
   document_attachment: data.document_attachment || "",
+  deduction_type: data.deduction_type || "",
 });
 
 // Create a new leave application
@@ -51,7 +51,7 @@ const createLeaveApplication = async (data) => {
   if (leaveApplication) {
     throw new CustomError(
       "Leave application already exists for this employee within the selected date range.",
-      400
+      400,
     );
   }
 
@@ -118,7 +118,7 @@ const findLeaveApplicationById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding leave application by ID: ${error.message}`,
-      503
+      503,
     );
   }
 };
@@ -167,7 +167,7 @@ const updateLeaveApplication = async (id, data) => {
   } catch (error) {
     throw new CustomError(
       `Error updating leave application: ${error.message}`,
-      500
+      500,
     );
   }
 };
@@ -182,7 +182,7 @@ const deleteLeaveApplication = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -196,7 +196,7 @@ const getAllLeaveApplication = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -222,6 +222,7 @@ const getAllLeaveApplication = async (
             contains: search.toLowerCase(),
           },
         },
+        { deduction_type: { contains: search.toLowerCase() } },
       ];
     }
     if (startDate && endDate) {
@@ -297,7 +298,7 @@ const updateLeaveStatus = async (id, data) => {
     if (!existingLeave) {
       throw new CustomError(
         `Leave application with ID ${leaveId} not found`,
-        404
+        404,
       );
     }
 
