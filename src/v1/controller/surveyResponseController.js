@@ -19,7 +19,7 @@ const createSurveyResponse = async (req, res, next) => {
 const findSurveyResponse = async (req, res, next) => {
   try {
     const reqData = await surveyResponseService.findSurveyResponseById(
-      req.params.id
+      req.params.id,
     );
     if (!reqData) throw new CustomError("Survey response not found", 404);
     res.status(200).success(null, reqData);
@@ -37,7 +37,7 @@ const updateSurveyResponse = async (req, res, next) => {
     };
     const reqData = await surveyResponseService.updateSurveyResponse(
       req.params.id,
-      data
+      data,
     );
     res.status(200).success("Survey response updated successfully", reqData);
   } catch (error) {
@@ -62,7 +62,7 @@ const getAllSurveyResponses = async (req, res, next) => {
       Number(page),
       Number(size),
       startDate && moment(startDate),
-      endDate && moment(endDate)
+      endDate && moment(endDate),
     );
     res.status(200).success(null, data);
   } catch (error) {

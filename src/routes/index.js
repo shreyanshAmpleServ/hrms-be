@@ -151,6 +151,7 @@ const candidateDocumentsRoute = require("../v1/routes/candidateDocumentsRoute.js
 const employeeKPIRoute = require("../v1/routes/employeeKPIRoutes.js");
 const seederRoutes = require("../v1/routes/seederRoutes.js");
 const payRollSettingsRoutes = require("../v1/routes/payRollConfigSettingRoute.js");
+const surveyTemplateRoutes = require("../v1/routes/surveyTemplateRoute.js");
 const router = express.Router();
 
 // Version 1 API
@@ -307,6 +308,7 @@ router.use("/v1", candidateDocumentsRoute);
 router.use("/v1/employee-kpi", employeeKPIRoute);
 router.use("/v1", seederRoutes);
 router.use("/v1", payRollSettingsRoutes);
+router.use("/v1", surveyTemplateRoutes);
 // Example: router.use('/v2', v2Routes);
 
 module.exports = router;

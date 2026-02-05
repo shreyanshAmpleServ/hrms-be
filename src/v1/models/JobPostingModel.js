@@ -1217,6 +1217,7 @@ const serializeJobData = (data) => {
   const serialized = {
     job_title: data.job_title || "",
     description: data.description || "",
+    survey_template_id: data.survey_template_id || "",
     required_experience: data.required_experience || "",
     is_internal: data.is_internal || false,
   };
@@ -1452,7 +1453,7 @@ const createJobPosting = async (data) => {
     if (!department || !designation || !jobTitle) {
       throw new CustomError(
         "Invalid department, designation, or job title",
-        400
+        400,
       );
     }
 
@@ -1474,7 +1475,7 @@ const createJobPosting = async (data) => {
         const invalidIds = stageIds.filter((id) => !foundIds.includes(id));
         throw new CustomError(
           `Invalid hiring stage IDs: ${invalidIds.join(", ")}`,
-          400
+          400,
         );
       }
     }
@@ -1497,7 +1498,7 @@ const createJobPosting = async (data) => {
         const invalidIds = docTypeIds.filter((id) => !foundIds.includes(id));
         throw new CustomError(
           `Invalid document type IDs: ${invalidIds.join(", ")}`,
-          400
+          400,
         );
       }
     }
@@ -1659,7 +1660,7 @@ const findJobPostingById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding job posting by ID: ${error.message}`,
-      503
+      503,
     );
   }
 };
@@ -1690,7 +1691,7 @@ const updateJobPosting = async (id, data) => {
         const invalidIds = stageIds.filter((id) => !foundIds.includes(id));
         throw new CustomError(
           `Invalid hiring stage IDs: ${invalidIds.join(", ")}`,
-          400
+          400,
         );
       }
     }
@@ -1714,7 +1715,7 @@ const updateJobPosting = async (id, data) => {
         const invalidIds = docTypeIds.filter((id) => !foundIds.includes(id));
         throw new CustomError(
           `Invalid document type IDs: ${invalidIds.join(", ")}`,
-          400
+          400,
         );
       }
     }
@@ -1769,7 +1770,7 @@ const deleteJobPosting = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.message, 500);
@@ -1784,7 +1785,7 @@ const getAllJobPosting = async (
   page,
   size,
   startDate,
-  endDate
+  endDate,
 ) => {
   try {
     page = !page || page == 0 ? 1 : page;
@@ -1854,6 +1855,7 @@ const getAllJobPosting = async (
             id: true,
           },
         },
+        hrms_survey_template: true,
         job_posting_reporting_manager: {
           select: {
             full_name: true,

@@ -570,7 +570,6 @@ model hrms_d_leave_application {
   employee_id                  Int?
   leave_type_id                Int?
   start_date                   DateTime?                 @db.Date
-  deduction_type               String?                   @db.VarChar(100)
   end_date                     DateTime?                 @db.Date
   reason                       String?                   @db.NVarChar(255)
   status                       String?                   @db.VarChar(20)
@@ -582,6 +581,7 @@ model hrms_d_leave_application {
   partial_day                  String?                   @db.VarChar(10)
   start_session                String?                   @db.VarChar(20)
   end_session                  String?                   @db.VarChar(20)
+  deduction_type               String?                   @db.VarChar(100)
   backup_person_id             Int?
   contact_details_during_leave String?                   @db.NVarChar(255)
   approver_id                  Int?
