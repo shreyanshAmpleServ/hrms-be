@@ -3105,7 +3105,7 @@ model hrms_m_survey_template {
 }
 
 model hrms_m_survey_question {
-  id String @id @default(uuid())
+  id Int @id @default(autoincrement())
 
   question   String
   type       String
