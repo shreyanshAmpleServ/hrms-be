@@ -102,10 +102,62 @@ const findSurveyById = async (id) => {
   }
 };
 
+// const updateSurveyTemplate = async (id, data) => {
+//   try {
+//     const surveyId = Number(id);
+
+//     if (isNaN(surveyId)) {
+//       throw new CustomError("Invalid survey template ID", 400);
+//     }
+
+//     const existingSurvey = await prisma.hrms_m_survey_template.findUnique({
+//       where: { id: surveyId },
+//     });
+
+//     if (!existingSurvey) {
+//       throw new CustomError("Survey template not found", 404);
+//     }
+
+//     const result = await prisma.$transaction(async (tx) => {
+//       // 1️⃣ Update survey master
+//       const survey = await tx.hrms_m_survey_template.update({
+//         where: { id: surveyId },
+//         data: {
+//           title: data.title,
+//           description: data.description,
+//           is_active: data.is_active || "Y",
+//           updatedAt: new Date(),
+//         },
+//       });
+
+//       // 2️⃣ Soft delete old questions
+//       await tx.hrms_m_survey_question.updateMany({
+//         where: { survey_id: surveyId },
+//         data: { is_active: "N", updatedAt: new Date() },
+//       });
+
+//       // 3️⃣ Create new questions
+//       if (Array.isArray(data.questions) && data.questions.length > 0) {
+//         await tx.hrms_m_survey_question.createMany({
+//           data: data.questions.map((q) => serializeSurveyQuestion(q, surveyId)),
+//         });
+//       }
+
+//       return survey;
+//     });
+
+//     return result;
+//   } catch (error) {
+//     throw new CustomError(
+//       `Error updating survey template: ${error.message}`,
+//       500,
+//     );
+//   }
+// };
+
 const updateSurveyTemplate = async (id, data) => {
   try {
     const surveyId = Number(id);
-
     if (isNaN(surveyId)) {
       throw new CustomError("Invalid survey template ID", 400);
     }
@@ -130,17 +182,37 @@ const updateSurveyTemplate = async (id, data) => {
         },
       });
 
-      // 2️⃣ Soft delete old questions
-      await tx.hrms_m_survey_question.updateMany({
-        where: { survey_id: surveyId },
-        data: { is_active: "N", updatedAt: new Date() },
-      });
+      // 2️⃣ Handle questions ONLY if sent
+      if (Array.isArray(data.questions)) {
+        const incomingIds = data.questions.filter((q) => q.id).map((q) => q.id);
 
-      // 3️⃣ Create new questions
-      if (Array.isArray(data.questions) && data.questions.length > 0) {
-        await tx.hrms_m_survey_question.createMany({
-          data: data.questions.map((q) => serializeSurveyQuestion(q, surveyId)),
+        // Soft delete removed questions
+        await tx.hrms_m_survey_question.updateMany({
+          where: {
+            survey_id: surveyId,
+            id: { notIn: incomingIds },
+          },
+          data: { is_active: "N", updatedAt: new Date() },
         });
+
+        // Upsert questions
+        for (const q of data.questions) {
+          if (q.id) {
+            // 🔁 Update existing
+            await tx.hrms_m_survey_question.update({
+              where: { id: q.id },
+              data: serializeSurveyQuestion(q, surveyId),
+            });
+          } else {
+            // ➕ Create new
+            await tx.hrms_m_survey_question.create({
+              data: {
+                ...serializeSurveyQuestion(q, surveyId),
+                createdAt: new Date(),
+              },
+            });
+          }
+        }
       }
 
       return survey;
