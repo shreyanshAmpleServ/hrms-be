@@ -66,9 +66,9 @@ const calculateOvertimeHours = (
   const workedHours = Interval.fromDateTimes(inTime, outTime).length("hours");
 
   const isWeek = isWeekend(attendanceDate);
-
+  console.log("is Weekend : ", isWeek, workedHours);
   // 🔥 Overtime logic
-  if (isWeekend) {
+  if (isWeek) {
     // ALL hours are overtime on weekend
     return Number(workedHours.toFixed(2));
   }
@@ -126,7 +126,7 @@ const serializeAttendanceData = async (data) => {
 
   if (checkIn && checkOut && checkOut > checkIn) {
     const diffMs = checkOut - checkIn;
-    working_hours = parseFloat((diffMs / (1000 * 60 * 60)).toFixed(2));
+    working_hours = Number((diffMs / (1000 * 60 * 60)).toFixed(2));
 
     // 🔹 overtime (default 8 hrs)
     // overtime_hours = Math.max(0, parseFloat((working_hours - 8).toFixed(2)));
@@ -147,7 +147,7 @@ const serializeAttendanceData = async (data) => {
     );
     overtime_types = await getOvertimeTypeIdByDate(data.attendance_date);
   }
-
+  console.log("is overtime : ", overtime_hours);
   if (!status && working_hours !== null && data.employee_id) {
     status = await getStatusFromWorkingHours(data.employee_id, working_hours);
   }
@@ -185,10 +185,10 @@ const getStatusFromWorkingHours = async (employeeId, working_hours) => {
   if (!shift?.daily_working_hours) return "Absent";
 
   const fullDay = parseFloat(shift.daily_working_hours);
-  const halfDay = fullDay / 2;
+  // const halfDay = fullDay / 2;
 
   if (working_hours >= fullDay) return "Present";
-  if (working_hours >= halfDay) return "Half Day";
+  // if (working_hours >= halfDay) return "Half Day";
   return "Absent";
 };
 
@@ -229,6 +229,7 @@ const upsertDailyAttendance = async (id, data) => {
     const serializedData = await serializeAttendanceData(data);
 
     let updatedEntry;
+    console.log("Serialized Data : ", serializedData);
 
     if (id) {
       updatedEntry = await prisma.hrms_d_daily_attendance_entry.update({

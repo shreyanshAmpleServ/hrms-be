@@ -545,6 +545,7 @@ model hrms_d_job_posting {
   annual_salary_from                 Int?
   annual_salary_to                   Int?
   currency_id                        Int?
+  survey_template_id                 Int?
   posting_date                       DateTime?                       @db.Date
   closing_date                       DateTime?                       @db.Date
   is_internal                        Boolean?
@@ -556,6 +557,7 @@ model hrms_d_job_posting {
   job_code                           String                          @db.VarChar(20)
   status                             String?                         @db.NVarChar(50)
   candidate_job_posting              hrms_d_candidate_master[]
+  hrms_survey_template               hrms_m_survey_template?         @relation(fields: [survey_template_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_job_department                hrms_m_department_master?       @relation(fields: [department_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   hrms_job_designation               hrms_m_designation_master?      @relation(fields: [designation_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
   job_posting_reporting_manager      hrms_d_employee?                @relation(fields: [reporting_manager_id], references: [id], onDelete: NoAction, onUpdate: NoAction)
@@ -1771,8 +1773,8 @@ model hrms_d_daily_attendance_entry {
   updatedate                     DateTime?              @db.DateTime
   updatedby                      Int?
   log_inst                       Int?
-  working_hours                  Decimal?               @db.Decimal(18, 0)
-  overtime_hours                 Decimal?               @db.Decimal(18, 0)
+  working_hours                  Decimal?               @db.Decimal(18, 2)
+  overtime_hours                 Decimal?               @db.Decimal(18, 2)
   overtime_types                 Int?
   manager_verified               String?                @db.VarChar(100)
   manager_verification_date      DateTime?
@@ -3086,4 +3088,34 @@ model hrms_m_payroll_confuguration_setting {
   payroll_config_loan_pay_component   hrms_m_pay_component? @relation("loanRelation", fields: [loan_pay_componet_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   payroll_config_advanc_pay_component hrms_m_pay_component? @relation("advanceRelation", fields: [advance_pay_componet_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
   payroll_config_nssf_pay_component   hrms_m_pay_component? @relation("nssfRelation", fields: [nssf_pay_componet_id], references: [id], onUpdate: NoAction, onDelete: NoAction)
+}
+
+model hrms_m_survey_template {
+  id                   Int                  @id @default(autoincrement())
+  title                String
+  description          String?
+  is_active            String               @default("Y") @db.Char(1)
+  hrms_survey_template hrms_d_job_posting[]
+
+  questions hrms_m_survey_question[]
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
+}
+
+model hrms_m_survey_question {
+  id String @id @default(uuid())
+
+  question   String
+  type       String
+  isRequired Boolean @default(false)
+  order      Int?
+  options    String?
+  survey_id  Int
+  is_active  String  @default("Y") @db.Char(1)
+
+  survey hrms_m_survey_template @relation(fields: [survey_id], references: [id], onDelete: Cascade)
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime? @updatedAt
 }
