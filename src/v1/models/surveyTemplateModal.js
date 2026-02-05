@@ -77,7 +77,7 @@ const findSurveyById = async (id) => {
       where: { id: Number(id) },
       include: {
         questions: {
-          where: { is_active: "Y" },
+          //   where: { is_active: "Y" },
           orderBy: { order: "asc" },
         },
       },
@@ -170,7 +170,7 @@ const updateSurveyTemplate = async (id, data) => {
       throw new CustomError("Survey template not found", 404);
     }
 
-    const result = await prisma.$transaction(async (tx) => {
+    await prisma.$transaction(async (tx) => {
       // 1️⃣ Update survey master
       const survey = await tx.hrms_m_survey_template.update({
         where: { id: surveyId },
@@ -214,11 +214,17 @@ const updateSurveyTemplate = async (id, data) => {
           }
         }
       }
-
-      return survey;
     });
-
-    return result;
+    const surveyResult = await prisma.hrms_m_survey_template.findUnique({
+      where: { id: Number(id) },
+      include: {
+        questions: {
+          //   where: { is_active: "Y" },
+          orderBy: { order: "asc" },
+        },
+      },
+    });
+    return surveyResult;
   } catch (error) {
     throw new CustomError(
       `Error updating survey template: ${error.message}`,
@@ -297,6 +303,9 @@ const getAllSurveyTemplates = async (search, page, size) => {
       where: filters,
       skip,
       take: size,
+      include: {
+        questions: true,
+      },
       orderBy: { createdAt: "desc" },
     });
 
