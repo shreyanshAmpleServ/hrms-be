@@ -47,62 +47,96 @@ class DesignationImportExportService {
             "1",
             "0",
           ];
-          if (value && !validValues.includes(value.toString())) {
-            return "Active status must be one of: Active, Inactive, Y, N, true, false, 1, 0";
-          }
-          return true;
+          const stringValue = value ? value.toString().toLowerCase() : "active";
+          return (
+            validValues.some((v) => v.toLowerCase() === stringValue) ||
+            "Must be Active/Inactive, Y/N, true/false, or 1/0"
+          );
         },
         transform: (value) => {
           if (!value) return "Active";
-          const val = value.toString().toLowerCase();
-          if (["y", "true", "1"].includes(val)) return "Active";
-          if (["n", "false", "0"].includes(val)) return "Inactive";
-          return value.toString();
+          const stringValue = value.toString().toLowerCase();
+          if (["y", "true", "1"].includes(stringValue)) return "Active";
+          if (["n", "false", "0"].includes(stringValue)) return "Inactive";
+          return ["active", "inactive"].includes(stringValue)
+            ? stringValue.charAt(0).toUpperCase() + stringValue.slice(1)
+            : "Active";
         },
-        description: "Whether the designation is active (defaults to Active)",
+        description:
+          "Active status - Active, Inactive, Y, N, true, false, 1, or 0 (defaults to Active)",
       },
     ];
   }
 
   async getSampleData() {
     return [
-      { designation_name: "Software Engineer", is_active: "Active" },
-      { designation_name: "Senior Software Engineer", is_active: "Active" },
-      { designation_name: "Team Lead", is_active: "Active" },
-      { designation_name: "Project Manager", is_active: "Active" },
-      { designation_name: "HR Manager", is_active: "Inactive" },
+      {
+        designation_name: "Software Engineer",
+        is_active: "Active",
+      },
+      {
+        designation_name: "Senior Software Engineer",
+        is_active: "Active",
+      },
+      {
+        designation_name: "Team Lead",
+        is_active: "Active",
+      },
+      {
+        designation_name: "Project Manager",
+        is_active: "Active",
+      },
+      {
+        designation_name: "HR Manager",
+        is_active: "Inactive",
+      },
     ];
   }
 
-  getColumnDescription(columnKey) {
-    const descriptions = {
-      designation_name:
-        "Name of the designation (required, 2-100 characters, must be unique)",
-      is_active: "Whether the designation is active (defaults to Active)",
-    };
-    return descriptions[columnKey] || "";
+  getColumnDescription() {
+    return `
+# Designations Import Template
+
+## Required Fields:
+- **Designation Name**: Name of the designation (2-100 characters, must be unique)
+
+## Optional Fields:
+- **Active Status**: Whether the designation is active (defaults to Active)
+
+## Accepted Values for Active Status:
+- Active, Inactive
+- Y, N
+- true, false
+- 1, 0
+
+## Notes:
+- Designation names must be unique across the system.
+- Active designations are available for use throughout the system.
+- Inactive designations are hidden but preserved for historical data.
+- Designation names are automatically trimmed of whitespace.
+    `;
   }
 
   async transformDataForExport(data) {
-    return data.map((designation) => ({
-      designation_name: designation.designation_name,
-      is_active: designation.is_active === "Y" ? "Active" : "Inactive",
-      createdate: designation.createdate
-        ? new Date(designation.createdate).toISOString().split("T")[0]
+    return data.map((desig) => ({
+      designation_name: desig.designation_name,
+      is_active: desig.is_active === "Y" ? "Active" : "Inactive",
+      createdate: desig.createdate
+        ? new Date(desig.createdate).toISOString().split("T")[0]
         : "",
-      createdby: designation.createdby || "",
-      updatedate: designation.updatedate
-        ? new Date(designation.updatedate).toISOString().split("T")[0]
+      createdby: desig.createdby || "",
+      updatedate: desig.updatedate
+        ? new Date(desig.updatedate).toISOString().split("T")[0]
         : "",
-      updatedby: designation.updatedby || "",
+      updatedby: desig.updatedby || "",
     }));
   }
 
   async checkDuplicate(data) {
-    const existingDesignation = await designationModel.findDesignationByName(
+    const existingDesig = await designationModel.findDesignationByName(
       data.designation_name,
     );
-    if (existingDesignation) {
+    if (existingDesig) {
       return `Designation "${data.designation_name}" already exists`;
     }
     return null;
@@ -114,19 +148,34 @@ class DesignationImportExportService {
       is_active:
         data.is_active === "Active" || data.is_active === "Y" ? "Y" : "N",
       createdby: userId,
-      updatedby: userId,
+      log_inst: 1,
       createdate: new Date(),
       updatedate: new Date(),
-      log_inst: 1,
+      updatedby: userId,
     };
-  }
-
-  async prepareDataForImport(data, userId) {
-    return await this.transformDataForImport(data, userId);
   }
 
   async validateForeignKeys(data) {
     return null;
+  }
+
+  async prepareDataForImport(data, userId) {
+    return this.transformDataForImport(data, userId);
+  }
+
+  async updateExisting(data, userId) {
+    const existing = await designationModel.findDesignationByName(
+      data.designation_name,
+    );
+    if (!existing) return null;
+
+    const updateData = {
+      ...data,
+      updatedby: userId,
+      updatedate: new Date(),
+    };
+
+    return await designationModel.updateDesignation(existing.id, updateData);
   }
 
   getModel() {
@@ -263,20 +312,26 @@ Team Lead,Active`;
 
     if (options.limit) query.take = options.limit;
 
-    const data = await designationModel.getAllDesignationsForExport();
-    const exportData = await this.transformDataForExport(data);
+    const data = await designationModel.getAllDesignationsForExport(
+      options.filters?.is_active,
+    );
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Designations");
+    const worksheet = workbook.addWorksheet(this.displayName);
 
-    worksheet.columns = [
-      { header: "Designation Name", key: "designation_name", width: 30 },
-      { header: "Active Status", key: "is_active", width: 15 },
-      { header: "Created Date", key: "createdate", width: 15 },
+    const exportColumns = [
+      ...this.columns,
+      { header: "Created Date", key: "createdate", width: 20 },
       { header: "Created By", key: "createdby", width: 15 },
-      { header: "Updated Date", key: "updatedate", width: 15 },
+      { header: "Updated Date", key: "updatedate", width: 20 },
       { header: "Updated By", key: "updatedby", width: 15 },
     ];
+
+    worksheet.columns = exportColumns.map((col) => ({
+      header: col.header,
+      key: col.key,
+      width: col.width || 20,
+    }));
 
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
@@ -288,18 +343,19 @@ Team Lead,Active`;
     headerRow.alignment = { vertical: "middle", horizontal: "center" };
     headerRow.height = 25;
 
-    headerRow.eachCell((cell) => {
-      cell.border = {
-        top: { style: "thin" },
-        left: { style: "thin" },
-        bottom: { style: "thin" },
-        right: { style: "thin" },
-      };
-    });
+    const exportData = await this.transformDataForExport(data);
+    exportData.forEach((row, index) => {
+      const excelRow = worksheet.addRow(row);
 
-    exportData.forEach((data, index) => {
-      const row = worksheet.addRow(data);
-      row.eachCell((cell) => {
+      if (index % 2 === 0) {
+        excelRow.fill = {
+          type: "pattern",
+          pattern: "solid",
+          fgColor: { argb: "FFF2F2F2" },
+        };
+      }
+
+      excelRow.eachCell((cell) => {
         cell.border = {
           top: { style: "thin" },
           left: { style: "thin" },
@@ -307,28 +363,28 @@ Team Lead,Active`;
           right: { style: "thin" },
         };
       });
-      if (index % 2 === 0) {
-        row.fill = {
-          type: "pattern",
-          pattern: "solid",
-          fgColor: { argb: "FFF2F2F2" },
-        };
-      }
     });
+
+    if (data.length > 0) {
+      worksheet.autoFilter = {
+        from: "A1",
+        to: `${String.fromCharCode(64 + exportColumns.length)}${data.length + 1}`,
+      };
+    }
 
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }
 
   async exportToCsv(options = {}) {
-    const data = await designationModel.getAllDesignationsForExport();
+    const data = await designationModel.getAllDesignationsForExport(
+      options.filters?.is_active,
+    );
     const exportData = await this.transformDataForExport(data);
 
     const csvWriter = createObjectCsvWriter({
-      path: "temp/export.csv",
       header: [
-        { id: "designation_name", title: "Designation Name" },
-        { id: "is_active", title: "Active Status" },
+        ...this.columns.map((col) => ({ id: col.key, title: col.header })),
         { id: "createdate", title: "Created Date" },
         { id: "createdby", title: "Created By" },
         { id: "updatedate", title: "Updated Date" },
@@ -452,13 +508,13 @@ Team Lead,Active`;
   }
 
   async parseCsvFile(filePath) {
+    const results = [];
     return new Promise((resolve, reject) => {
-      const results = [];
       fs.createReadStream(filePath)
         .pipe(csv())
         .on("data", (data) => results.push(data))
         .on("end", () => resolve(results))
-        .on("error", reject);
+        .on("error", (error) => reject(error));
     });
   }
 
