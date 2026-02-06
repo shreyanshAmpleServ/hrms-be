@@ -1638,18 +1638,7 @@ model hrms_m_tax_slab_rule {
   hrms_m_tax_slab_rule1  hrms_m_tax_slab_rule1[]
 }
 
-model m_mobile_notification_template {
-  id               Int       @id(map: "PK__m_mobile__3213E83F1A0CA05A") @default(autoincrement())
-  event_code       String    @db.NVarChar(50)
-  title_template   String    @db.NVarChar(200)
-  message_template String
-  is_active        String    @default("Y", map: "DF__m_mobile___is_ac__038683F8") @db.Char(1)
-  createdate       DateTime? @default(now(), map: "DF__m_mobile___creat__047AA831") @db.DateTime
-  createdby        Int
-  updatedate       DateTime? @db.DateTime
-  updatedby        Int?
-  log_inst         Int?
-}
+
 
 model hrms_m_states {
   id                          Int                             @id(map: "PK_crms__states") @default(autoincrement())
