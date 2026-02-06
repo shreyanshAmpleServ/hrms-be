@@ -396,7 +396,7 @@ model hrms_d_employee_address {
   zip_code              String?                @db.NVarChar(20)
   hrms_employee_address hrms_d_employee        @relation(fields: [employee_id], references: [id], onUpdate: NoAction, map: "FK__hrms_d_em__emplo__078C1F06")
   employee_country      hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
-  employee_state        crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
+  employee_state        hrms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_employee_suggestion {
@@ -1593,7 +1593,7 @@ model hrms_m_country_master {
   log_inst                      Int?
   code                          String?                         @db.VarChar(5)
   name                          String?                         @db.NVarChar(100)
-  country_details               crms_m_states[]
+  country_details               hrms_m_states[]
   default_configuration_country hrms_d_default_configurations[]
   employee_country              hrms_d_employee_address[]
   company_country               hrms_m_company_master[]
@@ -1638,20 +1638,9 @@ model hrms_m_tax_slab_rule {
   hrms_m_tax_slab_rule1  hrms_m_tax_slab_rule1[]
 }
 
-model m_mobile_notification_template {
-  id               Int       @id(map: "PK__m_mobile__3213E83F1A0CA05A") @default(autoincrement())
-  event_code       String    @db.NVarChar(50)
-  title_template   String    @db.NVarChar(200)
-  message_template String
-  is_active        String    @default("Y", map: "DF__m_mobile___is_ac__038683F8") @db.Char(1)
-  createdate       DateTime? @default(now(), map: "DF__m_mobile___creat__047AA831") @db.DateTime
-  createdby        Int
-  updatedate       DateTime? @db.DateTime
-  updatedby        Int?
-  log_inst         Int?
-}
 
-model crms_m_states {
+
+model hrms_m_states {
   id                          Int                             @id(map: "PK_crms__states") @default(autoincrement())
   country_code                Int
   name                        String                          @db.NVarChar(100)
@@ -2657,7 +2646,7 @@ model hrms_d_default_configurations {
   notes                           String?                @db.Text
   local_employee_notice_period    Int?
   default_configuration_country   hrms_m_country_master? @relation(fields: [country], references: [id], onUpdate: NoAction)
-  default_configuration_state     crms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
+  default_configuration_state     hrms_m_states?         @relation(fields: [state], references: [id], onUpdate: NoAction)
 }
 
 model hrms_d_requests {

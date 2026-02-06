@@ -4,7 +4,7 @@ const CustomError = require("../../utils/CustomError");
 const checkDuplicateStates = async (name, country_code, id = null) => {
   if (!name || !country_code) return null;
 
-  const duplicate = await prisma.crms_m_states.findFirst({
+  const duplicate = await prisma.hrms_m_states.findFirst({
     where: {
       name: name,
       country_code: Number(country_code),
@@ -21,7 +21,7 @@ const createState = async (data) => {
     if (duplicate) {
       throw new CustomError("State name already exists", 400);
     }
-    const state = await prisma.crms_m_states.create({
+    const state = await prisma.hrms_m_states.create({
       data: {
         ...data,
         country_code: Number(data.country_code) || null,
@@ -47,7 +47,7 @@ const createState = async (data) => {
 
 const findStateById = async (id) => {
   try {
-    const state = await prisma.crms_m_states.findUnique({
+    const state = await prisma.hrms_m_states.findUnique({
       where: { id: parseInt(id) },
       include: {
         country_details: {
@@ -73,14 +73,14 @@ const updateState = async (id, data) => {
     const duplicate = await checkDuplicateStates(
       data.name,
       data.country_code,
-      id
+      id,
     );
 
     if (duplicate) {
       throw new CustomError("State already exists for this country", 400);
     }
 
-    const updatedState = await prisma.crms_m_states.update({
+    const updatedState = await prisma.hrms_m_states.update({
       where: { id: parseInt(id) },
       data: {
         ...data,
@@ -101,14 +101,14 @@ const updateState = async (id, data) => {
 
 const deleteState = async (id) => {
   try {
-    await prisma.crms_m_states.delete({
+    await prisma.hrms_m_states.delete({
       where: { id: parseInt(id) },
     });
   } catch (error) {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -141,7 +141,7 @@ const getAllStates = async (search, page, size, country_id, is_active) => {
       if (is_active.toLowerCase() === "true") filters.is_active = "Y";
       else if (is_active.toLowerCase() === "false") filters.is_active = "N";
     }
-    const states = await prisma.crms_m_states.findMany({
+    const states = await prisma.hrms_m_states.findMany({
       where: filters,
       skip: skip,
       take: size,
@@ -156,7 +156,7 @@ const getAllStates = async (search, page, size, country_id, is_active) => {
       },
       orderBy: [{ name: "asc" }],
     });
-    const totalCount = await prisma.crms_m_states.count({
+    const totalCount = await prisma.hrms_m_states.count({
       where: filters,
     });
 

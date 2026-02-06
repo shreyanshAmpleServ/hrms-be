@@ -1,34 +1,51 @@
-const designationModel = require("../models/designationModel");
+const countryModel = require("../models/countryModel");
 const fs = require("fs");
 const path = require("path");
 const csv = require("csv-parser");
 const { createObjectCsvWriter } = require("csv-writer");
 const ExcelJS = require("exceljs");
 
-class DesignationImportExportService {
+class CountryImportExportService {
   constructor() {
-    this.modelName = "designations";
-    this.displayName = "Designations";
-    this.uniqueFields = ["designation_name"];
-    this.searchFields = ["designation_name"];
+    this.modelName = "countries";
+    this.displayName = "Countries";
+    this.uniqueFields = ["name", "code"];
+    this.searchFields = ["name", "code"];
 
     this.columns = [
       {
-        key: "designation_name",
-        header: "Designation Name",
+        key: "name",
+        header: "Country Name",
         width: 30,
         required: true,
         type: "string",
         validation: (value) => {
-          if (!value) return "Designation name is required";
+          if (!value) return "Country name is required";
           if (value.toString().trim().length < 2)
-            return "Designation name must be at least 2 characters";
+            return "Country name must be at least 2 characters";
           if (value.toString().trim().length > 100)
-            return "Designation name must not exceed 100 characters";
+            return "Country name must not exceed 100 characters";
           return true;
         },
         transform: (value) => value.toString().trim(),
-        description: "Name of the designation (required, 2-100 characters)",
+        description: "Name of the country (required, 2-100 characters)",
+      },
+      {
+        key: "code",
+        header: "Country Code",
+        width: 15,
+        required: true,
+        type: "string",
+        validation: (value) => {
+          if (!value) return "Country code is required";
+          if (value.toString().trim().length !== 2)
+            return "Country code must be exactly 2 characters";
+          if (!/^[A-Z]{2}$/.test(value.toString().toUpperCase()))
+            return "Country code must contain only letters (A-Z)";
+          return true;
+        },
+        transform: (value) => value.toString().toUpperCase().trim(),
+        description: "2-letter country code (required, e.g., US, IN, UK)",
       },
       {
         key: "is_active",
@@ -59,58 +76,61 @@ class DesignationImportExportService {
           if (["n", "false", "0"].includes(val)) return "Inactive";
           return value.toString();
         },
-        description: "Whether the designation is active (defaults to Active)",
+        description: "Whether the country is active (defaults to Active)",
       },
     ];
   }
 
   async getSampleData() {
     return [
-      { designation_name: "Software Engineer", is_active: "Active" },
-      { designation_name: "Senior Software Engineer", is_active: "Active" },
-      { designation_name: "Team Lead", is_active: "Active" },
-      { designation_name: "Project Manager", is_active: "Active" },
-      { designation_name: "HR Manager", is_active: "Inactive" },
+      { name: "United States", code: "US", is_active: "Active" },
+      { name: "India", code: "IN", is_active: "Active" },
+      { name: "United Kingdom", code: "UK", is_active: "Active" },
+      { name: "Canada", code: "CA", is_active: "Active" },
+      { name: "Australia", code: "AU", is_active: "Inactive" },
     ];
   }
 
   getColumnDescription(columnKey) {
     const descriptions = {
-      designation_name:
-        "Name of the designation (required, 2-100 characters, must be unique)",
-      is_active: "Whether the designation is active (defaults to Active)",
+      name: "Name of the country (required, 2-100 characters, must be unique)",
+      code: "2-letter country code (required, exactly 2 characters, A-Z only)",
+      is_active: "Whether the country is active (defaults to Active)",
     };
     return descriptions[columnKey] || "";
   }
 
   async transformDataForExport(data) {
-    return data.map((designation) => ({
-      designation_name: designation.designation_name,
-      is_active: designation.is_active === "Y" ? "Active" : "Inactive",
-      createdate: designation.createdate
-        ? new Date(designation.createdate).toISOString().split("T")[0]
+    return data.map((country) => ({
+      name: country.name,
+      code: country.code,
+      is_active: country.is_active === "Y" ? "Active" : "Inactive",
+      createdate: country.createdate
+        ? new Date(country.createdate).toISOString().split("T")[0]
         : "",
-      createdby: designation.createdby || "",
-      updatedate: designation.updatedate
-        ? new Date(designation.updatedate).toISOString().split("T")[0]
+      createdby: country.createdby || "",
+      updatedate: country.updatedate
+        ? new Date(country.updatedate).toISOString().split("T")[0]
         : "",
-      updatedby: designation.updatedby || "",
+      updatedby: country.updatedby || "",
     }));
   }
 
   async checkDuplicate(data) {
-    const existingDesignation = await designationModel.findDesignationByName(
-      data.designation_name,
+    const existingCountry = await countryModel.checkDuplicateCountry(
+      data.name,
+      data.code,
     );
-    if (existingDesignation) {
-      return `Designation "${data.designation_name}" already exists`;
+    if (existingCountry) {
+      return `Country "${data.name}" (${data.code}) already exists`;
     }
     return null;
   }
 
   async transformDataForImport(data, userId) {
     return {
-      designation_name: data.designation_name,
+      name: data.name,
+      code: data.code,
       is_active:
         data.is_active === "Active" || data.is_active === "Y" ? "Y" : "N",
       createdby: userId,
@@ -126,27 +146,29 @@ class DesignationImportExportService {
   }
 
   async validateForeignKeys(data) {
+    // Countries don't have foreign key dependencies
     return null;
   }
 
   getModel() {
-    return designationModel;
+    return countryModel;
   }
 
   async generateTemplate(format = "excel") {
     if (format === "csv") {
-      const csvData = `# Designation Import Template
-# Instructions: Replace sample data with your actual designations
-# Designation Name: Required field, must be unique
+      const csvData = `# Country Import Template
+# Instructions: Replace sample data with your actual countries
+# Country Name: Required field, must be unique
+# Country Code: Required field, exactly 2 letters (A-Z)
 # Active Status: Enter "Active" or "Inactive"
-designation_name,is_active
-Software Engineer,Active
-Senior Software Engineer,Active
-Team Lead,Active`;
+name,code,is_active
+United States,US,Active
+India,IN,Active
+United Kingdom,UK,Active`;
 
       return {
         data: csvData,
-        filename: "designation_import_template.csv",
+        filename: "country_import_template.csv",
       };
     } else {
       const workbook = new ExcelJS.Workbook();
@@ -197,6 +219,7 @@ Team Lead,Active`;
         }
       });
 
+      // Create instruction sheet like the reference
       const instructionSheet = workbook.addWorksheet("Instructions");
       instructionSheet.columns = [
         { header: "Field", key: "field", width: 25 },
@@ -233,9 +256,9 @@ Team Lead,Active`;
       instructionSheet.addRow([]);
       instructionSheet.addRow(["GENERAL INSTRUCTIONS:", "", "", ""]);
       const instructions = [
-        "1. Do not modify the column headers in the template sheet",
+        "1. Do not modify column headers in the template sheet",
         "2. Required fields must be filled for all rows",
-        "3. Date format should be YYYY-MM-DD",
+        "3. Country codes must be exactly 2 letters (A-Z)",
         "4. Boolean fields accept: Y/N, Yes/No, True/False, 1/0",
         "5. Remove any empty rows before importing",
         "6. Maximum file size: 10MB",
@@ -250,7 +273,7 @@ Team Lead,Active`;
       const buffer = await workbook.xlsx.writeBuffer();
       return {
         data: Buffer.from(buffer),
-        filename: "designation_import_template.xlsx",
+        filename: "country_import_template.xlsx",
       };
     }
   }
@@ -263,14 +286,15 @@ Team Lead,Active`;
 
     if (options.limit) query.take = options.limit;
 
-    const data = await designationModel.getAllDesignationsForExport();
+    const data = await countryModel.getAllCountriesForExport();
     const exportData = await this.transformDataForExport(data);
 
     const workbook = new ExcelJS.Workbook();
-    const worksheet = workbook.addWorksheet("Designations");
+    const worksheet = workbook.addWorksheet("Countries");
 
     worksheet.columns = [
-      { header: "Designation Name", key: "designation_name", width: 30 },
+      { header: "Country Name", key: "name", width: 30 },
+      { header: "Country Code", key: "code", width: 15 },
       { header: "Active Status", key: "is_active", width: 15 },
       { header: "Created Date", key: "createdate", width: 15 },
       { header: "Created By", key: "createdby", width: 15 },
@@ -278,6 +302,7 @@ Team Lead,Active`;
       { header: "Updated By", key: "updatedby", width: 15 },
     ];
 
+    // Style header row
     const headerRow = worksheet.getRow(1);
     headerRow.font = { bold: true, color: { argb: "FFFFFFFF" } };
     headerRow.fill = {
@@ -297,6 +322,7 @@ Team Lead,Active`;
       };
     });
 
+    // Add data rows
     exportData.forEach((data, index) => {
       const row = worksheet.addRow(data);
       row.eachCell((cell) => {
@@ -321,13 +347,14 @@ Team Lead,Active`;
   }
 
   async exportToCsv(options = {}) {
-    const data = await designationModel.getAllDesignationsForExport();
+    const data = await countryModel.getAllCountriesForExport();
     const exportData = await this.transformDataForExport(data);
 
     const csvWriter = createObjectCsvWriter({
       path: "temp/export.csv",
       header: [
-        { id: "designation_name", title: "Designation Name" },
+        { id: "name", title: "Country Name" },
+        { id: "code", title: "Country Code" },
         { id: "is_active", title: "Active Status" },
         { id: "createdate", title: "Created Date" },
         { id: "createdby", title: "Created By" },
@@ -391,7 +418,7 @@ Team Lead,Active`;
           userId,
         );
 
-        await designationModel.createDesignation(importData);
+        await countryModel.createCountry(importData);
         results.success++;
       } catch (error) {
         results.errors.push({
@@ -504,9 +531,9 @@ Team Lead,Active`;
   }
 
   async getCount() {
-    const data = await designationModel.getAllDesignationsForExport();
+    const data = await countryModel.getAllCountriesForExport();
     return data.length;
   }
 }
 
-module.exports = { DesignationImportExportService };
+module.exports = { CountryImportExportService };

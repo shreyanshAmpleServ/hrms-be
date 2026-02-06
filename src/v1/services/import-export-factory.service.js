@@ -4,11 +4,13 @@ const {
 const {
   DesignationImportExportService,
 } = require("./designationImportExportService");
+const { CountryImportExportService } = require("./countryImportExportService");
 
 class ImportExportFactory {
   static services = new Map([
     ["departments", DepartmentImportExportService],
     ["designations", DesignationImportExportService],
+    ["countries", CountryImportExportService],
   ]);
 
   static getService(tableName) {

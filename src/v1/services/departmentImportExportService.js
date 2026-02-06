@@ -458,6 +458,18 @@ Human Resources,Active`;
       }
     }
 
+    try {
+      if (fs.existsSync(filePath)) {
+        fs.unlinkSync(filePath);
+        console.log(`Cleaned up temp file: ${filePath}`);
+      }
+    } catch (cleanupError) {
+      console.warn(
+        `Failed to clean up temp file ${filePath}:`,
+        cleanupError.message,
+      );
+    }
+
     return results;
   }
 
