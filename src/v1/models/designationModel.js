@@ -33,7 +33,7 @@ const findDesignationById = async (id) => {
   } catch (error) {
     throw new CustomError(
       `Error finding designation by ID: ${error.message}`,
-      503
+      503,
     );
   }
 };
@@ -62,7 +62,7 @@ const deleteDesignation = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -76,7 +76,7 @@ const getAllDesignation = async (
   search,
   startDate,
   endDate,
-  is_active
+  is_active,
 ) => {
   try {
     const totalCountCheck = await prisma.hrms_m_designation_master.count();
@@ -199,11 +199,42 @@ const getDesignationOptions = async (is_active) => {
   }
 };
 
+const findDesignationByName = async (designationName) => {
+  try {
+    const designation = await prisma.hrms_m_designation_master.findFirst({
+      where: {
+        designation_name: designationName,
+      },
+    });
+    return designation;
+  } catch (error) {
+    console.log("Error finding designation by name: ", error);
+    throw new CustomError(
+      `Error finding designation by name: ${error.message}`,
+      503,
+    );
+  }
+};
+
+const getAllDesignationsForExport = async () => {
+  try {
+    const designations = await prisma.hrms_m_designation_master.findMany({
+      orderBy: [{ designation_name: "asc" }],
+    });
+    return designations;
+  } catch (error) {
+    console.error("Error retrieving designations for export: ", error);
+    throw new CustomError("Error retrieving designations for export", 503);
+  }
+};
+
 module.exports = {
   createDesignation,
   findDesignationById,
   updateDesignation,
   deleteDesignation,
   getAllDesignation,
+  findDesignationByName,
   getDesignationOptions,
+  getAllDesignationsForExport,
 };

@@ -1,9 +1,15 @@
 const {
   DepartmentImportExportService,
 } = require("./departmentImportExportService");
+const {
+  DesignationImportExportService,
+} = require("./designationImportExportService");
 
 class ImportExportFactory {
-  static services = new Map([["departments", DepartmentImportExportService]]);
+  static services = new Map([
+    ["departments", DepartmentImportExportService],
+    ["designations", DesignationImportExportService],
+  ]);
 
   static getService(tableName) {
     const ServiceClass = this.services.get(tableName);
