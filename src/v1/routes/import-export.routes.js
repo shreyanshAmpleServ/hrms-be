@@ -5,6 +5,7 @@ const {
 const { authenticateToken } = require("../middlewares/authMiddleware");
 const multer = require("multer");
 const path = require("path");
+const fs = require("fs");
 const {
   validateTemplate,
   validateImport,
@@ -12,9 +13,14 @@ const {
 } = require("../validations/import-export.validation");
 const router = express.Router();
 
+const tempDir = path.join(process.cwd(), "temp");
+if (!fs.existsSync(tempDir)) {
+  fs.mkdirSync(tempDir, { recursive: true });
+}
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
-    cb(null, path.join(process.cwd(), "temp"));
+    cb(null, tempDir);
   },
   filename: function (req, file, cb) {
     cb(null, Date.now() + "-" + file.originalname);
@@ -24,12 +30,12 @@ const storage = multer.diskStorage({
 const uploadExcel = multer({
   storage: storage,
   fileFilter: function (req, file, cb) {
-    const allowedTypes = [".csv", ".json", ".xlsx", ".xls"];
+    const allowedTypes = [".csv", ".xlsx", ".xls"];
     const fileExtension = path.extname(file.originalname).toLowerCase();
     if (allowedTypes.includes(fileExtension)) {
       cb(null, true);
     } else {
-      cb(new Error("Only CSV, JSON, and Excel files are allowed"), false);
+      cb(new Error("Only CSV and Excel files are allowed"), false);
     }
   },
   limits: {
