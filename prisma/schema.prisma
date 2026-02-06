@@ -1847,8 +1847,21 @@ model hrms_m_tax_slab_rule {
   pay_component_tax      hrms_m_pay_component[]  @relation("TaxSlabRule")
   tax_slab_pay_component hrms_m_pay_component    @relation(fields: [pay_component_id], references: [id], onUpdate: NoAction)
   hrms_m_tax_slab_rule1  hrms_m_tax_slab_rule1[]
+}
 
-  @@index([company_id], map: "IX_hrms_m_tax_slab_rule_company_id")
+model hrms_m_states {
+  id                          Int                             @id(map: "PK_crms__states") @default(autoincrement())
+  country_code                Int
+  name                        String                          @db.NVarChar(100)
+  is_active                   String                          @default("Y", map: "DF__crms_m_st__is_ac__361203C5") @db.Char(1)
+  createdate                  DateTime                        @default(now()) @db.DateTime
+  createdby                   Int
+  log_inst                    Int?
+  updatedate                  DateTime?                       @db.DateTime
+  updatedby                   Int?
+  country_details             hrms_m_country_master           @relation(fields: [country_code], references: [id], onUpdate: NoAction)
+  default_configuration_state hrms_d_default_configurations[]
+  employee_state              hrms_d_employee_address[]
 }
 
 model Country {
