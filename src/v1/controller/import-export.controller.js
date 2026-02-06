@@ -2,6 +2,8 @@ const {
   ImportExportFactory,
 } = require("../services/import-export-factory.service");
 const CustomError = require("../../utils/CustomError");
+const fs = require("fs");
+const path = require("path");
 
 const importExportController = {
   async getSupportedTables(req, res, next) {
@@ -177,6 +179,19 @@ const importExportController = {
         size: req.file.size,
         mimetype: req.file.mimetype,
       };
+
+      // Clean up temp file after preview
+      try {
+        if (fs.existsSync(req.file.path)) {
+          fs.unlinkSync(req.file.path);
+          console.log(`Cleaned up preview temp file: ${req.file.path}`);
+        }
+      } catch (cleanupError) {
+        console.warn(
+          `Failed to clean up preview temp file ${req.file.path}:`,
+          cleanupError.message,
+        );
+      }
 
       res.json({
         success: true,

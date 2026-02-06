@@ -87,7 +87,7 @@ const deleteCountry = async (id) => {
     if (error.code === "P2003") {
       throw new CustomError(
         "This record is connected to other data. Please remove that first.",
-        400
+        400,
       );
     } else {
       throw new CustomError(error.meta.constraint, 500);
@@ -118,10 +118,24 @@ const getAllCountries = async (is_active) => {
   }
 };
 
+const getAllCountriesForExport = async () => {
+  try {
+    const countries = await prisma.hrms_m_country_master.findMany({
+      orderBy: [{ name: "asc" }],
+    });
+    return countries;
+  } catch (error) {
+    console.error("Error retrieving countries for export: ", error);
+    throw new CustomError("Error retrieving countries for export", 503);
+  }
+};
+
 module.exports = {
   createCountry,
   findCountryById,
   updateCountry,
   deleteCountry,
   getAllCountries,
+  checkDuplicateCountry,
+  getAllCountriesForExport,
 };
