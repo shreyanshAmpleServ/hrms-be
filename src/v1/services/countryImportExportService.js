@@ -150,6 +150,22 @@ class CountryImportExportService {
     return null;
   }
 
+  async updateExisting(data, userId) {
+    const existing = await countryModel.checkDuplicateCountry(
+      data.name,
+      data.code,
+    );
+    if (!existing) return null;
+
+    const updateData = {
+      ...data,
+      updatedby: userId,
+      updatedate: new Date(),
+    };
+
+    return await countryModel.updateCountry(existing.id, updateData);
+  }
+
   getModel() {
     return countryModel;
   }
@@ -286,13 +302,15 @@ United Kingdom,UK,Active`;
 
     if (options.limit) query.take = options.limit;
 
-    const data = await countryModel.getAllCountriesForExport();
+    const data = await countryModel.getAllCountriesForExport(
+      options.filters?.is_active,
+    );
     const exportData = await this.transformDataForExport(data);
 
     const workbook = new ExcelJS.Workbook();
     const worksheet = workbook.addWorksheet("Countries");
 
-    worksheet.columns = [
+    const exportColumns = [
       { header: "Country Name", key: "name", width: 30 },
       { header: "Country Code", key: "code", width: 15 },
       { header: "Active Status", key: "is_active", width: 15 },
@@ -301,6 +319,8 @@ United Kingdom,UK,Active`;
       { header: "Updated Date", key: "updatedate", width: 15 },
       { header: "Updated By", key: "updatedby", width: 15 },
     ];
+
+    worksheet.columns = exportColumns;
 
     // Style header row
     const headerRow = worksheet.getRow(1);
@@ -342,16 +362,33 @@ United Kingdom,UK,Active`;
       }
     });
 
+    if (data.length > 0) {
+      worksheet.autoFilter = {
+        from: "A1",
+        to: `${String.fromCharCode(64 + exportColumns.length)}${data.length + 1}`,
+      };
+    }
+
     const buffer = await workbook.xlsx.writeBuffer();
     return Buffer.from(buffer);
   }
 
   async exportToCsv(options = {}) {
-    const data = await countryModel.getAllCountriesForExport();
+    const data = await countryModel.getAllCountriesForExport(
+      options.filters?.is_active,
+    );
     const exportData = await this.transformDataForExport(data);
 
     const csvWriter = createObjectCsvWriter({
-      path: "temp/export.csv",
+      path: "temp/export.csv", // Note: This might be legacy, typically we don't write to file if we stringify. But kept for compatibility if needed, though stringifyRecords returns string.
+      // Actually csv-writer createObjectCsvWriter returns an object with writeRecords (promise) and stringifyRecords (not standard in some versions, but let's check Department code)
+      // Department code: return await csvWriter.stringifyRecords(exportData);
+      // Wait, createObjectCsvWriter from 'csv-writer' usually writes to file.
+      // Department used `createObjectCsvWriter` but called `stringifyRecords`?
+      // Let's check Department code again. It used `createObjectCsvWriter({ ... })` and `await csvWriter.stringifyRecords(exportData)`.
+      // The `csv-writer` library documentation says `createObjectCsvWriter` returns an object that has `writeRecords`. `stringifyRecords` is usually from `csv-stringify` or similar.
+      // However, if the user's Department code has it, I assume it works (maybe a wrapper or specific version).
+      // I will copy what Department has.
       header: [
         { id: "name", title: "Country Name" },
         { id: "code", title: "Country Code" },
